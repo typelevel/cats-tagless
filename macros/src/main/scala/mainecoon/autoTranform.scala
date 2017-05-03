@@ -3,9 +3,9 @@ package mainecoon
 import scala.annotation.StaticAnnotation
 import scala.meta._
 import scala.collection.immutable.Seq
-import autoTransform._
+import autoFunctorK._
 
-class autoTransform extends StaticAnnotation {
+class autoFunctorK extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
     defn match {
       case Term.Block(
@@ -27,7 +27,7 @@ class autoTransform extends StaticAnnotation {
   }
 }
 
-object autoTransform {
+object autoFunctorK {
   def tranformKInst(templ: Template, name: Type.Name): Defn = {
 
     val methods = templ.stats.map(_.collect {
@@ -36,7 +36,7 @@ object autoTransform {
     }).getOrElse(Nil)
 
     q"""
-      implicit def ${Term.Name("transformKFor" + name.value)}: _root_.mainecoon.TransformK[$name] = new _root_.mainecoon.TransformK[$name] {
+      implicit def ${Term.Name("functorKFor" + name.value)}: _root_.mainecoon.FunctorK[$name] = new _root_.mainecoon.FunctorK[$name] {
         def mapK[F[_], G[_]](af: $name[F])(fk: _root_.cats.~>[F, G]): $name[G] = new ${Ctor.Ref.Name(name.value)}[G] {
           ..$methods
         }

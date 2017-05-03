@@ -5,9 +5,9 @@ import org.scalatest.{FunSuite, Matchers}
 
 import scala.util.{Try, Success}
 import cats.~>
-import TransformK.ops._
+import FunctorK.ops._
 
-@autoTransform
+@autoFunctorK
 trait ParseAlg[F[_]] {
   def parseInt(i: String): F[Int]
   def floatToString(f: Float, fmt: String): F[String]
@@ -22,7 +22,7 @@ object Interpreters {
   }
 }
 
-class AutoTransformTests extends FunSuite with Matchers {
+class FunctorKAnnotationTests extends FunSuite with Matchers {
   test("can transform") {
 
     val fk : Try ~> Option = λ[Try ~> Option](_.toOption)

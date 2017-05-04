@@ -40,6 +40,7 @@ lazy val coreJS  = coreM.js
 lazy val coreM   = module("core", CrossType.Pure)
   .settings(addLibs(vAll, "cats-core"))
   .settings(addTestLibs(vAll, "scalatest"))
+  .settings(metaMacroSettings)
 
 /** laws - cross project that provides cross laws support.*/
 lazy val laws    = prj(lawsM)
@@ -57,9 +58,7 @@ lazy val macrosJVM = macrosM.jvm
 lazy val macrosJS  = macrosM.js
 lazy val macrosM   = module("macros", CrossType.Pure)
   .dependsOn(coreM)
-  .settings(metaMacroSettings,
-    libraryDependencies += "org.scalameta" %% "scalameta" % "1.7.0"
-  )
+  .settings(metaMacroSettings)
 
 
 lazy val tests    = prj(testsM)
@@ -81,8 +80,6 @@ lazy val docs = project.configure(mkDocConfig(gh, rootSettings, commonJvmSetting
 lazy val buildSettings = sharedBuildSettings(gh, vAll)
 
 lazy val commonSettings = sharedCommonSettings ++ Seq(
-  addCompilerPlugin("org.scalameta" % "paradise" % "3.0.0-M8" cross CrossVersion.full),
-  scalacOptions ++= scalacAllOptions :+ "-Xplugin-require:macroparadise",
   parallelExecution in Test := false
 ) ++ warnUnusedImport ++ unidocCommonSettings ++
   addCompilerPlugins(vAll, "kind-projector")
@@ -100,8 +97,9 @@ lazy val disciplineDependencies = addLibs(vAll, "discipline", "scalacheck")
 lazy val metaMacroSettings: Seq[Def.Setting[_]] = Seq(
   resolvers += Resolver.sonatypeRepo("releases"),
   resolvers += Resolver.bintrayRepo("scalameta", "maven"),
-
+  libraryDependencies += "org.scalameta" %% "scalameta" % "1.7.0",
   scalacOptions in (Compile, console) := Seq(), // macroparadise plugin doesn't work in repl yet.
-
+  addCompilerPlugin("org.scalameta" % "paradise" % "3.0.0-M8" cross CrossVersion.full),
+  scalacOptions ++= scalacAllOptions :+ "-Xplugin-require:macroparadise",
   sources in (Compile, doc) := Nil // macroparadise doesn't work with scaladoc yet.
 )

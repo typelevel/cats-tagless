@@ -5,6 +5,9 @@ import scala.meta._
 import scala.collection.immutable.Seq
 import autoFunctorK._
 
+/**
+ * auto generates an instance of [[FunctorK]]
+ */
 class autoFunctorK extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
     defn match {

@@ -26,30 +26,30 @@ import org.scalacheck.Prop._
 import org.scalacheck.{Arbitrary, Prop}
 import org.typelevel.discipline.Laws
 
-trait CartesianKTests[A[_[_]]] extends Laws {
-  def laws: CartesianKLaws[A]
+trait CartesianKTests[F[_[_]]] extends Laws {
+  def laws: CartesianKLaws[F]
 
-  def CartesianK[F[_], G[_], H[_]](implicit
-                                               ArbCF: Arbitrary[A[F]],
-                                               ArbCG: Arbitrary[A[G]],
-                                               ArbCH: Arbitrary[A[H]],
-                                               iso: IsomorphismsK[A],
-                                               EqFGH: Eq[A[λ[T => (F[T], G[T], H[T])]]]
+  def CartesianK[A[_], B[_], C[_]](implicit
+                                               ArbCF: Arbitrary[F[A]],
+                                               ArbCG: Arbitrary[F[B]],
+                                               ArbCH: Arbitrary[F[C]],
+                                               iso: IsomorphismsK[F],
+                                               EqFGH: Eq[F[λ[T => (A[T], B[T], C[T])]]]
                                               ): RuleSet = {
     new DefaultRuleSet(
       name = "CartesianK",
       parent = None,
-      "cartesian associativity" -> forAll((af: A[F], ag: A[G], ah: A[H]) => iso.associativity(laws.cartesianAssociativity[F, G, H](af, ag, ah))))
+      "cartesian associativity" -> forAll((af: F[A], ag: F[B], ah: F[C]) => iso.associativity(laws.cartesianAssociativity[A, B, C](af, ag, ah))))
   }
 }
 
 
 object CartesianKTests {
-  def apply[A[_[_]]: CartesianK]: CartesianKTests[A] =
-    new CartesianKTests[A] { def laws: CartesianKLaws[A] = CartesianKLaws[A] }
+  def apply[F[_[_]]: CartesianK]: CartesianKTests[F] =
+    new CartesianKTests[F] { def laws: CartesianKLaws[F] = CartesianKLaws[F] }
 
-  trait IsomorphismsK[A[_[_]]] {
-    def associativity[F[_], G[_], H[_]](fs: (A[Prod[F, Prod[G, H, ?], ?]], A[Prod[Prod[F, G, ?], H, ?]]))
-                                       (implicit EqFGH: Eq[A[λ[T => (F[T], G[T], H[T])]]]): Prop
+  trait IsomorphismsK[F[_[_]]] {
+    def associativity[A[_], B[_], C[_]](fs: (F[Prod[A, Prod[B, C, ?], ?]], F[Prod[Prod[A, B, ?], C, ?]]))
+                                       (implicit EqFGH: Eq[F[λ[T => (A[T], B[T], C[T])]]]): Prop
   }
 }

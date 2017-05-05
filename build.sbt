@@ -3,17 +3,11 @@ import de.heikoseeberger.sbtheader.license.Apache2_0
 
 addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVersion.value.get + \"-SNAPSHOT\"")
 
-/**
- * Project settings
- */
 val gh = GitHubSettings(org = "com.kailuowang", proj = "mainecoon", publishOrg = "com.kailuowang", license = apache)
 val devs = Seq(Dev("Kailuo Wang", "kauowang"))
 
 val vAll = Versions(versions, libraries, scalacPlugins)
 
-/**
- * Root - This is the root project that aggregates the catalystsJVM and catalystsJS sub projects
- */
 lazy val rootSettings = buildSettings ++ commonSettings ++ publishSettings ++ scoverageSettings
 lazy val module = mkModuleFactory(gh.proj, mkConfig(rootSettings, commonJvmSettings, commonJsSettings))
 lazy val prj = mkPrjFactory(rootSettings)
@@ -34,8 +28,6 @@ lazy val rootJS = project
   .configure(mkRootJsConfig(gh.proj, rootSettings, commonJsSettings))
   .aggregate(coreJS, lawsJS)
 
-
-/** core - cross project that provides cross core support.*/
 lazy val core    = prj(coreM)
 lazy val coreJVM = coreM.jvm
 lazy val coreJS  = coreM.js
@@ -45,7 +37,6 @@ lazy val coreM   = module("core", CrossType.Pure)
   .settings(metaMacroSettings)
   .enablePlugins(AutomateHeaderPlugin)
 
-/** laws - cross project that provides cross laws support.*/
 lazy val laws    = prj(lawsM)
 lazy val lawsJVM = lawsM.jvm
 lazy val lawsJS  = lawsM.js
@@ -56,7 +47,6 @@ lazy val lawsM   = module("laws", CrossType.Pure)
   .enablePlugins(AutomateHeaderPlugin)
 
 
-/** macros - cross project that provides cross macros support.*/
 lazy val macros    = prj(macrosM)
 lazy val macrosJVM = macrosM.jvm
 lazy val macrosJS  = macrosM.js
@@ -83,7 +73,6 @@ lazy val testsM   = module("tests", CrossType.Pure)
 lazy val docs = project.configure(mkDocConfig(gh, rootSettings, commonJvmSettings,
   coreJVM))
 
-/** Settings.*/
 lazy val buildSettings = sharedBuildSettings(gh, vAll)
 
 lazy val commonSettings = sharedCommonSettings ++ Seq(

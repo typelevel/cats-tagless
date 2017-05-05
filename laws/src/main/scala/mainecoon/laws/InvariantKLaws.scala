@@ -34,7 +34,6 @@ trait InvariantKLaws[F[_[_]]] {
 }
 
 
-
 object InvariantKLaws {
   def apply[F[_[_]]](implicit ev: InvariantK[F]): InvariantKLaws[F] =
     new InvariantKLaws[F] { def F: InvariantK[F] = ev }

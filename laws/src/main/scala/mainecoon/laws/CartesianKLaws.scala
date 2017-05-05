@@ -19,16 +19,16 @@ package laws
 
 import cats.data.Prod
 
-trait CartesianKLaws[A[_[_]]] {
-  implicit def A: CartesianK[A]
+trait CartesianKLaws[F[_[_]]] {
+  implicit def F: CartesianK[F]
 
-  def cartesianAssociativity[F[_], G[_], H[_]](af: A[F], ag: A[G], ah: A[H]):
-  (A[Prod[F, Prod[G, H, ?], ?]], A[Prod[Prod[F, G, ?], H, ?]]) =
-    (A.product(af, A.product(ag, ah)), A.product(A.product(af, ag), ah))
+  def cartesianAssociativity[A[_], B[_], C[_]](af: F[A], ag: F[B], ah: F[C]):
+  (F[Prod[A, Prod[B, C, ?], ?]], F[Prod[Prod[A, B, ?], C, ?]]) =
+    (F.product(af, F.product(ag, ah)), F.product(F.product(af, ag), ah))
 
 }
 
 object CartesianKLaws {
-  def apply[A[_[_]]](implicit ev: CartesianK[A]): CartesianKLaws[A] =
-    new CartesianKLaws[A] { val A = ev }
+  def apply[F[_[_]]](implicit ev: CartesianK[F]): CartesianKLaws[F] =
+    new CartesianKLaws[F] { val F = ev }
 }

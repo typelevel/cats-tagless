@@ -2,31 +2,32 @@ package mainecoon
 package laws
 package discipline
 
-import cats.arrow.FunctionK
 import org.scalacheck.{Arbitrary, Prop}
 import Prop._
-import cats.Eq
+import cats.{Eq, ~>}
 import org.typelevel.discipline.Laws
 import cats.laws.discipline._
 
-trait FunctorKTests[F[_[_]]] extends Laws {
+trait FunctorKTests[F[_[_]]] extends InvariantKTests[F] {
   def laws: FunctorKLaws[F]
 
-  def functorK[G[_], H[_], I[_], A: Arbitrary](implicit
-                                               ArbFA: Arbitrary[F[G]],
-                                               ArbitraryG: Arbitrary[G[A]],
-                                               ArbitraryH: Arbitrary[H[A]],
-                                               ArbitraryI: Arbitrary[I[A]],
-                                               ArbitraryFK: Arbitrary[FunctionK[G, H]],
-                                               ArbitraryFK2: Arbitrary[FunctionK[H, I]],
-                                               EqFA: Eq[F[G]],
-                                               EqFC: Eq[F[I]]
+  def functorK[A[_], B[_], C[_], T: Arbitrary](implicit
+                                               ArbFA: Arbitrary[F[A]],
+                                               ArbitraryG: Arbitrary[A[T]],
+                                               ArbitraryH: Arbitrary[B[T]],
+                                               ArbitraryI: Arbitrary[C[T]],
+                                               ArbitraryFK: Arbitrary[A ~> B],
+                                               ArbitraryFK2: Arbitrary[B ~> C],
+                                               ArbitraryFK3: Arbitrary[B ~> A],
+                                               ArbitraryFK4: Arbitrary[C ~> B],
+                                               EqFA: Eq[F[A]],
+                                               EqFC: Eq[F[C]]
                                               ): RuleSet = {
     new DefaultRuleSet(
       name = "functorK",
-      parent = None,
-      "covariant identity" -> forAll(laws.covariantIdentity[G] _),
-      "covariant composition" -> forAll(laws.covariantComposition[G, H, I] _))
+      parent = Some(invariantK[A, B, C]),
+      "covariant identity" -> forAll(laws.covariantIdentity[A] _),
+      "covariant composition" -> forAll(laws.covariantComposition[A, B, C] _))
   }
 }
 

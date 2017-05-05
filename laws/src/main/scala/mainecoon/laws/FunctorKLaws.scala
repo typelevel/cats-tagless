@@ -4,15 +4,16 @@ package laws
 import cats.arrow.FunctionK
 import cats.laws._
 import syntax.all._
+import cats.~>
 
-trait FunctorKLaws[F[_[_]]] {
+trait FunctorKLaws[F[_[_]]] extends InvariantKLaws[F]{
   implicit def F: FunctorK[F]
 
-  def covariantIdentity[G[_]](fg: F[G]): IsEq[F[G]] =
-    fg.mapK(FunctionK.id[G]) <-> fg
+  def covariantIdentity[A[_]](fg: F[A]): IsEq[F[A]] =
+    fg.mapK(FunctionK.id[A]) <-> fg
 
-  def covariantComposition[G[_], H[_], I[_]](fg: F[G], f: FunctionK[G, H], g: FunctionK[H, I]): IsEq[F[I]] =
-    fg.mapK(f).mapK(g) <-> fg.mapK(f andThen g)
+  def covariantComposition[A[_], B[_], C[_]](fa: F[A], f: A ~> B, g: B ~> C): IsEq[F[C]] =
+    fa.mapK(f).mapK(g) <-> fa.mapK(f andThen g)
 
 }
 

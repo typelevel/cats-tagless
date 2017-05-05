@@ -1,5 +1,5 @@
-
 import org.typelevel.Dependencies._
+import de.heikoseeberger.sbtheader.license.Apache2_0
 
 addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVersion.value.get + \"-SNAPSHOT\"")
 
@@ -22,11 +22,13 @@ lazy val rootPrj = project
   .configure(mkRootConfig(rootSettings,rootJVM))
   .aggregate(rootJVM, rootJS, testsJS, macrosJS)
   .dependsOn(rootJVM, rootJS, testsJS, macrosJS)
+  .settings(noPublishSettings)
 
 lazy val rootJVM = project
   .configure(mkRootJvmConfig(gh.proj, rootSettings, commonJvmSettings))
   .aggregate(coreJVM, lawsJVM, testsJVM, macrosJVM, docs)
   .dependsOn(coreJVM, lawsJVM, testsJVM, macrosJVM)
+
 
 lazy val rootJS = project
   .configure(mkRootJsConfig(gh.proj, rootSettings, commonJsSettings))
@@ -41,6 +43,7 @@ lazy val coreM   = module("core", CrossType.Pure)
   .settings(addLibs(vAll, "cats-core"))
   .settings(addTestLibs(vAll, "scalatest"))
   .settings(metaMacroSettings)
+  .enablePlugins(AutomateHeaderPlugin)
 
 /** laws - cross project that provides cross laws support.*/
 lazy val laws    = prj(lawsM)
@@ -50,6 +53,7 @@ lazy val lawsM   = module("laws", CrossType.Pure)
   .dependsOn(coreM)
   .settings(addLibs(vAll, "cats-laws"))
   .settings(disciplineDependencies)
+  .enablePlugins(AutomateHeaderPlugin)
 
 
 /** macros - cross project that provides cross macros support.*/
@@ -59,6 +63,8 @@ lazy val macrosJS  = macrosM.js
 lazy val macrosM   = module("macros", CrossType.Pure)
   .dependsOn(coreM)
   .settings(metaMacroSettings)
+  .settings(copyrightHeader)
+  .enablePlugins(AutomateHeaderPlugin)
 
 
 lazy val tests    = prj(testsM)
@@ -70,6 +76,7 @@ lazy val testsM   = module("tests", CrossType.Pure)
   .settings(metaMacroSettings)
   .settings(noPublishSettings)
   .settings(addTestLibs(vAll, "scalatest" ))
+  .enablePlugins(AutomateHeaderPlugin)
 
 
 /** Docs - Generates and publishes the scaladoc API documents and the project web site.*/
@@ -82,7 +89,7 @@ lazy val buildSettings = sharedBuildSettings(gh, vAll)
 lazy val commonSettings = sharedCommonSettings ++ Seq(
   parallelExecution in Test := false
 ) ++ warnUnusedImport ++ unidocCommonSettings ++
-  addCompilerPlugins(vAll, "kind-projector")
+  addCompilerPlugins(vAll, "kind-projector") ++ copyrightHeader
 
 lazy val commonJsSettings = Seq(scalaJSStage in Global := FastOptStage)
 
@@ -103,3 +110,9 @@ lazy val metaMacroSettings: Seq[Def.Setting[_]] = Seq(
   scalacOptions ++= scalacAllOptions :+ "-Xplugin-require:macroparadise",
   sources in (Compile, doc) := Nil // macroparadise doesn't work with scaladoc yet.
 )
+
+lazy val copyrightHeader = Seq(
+  headers := Map(
+    "scala" -> Apache2_0("2017", "Kailuo Wang"),
+    "java" -> Apache2_0("2017", "Kailuo Wang"))
+  )

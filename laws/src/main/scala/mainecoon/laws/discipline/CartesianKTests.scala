@@ -30,7 +30,7 @@ import org.typelevel.discipline.Laws
 trait CartesianKTests[F[_[_]]] extends Laws {
   def laws: CartesianKLaws[F]
 
-  def CartesianK[A[_], B[_], C[_]](implicit
+  def cartesianK[A[_], B[_], C[_]](implicit
                                                ArbCF: Arbitrary[F[A]],
                                                ArbCG: Arbitrary[F[B]],
                                                ArbCH: Arbitrary[F[C]],
@@ -50,6 +50,7 @@ object CartesianKTests {
     new CartesianKTests[F] { def laws: CartesianKLaws[F] = CartesianKLaws[F] }
 
   import IsomorphismsK._
+
   trait IsomorphismsK[F[_[_]]] {
     def associativity[A[_], B[_], C[_]](fs: (F[ProdA_BC[A, B, C, ?]], F[ProdAB_C[A, B, C, ?]]))
                                        (implicit EqFGH: Eq[F[Tuple3K[A, B, C, ?]]]): Prop

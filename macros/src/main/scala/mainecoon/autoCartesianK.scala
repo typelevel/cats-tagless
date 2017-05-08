@@ -18,30 +18,31 @@ package mainecoon
 
 import scala.annotation.StaticAnnotation
 import scala.meta._
-import autoFunctorK._
+import autoCartesianK._
 import Util._
 import collection.immutable.Seq
 
 /**
- * auto generates an instance of [[FunctorK]]
+ * auto generates an instance of [[CartesianK]]
  */
-class autoFunctorK extends StaticAnnotation {
+class autoCartesianK extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
-    enrichCompanion(defn, functorKInst)
+    enrichCompanion(defn, cartesianKInst)
   }
 }
 
-object autoFunctorK {
-  def functorKInst(templ: Template, name: Type.Name): Seq[Defn] = {
+object autoCartesianK {
+  def cartesianKInst(templ: Template, name: Type.Name): Seq[Defn] = {
 
     val methods = templ.stats.map(_.collect {
       case q"def $methodName(..$params): $f[$resultType]" =>
-        q"""def $methodName(..$params): G[$resultType] = fk(af.$methodName(..${params.map(p => Term.Name(p.name.value))}))"""
+        val arguments = params.map(p => Term.Name(p.name.value))
+        q"""def $methodName(..$params): _root_.cats.data.Prod[F, G, $resultType] = _root_.cats.data.Prod(af.$methodName(..$arguments), ag.$methodName(..$arguments))"""
     }).getOrElse(Nil)
 
     Seq(q"""
-      implicit def ${Term.Name("functorKFor" + name.value)}: _root_.mainecoon.FunctorK[$name] = new _root_.mainecoon.FunctorK[$name] {
-        def mapK[F[_], G[_]](af: $name[F])(fk: _root_.cats.~>[F, G]): $name[G] = new ${Ctor.Ref.Name(name.value)}[G] {
+      implicit def ${Term.Name("cartesianKFor" + name.value)}: _root_.mainecoon.CartesianK[$name] = new _root_.mainecoon.CartesianK[$name] {
+        def productK[F[_], G[_]](af: $name[F], ag: $name[G]): $name[({type λ[A]=_root_.cats.data.Prod[F, G, A]})#λ] = new ${Ctor.Ref.Name(name.value)}[({type λ[A]=_root_.cats.data.Prod[F, G, A]})#λ] {
           ..$methods
         }
       }

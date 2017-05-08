@@ -17,13 +17,14 @@
 package mainecoon
 package tests
 
+import cats.Eval
 import cats.kernel.Eq
 import org.scalacheck.{Arbitrary, Cogen}
 
 import scala.util.Try
 import cats.laws.discipline.eq._
 
-@finalAlg @autoFunctorK
+@finalAlg @autoFunctorK @autoCartesianK
 trait SafeAlg[F[_]] {
   def parseInt(i: String): F[Int]
   def divide(dividend: Float, divisor: Float): F[Float]
@@ -50,11 +51,15 @@ object SafeAlg {
 }
 
 object Interpreters {
-  type F[T] = Try[T]
 
-  implicit object tryInterpreter extends SafeAlg[F] {
+  implicit object tryInterpreter extends SafeAlg[Try] {
     def parseInt(s: String) = Try(s.toInt)
-    def divide(dividend: Float, divisor: Float): F[Float] = Try(dividend / divisor)
+    def divide(dividend: Float, divisor: Float): Try[Float] = Try(dividend / divisor)
+  }
+
+  implicit object lazyInterpreter extends SafeAlg[Eval] {
+    def parseInt(s: String): Eval[Int] = Eval.later(s.toInt)
+    def divide(dividend: Float, divisor: Float): Eval[Float] = Eval.later(dividend / divisor)
   }
 
 }

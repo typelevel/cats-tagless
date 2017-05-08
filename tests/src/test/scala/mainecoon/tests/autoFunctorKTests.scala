@@ -24,7 +24,7 @@ import cats.laws.discipline.SerializableTests
 import mainecoon.laws.discipline.FunctorKTests
 
 
-class AutoFunctorKTests extends MainecoonTestSuite {
+class autoFunctorKTests extends MainecoonTestSuite {
   test("simple mapK") {
 
     val fk : Try ~> Option = λ[Try ~> Option](_.toOption)

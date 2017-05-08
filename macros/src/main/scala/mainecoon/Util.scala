@@ -40,4 +40,12 @@ private[mainecoon] object Util {
         abort("@algebra must annotate a class or a trait/class.")
     }
   }
+
+  object ClassOrTrait {
+    def unapply(any: Defn): Option[(Template, Type.Name)] = any match {
+      case t: Defn.Class => Some((t.templ, t.name))
+      case t: Defn.Trait => Some((t.templ, t.name))
+      case _             => None
+    }
+  }
 }

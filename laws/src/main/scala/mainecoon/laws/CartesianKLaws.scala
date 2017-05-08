@@ -24,7 +24,7 @@ trait CartesianKLaws[F[_[_]]] {
 
   def cartesianAssociativity[A[_], B[_], C[_]](af: F[A], ag: F[B], ah: F[C]):
   (F[Prod[A, Prod[B, C, ?], ?]], F[Prod[Prod[A, B, ?], C, ?]]) =
-    (F.product(af, F.product(ag, ah)), F.product(F.product(af, ag), ah))
+    (F.productK(af, F.productK(ag, ah)), F.productK(F.productK(af, ag), ah))
 
 }
 

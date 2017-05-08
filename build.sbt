@@ -76,7 +76,8 @@ lazy val docs = project.configure(mkDocConfig(gh, rootSettings, commonJvmSetting
 lazy val buildSettings = sharedBuildSettings(gh, vAll)
 
 lazy val commonSettings = sharedCommonSettings ++ Seq(
-  parallelExecution in Test := false
+  parallelExecution in Test := false,
+  crossScalaVersions := Seq(vAll.vers("scalac_2.11"), scalaVersion.value)
 ) ++ warnUnusedImport ++ unidocCommonSettings ++
   addCompilerPlugins(vAll, "kind-projector") ++ copyrightHeader
 
@@ -93,7 +94,7 @@ lazy val disciplineDependencies = addLibs(vAll, "discipline", "scalacheck")
 lazy val metaMacroSettings: Seq[Def.Setting[_]] = Seq(
   resolvers += Resolver.sonatypeRepo("releases"),
   resolvers += Resolver.bintrayRepo("scalameta", "maven"),
-  libraryDependencies += "org.scalameta" %% "scalameta" % "1.7.0",
+  libraryDependencies += "org.scalameta" %% "scalameta" % "1.7.0" % Provided,
   scalacOptions in (Compile, console) := Seq(), // macroparadise plugin doesn't work in repl yet.
   addCompilerPlugin("org.scalameta" % "paradise" % "3.0.0-M8" cross CrossVersion.full),
   scalacOptions ++= scalacAllOptions :+ "-Xplugin-require:macroparadise",

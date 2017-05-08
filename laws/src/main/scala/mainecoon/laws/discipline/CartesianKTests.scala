@@ -35,7 +35,7 @@ trait CartesianKTests[F[_[_]]] extends Laws {
                                                ArbCG: Arbitrary[F[B]],
                                                ArbCH: Arbitrary[F[C]],
                                                iso: IsomorphismsK[F],
-                                               EqFGH: Eq[F[Tuple3K[A, B, C]#T]]
+                                               EqFGH: Eq[F[Tuple3K[A, B, C, ?]]]
                                               ): RuleSet = {
     new DefaultRuleSet(
       name = "CartesianK",
@@ -51,28 +51,28 @@ object CartesianKTests {
 
   import IsomorphismsK._
   trait IsomorphismsK[F[_[_]]] {
-    def associativity[A[_], B[_], C[_]](fs: (F[ProdA_BC[A, B, C]#T], F[ProdAB_C[A, B, C]#T]))
-                                       (implicit EqFGH: Eq[F[Tuple3K[A, B, C]#T]]): Prop
+    def associativity[A[_], B[_], C[_]](fs: (F[ProdA_BC[A, B, C, ?]], F[ProdAB_C[A, B, C, ?]]))
+                                       (implicit EqFGH: Eq[F[Tuple3K[A, B, C, ?]]]): Prop
   }
 
   object IsomorphismsK {
-    trait Tuple3K[A[_], B[_], C[_]] { type T[D] = (A[D], B[D], C[D]) }
-    trait ProdA_BC[A[_], B[_], C[_]] { type T[D] = Prod[A, Prod[B, C, ?], D] }
-    trait ProdAB_C[A[_], B[_], C[_]] { type T[D] = Prod[Prod[A, B, ?], C, D] }
+    type Tuple3K[A[_], B[_], C[_], T] = (A[T], B[T], C[T])
+    type ProdA_BC[A[_], B[_], C[_], T]  =  Prod[A, Prod[B, C, ?], T] 
+    type ProdAB_C[A[_], B[_], C[_], T]  = Prod[Prod[A, B, ?], C, T] 
 
     import cats.kernel.laws._
     implicit def invariantK[F[_[_]]](implicit F: InvariantK[F]): IsomorphismsK[F] =
       new IsomorphismsK[F] {
-        def associativity[A[_], B[_], C[_]](fs: (F[ProdA_BC[A, B, C]#T], F[ProdAB_C[A, B, C]#T]))
-                                           (implicit EqFGH: Eq[F[Tuple3K[A, B, C]#T]]): Prop = {
+        def associativity[A[_], B[_], C[_]](fs: (F[ProdA_BC[A, B, C, ?]], F[ProdAB_C[A, B, C, ?]]))
+                                           (implicit EqFGH: Eq[F[Tuple3K[A, B, C, ?]]]): Prop = {
 
-          val fkA_BC_T3 = λ[ProdA_BC[A, B, C]#T ~> Tuple3K[A, B, C]#T ](p => (p.first, p.second.first, p.second.second))
-          val fkAB_C_T3 = λ[ProdAB_C[A, B, C]#T ~> Tuple3K[A, B, C]#T ](p => (p.first.first, p.first.second, p.second))
-          val fkT3_AB_C = λ[Tuple3K[A, B, C]#T ~> ProdAB_C[A, B, C]#T](t => Prod(Prod(t._1, t._2), t._3))
-          val fkT3_A_BC = λ[Tuple3K[A, B, C]#T ~> ProdA_BC[A, B, C]#T](t => Prod(t._1, Prod(t._2, t._3)))
+          val fkA_BC_T3 = λ[ProdA_BC[A, B, C, ?] ~> Tuple3K[A, B, C, ?] ]{ case Prod(a, Prod(b, c)) => (a, b, c) }
+          val fkAB_C_T3 = λ[ProdAB_C[A, B, C, ?] ~> Tuple3K[A, B, C, ?] ]{ case Prod(Prod(a, b), c) => (a, b, c) }
+          val fkT3_AB_C = λ[Tuple3K[A, B, C, ?] ~> ProdAB_C[A, B, C, ?]]{ case (a, b, c) => Prod(Prod(a, b), c) }
+          val fkT3_A_BC = λ[Tuple3K[A, B, C, ?] ~> ProdA_BC[A, B, C, ?]]{ case (a, b, c) => Prod(a, Prod(b, c)) }
 
-          F.imapK[ProdA_BC[A, B, C]#T, Tuple3K[A, B, C]#T](fs._1)(fkA_BC_T3)(fkT3_A_BC) ?==
-            F.imapK[ProdAB_C[A, B, C]#T, Tuple3K[A, B, C]#T](fs._2)(fkAB_C_T3)(fkT3_AB_C)
+          F.imapK[ProdA_BC[A, B, C, ?], Tuple3K[A, B, C, ?]](fs._1)(fkA_BC_T3)(fkT3_A_BC) ?==
+            F.imapK[ProdAB_C[A, B, C, ?], Tuple3K[A, B, C, ?]](fs._2)(fkAB_C_T3)(fkT3_AB_C)
         }
 
       }

@@ -23,7 +23,7 @@ import org.scalacheck.{Arbitrary, Cogen}
 import scala.util.Try
 import cats.laws.discipline.eq._
 
-@autoFunctorK
+@finalAlg @autoFunctorK
 trait SafeAlg[F[_]] {
   def parseInt(i: String): F[Int]
   def divide(dividend: Float, divisor: Float): F[Float]
@@ -52,7 +52,7 @@ object SafeAlg {
 object Interpreters {
   type F[T] = Try[T]
 
-  object tryInterpreter extends SafeAlg[F] {
+  implicit object tryInterpreter extends SafeAlg[F] {
     def parseInt(s: String) = Try(s.toInt)
     def divide(dividend: Float, divisor: Float): F[Float] = Try(dividend / divisor)
   }

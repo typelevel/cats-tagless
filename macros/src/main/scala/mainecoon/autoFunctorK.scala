@@ -18,49 +18,33 @@ package mainecoon
 
 import scala.annotation.StaticAnnotation
 import scala.meta._
-import scala.collection.immutable.Seq
 import autoFunctorK._
-
+import Util._
+import collection.immutable.Seq
 /**
  * auto generates an instance of [[FunctorK]]
  */
 class autoFunctorK extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
-    defn match {
-      case Term.Block(
-        Seq(t @ ClassOrTrait(templ, name), companion: Defn.Object)) =>
-        val newMethod = tranformKInst(templ, name)
-        val templateStats: Seq[Stat] =
-          newMethod +: companion.templ.stats.getOrElse(Nil)
-        val newCompanion = companion.copy(
-          templ = companion.templ.copy(stats = Some(templateStats)))
-        Term.Block(Seq(t, newCompanion))
-      case t @ ClassOrTrait(templ, name) =>
-        val newMethod = tranformKInst(templ, name)
-        val companion = q"object ${Term.Name(name.value)} { $newMethod }"
-        Term.Block(Seq(t, companion))
-      case t =>
-        abort("@algebra must annotate a class or a trait/class.")
-    }
-
+    enrichCompanion(defn, functorKInst)
   }
 }
 
 object autoFunctorK {
-  def tranformKInst(templ: Template, name: Type.Name): Defn = {
+  def functorKInst(templ: Template, name: Type.Name): Seq[Defn] = {
 
     val methods = templ.stats.map(_.collect {
       case q"def $methodName(..$params): $f[$resultType]" =>
         q"""def $methodName(..$params): G[$resultType] = fk(af.$methodName(..${params.map(p => Term.Name(p.name.value))}))"""
     }).getOrElse(Nil)
 
-    q"""
+    Seq(q"""
       implicit def ${Term.Name("functorKFor" + name.value)}: _root_.mainecoon.FunctorK[$name] = new _root_.mainecoon.FunctorK[$name] {
         def mapK[F[_], G[_]](af: $name[F])(fk: _root_.cats.~>[F, G]): $name[G] = new ${Ctor.Ref.Name(name.value)}[G] {
           ..$methods
         }
       }
-   """
+   """)
   }
 }
 

@@ -24,9 +24,16 @@ import collection.immutable.Seq
 class finalAlg extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
 
-    def addApply(template: Template, name: Type.Name): Seq[Defn] = {
-      Seq(q"def apply[F[_]](implicit inst: $name[F]): $name[F] = inst")
+    def newMethods(template: Template, name: Type.Name): Seq[Defn] = {
+      Seq(
+        q"def apply[F[_]](implicit inst: $name[F]): $name[F] = inst",
+        q"""implicit def autoDeriveFromFunctorK[F[_], G[_]](
+              implicit af: $name[F],
+              FK: _root_.mainecoon.FunctorK[$name],
+              fk: _root_.cats.~>[F, G])
+              : $name[G] = FK.mapK(af)(fk)
+         """)
     }
-    enrichCompanion(defn, addApply)
+    enrichCompanion(defn, newMethods)
   }
 }

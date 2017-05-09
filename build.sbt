@@ -5,7 +5,10 @@ import de.heikoseeberger.sbtheader.license.Apache2_0
 
 addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVersion.value.get + \"-SNAPSHOT\"")
 
-val gh = GitHubSettings(org = "com.kailuowang", proj = "mainecoon", publishOrg = "com.kailuowang", license = apache)
+
+
+val apache2 = "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")
+val gh = GitHubSettings(org = "com.kailuowang", proj = "mainecoon", publishOrg = "com.kailuowang", license = apache2)
 val devs = Seq(Dev("Kailuo Wang", "kauowang"))
 
 val vAll = Versions(versions, libraries, scalacPlugins)
@@ -19,6 +22,7 @@ lazy val rootPrj = project
   .aggregate(rootJVM, rootJS, testsJS, macrosJS)
   .dependsOn(rootJVM, rootJS, testsJS, macrosJS)
   .settings(noPublishSettings)
+  .disablePlugins(Sonatype)
 
 lazy val rootJVM = project
   .configure(mkRootJvmConfig(gh.proj, rootSettings, commonJvmSettings))
@@ -39,6 +43,7 @@ lazy val coreM   = module("core", CrossType.Pure)
   .settings(metaMacroSettings)
   .settings(simulacrumSettings(vAll))
   .enablePlugins(AutomateHeaderPlugin)
+  .disablePlugins(Sonatype)
 
 lazy val laws    = prj(lawsM)
 lazy val lawsJVM = lawsM.jvm
@@ -48,7 +53,7 @@ lazy val lawsM   = module("laws", CrossType.Pure)
   .settings(addLibs(vAll, "cats-laws"))
   .settings(disciplineDependencies)
   .enablePlugins(AutomateHeaderPlugin)
-
+  .disablePlugins(Sonatype)
 
 lazy val macros    = prj(macrosM)
 lazy val macrosJVM = macrosM.jvm
@@ -58,7 +63,7 @@ lazy val macrosM   = module("macros", CrossType.Pure)
   .settings(metaMacroSettings)
   .settings(copyrightHeader)
   .enablePlugins(AutomateHeaderPlugin)
-
+  .disablePlugins(Sonatype)
 
 lazy val tests    = prj(testsM)
 lazy val testsJVM = testsM.jvm

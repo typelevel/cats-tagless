@@ -110,7 +110,18 @@ lazy val commonJsSettings = Seq(scalaJSStage in Global := FastOptStage)
 
 lazy val commonJvmSettings = Seq()
 
-lazy val publishSettings = sharedPublishSettings(gh, devs) ++ credentialSettings ++ sharedReleaseProcess
+lazy val publishSettings = Seq(
+  bintrayOrganization := Some("kailuowang"),
+  bintrayPackageLabels := Seq("henkan"),
+  licenses += gh.license,
+  scmInfo :=  Some(ScmInfo(url(gh.home), "scm:git:" + gh.repo)),
+  apiURL := Some(url(gh.api)),
+  releaseCrossBuild := true,
+  publishMavenStyle := true,
+  homepage := Some(url(gh.home)),
+  pomIncludeRepository := { _ => false },
+  publishArtifact in Test := false
+)
 
 lazy val scoverageSettings = sharedScoverageSettings(60)
 

@@ -20,7 +20,7 @@ package discipline
 
 import cats.{Eq, ~>}
 import org.scalacheck.Prop._
-import org.scalacheck.{Arbitrary, Prop}
+import org.scalacheck.Arbitrary
 import org.typelevel.discipline.Laws
 import cats.laws.discipline._
 

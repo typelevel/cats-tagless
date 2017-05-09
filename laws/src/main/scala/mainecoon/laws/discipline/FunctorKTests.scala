@@ -18,10 +18,9 @@ package mainecoon
 package laws
 package discipline
 
-import org.scalacheck.{Arbitrary, Prop}
-import Prop._
+import org.scalacheck.Arbitrary
+import org.scalacheck.Prop._
 import cats.{Eq, ~>}
-import org.typelevel.discipline.Laws
 import cats.laws.discipline._
 
 trait FunctorKTests[F[_[_]]] extends InvariantKTests[F] {

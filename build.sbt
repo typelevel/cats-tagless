@@ -1,3 +1,5 @@
+import com.typesafe.sbt.SbtGhPages.GhPagesKeys.ghpagesNoJekyll
+import com.typesafe.sbt.SbtGit.git
 import org.typelevel.Dependencies._
 import de.heikoseeberger.sbtheader.license.Apache2_0
 
@@ -35,6 +37,7 @@ lazy val coreM   = module("core", CrossType.Pure)
   .settings(addLibs(vAll, "cats-core"))
   .settings(addTestLibs(vAll, "scalatest"))
   .settings(metaMacroSettings)
+  .settings(simulacrumSettings(vAll))
   .enablePlugins(AutomateHeaderPlugin)
 
 lazy val laws    = prj(lawsM)
@@ -70,15 +73,37 @@ lazy val testsM   = module("tests", CrossType.Pure)
 
 
 /** Docs - Generates and publishes the scaladoc API documents and the project web site.*/
-lazy val docs = project.configure(mkDocConfig(gh, rootSettings, commonJvmSettings,
-  coreJVM))
+lazy val docs = project.configure(mkMyDocConfig(gh, rootSettings ++ metaMacroSettings ++ unidocCommonSettings ++ simulacrumSettings(vAll), commonJvmSettings,
+  coreJVM, macrosJVM))
+
+def mkMyDocConfig(gh: GitHubSettings, projSettings: Seq[sbt.Setting[_]], jvmSettings: Seq[sbt.Setting[_]],
+                deps: Project*): Project ⇒ Project =
+  _.settings(projSettings)
+    .settings(moduleName := gh.proj + "-docs")
+    .settings(noPublishSettings)
+    .settings(ghpages.settings)
+    .settings(jvmSettings)
+    .dependsOn(deps.map( ClasspathDependency(_, Some("compile;test->test"))):_*)
+    .enablePlugins(MicrositesPlugin)
+    .settings(
+      organization  := gh.organisation,
+      autoAPIMappings := true,
+      micrositeName := "Mainecoon",
+      micrositeGithubOwner := "kailuowang",
+      micrositeGithubRepo := "mainecoon",
+      ghpagesNoJekyll := false,
+      tutScalacOptions ~= (_.filterNot(Set("-Ywarn-unused-import", "-Ywarn-dead-code"))),
+      git.remoteRepo := gh.repo,
+      includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md")
+
 
 lazy val buildSettings = sharedBuildSettings(gh, vAll)
 
 lazy val commonSettings = sharedCommonSettings ++ Seq(
   parallelExecution in Test := false,
+  scalacOptions ++= scalacAllOptions,
   crossScalaVersions := Seq(vAll.vers("scalac_2.11"), scalaVersion.value)
-) ++ warnUnusedImport ++ unidocCommonSettings ++
+) ++ xlintSettings ++ warnUnusedImport ++ unidocCommonSettings ++
   addCompilerPlugins(vAll, "kind-projector") ++ copyrightHeader
 
 lazy val commonJsSettings = Seq(scalaJSStage in Global := FastOptStage)
@@ -97,7 +122,7 @@ lazy val metaMacroSettings: Seq[Def.Setting[_]] = Seq(
   libraryDependencies += "org.scalameta" %% "scalameta" % "1.7.0" % Provided,
   scalacOptions in (Compile, console) := Seq(), // macroparadise plugin doesn't work in repl yet.
   addCompilerPlugin("org.scalameta" % "paradise" % "3.0.0-M8" cross CrossVersion.full),
-  scalacOptions ++= scalacAllOptions :+ "-Xplugin-require:macroparadise",
+  scalacOptions += "-Xplugin-require:macroparadise",
   sources in (Compile, doc) := Nil // macroparadise doesn't work with scaladoc yet.
 )
 

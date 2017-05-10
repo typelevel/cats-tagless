@@ -81,28 +81,29 @@ lazy val testsM   = module("tests", CrossType.Pure)
 
 
 /** Docs - Generates and publishes the scaladoc API documents and the project web site.*/
-lazy val docs = project.configure(mkMyDocConfig(gh, rootSettings ++ metaMacroSettings ++ unidocCommonSettings ++ simulacrumSettings(vAll), commonJvmSettings,
-  coreJVM, macrosJVM))
+lazy val docs = project
+  .settings(rootSettings)
+  .settings(moduleName := gh.proj + "-docs")
+  .settings(noPublishSettings)
+  .settings(unidocCommonSettings)
+  .settings(simulacrumSettings(vAll))
+  .settings(commonJvmSettings)
+  .settings(metaMacroSettings)
+  .settings(addLibs(vAll, "cats-free"))
+  .dependsOn(List(coreJVM, macrosJVM).map( ClasspathDependency(_, Some("compile;test->test"))):_*)
+  .enablePlugins(MicrositesPlugin)
+  .settings(
+    organization  := gh.organisation,
+    autoAPIMappings := true,
+    micrositeName := "Mainecoon",
+    micrositeDescription := "A library for transforming and composing final tagless algebras",
+    micrositeGithubOwner := "kailuowang",
+    micrositeGithubRepo := "mainecoon",
+    ghpagesNoJekyll := false,
+    tutScalacOptions ~= (_.filterNot(Set("-Ywarn-unused-import", "-Ywarn-dead-code"))),
+    git.remoteRepo := gh.repo,
+    includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md")
 
-def mkMyDocConfig(gh: GitHubSettings, projSettings: Seq[sbt.Setting[_]], jvmSettings: Seq[sbt.Setting[_]],
-                deps: Project*): Project ⇒ Project =
-  _.settings(projSettings)
-    .settings(moduleName := gh.proj + "-docs")
-    .settings(noPublishSettings)
-    .settings(ghpages.settings)
-    .settings(jvmSettings)
-    .dependsOn(deps.map( ClasspathDependency(_, Some("compile;test->test"))):_*)
-    .enablePlugins(MicrositesPlugin)
-    .settings(
-      organization  := gh.organisation,
-      autoAPIMappings := true,
-      micrositeName := "Mainecoon",
-      micrositeGithubOwner := "kailuowang",
-      micrositeGithubRepo := "mainecoon",
-      ghpagesNoJekyll := false,
-      tutScalacOptions ~= (_.filterNot(Set("-Ywarn-unused-import", "-Ywarn-dead-code"))),
-      git.remoteRepo := gh.repo,
-      includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md")
 
 
 lazy val buildSettings = sharedBuildSettings(gh, vAll)

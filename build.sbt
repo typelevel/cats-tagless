@@ -22,16 +22,19 @@ lazy val rootPrj = project
   .aggregate(rootJVM, rootJS, testsJS, macrosJS)
   .dependsOn(rootJVM, rootJS, testsJS, macrosJS)
   .settings(noPublishSettings)
+  .disablePlugins(Sonatype)
 
 lazy val rootJVM = project
   .configure(mkRootJvmConfig(gh.proj, rootSettings, commonJvmSettings))
   .aggregate(coreJVM, lawsJVM, testsJVM, macrosJVM, docs)
   .dependsOn(coreJVM, lawsJVM, testsJVM, macrosJVM)
+  .settings(noPublishSettings)
   .disablePlugins(Sonatype)
 
 lazy val rootJS = project
   .configure(mkRootJsConfig(gh.proj, rootSettings, commonJsSettings))
   .aggregate(coreJS, lawsJS)
+  .settings(noPublishSettings)
   .disablePlugins(Sonatype)
 
 lazy val core    = prj(coreM)

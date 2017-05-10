@@ -93,5 +93,7 @@ object autoFunctorKTests {
     def a(i: Int): F[T]
   }
 
-  implicit val algWithExtraTP: AlgWithExtraTP[Try, String] = (i: Int) => Try(i.toString)
+  implicit val algWithExtraTP: AlgWithExtraTP[Try, String] = new AlgWithExtraTP[Try, String] {
+    def a(i: Int) = Try(i.toString)
+  }
 }

@@ -48,8 +48,12 @@ class autoFunctorKTests extends MainecoonTestSuite {
     tryInt.mapK(fk).b(2) should be(2)
   }
 
+
+  test("Alg with extra type parameters") {
+    AlgWithExtraTP[Option, String].a(5) should be(Some("5"))
+  }
+
   test("Alg with type member") {
-    implicit val f : Try ~> Option = fk
     implicit val tryInt = new AlgWithTypeMember[Try] {
       type T = String
       def a(i: Int): Try[String] = Try(i.toString)
@@ -57,14 +61,15 @@ class autoFunctorKTests extends MainecoonTestSuite {
 
     AlgWithTypeMember[Option].a(3) should be(Some("3"))
 
-    val algAux: AlgWithTypeMember.Aux[Option, String] = AlgWithTypeMember.mapK(tryInt)(f)
+    val algAux: AlgWithTypeMember.Aux[Option, String] = AlgWithTypeMember.mapK(tryInt)(fk)
     algAux.a(4) should be(Some("4"))
   }
+
 }
 
 
 object autoFunctorKTests {
-  val fk : Try ~> Option = λ[Try ~> Option](_.toOption)
+  implicit val fk : Try ~> Option = λ[Try ~> Option](_.toOption)
 
   @autoFunctorK
   trait AlgWithNonEffectMethod[F[_]] {
@@ -81,4 +86,12 @@ object autoFunctorKTests {
   object AlgWithTypeMember {
     type Aux[F[_], T0] = AlgWithTypeMember[F] { type T = T0 }
   }
+
+
+  @autoFunctorK @finalAlg
+  trait AlgWithExtraTP[F[_], T] {
+    def a(i: Int): F[T]
+  }
+
+  implicit val algWithExtraTP: AlgWithExtraTP[Try, String] = (i: Int) => Try(i.toString)
 }

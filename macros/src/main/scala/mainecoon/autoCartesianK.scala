@@ -27,7 +27,7 @@ import collection.immutable.Seq
  */
 class autoCartesianK extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
-    enrichCompanion(defn, cartesianKInst)
+    enrichCompanion(defn)(cartesianKInst)
   }
 }
 
@@ -39,14 +39,17 @@ object autoCartesianK {
     val methods = templ.stats.map(_.collect {
       case q"def $methodName(..$params): $f[$resultType]" =>
 
-        q"""def $methodName(..$params): _root_.cats.data.Prod[F, G, $resultType] = _root_.cats.data.Prod(af.$methodName(..${arguments(params)}), ag.$methodName(..${arguments(params)}))"""
+        q"""def $methodName(..$params): _root_.cats.data.Prod[F, G, $resultType] =
+           _root_.cats.data.Prod(af.$methodName(..${arguments(params)}), ag.$methodName(..${arguments(params)}))"""
     }).getOrElse(Nil)
 
     Seq(q"""
-      implicit def ${Term.Name("cartesianKFor" + name.value)}: _root_.mainecoon.CartesianK[$name] = new _root_.mainecoon.CartesianK[$name] {
-        def productK[F[_], G[_]](af: $name[F], ag: $name[G]): $name[({type λ[A]=_root_.cats.data.Prod[F, G, A]})#λ] = new ${Ctor.Ref.Name(name.value)}[({type λ[A]=_root_.cats.data.Prod[F, G, A]})#λ] {
-          ..$methods
-        }
+      implicit def ${Term.Name("cartesianKFor" + name.value)}: _root_.mainecoon.CartesianK[$name] =
+        new _root_.mainecoon.CartesianK[$name] {
+          def productK[F[_], G[_]](af: $name[F], ag: $name[G]): $name[({type λ[A]=_root_.cats.data.Prod[F, G, A]})#λ] =
+            new ${Ctor.Ref.Name(name.value)}[({type λ[A]=_root_.cats.data.Prod[F, G, A]})#λ] {
+              ..$methods
+            }
       }
    """)
   }

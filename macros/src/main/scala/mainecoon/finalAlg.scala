@@ -24,17 +24,19 @@ import collection.immutable.Seq
 class finalAlg extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
 
-    def newMethods(cls: ClassOrTrait): Seq[Defn] = {
+    def newMethods(ad: AlgDefn): Seq[Defn] = {
+      import ad._
       import cls._
+
       Seq(
-        q"def apply[F[_]](implicit inst: $name[F]): $name[F] = inst",
-        q"""implicit def autoDeriveFromFunctorK[F[_], G[_]](
-              implicit af: $name[F],
-              FK: _root_.mainecoon.FunctorK[$name],
+        q"def apply[..${cls.tparams}](implicit inst: $name[..$tArgs]): $name[..$tArgs] = inst",
+        q"""implicit def autoDeriveFromFunctorK[${effectType}, G[_], ..${extraTParams}](
+              implicit af: $name[..$tArgs],
+              FK: _root_.mainecoon.FunctorK[({type λ[Ƒ[_]] = $name[Ƒ, ..${extraTArgs}]})#λ],
               fk: _root_.cats.~>[F, G])
-              : $name[G] = FK.mapK(af)(fk)
+              : $name[G, ..${extraTArgs}] = FK.mapK(af)(fk)
          """)
     }
-    enrichCompanion(defn, newMethods)
+    enrichAlg(defn)(newMethods)
   }
 }

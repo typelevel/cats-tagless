@@ -21,6 +21,7 @@ import cats.arrow.FunctionK
 
 import scala.util.{Success, Try}
 import cats.~>
+import FinalAlgTests._
 
 class FinalAlgTests extends MainecoonTestSuite {
   test("companion apply") {
@@ -34,4 +35,18 @@ class FinalAlgTests extends MainecoonTestSuite {
     SafeAlg[Option].parseInt("10") should be(Some(10))
   }
 
+  test("extra TP") {
+    AlgWithExtraTP[Try, String].a(3) should be(Success("3"))
+  }
+
+}
+
+object FinalAlgTests {
+
+  @finalAlg
+  trait AlgWithExtraTP[F[_], T] {
+    def a(i: Int): F[T]
+  }
+
+  implicit val algWithExtraTP: AlgWithExtraTP[Try, String] = (i: Int) => Try(i.toString)
 }

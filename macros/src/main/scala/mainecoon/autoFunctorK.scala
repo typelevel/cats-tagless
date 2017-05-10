@@ -27,13 +27,15 @@ import collection.immutable.Seq
  */
 class autoFunctorK extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
-    enrichCompanion(defn, functorKInst)
+    enrichAlg(defn)(functorKInst)
   }
 }
 
 object autoFunctorK {
-  def functorKInst(cls: ClassOrTrait): Seq[Defn] = {
+  def functorKInst(ad: AlgDefn): Seq[Defn] = {
+    import ad._
     import cls._
+
     val methods = templ.stats.map(_.collect {
       case q"def $methodName(..$params): $f[$resultType]" =>
         q"""def $methodName(..$params): G[$resultType] = fk(af.$methodName(..${arguments(params)}))"""
@@ -48,17 +50,20 @@ object autoFunctorK {
 
     val typeMember = methods.collect{ case tm: Defn.Type => tm }
 
-    val typeSignature = if(typeMember.isEmpty) t"$name[G]" else t"$name[G] { ..$typeMember }"
+    val typeSignature = if(typeMember.isEmpty) t"$name[G, ..${extraTArgs}]" else t"$name[G, ..${extraTArgs}] { ..$typeMember }"
 
     //create a mapK method in the companion object with more precise refined type signature
     Seq(q"""
-      def mapK[F[_], G[_]](af: $name[F])(fk: _root_.cats.~>[F, G]): $typeSignature = new ${Ctor.Ref.Name(name.value)}[G] {
-        ..$methods
-      }""",
+      def mapK[F[_], G[_], ..$extraTParams](af: $name[..${tArgs}])(fk: _root_.cats.~>[F, G]): $typeSignature =
+        new ${Ctor.Ref.Name(name.value)}[G, ..${extraTArgs}] {
+          ..$methods
+        }""",
       q"""
-      implicit def ${Term.Name("functorKFor" + name.value)}: _root_.mainecoon.FunctorK[$name] = new _root_.mainecoon.FunctorK[$name] {
-        def mapK[F[_], G[_]](af: $name[F])(fk: _root_.cats.~>[F, G]): $name[G] = ${Term.Name(name.value)}.mapK(af)(fk)
-      }
+        implicit def ${Term.Name("functorKFor" + name.value)}[..$extraTParams]: _root_.mainecoon.FunctorK[$typeLambdaForFunctorK] =
+          new _root_.mainecoon.FunctorK[$typeLambdaForFunctorK] {
+            def mapK[F[_], G[_]](af: $name[F, ..${extraTArgs}])(fk: _root_.cats.~>[F, G]): $name[G, ..${extraTArgs}] =
+              ${Term.Name(name.value)}.mapK(af)(fk)
+          }
    """)
   }
 }

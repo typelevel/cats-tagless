@@ -36,7 +36,14 @@ object autoFunctorK {
 
     val methods = templ.stats.map(_.collect {
       case q"def $methodName(..$params): $f[$resultType]" =>
-        q"""def $methodName(..$params): G[$resultType] = fk(af.$methodName(..${params.map(p => Term.Name(p.name.value))}))"""
+        q"""def $methodName(..$params): G[$resultType] = fk(af.$methodName(..${arguments(params)}))"""
+
+      case q"def $methodName(..$params): $resultType" =>
+        q"""def $methodName(..$params): $resultType = af.$methodName(..${arguments(params)})"""
+
+      case q"type $t" =>
+        q"type $t = ${Type.Name("af." + t.value)}"
+
     }).getOrElse(Nil)
 
     Seq(q"""

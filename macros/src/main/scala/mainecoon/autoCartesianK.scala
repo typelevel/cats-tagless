@@ -36,8 +36,8 @@ object autoCartesianK {
 
     val methods = templ.stats.map(_.collect {
       case q"def $methodName(..$params): $f[$resultType]" =>
-        val arguments = params.map(p => Term.Name(p.name.value))
-        q"""def $methodName(..$params): _root_.cats.data.Prod[F, G, $resultType] = _root_.cats.data.Prod(af.$methodName(..$arguments), ag.$methodName(..$arguments))"""
+
+        q"""def $methodName(..$params): _root_.cats.data.Prod[F, G, $resultType] = _root_.cats.data.Prod(af.$methodName(..${arguments(params)}), ag.$methodName(..${arguments(params)}))"""
     }).getOrElse(Nil)
 
     Seq(q"""

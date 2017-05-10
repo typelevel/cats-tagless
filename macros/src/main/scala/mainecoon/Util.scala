@@ -48,4 +48,7 @@ private[mainecoon] object Util {
       case _             => None
     }
   }
+
+  def arguments(params: Seq[Term.Param]) =
+     params.map(p => Term.Name(p.name.value))
 }

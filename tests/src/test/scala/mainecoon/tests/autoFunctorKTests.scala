@@ -22,12 +22,10 @@ import scala.util.Try
 import cats.~>
 import cats.laws.discipline.SerializableTests
 import mainecoon.laws.discipline.FunctorKTests
-
+import autoFunctorKTests._
 
 class autoFunctorKTests extends MainecoonTestSuite {
   test("simple mapK") {
-
-    val fk : Try ~> Option = λ[Try ~> Option](_.toOption)
 
     val optionParse: SafeAlg[Option] = Interpreters.tryInterpreter.mapK(fk)
 
@@ -39,5 +37,40 @@ class autoFunctorKTests extends MainecoonTestSuite {
 
   checkAll("ParseAlg[Option]", FunctorKTests[SafeAlg].functorK[Try, Option, List, Int])
   checkAll("FunctorK[ParseAlg]", SerializableTests.serializable(FunctorK[SafeAlg]))
+
+  test("Alg with non effect method") {
+    val tryInt = new AlgWithNonEffectMethod[Try] {
+      def a(i: Int): Try[Int] = Try(i)
+      def b(i: Int): Int = i
+    }
+
+    tryInt.mapK(fk).a(3) should be(Some(3))
+    tryInt.mapK(fk).b(2) should be(2)
+  }
+
+  test("Alg with type member") {
+    val tryInt = new AlgWithTypeMember[Try] {
+      type T = String
+      def a(i: Int): Try[String] = Try(i.toString)
+    }
+
+    tryInt.mapK(fk).a(3) should be(Some("3"))
+  }
 }
 
+
+object autoFunctorKTests {
+  val fk : Try ~> Option = λ[Try ~> Option](_.toOption)
+
+  @autoFunctorK
+  trait AlgWithNonEffectMethod[F[_]] {
+    def a(i: Int): F[Int]
+    def b(i: Int): Int
+  }
+
+  @autoFunctorK
+  trait AlgWithTypeMember[F[_]] {
+    type T
+    def a(i: Int): F[T]
+  }
+}

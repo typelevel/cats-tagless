@@ -16,37 +16,44 @@
 
 package mainecoon
 
+import mainecoon.Util.ClassOrTrait.FromDefn
+
 import scala.meta.Term.Block
 import scala.meta._
 import scala.collection.immutable.Seq
 
 private[mainecoon] object Util {
 
-  def enrichCompanion(defn: Any, f: (Template, Type.Name) => Seq[Defn]) : Block = {
+  def enrichCompanion(defn: Any, f: ClassOrTrait => Seq[Defn]) : Block = {
     defn match {
       case Term.Block(
-      Seq(t@ClassOrTrait(templ, name), companion: Defn.Object)) =>
-        val newStat = f(templ, name)
+      Seq(t@FromDefn(cls), companion: Defn.Object)) =>
+        val newStat = f(cls)
         val templateStats: Seq[Stat] =
           newStat ++ companion.templ.stats.getOrElse(Nil)
         val newCompanion = companion.copy(
           templ = companion.templ.copy(stats = Some(templateStats)))
         Term.Block(Seq(t, newCompanion))
-      case t@ClassOrTrait(templ, name) =>
-        val newStat = f(templ, name)
-        val companion = q"object ${Term.Name(name.value)} { ..$newStat }"
+      case t@FromDefn(cls) =>
+        val newStat = f(cls)
+        val companion = q"object ${Term.Name(cls.name.value)} { ..$newStat }"
         Term.Block(Seq(t, companion))
       case t =>
         abort("@algebra must annotate a class or a trait/class.")
     }
   }
 
+  case class ClassOrTrait(name: Type.Name, templ: Template, tparams: Seq[Type.Param])
+
   object ClassOrTrait {
-    def unapply(any: Defn): Option[(Template, Type.Name)] = any match {
-      case t: Defn.Class => Some((t.templ, t.name))
-      case t: Defn.Trait => Some((t.templ, t.name))
-      case _             => None
+    object FromDefn {
+      def unapply(any: Defn): Option[ClassOrTrait] = any match {
+        case t: Defn.Class => Some(ClassOrTrait(t.name, t.templ, t.tparams))
+        case t: Defn.Trait => Some(ClassOrTrait(t.name, t.templ, t.tparams))
+        case _             => None
+      }
     }
+
   }
 
   def arguments(params: Seq[Term.Param]) =

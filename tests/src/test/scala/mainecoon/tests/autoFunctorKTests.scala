@@ -49,12 +49,16 @@ class autoFunctorKTests extends MainecoonTestSuite {
   }
 
   test("Alg with type member") {
-    val tryInt = new AlgWithTypeMember[Try] {
+    implicit val f : Try ~> Option = fk
+    implicit val tryInt = new AlgWithTypeMember[Try] {
       type T = String
       def a(i: Int): Try[String] = Try(i.toString)
     }
 
-    tryInt.mapK(fk).a(3) should be(Some("3"))
+    AlgWithTypeMember[Option].a(3) should be(Some("3"))
+
+    val algAux: AlgWithTypeMember.Aux[Option, String] = AlgWithTypeMember.mapK(tryInt)(f)
+    algAux.a(4) should be(Some("4"))
   }
 }
 
@@ -68,9 +72,13 @@ object autoFunctorKTests {
     def b(i: Int): Int
   }
 
-  @autoFunctorK
+  @autoFunctorK @finalAlg
   trait AlgWithTypeMember[F[_]] {
     type T
     def a(i: Int): F[T]
+  }
+
+  object AlgWithTypeMember {
+    type Aux[F[_], T0] = AlgWithTypeMember[F] { type T = T0 }
   }
 }

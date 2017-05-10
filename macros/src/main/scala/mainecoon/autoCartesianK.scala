@@ -32,7 +32,9 @@ class autoCartesianK extends StaticAnnotation {
 }
 
 object autoCartesianK {
-  def cartesianKInst(templ: Template, name: Type.Name): Seq[Defn] = {
+  def cartesianKInst(cls: ClassOrTrait): Seq[Defn] = {
+
+    import cls._
 
     val methods = templ.stats.map(_.collect {
       case q"def $methodName(..$params): $f[$resultType]" =>

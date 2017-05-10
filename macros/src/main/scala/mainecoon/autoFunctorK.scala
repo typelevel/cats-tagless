@@ -32,8 +32,8 @@ class autoFunctorK extends StaticAnnotation {
 }
 
 object autoFunctorK {
-  def functorKInst(templ: Template, name: Type.Name): Seq[Defn] = {
-
+  def functorKInst(cls: ClassOrTrait): Seq[Defn] = {
+    import cls._
     val methods = templ.stats.map(_.collect {
       case q"def $methodName(..$params): $f[$resultType]" =>
         q"""def $methodName(..$params): G[$resultType] = fk(af.$methodName(..${arguments(params)}))"""
@@ -42,15 +42,22 @@ object autoFunctorK {
         q"""def $methodName(..$params): $resultType = af.$methodName(..${arguments(params)})"""
 
       case q"type $t" =>
-        q"type $t = ${Type.Name("af." + t.value)}"
+        q"type $t = ${Type.Select(Term.Name("af"), Type.Name(t.value))}"
 
     }).getOrElse(Nil)
 
+    val typeMember = methods.collect{ case tm: Defn.Type => tm }
+
+    val typeSignature = if(typeMember.isEmpty) t"$name[G]" else t"$name[G] { ..$typeMember }"
+
+    //create a mapK method in the companion object with more precise refined type signature
     Seq(q"""
+      def mapK[F[_], G[_]](af: $name[F])(fk: _root_.cats.~>[F, G]): $typeSignature = new ${Ctor.Ref.Name(name.value)}[G] {
+        ..$methods
+      }""",
+      q"""
       implicit def ${Term.Name("functorKFor" + name.value)}: _root_.mainecoon.FunctorK[$name] = new _root_.mainecoon.FunctorK[$name] {
-        def mapK[F[_], G[_]](af: $name[F])(fk: _root_.cats.~>[F, G]): $name[G] = new ${Ctor.Ref.Name(name.value)}[G] {
-          ..$methods
-        }
+        def mapK[F[_], G[_]](af: $name[F])(fk: _root_.cats.~>[F, G]): $name[G] = ${Term.Name(name.value)}.mapK(af)(fk)
       }
    """)
   }

@@ -24,7 +24,8 @@ import collection.immutable.Seq
 class finalAlg extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
 
-    def newMethods(template: Template, name: Type.Name): Seq[Defn] = {
+    def newMethods(cls: ClassOrTrait): Seq[Defn] = {
+      import cls._
       Seq(
         q"def apply[F[_]](implicit inst: $name[F]): $name[F] = inst",
         q"""implicit def autoDeriveFromFunctorK[F[_], G[_]](

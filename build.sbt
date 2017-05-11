@@ -100,6 +100,7 @@ lazy val docs = project
     micrositeGithubOwner := "kailuowang",
     micrositeGithubRepo := "mainecoon",
     micrositeHighlightTheme := "atom-one-light",
+    fork in tut := true,
     micrositePalette := Map(
       "brand-primary"     -> "#51839A",
       "brand-secondary"   -> "#EDAF79",

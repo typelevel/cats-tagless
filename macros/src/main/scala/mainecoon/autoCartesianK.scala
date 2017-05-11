@@ -36,11 +36,12 @@ object autoCartesianK {
 
     import cls._
 
-    val methods = templ.stats.map(_.collect {
+    val methods = templ.stats.map(_.map {
       case q"def $methodName(..$params): $f[$resultType]" =>
 
         q"""def $methodName(..$params): _root_.cats.data.Prod[F, G, $resultType] =
            _root_.cats.data.Prod(af.$methodName(..${arguments(params)}), ag.$methodName(..${arguments(params)}))"""
+      case st => abort(s"autoCartesianK does not support algebra with such statement: $st")
     }).getOrElse(Nil)
 
     Seq(q"""

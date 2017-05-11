@@ -8,8 +8,8 @@ addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVe
 
 
 val apache2 = "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")
-val gh = GitHubSettings(org = "com.kailuowang", proj = "mainecoon", publishOrg = "com.kailuowang", license = apache2)
-val devs = Seq(Dev("Kailuo Wang", "kauowang"))
+val gh = GitHubSettings(org = "kailuowang", proj = "mainecoon", publishOrg = "com.kailuowang", license = apache2)
+val devs = Seq(Dev("Kailuo Wang", "kailuowang"))
 
 val vAll = Versions(versions, libraries, scalacPlugins)
 
@@ -100,7 +100,17 @@ lazy val docs = project
     micrositeGithubOwner := "kailuowang",
     micrositeGithubRepo := "mainecoon",
     micrositeHighlightTheme := "atom-one-light",
+    micrositePalette := Map(
+      "brand-primary"     -> "#51839A",
+      "brand-secondary"   -> "#EDAF79",
+      "brand-tertiary"    -> "#96A694",
+      "gray-dark"         -> "#192946",
+      "gray"              -> "#424F67",
+      "gray-light"        -> "#E3E2E3",
+      "gray-lighter"      -> "#F4F3F4",
+      "white-color"       -> "#FFFFFF"),
     ghpagesNoJekyll := false,
+    micrositeAuthor := "Kailuo Wang",
     tutScalacOptions ~= (_.filterNot(Set("-Ywarn-unused-import", "-Ywarn-dead-code"))),
     git.remoteRepo := gh.repo,
     includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md")

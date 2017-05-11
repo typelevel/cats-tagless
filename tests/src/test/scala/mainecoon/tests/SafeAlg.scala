@@ -62,4 +62,17 @@ object Interpreters {
     def divide(dividend: Float, divisor: Float): Eval[Float] = Eval.later(dividend / divisor)
   }
 
+  implicit object tryInvAlgInterpreter extends InvAlg[Try] {
+    def parseInt(s: Try[String]) = s.map(_.toInt)
+    def divide(dividend: Float, divisor: Float): Try[Float] = Try(dividend / divisor)
+  }
+
+
+}
+
+
+@finalAlg @autoInvariantK
+trait InvAlg[F[_]] {
+  def parseInt(i: F[String]): F[Int]
+  def divide(dividend: Float, divisor: Float): F[Float]
 }

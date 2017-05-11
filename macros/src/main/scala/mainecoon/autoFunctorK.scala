@@ -18,7 +18,6 @@ package mainecoon
 
 import scala.annotation.StaticAnnotation
 import scala.meta._
-import autoFunctorK._
 import Util._
 import collection.immutable.Seq
 
@@ -27,46 +26,75 @@ import collection.immutable.Seq
  */
 class autoFunctorK extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
-    enrichAlg(defn)(functorKInst)
+    enrichAlg(defn)(a => new CovariantKInstanceGenerator(a).newDef)
   }
 }
 
-object autoFunctorK {
-  def functorKInst(ad: AlgDefn): Seq[Defn] = {
-    import ad._
-    import cls._
 
-    val methods = templ.stats.map(_.collect {
-      case q"def $methodName(..$params): $f[$resultType]" =>
-        q"""def $methodName(..$params): G[$resultType] = fk(af.$methodName(..${arguments(params)}))"""
+abstract class FunctorKInstanceGenerator(ad: AlgDefn) {
+  import ad._
+  import cls._
 
-      case q"def $methodName(..$params): $resultType" =>
-        q"""def $methodName(..$params): $resultType = af.$methodName(..${arguments(params)})"""
-
+  lazy val newTypeMember: Seq[Defn.Type] =
+    fromExistingMethods {
       case q"type $t" =>
         q"type $t = ${Type.Select(Term.Name("af"), Type.Name(t.value))}"
+    }
 
-    }).getOrElse(Nil)
+  def fromExistingMethods[T <: Stat](pf: PartialFunction[Stat, T]): Seq[T] =
+    templ.stats.map(_.collect(pf)).getOrElse(Nil)
 
-    val typeMember = methods.collect{ case tm: Defn.Type => tm }
+  lazy val typeSignature: Type = {
+    if(newTypeMember.isEmpty) t"$name[..${tArgs("G")}]" else t"$name[..${tArgs("G")}] { ..$newTypeMember }"
+  }
 
-    val typeSignature = if(typeMember.isEmpty) t"$name[..${tArgs("G")}]" else t"$name[..${tArgs("G")}] { ..$typeMember }"
+  def covariantTransform(resultType: Type, originImpl: Term): (Type, Term) = {
+    resultType match {
+      case t"${Type.Name(`effectTypeName`)}[$resultTpeArg]" =>
+        (t"G[$resultTpeArg]", q"fk($originImpl)")
+      case _ => (resultType, originImpl)
+    }
+  }
+}
+
+class CovariantKInstanceGenerator(algDefn: AlgDefn) extends FunctorKInstanceGenerator(algDefn) {
+  import algDefn._
+  import cls._
+
+  lazy val covariantKMethods: Seq[Stat] =
+    fromExistingMethods {
+      case q"def $methodName(..$params): $resultType" =>
+        val (newResultType, newImpl) = covariantTransform(resultType, q"af.$methodName(..${arguments(params)})" )
+        q"""def $methodName(..$params): $newResultType = $newImpl"""
+    }
+
+  lazy val instanceDef: Seq[Defn] = {
 
     //create a mapK method in the companion object with more precise refined type signature
     Seq(q"""
-      def mapK[F[_], G[_], ..$extraTParams](af: $name[..${tArgs()}])(fk: _root_.cats.~>[F, G]): $typeSignature =
+      def mapK[F[_], G[_], ..$extraTParams](af: $name[..${tArgs()}])(fk: _root_.cats.~>[F, G]): ${typeSignature} =
         new ${Ctor.Ref.Name(name.value)}[..${tArgs("G")}] {
-          ..$methods
+          ..${covariantKMethods ++ newTypeMember}
         }""",
       q"""
-        implicit def ${Term.Name("functorKFor" + name.value)}[..$extraTParams]: _root_.mainecoon.FunctorK[$typeLambdaForFunctorK] =
-          new _root_.mainecoon.FunctorK[$typeLambdaForFunctorK] {
+        implicit def ${Term.Name("functorKFor" + name.value)}[..$extraTParams]: _root_.mainecoon.FunctorK[$typeLambdaVaryingEffect] =
+          new _root_.mainecoon.FunctorK[$typeLambdaVaryingEffect] {
             def mapK[F[_], G[_]](af: $name[..${tArgs("F")}])(fk: _root_.cats.~>[F, G]): $name[..${tArgs("G")}] =
               ${Term.Name(name.value)}.mapK(af)(fk)
           }
-   """)
-  }
-}
+      """,
+      q"""
+         implicit def autoDeriveFromFunctorK[${effectType}, G[_], ..${extraTParams}](
+           implicit af: $name[..${tArgs()}],
+           FK: _root_.mainecoon.FunctorK[$typeLambdaVaryingEffect],
+           fk: _root_.cats.~>[F, G])
+           : $name[..${tArgs("G")}] = FK.mapK(af)(fk)
+        """
 
+    )
+  }
+
+  lazy val newDef: TypeDefinition = cls.copy(companion = cls.companion.addStats(instanceDef))
+}
 
 

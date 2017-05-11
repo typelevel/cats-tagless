@@ -23,6 +23,7 @@ import scala.util.{Success, Try}
 import cats.~>
 import FinalAlgTests._
 
+
 class FinalAlgTests extends MainecoonTestSuite {
   test("companion apply") {
     import Interpreters.tryInterpreter

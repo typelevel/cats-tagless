@@ -13,7 +13,6 @@ Mainecoon is a small library built to facilitate composing tagless final encoded
 Mainecoon is developed using [scalameta](http://scalameta.org/), so there are a few dependencies to add in your `build.sbt`.
 
 ```scala
-resolvers += Resolver.bintrayRepo("kailuowang", "maven")
 
 addCompilerPlugin(
   ("org.scalameta" % "paradise" % "3.0.0-M8").cross(CrossVersion.full)

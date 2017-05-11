@@ -5,6 +5,7 @@ import de.heikoseeberger.sbtheader.license.Apache2_0
 
 addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVersion.value.get + \"-SNAPSHOT\"")
 
+addCommandAlias("validateJVM", ";testsJVM/test ; docs/makeMicrosite")
 
 
 val apache2 = "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")

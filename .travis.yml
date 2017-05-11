@@ -23,7 +23,8 @@ install:
   - pip install --user codecov
 
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION clean coverage tests/test;
+  - sbt ++$TRAVIS_SCALA_VERSION clean testsJS/test; #todo: combine the two tests on scalajs after https://github.com/scalameta/paradise/issues/201 is fixed.
+  - sbt ++$TRAVIS_SCALA_VERSION clean coverage validateJVM;
   - sbt ++$TRAVIS_SCALA_VERSION coverageReport && codecov;
 
   # See http://www.scala-sbt.org/0.13/docs/Travis-CI-with-sbt.html

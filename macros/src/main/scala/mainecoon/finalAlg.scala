@@ -29,12 +29,12 @@ class finalAlg extends StaticAnnotation {
       import cls._
 
       Seq(
-        q"def apply[..${cls.tparams}](implicit inst: $name[..$tArgs]): $name[..$tArgs] = inst",
+        q"def apply[..${cls.tparams}](implicit inst: $name[..${tArgs()}]): $name[..${tArgs()}] = inst",
         q"""implicit def autoDeriveFromFunctorK[${effectType}, G[_], ..${extraTParams}](
-              implicit af: $name[..$tArgs],
-              FK: _root_.mainecoon.FunctorK[({type λ[Ƒ[_]] = $name[Ƒ, ..${extraTArgs}]})#λ],
+              implicit af: $name[..${tArgs()}],
+              FK: _root_.mainecoon.FunctorK[$typeLambdaForFunctorK],
               fk: _root_.cats.~>[F, G])
-              : $name[G, ..${extraTArgs}] = FK.mapK(af)(fk)
+              : $name[..${tArgs("G")}] = FK.mapK(af)(fk)
          """)
     }
     enrichAlg(defn)(newMethods)

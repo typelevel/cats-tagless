@@ -50,7 +50,19 @@ class autoFunctorKTests extends MainecoonTestSuite {
 
 
   test("Alg with extra type parameters") {
+    implicit val algWithExtraTP: AlgWithExtraTP[Try, String] = new AlgWithExtraTP[Try, String] {
+      def a(i: Int) = Try(i.toString)
+    }
+
     AlgWithExtraTP[Option, String].a(5) should be(Some("5"))
+  }
+
+  test("Alg with extra type parameters before effect type") {
+    implicit val algWithExtraTP: AlgWithExtraTP2[String, Try] = new AlgWithExtraTP2[String, Try] {
+      def a(i: Int) = Try(i.toString)
+    }
+
+    AlgWithExtraTP2[String, Option].a(5) should be(Some("5"))
   }
 
   test("Alg with type member") {
@@ -93,7 +105,9 @@ object autoFunctorKTests {
     def a(i: Int): F[T]
   }
 
-  implicit val algWithExtraTP: AlgWithExtraTP[Try, String] = new AlgWithExtraTP[Try, String] {
-    def a(i: Int) = Try(i.toString)
+  @autoFunctorK @finalAlg
+  trait AlgWithExtraTP2[T, F[_]] {
+    def a(i: Int): F[T]
   }
+
 }

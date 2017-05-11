@@ -50,18 +50,18 @@ object autoFunctorK {
 
     val typeMember = methods.collect{ case tm: Defn.Type => tm }
 
-    val typeSignature = if(typeMember.isEmpty) t"$name[G, ..${extraTArgs}]" else t"$name[G, ..${extraTArgs}] { ..$typeMember }"
+    val typeSignature = if(typeMember.isEmpty) t"$name[..${tArgs("G")}]" else t"$name[..${tArgs("G")}] { ..$typeMember }"
 
     //create a mapK method in the companion object with more precise refined type signature
     Seq(q"""
-      def mapK[F[_], G[_], ..$extraTParams](af: $name[..${tArgs}])(fk: _root_.cats.~>[F, G]): $typeSignature =
-        new ${Ctor.Ref.Name(name.value)}[G, ..${extraTArgs}] {
+      def mapK[F[_], G[_], ..$extraTParams](af: $name[..${tArgs()}])(fk: _root_.cats.~>[F, G]): $typeSignature =
+        new ${Ctor.Ref.Name(name.value)}[..${tArgs("G")}] {
           ..$methods
         }""",
       q"""
         implicit def ${Term.Name("functorKFor" + name.value)}[..$extraTParams]: _root_.mainecoon.FunctorK[$typeLambdaForFunctorK] =
           new _root_.mainecoon.FunctorK[$typeLambdaForFunctorK] {
-            def mapK[F[_], G[_]](af: $name[F, ..${extraTArgs}])(fk: _root_.cats.~>[F, G]): $name[G, ..${extraTArgs}] =
+            def mapK[F[_], G[_]](af: $name[..${tArgs("F")}])(fk: _root_.cats.~>[F, G]): $name[..${tArgs("G")}] =
               ${Term.Name(name.value)}.mapK(af)(fk)
           }
    """)

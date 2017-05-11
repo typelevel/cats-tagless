@@ -99,6 +99,7 @@ lazy val docs = project
     micrositeDescription := "A library for transforming and composing final tagless algebras",
     micrositeGithubOwner := "kailuowang",
     micrositeGithubRepo := "mainecoon",
+    micrositeHighlightTheme := "atom-one-light",
     ghpagesNoJekyll := false,
     tutScalacOptions ~= (_.filterNot(Set("-Ywarn-unused-import", "-Ywarn-dead-code"))),
     git.remoteRepo := gh.repo,

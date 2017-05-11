@@ -52,12 +52,20 @@ private[mainecoon] object Util {
 
   case class ClassOrTrait(name: Type.Name, templ: Template, tparams: Seq[Type.Param])
 
-  case class AlgDefn(cls: ClassOrTrait, effectType: Type.Param, extraTParams: Seq[Type.Param]){
-    val tArgs = cls.tparams.map(tp => Type.Name(tp.name.value))
-    val extraTArgs = extraTParams.map(tp => Type.Name(tp.name.value))
+  case class AlgDefn(cls: ClassOrTrait, effectType: Type.Param){
+
+    val extraTParams = cls.tparams.filterNot(Set(effectType))
     val effectTypeArg = Type.Name(effectType.name.value)
 
-    val typeLambdaForFunctorK = t"({type λ[Ƒ[_]] = ${cls.name}[Ƒ, ..${extraTArgs}]})#λ"
+    def tArgs(effTpeName: Type.Name = effectTypeArg): Seq[Type.Name] = cls.tparams.map {
+      case `effectType` => effTpeName
+      case tp =>  Type.Name(tp.name.value)
+    }
+
+    def tArgs(effTpeName: String): Seq[Type.Name] = tArgs(Type.Name(effTpeName))
+
+
+    val typeLambdaForFunctorK = t"({type λ[Ƒ[_]] = ${cls.name}[..${tArgs("Ƒ")}]})#λ"
   }
 
   object AlgDefn {
@@ -65,8 +73,7 @@ private[mainecoon] object Util {
       cls.tparams.collectFirst {
         case tp: Type.Param if tp.tparams.nonEmpty => tp
       }.map { effectType =>
-        val extraTParams = cls.tparams.filterNot(Set(effectType))
-        AlgDefn(cls, effectType, extraTParams)
+        AlgDefn(cls, effectType)
       }
     }
   }

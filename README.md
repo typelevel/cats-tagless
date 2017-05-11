@@ -1,7 +1,7 @@
 
 Mainecoon is a small library built to facilitate composing tagless final encoded algebras.
 
-A quick example of how Mainecoon can help.
+Here is a quick example of how Mainecoon can help:
 
 Say we have a typical tagless encoded algebra `ExpressionAlg[F[_]]`, with an interpreter implemented using `Try`
 
@@ -14,7 +14,6 @@ trait ExpressionAlg[F[_]] {
   def num(i: String): F[Float]
   def divide(dividend: Float, divisor: Float): F[Float]
 }
-
 
 implicit object tryExpression extends ExpressionAlg[Try] {
   def num(i: String) = Try(i.toFloat)

@@ -97,6 +97,7 @@ lazy val docs = project
     autoAPIMappings := true,
     micrositeName := "Mainecoon",
     micrositeDescription := "A library for transforming and composing final tagless algebras",
+    micrositeBaseUrl := "mainecoon",
     micrositeGithubOwner := "kailuowang",
     micrositeGithubRepo := "mainecoon",
     micrositeHighlightTheme := "atom-one-light",

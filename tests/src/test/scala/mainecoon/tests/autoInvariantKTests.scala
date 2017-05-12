@@ -25,7 +25,7 @@ import mainecoon.laws.discipline.InvariantKTests
 import autoInvariantKTests._
 
 class autoInvariantKTests extends MainecoonTestSuite {
-  //work with covariant algs
+  //work with covariant algs, todo: add law tests for an invariant alg.
   checkAll("ParseAlg[Option]", InvariantKTests[SafeAlg].invariantK[Try, Option, List])
   checkAll("InvariantK[ParseAlg]", SerializableTests.serializable(InvariantK[SafeAlg]))
 

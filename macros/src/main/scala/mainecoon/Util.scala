@@ -16,46 +16,48 @@
 
 package mainecoon
 
-import mainecoon.Util.ClassOrTrait.FromDefn
-
 import scala.meta.Term.Block
 import scala.meta._
 import scala.collection.immutable.Seq
 
 private[mainecoon] object Util {
 
-  def enrichCompanion(defn: Any)(f: ClassOrTrait => Seq[Defn]) : Block = {
+
+  def enrichCompanion(defn: Any)(f: TypeDefinition => TypeDefinition) : Block = {
     defn match {
-      case Term.Block(
-      Seq(t@FromDefn(cls), companion: Defn.Object)) =>
-        val newStat = f(cls)
-        val templateStats: Seq[Stat] =
-          newStat ++ companion.templ.stats.getOrElse(Nil)
-        val newCompanion = companion.copy(
-          templ = companion.templ.copy(stats = Some(templateStats)))
-        Term.Block(Seq(t, newCompanion))
-      case t@FromDefn(cls) =>
-        val newStat = f(cls)
-        val companion = q"object ${Term.Name(cls.name.value)} { ..$newStat }"
-        Term.Block(Seq(t, companion))
+      case TypeDefinition.FromAny(td) =>
+        val enriched = f(td)
+        Block(Seq(enriched.defn, enriched.companion))
       case t =>
-        abort("@algebra must annotate a class or a trait/class.")
+        abort(s"$defn is not a class or trait.")
     }
   }
 
-  def enrichAlg(defn: Any)(f: AlgDefn => Seq[Defn]): Block = {
-    enrichCompanion(defn){ cls: ClassOrTrait =>
+  def enrichAlg(defn: Any)(f: AlgDefn => TypeDefinition): Block = {
+    enrichCompanion(defn){ cls: TypeDefinition =>
       val ad = AlgDefn.from(cls).getOrElse(abort(s"${cls.name} does not have an higher-kinded type parameter, e.g. F[_]"))
       f(ad)
     }
   }
 
-  case class ClassOrTrait(name: Type.Name, templ: Template, tparams: Seq[Type.Param])
+  implicit class CompanionExtension(val self: Defn.Object) extends AnyVal {
+    import self._
+    def addStats(stats: Seq[Stat]): Defn.Object =
+      copy(templ = templ.copy(stats = Some(templ.stats.getOrElse(Nil) ++ stats)))
 
-  case class AlgDefn(cls: ClassOrTrait, effectType: Type.Param){
+    def addParent(parent: Ctor.Call): Defn.Object =
+      copy(templ = templ.copy(parents = parent +: templ.parents))
+
+  }
+
+
+  case class AlgDefn(cls: TypeDefinition, effectType: Type.Param){
 
     val extraTParams = cls.tparams.filterNot(Set(effectType))
-    val effectTypeArg = Type.Name(effectType.name.value)
+
+    val effectTypeArg: Type.Name = Type.Name(effectType.name.value)
+
+    val effectTypeName: String = effectType.name.value
 
     def tArgs(effTpeName: Type.Name = effectTypeArg): Seq[Type.Name] = cls.tparams.map {
       case `effectType` => effTpeName
@@ -64,12 +66,11 @@ private[mainecoon] object Util {
 
     def tArgs(effTpeName: String): Seq[Type.Name] = tArgs(Type.Name(effTpeName))
 
-
-    val typeLambdaForFunctorK = t"({type λ[Ƒ[_]] = ${cls.name}[..${tArgs("Ƒ")}]})#λ"
+    val typeLambdaVaryingEffect = t"({type λ[Ƒ[_]] = ${cls.name}[..${tArgs("Ƒ")}]})#λ"
   }
 
   object AlgDefn {
-    def from(cls: ClassOrTrait): Option[AlgDefn] = {
+    def from(cls: TypeDefinition): Option[AlgDefn] = {
       cls.tparams.collectFirst {
         case tp: Type.Param if tp.tparams.nonEmpty => tp
       }.map { effectType =>
@@ -78,15 +79,30 @@ private[mainecoon] object Util {
     }
   }
 
-  object ClassOrTrait {
-    object FromDefn {
-      def unapply(any: Defn): Option[ClassOrTrait] = any match {
-        case t: Defn.Class => Some(ClassOrTrait(t.name, t.templ, t.tparams))
-        case t: Defn.Trait => Some(ClassOrTrait(t.name, t.templ, t.tparams))
-        case _             => None
+  case class TypeDefinition(name: Type.Name, templ: Template, tparams: Seq[Type.Param], companion: Defn.Object, defn: Defn)
+
+  object TypeDefinition {
+
+    object FromAny {
+      def unapply(defn: Any): Option[TypeDefinition] = {
+        def createCompanion(name: Type.Name): Defn.Object = q"object ${Term.Name(name.value)} { }"
+        defn match {
+
+          case Term.Block(Seq(t: Defn.Class, companion: Defn.Object)) =>
+              Some(TypeDefinition(t.name, t.templ, t.tparams, companion, t))
+
+          case Term.Block(Seq(t: Defn.Trait, companion: Defn.Object)) =>
+            Some(TypeDefinition(t.name, t.templ, t.tparams, companion, t))
+
+          case t: Defn.Class =>
+            Some(TypeDefinition(t.name, t.templ, t.tparams, createCompanion(t.name), t))
+
+          case t: Defn.Trait =>
+            Some(TypeDefinition(t.name, t.templ, t.tparams, createCompanion(t.name), t))
+        }
+
       }
     }
-
   }
 
   def arguments(params: Seq[Term.Param]) =

@@ -12,7 +12,7 @@ position: 2
 
 Yes. e.g.
 
-```tut:book
+```tut:silent
 import mainecoon._
 import cats.~>
 import util.Try
@@ -27,6 +27,8 @@ implicit val tryFoo: Foo[Try, String] = new Foo[Try, String] {
 }
 
 implicit val fk: Try ~> Option = λ[Try ~> Option](_.toOption)
+```
+```tut:book
 
 Foo[Option, String].a(3)
 ```
@@ -35,6 +37,7 @@ Foo[Option, String].a(3)
 
 Yes but with some caveats.
 The `FunctorK` instance it generates does not refine to the type member. E.g.
+
 ```tut:silent
  @autoFunctorK @finalAlg
   trait Bar[F[_]] {
@@ -48,10 +51,12 @@ The `FunctorK` instance it generates does not refine to the type member. E.g.
 ```
 
 If you try to map this tryInt to a `Bar[Option]`, the `type T` of the `Bar[Option]` isn't refined.  That is, you can do
+
 ```tut:book
 Bar[Option].a(3)
 ```
 But you can't create a `Bar[Option]{ type T = String }` from the `tryInt` using `FunctorK`.
+
 ```tut:fail
 val barOption: Bar[Option] { type T = String } = tryInt.mapK(fk)
 ```

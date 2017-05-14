@@ -44,7 +44,7 @@ trait InvariantKTests[F[_[_]]] extends Laws {
   }
 }
 
-object InvariantTests {
+object InvariantKTests {
   def apply[F[_[_]]: InvariantK]: InvariantKTests[F] =
     new InvariantKTests[F] { def laws: InvariantKLaws[F] = InvariantKLaws[F] }
 }

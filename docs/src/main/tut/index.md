@@ -13,15 +13,12 @@ Mainecoon is a small library built to facilitate composing tagless final encoded
 Mainecoon is developed using [scalameta](http://scalameta.org/), so there are a few dependencies to add in your `build.sbt`.
 
 ```scala
-
 addCompilerPlugin(
-  ("org.scalameta" % "paradise" % "3.0.0-M8").cross(CrossVersion.full)
-)
+  ("org.scalameta" % "paradise" % "3.0.0-M8").cross(CrossVersion.full))
 
 libraryDependencies ++= Seq(
   "org.scalameta" %% "scalameta" % "1.7.0" % Provided,
-  "com.kailuowang" %% "mainecoon-macros" % "0.0.3"
-)
+  "com.kailuowang" %% "mainecoon-macros" % "0.0.3")
 ```
 
 ## Transforming Interpreters
@@ -48,13 +45,13 @@ implicit object tryExpression extends ExpressionAlg[Try] {
 }
 ```
 
-Similar to [simularcum], `@finalAlg` adds an `apply` method in the companion object so that you can do implicit calling.
+Similar to [simularcum](https://github.com/mpilquist/simulacrum), `@finalAlg` adds an `apply` method in the companion object so that you can do implicit calling.
 ```tut:book
 ExpressionAlg[Try]
 ```
 
 The `@autoFunctorK` annotation adds a `FunctorK` instance for `ExpressionAlg` so that you can map
- an `ExpressionAlg[F]` to a `ExpressionAlg[G]`, if you have a `FunctionK[F, G]`, a.k.a. `F ~> G`.
+ an `ExpressionAlg[F]` to a `ExpressionAlg[G]` using a `FunctionK[F, G]`, a.k.a. `F ~> G`.
 ```tut:silent
 import mainecoon.implicits._
 import cats.implicits._

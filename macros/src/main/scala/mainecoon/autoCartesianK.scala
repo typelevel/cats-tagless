@@ -32,8 +32,7 @@ class autoCartesianK extends StaticAnnotation {
 }
 
 object autoCartesianK {
-  def cartesianKInst(cls: ClassOrTrait): Seq[Defn] = {
-
+  def cartesianKInst(cls: TypeDefinition): TypeDefinition = {
     import cls._
 
     val methods = templ.stats.map(_.map {
@@ -44,15 +43,16 @@ object autoCartesianK {
       case st => abort(s"autoCartesianK does not support algebra with such statement: $st")
     }).getOrElse(Nil)
 
-    Seq(q"""
+    val instanceDef = Seq(q"""
       implicit def ${Term.Name("cartesianKFor" + name.value)}: _root_.mainecoon.CartesianK[$name] =
         new _root_.mainecoon.CartesianK[$name] {
           def productK[F[_], G[_]](af: $name[F], ag: $name[G]): $name[({type λ[A]=_root_.cats.data.Prod[F, G, A]})#λ] =
             new ${Ctor.Ref.Name(name.value)}[({type λ[A]=_root_.cats.data.Prod[F, G, A]})#λ] {
               ..$methods
             }
-      }
-   """)
+        }""")
+
+    cls.copy(companion = cls.companion.addStats(instanceDef))
   }
 }
 

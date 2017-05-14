@@ -18,25 +18,25 @@ package mainecoon
 
 import scala.annotation.StaticAnnotation
 import Util._
+
 import scala.meta._
 import collection.immutable.Seq
 
 class finalAlg extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
 
-    def newMethods(ad: AlgDefn): Seq[Defn] = {
+    def enrich(ad: AlgDefn): TypeDefinition = {
       import ad._
       import cls._
 
-      Seq(
-        q"def apply[..${cls.tparams}](implicit inst: $name[..${tArgs()}]): $name[..${tArgs()}] = inst",
-        q"""implicit def autoDeriveFromFunctorK[${effectType}, G[_], ..${extraTParams}](
-              implicit af: $name[..${tArgs()}],
-              FK: _root_.mainecoon.FunctorK[$typeLambdaForFunctorK],
-              fk: _root_.cats.~>[F, G])
-              : $name[..${tArgs("G")}] = FK.mapK(af)(fk)
-         """)
+     cls.copy(
+        companion = companion.addStats( Seq[Stat](
+          q"def apply[..${cls.tparams}](implicit inst: $name[..${tArgs()}]): $name[..${tArgs()}] = inst"
+        ))
+      )
     }
-    enrichAlg(defn)(newMethods)
+    enrichAlg(defn)(enrich)
   }
 }
+
+

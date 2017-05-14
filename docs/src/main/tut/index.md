@@ -21,7 +21,7 @@ libraryDependencies ++= Seq(
   "com.kailuowang" %% "mainecoon-macros" % "0.0.3")
 ```
 
-## Transforming Interpreters
+## <a id="auto-transform" href="#auto-transform"></a>Auto-transforming interpreters
 
 Say we have a typical tagless encoded algebra `ExpressionAlg[F[_]]`
 
@@ -70,8 +70,49 @@ In fact, `@finalAlg` also add an auto derivation, so that if you have an implici
 ExpressionAlg[Option]
 ```
 
+## <a id="stack-safe" href="#stack-safe"></a>Make stack safe with `Free`
+Another quick win with a `FunctorK` instance is to lift your algebra interpreters to use `Free` to achieve stack safety.
 
-## Vertical composition
+ For example, say you have an interpreter using `Try`
+
+```tut:silent
+@finalAlg @autoFunctorK
+trait Increment[F[_]] {
+  def plusOne(i: Int): F[Int]
+}
+
+implicit object incTry extends Increment[Try] {
+  def plusOne(i: Int) = Try(i + 1)
+}
+
+def program[F[_]: Monad: Increment](i: Int): F[Int] = for {
+  j <- Increment[F].plusOne(i)
+  z <- if (j < 10000) program[F](j) else Monad[F].pure(j)
+} yield z
+
+```
+Obviously, this program is not stack safe.
+```scala
+program[Try](0)
+//throws java.lang.StackOverflowError
+```
+Now lets use auto derivation to lift the interpreter with `Try` into an interpreter with `Free`
+
+```tut:silent
+import cats.free.Free
+import cats.arrow.FunctionK
+
+implicit def toFree[F[_]]: F ~> Free[F, ?] = λ[F ~> Free[F, ?]](t => Free.liftF(t))
+```
+```tut:book
+program[Free[Try, ?]](0).foldMap(FunctionK.id)
+```
+
+Again the magic here is that mainecoon auto derive an `Increment[Free[Try, ?]]` when there is an implicit `Try ~> Free[Try, ?]` and a `Increment[Try]` in scope.
+
+
+
+## <a id="vertical-comp" href="#vertical-comp"></a>Vertical composition
 
 Say you have another algebra that could use the `ExpressionAlg`.
 
@@ -104,7 +145,7 @@ Note that the `ExpressionAlg` interpreter needed here is a `ExpressionAlg[Option
 new StringCalculatorOption
 ```
 
-## Horizontal composition
+## <a id="horizontal-comp" href="#horizontal-comp"></a>Horizontal composition
 
 You can use `CartesianK` to create a new interpreter that runs two interpreters simultaneously and return the result as a `cats.Prod`. The `@autoCartesianK` attribute add an instance of `CartesianK` to the companion object. Example:
 ```tut:book

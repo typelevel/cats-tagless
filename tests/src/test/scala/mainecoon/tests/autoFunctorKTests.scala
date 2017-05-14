@@ -23,6 +23,8 @@ import cats.~>
 import cats.laws.discipline.SerializableTests
 import mainecoon.laws.discipline.FunctorKTests
 import autoFunctorKTests._
+import cats.arrow.FunctionK
+import cats.free.Free
 
 class autoFunctorKTests extends MainecoonTestSuite {
   test("simple mapK") {
@@ -75,6 +77,20 @@ class autoFunctorKTests extends MainecoonTestSuite {
     algAux.a(4) should be(Some("4"))
   }
 
+  test("Stack safety with Free") {
+    val incTry: Increment[Try] = new Increment[Try] {
+      def plusOne(i: Int) = Try(i + 1)
+    }
+
+    val incFree = incTry.mapK(λ[Try ~> Free[Try, ?]](t => Free.liftF(t)))
+
+    def a(i: Int): Free[Try, Int] = for {
+      j <- incFree.plusOne(i)
+      z <- if (j < 10000) a(j) else Free.pure[Try, Int](j)
+    } yield z
+    a(0).foldMap(FunctionK.id) should be(util.Success(10000))
+  }
+
 }
 
 
@@ -107,5 +123,12 @@ object autoFunctorKTests {
   trait AlgWithExtraTP2[T, F[_]] {
     def a(i: Int): F[T]
   }
+
+  @autoFunctorK
+  trait Increment[F[_]] {
+    def plusOne(i: Int): F[Int]
+  }
+
+
 
 }

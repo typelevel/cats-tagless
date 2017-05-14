@@ -77,7 +77,7 @@ lazy val testsM   = module("tests", CrossType.Pure)
   .settings(disciplineDependencies)
   .settings(metaMacroSettings)
   .settings(noPublishSettings)
-  .settings(addTestLibs(vAll, "scalatest" ))
+  .settings(addTestLibs(vAll, "scalatest", "cats-free"))
   .enablePlugins(AutomateHeaderPlugin)
 
 
@@ -97,7 +97,7 @@ lazy val docs = project
     organization  := gh.organisation,
     autoAPIMappings := true,
     micrositeName := "Mainecoon",
-    micrositeDescription := "A library for transforming and composing final tagless algebras",
+    micrositeDescription := "A library for transforming and composing tagless final algebras",
     micrositeBaseUrl := "mainecoon",
     micrositeGithubOwner := "kailuowang",
     micrositeGithubRepo := "mainecoon",

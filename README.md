@@ -4,7 +4,7 @@
 
 Mainecoon is a small library built to facilitate composing tagless final encoded algebras.
 
-Here is a quick example of how Mainecoon can help:
+Here is a quick example of how mainecoon can help:
 
 Say we have a typical tagless encoded algebra `ExpressionAlg[F[_]]`, with an interpreter implemented using `Try`
 

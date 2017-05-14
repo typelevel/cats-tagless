@@ -8,7 +8,7 @@ position: 2
 
 ## FAQs
 
-### Does Mainecoon support algebras with extra type parameters?
+### Does mainecoon support algebras with extra type parameters?
 
 Yes. e.g.
 
@@ -33,7 +33,7 @@ implicit val fk: Try ~> Option = λ[Try ~> Option](_.toOption)
 Foo[Option, String].a(3)
 ```
 
-### Does Mainecoon support algebras with abstract type member?
+### Does mainecoon support algebras with abstract type member?
 
 Yes but with some caveats.
 The `FunctorK` instance it generates does not refine to the type member. E.g.

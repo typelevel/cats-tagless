@@ -5,12 +5,11 @@ section: home
 position: 1
 ---
 
-
 Mainecoon is a small library built to facilitate composing tagless final encoded algebras.
 
 ## Installation
 
-Mainecoon is developed using [scalameta](http://scalameta.org/), so there are a few dependencies to add in your `build.sbt`.
+Mainecoon is available on scala 2.11, 2.12, and scalajs. The macro annotations are developed using [scalameta](http://scalameta.org/), so there are a few dependencies to add in your `build.sbt`.
 
 ```scala
 addCompilerPlugin(
@@ -18,7 +17,7 @@ addCompilerPlugin(
 
 libraryDependencies ++= Seq(
   "org.scalameta" %% "scalameta" % "1.7.0" % Provided,
-  "com.kailuowang" %% "mainecoon-macros" % "0.0.3")
+  "com.kailuowang" %% "mainecoon-macros" % "0.0.4")
 ```
 
 ## <a id="auto-transform" href="#auto-transform"></a>Auto-transforming interpreters

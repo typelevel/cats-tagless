@@ -96,8 +96,7 @@ class InvariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
             def imapK[F[_], G[_]](af: $name[..${tArgs("F")}])(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): $name[..${tArgs("G")}] =
               ${Term.Name(name.value)}.imapK(af)(fk)(gk)
           }
-       """
-      )
+       """)
   }
 
   lazy val autoDerivationDef  = if(autoDerivation)

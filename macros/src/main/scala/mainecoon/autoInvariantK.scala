@@ -26,14 +26,19 @@ import collection.immutable.Seq
 /**
  * auto generates an instance of [[InvariantK]]
  */
-class autoInvariantK extends StaticAnnotation {
+class autoInvariantK(autoDerivation: Boolean) extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
-    enrichAlg(defn)(a => new InvariantKInstanceGenerator(a).newTypeDef)
+    val autoDerivation: Boolean = this match {
+      case q"new $_(${Lit.Boolean(arg)})" => arg
+      case q"new $_(autoDerivation = ${Lit.Boolean(arg)})" => arg
+      case _  => true
+    } //todo: code dup with autoFunctorK
+    enrichAlgebra(defn)(a => new InvariantKInstanceGenerator(a, autoDerivation).newTypeDef)
   }
 }
 
 
-class InvariantKInstanceGenerator(algDefn: AlgDefn) extends FunctorKInstanceGenerator(algDefn) {
+class InvariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) extends FunctorKInstanceGenerator(algDefn) {
   import algDefn._
   import cls._
 
@@ -91,16 +96,20 @@ class InvariantKInstanceGenerator(algDefn: AlgDefn) extends FunctorKInstanceGene
             def imapK[F[_], G[_]](af: $name[..${tArgs("F")}])(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): $name[..${tArgs("G")}] =
               ${Term.Name(name.value)}.imapK(af)(fk)(gk)
           }
-       """,
-      q"""
-        implicit def autoDeriveFromInvariantK[${effectType}, G[_], ..${extraTParams}](
-          implicit af: $name[..${tArgs()}],
-          IK: _root_.mainecoon.InvariantK[$typeLambdaVaryingEffect],
-          fk: _root_.cats.~>[F, G],
-          gk: _root_.cats.~>[G, F])
-            : $name[..${tArgs("G")}] = IK.imapK(af)(fk)(gk)
-      """)
+       """
+      )
   }
 
-  lazy val newTypeDef = cls.copy(companion = companion.addStats(instanceDef))
+  lazy val autoDerivationDef  = if(autoDerivation)
+      Seq(q"""
+          implicit def autoDeriveFromInvariantK[${effectType}, G[_], ..${extraTParams}](
+            implicit af: $name[..${tArgs()}],
+            IK: _root_.mainecoon.InvariantK[$typeLambdaVaryingEffect],
+            fk: _root_.cats.~>[F, G],
+            gk: _root_.cats.~>[G, F])
+              : $name[..${tArgs("G")}] = IK.imapK(af)(fk)(gk)
+        """)
+    else Nil
+
+  lazy val newTypeDef = cls.copy(companion = companion.addStats(instanceDef ++ autoDerivationDef))
 }

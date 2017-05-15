@@ -73,6 +73,7 @@ lazy val tests    = prj(testsM)
 lazy val testsJVM = testsM.jvm
 lazy val testsJS  = testsM.js
 lazy val testsM   = module("tests", CrossType.Pure)
+  .settings(addLibs(vAll, "shapeless"))
   .dependsOn(coreM, lawsM, macrosM)
   .settings(disciplineDependencies)
   .settings(metaMacroSettings)

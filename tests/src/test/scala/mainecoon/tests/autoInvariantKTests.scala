@@ -23,6 +23,7 @@ import cats.~>
 import cats.laws.discipline.SerializableTests
 import mainecoon.laws.discipline.InvariantKTests
 import autoInvariantKTests._
+import shapeless.test.illTyped
 
 class autoInvariantKTests extends MainecoonTestSuite {
   //work with covariant algs, todo: add law tests for an invariant alg.
@@ -85,6 +86,14 @@ class autoInvariantKTests extends MainecoonTestSuite {
     algAux.a(Some("4")) should be(Some("4a"))
   }
 
+  test("turn off auto derivation") {
+    implicit object foo extends AlgWithoutAutoDerivation[Try] {
+      def a(i: Try[Int]): Try[Int] = i
+    }
+
+    illTyped { """ implicitly[AlgWithoutAutoDerivation[Option]] """}
+  }
+
 }
 
 
@@ -129,5 +138,11 @@ object autoInvariantKTests {
   trait AlgWithExtraTP2[T, F[_]] {
     def a(i: F[Int]): F[T]
   }
+
+  @autoInvariantK(autoDerivation = false)
+  trait AlgWithoutAutoDerivation[F[_]] {
+    def a(i: F[Int]): F[Int]
+  }
+
 
 }

@@ -24,12 +24,16 @@ import collection.immutable.Seq
 /**
  * auto generates an instance of [[FunctorK]]
  */
-class autoFunctorK extends StaticAnnotation {
+class autoFunctorK(autoDerivation: Boolean) extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
-    enrichAlg(defn)(a => new CovariantKInstanceGenerator(a).newDef)
+    val autoDerivation: Boolean = this match {
+      case q"new $_(${Lit.Boolean(arg)})" => arg
+      case q"new $_(autoDerivation = ${Lit.Boolean(arg)})" => arg
+      case _  => true
+    }
+    enrichAlgebra(defn)(a => new CovariantKInstanceGenerator(a, autoDerivation).newDef)
   }
 }
-
 
 abstract class FunctorKInstanceGenerator(ad: AlgDefn) {
   import ad._
@@ -57,7 +61,7 @@ abstract class FunctorKInstanceGenerator(ad: AlgDefn) {
   }
 }
 
-class CovariantKInstanceGenerator(algDefn: AlgDefn) extends FunctorKInstanceGenerator(algDefn) {
+class CovariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) extends FunctorKInstanceGenerator(algDefn) {
   import algDefn._
   import cls._
 
@@ -83,18 +87,22 @@ class CovariantKInstanceGenerator(algDefn: AlgDefn) extends FunctorKInstanceGene
               ${Term.Name(name.value)}.mapK(af)(fk)
           }
       """,
-      q"""
-         implicit def autoDeriveFromFunctorK[${effectType}, G[_], ..${extraTParams}](
-           implicit af: $name[..${tArgs()}],
-           FK: _root_.mainecoon.FunctorK[$typeLambdaVaryingEffect],
-           fk: _root_.cats.~>[F, G])
-           : $name[..${tArgs("G")}] = FK.mapK(af)(fk)
-        """
+
 
     )
   }
 
-  lazy val newDef: TypeDefinition = cls.copy(companion = cls.companion.addStats(instanceDef))
+  lazy val autoDerivationDef: Seq[Defn] = if(autoDerivation)
+      Seq(q"""
+           implicit def autoDeriveFromFunctorK[${effectType}, G[_], ..${extraTParams}](
+             implicit af: $name[..${tArgs()}],
+             FK: _root_.mainecoon.FunctorK[$typeLambdaVaryingEffect],
+             fk: _root_.cats.~>[F, G])
+             : $name[..${tArgs("G")}] = FK.mapK(af)(fk)
+          """)
+    else Nil
+
+  lazy val newDef: TypeDefinition = cls.copy(companion = cls.companion.addStats(instanceDef ++ autoDerivationDef))
 }
 
 

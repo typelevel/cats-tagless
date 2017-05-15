@@ -33,12 +33,14 @@ private[mainecoon] object Util {
     }
   }
 
-  def enrichAlg(defn: Any)(f: AlgDefn => TypeDefinition): Block = {
+  def enrichAlgebra(defn: Any)(f: AlgDefn => TypeDefinition): Block = {
     enrichCompanion(defn){ cls: TypeDefinition =>
       val ad = AlgDefn.from(cls).getOrElse(abort(s"${cls.name} does not have an higher-kinded type parameter, e.g. F[_]"))
       f(ad)
     }
   }
+
+//  def getArg(name: String, )
 
   implicit class CompanionExtension(val self: Defn.Object) extends AnyVal {
     import self._

@@ -35,7 +35,7 @@ class finalAlg extends StaticAnnotation {
         ))
       )
     }
-    enrichAlg(defn)(enrich)
+    enrichAlgebra(defn)(enrich)
   }
 }
 

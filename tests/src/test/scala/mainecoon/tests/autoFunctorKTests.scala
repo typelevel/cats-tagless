@@ -25,6 +25,7 @@ import mainecoon.laws.discipline.FunctorKTests
 import autoFunctorKTests._
 import cats.arrow.FunctionK
 import cats.free.Free
+import shapeless.test.illTyped
 
 class autoFunctorKTests extends MainecoonTestSuite {
   test("simple mapK") {
@@ -91,6 +92,13 @@ class autoFunctorKTests extends MainecoonTestSuite {
     a(0).foldMap(FunctionK.id) should be(util.Success(10000))
   }
 
+  test("turn off auto derivation") {
+    implicit object foo extends AlgWithoutAutoDerivation[Try] {
+      def a(i: Int): Try[Int] = util.Success(i)
+    }
+
+    illTyped { """ implicitly[AlgWithoutAutoDerivation[Option]] """}
+  }
 }
 
 
@@ -127,6 +135,11 @@ object autoFunctorKTests {
   @autoFunctorK
   trait Increment[F[_]] {
     def plusOne(i: Int): F[Int]
+  }
+
+  @autoFunctorK(autoDerivation = false)
+  trait AlgWithoutAutoDerivation[F[_]] {
+    def a(i: Int): F[Int]
   }
 
 

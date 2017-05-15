@@ -63,7 +63,7 @@ tryExpression.mapK(fk)
 ```
 
 In fact, `@finalAlg` also add an auto derivation, so that if you have an implicit  `ExpressionAlg[F]` and an implicit
-`F ~> G`, you automatically have a `ExpressionAlg[G]`
+`F ~> G`, you automatically have a `ExpressionAlg[G]`. This auto derivation can be turned off using an annotation argument: `@autoFunctorK(autoDerivation = false)`.
 
 ```tut:book
 ExpressionAlg[Option]
@@ -107,7 +107,7 @@ implicit def toFree[F[_]]: F ~> Free[F, ?] = λ[F ~> Free[F, ?]](t => Free.liftF
 program[Free[Try, ?]](0).foldMap(FunctionK.id)
 ```
 
-Again the magic here is that mainecoon auto derive an `Increment[Free[Try, ?]]` when there is an implicit `Try ~> Free[Try, ?]` and a `Increment[Try]` in scope.
+Again the magic here is that mainecoon auto derive an `Increment[Free[Try, ?]]` when there is an implicit `Try ~> Free[Try, ?]` and a `Increment[Try]` in scope. This auto derivation can be turned off using an annotation argument: `@autoFunctorK(autoDerivation = false)`.
 
 
 
@@ -151,7 +151,5 @@ You can use `CartesianK` to create a new interpreter that runs two interpreters 
 val prod = ExpressionAlg[Option].productK(ExpressionAlg[Try])
 prod.num("2")
 ```
-
-
 
 

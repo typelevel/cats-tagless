@@ -86,9 +86,7 @@ class CovariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
             def mapK[F[_], G[_]](af: $name[..${tArgs("F")}])(fk: _root_.cats.~>[F, G]): $name[..${tArgs("G")}] =
               ${Term.Name(name.value)}.mapK(af)(fk)
           }
-      """,
-
-
+      """
     )
   }
 

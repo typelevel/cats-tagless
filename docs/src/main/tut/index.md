@@ -17,7 +17,7 @@ addCompilerPlugin(
 
 libraryDependencies ++= Seq(
   "org.scalameta" %% "scalameta" % "1.7.0" % Provided,
-  "com.kailuowang" %% "mainecoon-macros" % "0.0.4")
+  "com.kailuowang" %% "mainecoon-macros" % "0.0.5")
 ```
 
 ## <a id="auto-transform" href="#auto-transform"></a>Auto-transforming interpreters
@@ -62,7 +62,7 @@ implicit val fk : Try ~> Option = λ[Try ~> Option](_.toOption)
 tryExpression.mapK(fk)
 ```
 
-In fact, `@finalAlg` also add an auto derivation, so that if you have an implicit  `ExpressionAlg[F]` and an implicit
+In fact, `@autoFunctorK` also add an auto derivation, so that if you have an implicit  `ExpressionAlg[F]` and an implicit
 `F ~> G`, you automatically have a `ExpressionAlg[G]`. This auto derivation can be turned off using an annotation argument: `@autoFunctorK(autoDerivation = false)`.
 
 ```tut:book

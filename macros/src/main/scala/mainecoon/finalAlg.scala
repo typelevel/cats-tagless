@@ -16,12 +16,13 @@
 
 package mainecoon
 
-import scala.annotation.StaticAnnotation
+import scala.annotation.{StaticAnnotation, compileTimeOnly}
 import Util._
 
 import scala.meta._
 import collection.immutable.Seq
 
+@compileTimeOnly("Cannot expand @finalAlg")
 class finalAlg extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
 

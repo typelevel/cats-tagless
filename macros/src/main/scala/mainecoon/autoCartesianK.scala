@@ -16,15 +16,17 @@
 
 package mainecoon
 
-import scala.annotation.StaticAnnotation
+import scala.annotation.{StaticAnnotation, compileTimeOnly}
 import scala.meta._
 import autoCartesianK._
 import Util._
+
 import collection.immutable.Seq
 
 /**
  * auto generates an instance of [[CartesianK]]
  */
+@compileTimeOnly("Cannot expand @autoCartesianK")
 class autoCartesianK extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
     enrichCompanion(defn)(cartesianKInst)

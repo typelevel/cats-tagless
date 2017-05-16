@@ -16,14 +16,16 @@
 
 package mainecoon
 
-import scala.annotation.StaticAnnotation
+import scala.annotation.{StaticAnnotation, compileTimeOnly}
 import scala.meta._
 import Util._
+
 import collection.immutable.Seq
 
 /**
  * auto generates an instance of [[FunctorK]]
  */
+@compileTimeOnly("Cannot expand @autoFunctorK")
 class autoFunctorK(autoDerivation: Boolean) extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
     val autoDerivation: Boolean = this match {

@@ -17,7 +17,7 @@ addCompilerPlugin(
 
 libraryDependencies ++= Seq(
   "org.scalameta" %% "scalameta" % "1.7.0" % Provided,
-  "com.kailuowang" %% "mainecoon-macros" % "0.0.5")
+  "com.kailuowang" %% "mainecoon-macros" % "0.0.6")
 ```
 
 ## <a id="auto-transform" href="#auto-transform"></a>Auto-transforming interpreters

@@ -23,20 +23,20 @@ lazy val rootPrj = project
   .aggregate(rootJVM, rootJS, testsJS, macrosJS)
   .dependsOn(rootJVM, rootJS, testsJS, macrosJS)
   .settings(noPublishSettings)
-  .disablePlugins(Sonatype)
+
 
 lazy val rootJVM = project
   .configure(mkRootJvmConfig(gh.proj, rootSettings, commonJvmSettings))
   .aggregate(coreJVM, lawsJVM, testsJVM, macrosJVM, docs)
   .dependsOn(coreJVM, lawsJVM, testsJVM, macrosJVM)
   .settings(noPublishSettings)
-  .disablePlugins(Sonatype)
+
 
 lazy val rootJS = project
   .configure(mkRootJsConfig(gh.proj, rootSettings, commonJsSettings))
   .aggregate(coreJS, lawsJS)
   .settings(noPublishSettings)
-  .disablePlugins(Sonatype)
+
 
 lazy val core    = prj(coreM)
 lazy val coreJVM = coreM.jvm
@@ -47,7 +47,7 @@ lazy val coreM   = module("core", CrossType.Pure)
   .settings(metaMacroSettings)
   .settings(simulacrumSettings(vAll))
   .enablePlugins(AutomateHeaderPlugin)
-  .disablePlugins(Sonatype)
+
 
 lazy val laws    = prj(lawsM)
 lazy val lawsJVM = lawsM.jvm
@@ -57,7 +57,7 @@ lazy val lawsM   = module("laws", CrossType.Pure)
   .settings(addLibs(vAll, "cats-laws"))
   .settings(disciplineDependencies)
   .enablePlugins(AutomateHeaderPlugin)
-  .disablePlugins(Sonatype)
+
 
 lazy val macros    = prj(macrosM)
 lazy val macrosJVM = macrosM.jvm
@@ -67,7 +67,7 @@ lazy val macrosM   = module("macros", CrossType.Pure)
   .settings(metaMacroSettings)
   .settings(copyrightHeader)
   .enablePlugins(AutomateHeaderPlugin)
-  .disablePlugins(Sonatype)
+
 
 lazy val tests    = prj(testsM)
 lazy val testsJVM = testsM.jvm
@@ -134,18 +134,8 @@ lazy val commonJsSettings = Seq(scalaJSStage in Global := FastOptStage)
 
 lazy val commonJvmSettings = Seq()
 
-lazy val publishSettings = Seq(
-  bintrayOrganization := Some("kailuowang"),
-  bintrayPackageLabels := Seq("henkan"),
-  licenses += gh.license,
-  scmInfo :=  Some(ScmInfo(url(gh.home), "scm:git:" + gh.repo)),
-  apiURL := Some(url(gh.api)),
-  releaseCrossBuild := true,
-  publishMavenStyle := true,
-  homepage := Some(url(gh.home)),
-  pomIncludeRepository := { _ => false },
-  publishArtifact in Test := false
-)
+lazy val publishSettings = sharedPublishSettings(gh, devs) ++ credentialSettings ++ sharedReleaseProcess
+
 
 lazy val scoverageSettings = sharedScoverageSettings(60)
 

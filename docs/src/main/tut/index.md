@@ -63,7 +63,7 @@ implicit val fk : Try ~> Option = λ[Try ~> Option](_.toOption)
 
 tryExpression.mapK(fk)
 ```
-The `Try ~> Option`(i.e. `FunctionK[Try, Option]`), is implemented using [kind projector's polymorphic lambda syntax](https://github.com/non/kind-projector#polymorphic-lambda-values). 
+Note that the `Try ~> Option` is implemented using [kind projector's polymorphic lambda syntax](https://github.com/non/kind-projector#polymorphic-lambda-values).   
 `@autoFunctorK` also add an auto derivation, so that if you have an implicit  `ExpressionAlg[F]` and an implicit
 `F ~> G`, you automatically have a `ExpressionAlg[G]`.
 

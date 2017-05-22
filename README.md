@@ -26,7 +26,7 @@ implicit object tryExpression extends ExpressionAlg[Try] {
 }
 ```
 With the `@autoFunctorK` annotation you can map
- an `ExpressionAlg[F]` to a `ExpressionAlg[G]`, using a `FunctionK[F, G]`, a.k.a. `F ~> G`.
+ an `ExpressionAlg[F]` to a `ExpressionAlg[G]`, using a [`FunctionK[F, G]`](http://typelevel.org/cats/datatypes/functionk.html), a.k.a. `F ~> G`.
 ```scala
 import mainecoon.implicits._
 import cats.~>
@@ -36,6 +36,7 @@ val fk : Try ~> Option = λ[Try ~> Option](_.toOption)
 tryExpression.mapK(fk)
 // res3: ExpressionAlg[Option] = ExpressionAlg$$anon$4@14dd7f4
 ```
+Note that the `Try ~> Option` is implemented using [kind projector's polymorphic lambda syntax](https://github.com/non/kind-projector#polymorphic-lambda-values). 
 
 Mainecoon also provides auto instance derivation for `InvariantK` and `CartesianK`.
 

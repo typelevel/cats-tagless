@@ -19,6 +19,8 @@ libraryDependencies ++= Seq(
   "org.scalameta" %% "scalameta" % "1.7.0" % Provided,
   "com.kailuowang" %% "mainecoon-macros" % "0.1.0")
 ```
+Note that `org.scalameta.paradise` is a fork of `org.scalamacros.paradise`. So if you already have the
+`org.scalamacros.paradise` dependency, you might need to replace it.
 
 ## <a id="auto-transform" href="#auto-transform"></a>Auto-transforming interpreters
 
@@ -50,7 +52,7 @@ ExpressionAlg[Try]
 ```
 
 The `@autoFunctorK` annotation adds a `FunctorK` instance for `ExpressionAlg` so that you can map
- an `ExpressionAlg[F]` to a `ExpressionAlg[G]` using a `FunctionK[F, G]`, a.k.a. `F ~> G`.
+ an `ExpressionAlg[F]` to a `ExpressionAlg[G]` using a [`FunctionK[F, G]`](http://typelevel.org/cats/datatypes/functionk.html), a.k.a. `F ~> G`.
 ```tut:silent
 import mainecoon.implicits._
 import cats.implicits._
@@ -61,13 +63,14 @@ implicit val fk : Try ~> Option = λ[Try ~> Option](_.toOption)
 
 tryExpression.mapK(fk)
 ```
-
-In fact, `@autoFunctorK` also add an auto derivation, so that if you have an implicit  `ExpressionAlg[F]` and an implicit
-`F ~> G`, you automatically have a `ExpressionAlg[G]`. This auto derivation can be turned off using an annotation argument: `@autoFunctorK(autoDerivation = false)`.
+Note that the `Try ~> Option` is implemented using [kind projector's polymorphic lambda syntax](https://github.com/non/kind-projector#polymorphic-lambda-values).   
+`@autoFunctorK` also add an auto derivation, so that if you have an implicit  `ExpressionAlg[F]` and an implicit
+`F ~> G`, you automatically have a `ExpressionAlg[G]`.
 
 ```tut:book
 ExpressionAlg[Option]
 ```
+This auto derivation can be turned off using an annotation argument: `@autoFunctorK(autoDerivation = false)`.
 
 ## <a id="stack-safe" href="#stack-safe"></a>Make stack safe with `Free`
 Another quick win with a `FunctorK` instance is to lift your algebra interpreters to use `Free` to achieve stack safety.

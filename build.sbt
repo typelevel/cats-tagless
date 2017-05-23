@@ -43,7 +43,6 @@ lazy val coreJVM = coreM.jvm
 lazy val coreJS  = coreM.js
 lazy val coreM   = module("core", CrossType.Pure)
   .settings(addLibs(vAll, "cats-core"))
-  .settings(addTestLibs(vAll, "scalatest"))
   .settings(metaMacroSettings)
   .settings(simulacrumSettings(vAll))
   .enablePlugins(AutomateHeaderPlugin)

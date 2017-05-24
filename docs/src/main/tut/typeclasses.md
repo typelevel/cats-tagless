@@ -10,21 +10,21 @@ position: 4
 
 There are three type classes that are higher kinded version of the corresponding type classes in cats.
 
-1. `FunctorK` provides
+### <a id="functorK" href="#functorK"></a>`FunctorK` provides
 ```tut:silent
   def mapK[F[_], G[_]](af: A[F])(fk: F ~> G): A[G]
 ```
 
 For tagless final algebras whose effect `F` appears only in the covariant position, instance of `FunctorK` can be auto generated through the `autoFunctorK` annotation.
 
-2. `InvariantK` provides
+### <a id="invariantK" href="#invariantK"></a>`InvariantK` provides
 ```tut:silent
   def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gK: G ~> F): A[G]
 ```
 
 For tagless final algebras whose effect `F` appears in both the covariant positions and contravariant positions, instance of `InvariantK` can be auto generated through the `autoInvariantK` annotation.
 
-3. `CartesianK` provides
+### <a id="cartesianK" href="#cartesianK"></a>`CartesianK` provides
 ```
  def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Prod[F, G, ?]]
 ```

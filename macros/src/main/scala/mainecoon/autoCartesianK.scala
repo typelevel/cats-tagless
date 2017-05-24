@@ -34,7 +34,7 @@ class autoCartesianK extends StaticAnnotation {
 }
 
 object autoCartesianK {
-  def cartesianKInst(cls: TypeDefinition): TypeDefinition = {
+  private[mainecoon] def cartesianKInst(cls: TypeDefinition): TypeDefinition = {
     import cls._
 
     val methods = templ.stats.map(_.map {

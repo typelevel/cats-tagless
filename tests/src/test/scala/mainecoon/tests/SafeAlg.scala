@@ -24,7 +24,7 @@ import org.scalacheck.{Arbitrary, Cogen}
 import scala.util.Try
 import cats.laws.discipline.eq._
 
-@finalAlg @autoFunctorK @autoCartesianK
+@finalAlg @autoFunctorK @autoCartesianK @autoProductNK
 trait SafeAlg[F[_]] {
   def parseInt(i: String): F[Int]
   def divide(dividend: Float, divisor: Float): F[Float]

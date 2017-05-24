@@ -29,7 +29,10 @@ Say we have a typical tagless encoded algebra `ExpressionAlg[F[_]]`
 ```tut:silent
 import mainecoon._
 
-@finalAlg @autoFunctorK @autoCartesianK
+@finalAlg
+@autoFunctorK
+@autoCartesianK
+@autoProductNK
 trait ExpressionAlg[F[_]] {
   def num(i: String): F[Float]
   def divide(dividend: Float, divisor: Float): F[Float]
@@ -155,4 +158,17 @@ val prod = ExpressionAlg[Option].productK(ExpressionAlg[Try])
 prod.num("2")
 ```
 
+If you want to combine more than 2 interpreters, the `@autoProductNK` attribute add a serials of `product{n}K` (`n = 3..9`)methods.
+For example
+```tut:book
 
+val listInterpreter = ExpressionAlg[Option].mapK(λ[Option ~> List](_.toList))
+val vectorInterpreter = listInterpreter.mapK(λ[List ~> Vector](_.toVector))
+
+val prod4 = ExpressionAlg.product4K(ExpressionAlg[Try], ExpressionAlg[Option], listInterpreter, vectorInterpreter)
+
+prod4.num("3")
+
+prod4.num("invalid")
+
+```

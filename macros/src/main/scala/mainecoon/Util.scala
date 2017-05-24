@@ -22,6 +22,13 @@ import scala.collection.immutable.Seq
 
 private[mainecoon] object Util {
 
+  /**
+   *
+   * @param name e.g. "F" gives a `tparam"F[_]"`
+   * @return
+   */
+  def highKindedTypeParam(name: String): Type.Param =
+    Type.Param(Nil, Type.Name(name), Seq(Type.Param(Nil, Name.Anonymous(), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Bounds(None, None), Nil, Nil)
 
   def enrichCompanion(defn: Any)(f: TypeDefinition => TypeDefinition) : Block = {
     defn match {
@@ -40,15 +47,10 @@ private[mainecoon] object Util {
     }
   }
 
-//  def getArg(name: String, )
-
   implicit class CompanionExtension(val self: Defn.Object) extends AnyVal {
     import self._
     def addStats(stats: Seq[Stat]): Defn.Object =
       copy(templ = templ.copy(stats = Some(templ.stats.getOrElse(Nil) ++ stats)))
-
-    def addParent(parent: Ctor.Call): Defn.Object =
-      copy(templ = templ.copy(parents = parent +: templ.parents))
 
   }
 

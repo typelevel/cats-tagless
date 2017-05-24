@@ -36,9 +36,9 @@ val fk : Try ~> Option = λ[Try ~> Option](_.toOption)
 tryExpression.mapK(fk)
 // res3: ExpressionAlg[Option] = ExpressionAlg$$anon$4@14dd7f4
 ```
-Note that the `Try ~> Option` is implemented using [kind projector's polymorphic lambda syntax](https://github.com/non/kind-projector#polymorphic-lambda-values). 
+Note that the `Try ~> Option` is implemented using [kind projector's polymorphic lambda syntax](https://github.com/non/kind-projector#polymorphic-lambda-values).
 
-Mainecoon also provides auto instance derivation for `InvariantK` and `CartesianK`.
+Behind the scene, `@autoFunctorK` generates an instance of the [`FunctorK`](http://kailuowang.com/mainecoon/typeclasses.html#functorK) type class that provides the mapping functionality. Mainecoon also provides type classes [`InvariantK`](http://kailuowang.com/mainecoon/typeclasses.html#invariantK) and [`CartesianK`](http://kailuowang.com/mainecoon/typeclasses.html#cartesianK) and auto instance generations for them.
 
 #### For documentation/FAQ/guides, go to [kailuowang.com/mainecoon](http://kailuowang.com/mainecoon).
 

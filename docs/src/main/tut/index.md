@@ -54,8 +54,10 @@ Similar to [simularcum](https://github.com/mpilquist/simulacrum), `@finalAlg` ad
 ExpressionAlg[Try]
 ```
 
-The `@autoFunctorK` annotation adds a `FunctorK` instance for `ExpressionAlg` so that you can map
- an `ExpressionAlg[F]` to a `ExpressionAlg[G]` using a [`FunctionK[F, G]`](http://typelevel.org/cats/datatypes/functionk.html), a.k.a. `F ~> G`.
+Mainecoon provides a [`FunctorK`](typeclasses.html#functorK) type class to map over algebras using [cats](http://typelevel.org/cats)' [`FunctionK`](http://typelevel.org/cats/datatypes/functionk.html).
+The `@autoFunctorK` annotation automatically generate an instance of `FunctorK` for `ExpressionAlg` so that you can map
+ an `ExpressionAlg[F]` to a `ExpressionAlg[G]` using a `FunctionK[F, G]`, a.k.a. `F ~> G`.
+
 ```tut:silent
 import mainecoon.implicits._
 import cats.implicits._
@@ -69,6 +71,9 @@ tryExpression.mapK(fk)
 Note that the `Try ~> Option` is implemented using [kind projector's polymorphic lambda syntax](https://github.com/non/kind-projector#polymorphic-lambda-values).   
 `@autoFunctorK` also add an auto derivation, so that if you have an implicit  `ExpressionAlg[F]` and an implicit
 `F ~> G`, you automatically have a `ExpressionAlg[G]`.
+
+Obviously [`FunctorK`](typeclasses.html#functorK) instance is only possible when the effect type `F[_]` appears only in the
+covariant position (i.e. the return types). For algebras with effect type also appearing in the contravariant position (i.e. argument types), mainecoon provides a [`InvariantK`](typeclasses.html#invariantK) type class and an `autoInvariantK` annotation to automatically generate instances.
 
 ```tut:book
 ExpressionAlg[Option]
@@ -152,14 +157,15 @@ new StringCalculatorOption
 
 ## <a id="horizontal-comp" href="#horizontal-comp"></a>Horizontal composition
 
-You can use `CartesianK` to create a new interpreter that runs two interpreters simultaneously and return the result as a `cats.Prod`. The `@autoCartesianK` attribute add an instance of `CartesianK` to the companion object. Example:
+You can use the [`CartesianK`](typeclasses.html#cartesianK) type class to create a new interpreter that runs two interpreters simultaneously and return the result as a `cats.Prod`. The `@autoCartesianK` attribute add an instance of `CartesianK` to the companion object. Example:
 ```tut:book
 val prod = ExpressionAlg[Option].productK(ExpressionAlg[Try])
 prod.num("2")
 ```
 
-If you want to combine more than 2 interpreters, the `@autoProductNK` attribute add a serials of `product{n}K` (`n = 3..9`)methods.
-For example
+If you want to combine more than 2 interpreters, the `@autoProductNK` attribute add a series of `product{n}K (n = 3..9)` methods to the companion object.
+
+For example.
 ```tut:book
 
 val listInterpreter = ExpressionAlg[Option].mapK(λ[Option ~> List](_.toList))
@@ -172,3 +178,4 @@ prod4.num("3")
 prod4.num("invalid")
 
 ```
+Unlike `productK` living in the `CartesianK` type class, currently we don't have a type class for these `product{n}K` operations yet.

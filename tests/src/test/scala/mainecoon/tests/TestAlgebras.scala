@@ -23,6 +23,7 @@ import org.scalacheck.{Arbitrary, Cogen}
 
 import scala.util.Try
 import cats.laws.discipline.eq._
+import cats.implicits._
 
 @finalAlg @autoFunctorK @autoCartesianK @autoProductNK
 trait SafeAlg[F[_]] {
@@ -32,10 +33,13 @@ trait SafeAlg[F[_]] {
 
 object SafeAlg {
 
-  implicit def eqForParseAlg[F[_]](implicit eqF: Eq[F[Int]]): Eq[SafeAlg[F]] =
-    Eq.by[SafeAlg[F], String => F[Int]](p => (s: String) => p.parseInt(s))
+  implicit def eqForSafeAlg[F[_]](implicit eqFInt: Eq[F[Int]], eqFFloat: Eq[F[Float]]): Eq[SafeAlg[F]] =
+    Eq.by[SafeAlg[F], (String => F[Int], (((Float, Float)) => F[Float]))] { p => (
+      (s: String) => p.parseInt(s),
+      (pair: (Float, Float)) => p.divide(pair._1, pair._2))
+    }
 
-  implicit def arbitraryParseAlg[F[_]](implicit cS: Cogen[String],
+  implicit def arbitrarySafeAlg[F[_]](implicit cS: Cogen[String],
                                        gF: Cogen[Float],
                                        FI: Arbitrary[F[Int]],
                                        FB: Arbitrary[F[Float]]): Arbitrary[SafeAlg[F]] =
@@ -49,6 +53,34 @@ object SafeAlg {
       }
     }
 }
+
+
+@finalAlg @autoInvariantK
+trait SafeInvAlg[F[_]] {
+  def parseInt(i: F[String]): F[Int]
+}
+
+object SafeInvAlg {
+
+  implicit def eqForSafeInvAlg[F[_]](implicit eqFInt: Eq[F[Int]], eqFString: Eq[F[String]],  A: Arbitrary[F[String]]): Eq[SafeInvAlg[F]] =
+    Eq.by[SafeInvAlg[F], F[String] => F[Int]] { p =>
+      (s: F[String]) => p.parseInt(s)
+    }
+
+  implicit def arbitrarySafeInvAlg[F[_]](implicit
+                                       gF: Cogen[F[String]],
+                                       FI: Arbitrary[F[Int]]): Arbitrary[SafeInvAlg[F]] =
+    Arbitrary {
+      for {
+        f <- Arbitrary.arbitrary[F[String] => F[Int]]
+      } yield new SafeInvAlg[F] {
+        def parseInt(i: F[String]): F[Int] = f(i)
+
+      }
+    }
+}
+
+
 
 object Interpreters {
 

@@ -36,7 +36,7 @@ class autoCartesianKTests extends MainecoonTestSuite {
 
   }
 
-  implicit def eqT32 = SafeAlg.eqForParseAlg[Tuple3K[Try, Option, List, ?]] //have to help scalac here
+  implicit def eqT32 = SafeAlg.eqForSafeAlg[Tuple3K[Try, Option, List, ?]] //have to help scalac here
 
   checkAll("ParseAlg[Option]", CartesianKTests[SafeAlg].cartesianK[Try, Option, List])
   checkAll("CartesianK[ParseAlg]", SerializableTests.serializable(CartesianK[SafeAlg]))

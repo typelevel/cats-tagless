@@ -42,8 +42,3 @@ class autoProductNKTests extends MainecoonTestSuite {
   }
 
 }
-
-object autoProductNKTests {
-
-}
-

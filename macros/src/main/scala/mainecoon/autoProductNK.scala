@@ -51,7 +51,7 @@ object autoProductNK {
           val returnItems = range.map { n =>
             q"${Term.Name("af" + n)}.$methodName(..${arguments(params)})"
           }
-          q"""def $methodName(..$params): $productTypeName[..$effectTypeParamsNames]#l[$resultType] =
+          q"""def $methodName(..$params): $productTypeName[..$effectTypeParamsNames]#λ[$resultType] =
            (..$returnItems)"""
         case st => abort(s"autoProductK does not support algebra with such statement: $st")
       }).getOrElse(Nil)
@@ -67,8 +67,8 @@ object autoProductNK {
       val inboundInterpreters: Seq[Term.Param] = range.map(inboundInterpreter)
 
       q"""
-        def ${Term.Name("product" + arity + "K")}[..$effectTypeParams](..$inboundInterpreters): $name[$productTypeName[..$effectTypeParamsNames]#l] =
-          new ${Ctor.Ref.Name(name.value)}[$productTypeName[..$effectTypeParamsNames]#l] {
+        def ${Term.Name("product" + arity + "K")}[..$effectTypeParams](..$inboundInterpreters): $name[$productTypeName[..$effectTypeParamsNames]#λ] =
+          new ${Ctor.Ref.Name(name.value)}[$productTypeName[..$effectTypeParamsNames]#λ] {
             ..$methods
           }
       """

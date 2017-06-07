@@ -26,9 +26,8 @@ import autoInvariantKTests._
 import shapeless.test.illTyped
 
 class autoInvariantKTests extends MainecoonTestSuite {
-  //work with covariant algs, todo: add law tests for an invariant alg.
-  checkAll("ParseAlg[Option]", InvariantKTests[SafeAlg].invariantK[Try, Option, List])
-  checkAll("InvariantK[ParseAlg]", SerializableTests.serializable(InvariantK[SafeAlg]))
+  checkAll("SafeInvAlg[Option]", InvariantKTests[SafeInvAlg].invariantK[Try, Option, List])
+  checkAll("InvariantK[SafeInvAlg]", SerializableTests.serializable(InvariantK[SafeInvAlg]))
 
   test("Alg with non effect method") {
     val tryInt = new NoEffectMethod[Try] {

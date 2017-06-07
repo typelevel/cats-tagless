@@ -27,7 +27,7 @@ class autoProductNKTests extends MainecoonTestSuite {
     val optionInterpreter = Interpreters.tryInterpreter.mapK(λ[Try ~> Option](_.toOption))
     val listInterpreter = optionInterpreter.mapK(λ[Option ~> List](_.toList))
 
-    val prodInterpreter: SafeAlg[Tuple3K[Try, List, Option]#l] =
+    val prodInterpreter: SafeAlg[Tuple3K[Try, List, Option]#λ] =
       SafeAlg.product3K(Interpreters.tryInterpreter, listInterpreter, optionInterpreter)
 
     prodInterpreter.parseInt("3") should be((Success(3), List(3f), Some(3f)))

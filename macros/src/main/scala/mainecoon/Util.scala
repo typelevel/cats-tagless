@@ -42,7 +42,7 @@ private[mainecoon] object Util {
 
   def enrichAlgebra(defn: Any)(f: AlgDefn => TypeDefinition): Block = {
     enrichCompanion(defn){ cls: TypeDefinition =>
-      val ad = AlgDefn.from(cls).getOrElse(abort(s"${cls.name} does not have an higher-kinded type parameter, e.g. F[_]"))
+      val ad = AlgDefn.fromHigherKinded(cls).getOrElse(abort(s"${cls.name} does not have an higher-kinded type parameter, e.g. F[_]"))
       f(ad)
     }
   }
@@ -74,12 +74,18 @@ private[mainecoon] object Util {
   }
 
   object AlgDefn {
-    def from(cls: TypeDefinition): Option[AlgDefn] = {
+    def fromHigherKinded(cls: TypeDefinition): Option[AlgDefn] = {
       cls.tparams.collectFirst {
         case tp: Type.Param if tp.tparams.nonEmpty => tp
       }.map { effectType =>
         AlgDefn(cls, effectType)
       }
+    }
+
+    def from(cls: TypeDefinition): Option[AlgDefn] = {
+      cls.tparams.headOption.map(
+        AlgDefn(cls, _)
+      )
     }
   }
 

@@ -35,7 +35,7 @@ class autoInvariantTests extends MainecoonTestSuite {
     val doubleAlg = AlgWithNonEffectMethodFloat.imap(_.toDouble)(_.toFloat)
     doubleAlg.foo("big") should be(3d)
     doubleAlg.foo2("big") should be("gib")
-    doubleAlg.foo3(3d) should be("3.0")
+    doubleAlg.foo3(3d) should be("3")
   }
 
   test("extra type param correctly handled") {
@@ -71,7 +71,7 @@ object autoInvariantTests {
   object AlgWithNonEffectMethodFloat extends AlgWithNonEffectMethod[Float] {
     def foo(a: String): Float = a.length.toFloat
     def foo2(a: String): String = a.reverse
-    def foo3(a: Float): String = a.toString
+    def foo3(a: Float): String = a.toInt.toString
   }
 
 

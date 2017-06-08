@@ -37,7 +37,7 @@ object autoFunctor {
     import ad._
     import cls._
 
-    val methods = templ.stats.map(_.map {
+    val methods = templ.stats.map(_.collect {
       //abstract method with return type being effect type
       case q"def $methodName(..$params): ${Type.Name(`effectTypeName`)}" =>
         q"""def $methodName(..$params): TTarget =
@@ -47,7 +47,6 @@ object autoFunctor {
         q"""def $methodName(..$params): $targetType =
            delegatee_.$methodName(..${arguments(params)})"""
 
-      case st => abort(s"autoFunctor does not support algebra with such statement: $st")
     }).getOrElse(Nil)
 
     val instanceDef = Seq(q"""

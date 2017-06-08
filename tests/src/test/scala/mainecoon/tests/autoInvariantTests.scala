@@ -43,6 +43,16 @@ class autoInvariantTests extends MainecoonTestSuite {
     doubleAlg.foo("big", 3d) should be(6d)
   }
 
+  test("Alg with non effect method with default Impl") {
+    val tryInt = new AlgWithDefaultImpl[Int] {
+      def plusOne(i: Int): Int = i + 1
+    }
+
+    tryInt.imap(_.toString)(_.toInt).plusOne("3") should be("4")
+    tryInt.imap(_.toString)(_.toInt).minusOne(2) should be(1)
+  }
+
+
 }
 
 object autoInvariantTests {
@@ -68,6 +78,12 @@ object autoInvariantTests {
   @autoInvariant
   trait AlgWithExtraTypeParam[T1, T] {
     def foo(a: T1, b: T): T
+  }
+
+  @autoInvariant
+  trait AlgWithDefaultImpl[T] {
+    def plusOne(i: T): T
+    def minusOne(i: Int): Int = i - 1
   }
 
   object AlgWithExtraTypeParamFloat extends AlgWithExtraTypeParam[String, Float] {

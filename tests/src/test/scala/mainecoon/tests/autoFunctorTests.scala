@@ -41,6 +41,15 @@ class autoFunctorTests extends MainecoonTestSuite {
     val doubleAlg = AlgWithExtraTypeParamFloat.map(_.toDouble)
     doubleAlg.foo("big") should be(3d)
   }
+
+  test("Alg with non effect method with default Impl") {
+    val tryInt = new AlgWithDefaultImpl[Int] {
+      def plusOne(i: Int): Int = i + 1
+    }
+
+    tryInt.map(_.toString).plusOne(3) should be("4")
+    tryInt.map(_.toString).minusOne(2) should be(1)
+  }
 }
 
 object autoFunctorTests {
@@ -70,7 +79,11 @@ object autoFunctorTests {
     def foo(a: String): Float = a.length.toFloat
   }
 
-
+  @autoFunctor
+  trait AlgWithDefaultImpl[T] {
+    def plusOne(i: Int): T
+    def minusOne(i: Int): Int = i - 1
+  }
 
   implicit def eqForSimpleAlg[T](implicit eqT: Eq[T]): Eq[SimpleAlg[T]] =
     Eq.by[SimpleAlg[T], String => T] { p =>

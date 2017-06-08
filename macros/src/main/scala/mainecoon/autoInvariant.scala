@@ -57,7 +57,7 @@ object autoInvariant {
         }
     }
 
-    val methods = templ.stats.map(_.map {
+    val methods = templ.stats.map(_.collect {
       //abstract method with return type being effect type
       case q"def $methodName(..$params): ${Type.Name(`effectTypeName`)}" =>
         val pp = new ParamParser(params)
@@ -68,8 +68,6 @@ object autoInvariant {
         val pp = new ParamParser(params)
         q"""def $methodName(..${pp.newParams}): $targetType =
            delegatee_.$methodName(..${pp.newArgs})"""
-
-      case st => abort(s"autoInvariant does not support algebra with such statement: $st")
     }).getOrElse(Nil)
 
     val instanceDef = Seq(q"""

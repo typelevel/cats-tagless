@@ -44,6 +44,7 @@ Behind the scene, `@autoFunctorK` generates an instance of the [`FunctorK`](http
 #### For documentation/FAQ/guides, go to [kailuowang.com/mainecoon](http://kailuowang.com/mainecoon).
 
 ### Community
+Any contribution is more than welcome. Also feel free to report bugs, request features using github issues or gitter. 
 
 Discussion around mainecoon is encouraged in the
 [Gitter channel](https://gitter.im/kailuowang/mainecoon) as well as on Github issue and PR pages.
@@ -55,3 +56,7 @@ discussing mainecoon on the Github page, Gitter channel, or other venues.
 ### Copyright
 
 Copyright (C) 2017 Kailuo Wang [http://kailuowang.com](http://kailuowang.com)
+
+### License 
+
+Mainecoon is licensed under the Apache License 2.0

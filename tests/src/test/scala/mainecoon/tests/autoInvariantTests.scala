@@ -37,6 +37,12 @@ class autoInvariantTests extends MainecoonTestSuite {
     doubleAlg.foo2("big") should be("gib")
     doubleAlg.foo3(3d) should be("3.0")
   }
+
+  test("extra type param correctly handled") {
+    val doubleAlg = AlgWithExtraTypeParamFloat.imap(_.toDouble)(_.toFloat)
+    doubleAlg.foo("big", 3d) should be(6d)
+  }
+
 }
 
 object autoInvariantTests {
@@ -57,6 +63,17 @@ object autoInvariantTests {
     def foo2(a: String): String = a.reverse
     def foo3(a: Float): String = a.toString
   }
+
+
+  @autoInvariant
+  trait AlgWithExtraTypeParam[T1, T] {
+    def foo(a: T1, b: T): T
+  }
+
+  object AlgWithExtraTypeParamFloat extends AlgWithExtraTypeParam[String, Float] {
+    def foo(a: String, b: Float): Float = a.length.toFloat + b
+  }
+
 
   implicit def eqForSimpleAlg[T: Arbitrary](implicit eqT: Eq[T]): Eq[SimpleAlg[T]] =
     Eq.by[SimpleAlg[T], T => T] { p =>

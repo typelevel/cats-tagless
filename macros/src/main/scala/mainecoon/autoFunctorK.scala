@@ -83,8 +83,8 @@ class CovariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
           ..${covariantKMethods ++ newTypeMember}
         }""",
       q"""
-        implicit def ${Term.Name("functorKFor" + name.value)}[..$extraTParams]: _root_.mainecoon.FunctorK[$typeLambdaVaryingEffect] =
-          new _root_.mainecoon.FunctorK[$typeLambdaVaryingEffect] {
+        implicit def ${Term.Name("functorKFor" + name.value)}[..$extraTParams]: _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffect] =
+          new _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffect] {
             def mapK[F[_], G[_]](af: $name[..${tArgs("F")}])(fk: _root_.cats.~>[F, G]): $name[..${tArgs("G")}] =
               ${Term.Name(name.value)}.mapK(af)(fk)
           }
@@ -96,7 +96,7 @@ class CovariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
       Seq(q"""
            implicit def autoDeriveFromFunctorK[${effectType}, G[_], ..${extraTParams}](
              implicit af: $name[..${tArgs()}],
-             FK: _root_.mainecoon.FunctorK[$typeLambdaVaryingEffect],
+             FK: _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffect],
              fk: _root_.cats.~>[F, G])
              : $name[..${tArgs("G")}] = FK.mapK(af)(fk)
           """)

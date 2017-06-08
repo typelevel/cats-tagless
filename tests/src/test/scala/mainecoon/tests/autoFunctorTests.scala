@@ -36,6 +36,11 @@ class autoFunctorTests extends MainecoonTestSuite {
     doubleAlg.bar("big") should be("big")
     doubleAlg.foo("big") should be(3d)
   }
+
+  test("extra type param correctly handled") {
+    val doubleAlg = AlgWithExtraTypeParamFloat.map(_.toDouble)
+    doubleAlg.foo("big") should be(3d)
+  }
 }
 
 object autoFunctorTests {
@@ -50,10 +55,22 @@ object autoFunctorTests {
     def bar(a: String): String
   }
 
+
   object AlgWithNonEffectMethodFloat extends AlgWithNonEffectMethod[Float] {
     def foo(a: String): Float = a.length.toFloat
     def bar(a: String): String = a
   }
+
+  @autoFunctor
+  trait AlgWithExtraTypeParam[T1, T] {
+    def foo(a: T1): T
+  }
+
+  object AlgWithExtraTypeParamFloat extends AlgWithExtraTypeParam[String, Float] {
+    def foo(a: String): Float = a.length.toFloat
+  }
+
+
 
   implicit def eqForSimpleAlg[T](implicit eqT: Eq[T]): Eq[SimpleAlg[T]] =
     Eq.by[SimpleAlg[T], String => T] { p =>

@@ -28,11 +28,7 @@ import collection.immutable.Seq
 @compileTimeOnly("Cannot expand @autoFunctor")
 class autoInvariant extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
-    enrichCompanion(defn){ cls: TypeDefinition =>
-      val ad = AlgDefn.from(cls).getOrElse(abort(s"${cls.name} does not have a type parameter"))
-      autoInvariant.invariantInst(ad)
-    }
-
+    enrichAlgebra(defn, higherKinded = false)(autoInvariant.invariantInst)
   }
 }
 
@@ -77,10 +73,10 @@ object autoInvariant {
     }).getOrElse(Nil)
 
     val instanceDef = Seq(q"""
-      implicit def ${Term.Name("invariantFor" + name.value)}: _root_.cats.functor.Invariant[$name] =
-        new _root_.cats.functor.Invariant[$name] {
-          def imap[T, TTarget](delegatee_ : $name[T])(mapFunctionTo: T => TTarget)(mapFunctionFrom: TTarget => T): $name[TTarget] =
-            new ${Ctor.Ref.Name(name.value)}[TTarget] {
+      implicit def ${Term.Name("invariantFor" + name.value)}[..$extraTParams]: _root_.cats.functor.Invariant[$typeLambdaVaryingEffect] =
+        new _root_.cats.functor.Invariant[$typeLambdaVaryingEffect] {
+          def imap[T, TTarget](delegatee_ : $name[..${tArgs("T")}])(mapFunctionTo: T => TTarget)(mapFunctionFrom: TTarget => T): $name[..${tArgs("TTarget")}] =
+            new ${Ctor.Ref.Name(name.value)}[..${tArgs("TTarget")}] {
               ..$methods
             }
         }""")

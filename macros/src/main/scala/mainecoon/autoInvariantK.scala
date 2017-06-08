@@ -92,8 +92,8 @@ class InvariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
           ..${methods ++ newTypeMember}
         }""",
       q"""
-        implicit def ${Term.Name("invariantKFor" + name.value)}[..$extraTParams]: _root_.mainecoon.InvariantK[$typeLambdaVaryingEffect] =
-          new _root_.mainecoon.InvariantK[$typeLambdaVaryingEffect] {
+        implicit def ${Term.Name("invariantKFor" + name.value)}[..$extraTParams]: _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffect] =
+          new _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffect] {
             def imapK[F[_], G[_]](af: $name[..${tArgs("F")}])(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): $name[..${tArgs("G")}] =
               ${Term.Name(name.value)}.imapK(af)(fk)(gk)
           }
@@ -104,7 +104,7 @@ class InvariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
       Seq(q"""
           implicit def autoDeriveFromInvariantK[${effectType}, G[_], ..${extraTParams}](
             implicit af: $name[..${tArgs()}],
-            IK: _root_.mainecoon.InvariantK[$typeLambdaVaryingEffect],
+            IK: _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffect],
             fk: _root_.cats.~>[F, G],
             gk: _root_.cats.~>[G, F])
               : $name[..${tArgs("G")}] = IK.imapK(af)(fk)(gk)

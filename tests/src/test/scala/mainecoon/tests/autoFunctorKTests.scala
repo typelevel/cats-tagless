@@ -51,6 +51,15 @@ class autoFunctorKTests extends MainecoonTestSuite {
     tryInt.mapK(fk).b(2) should be(2)
   }
 
+  test("Alg with non effect method with default Impl") {
+    val tryInt = new AlgWithDefaultImpl[Try] {
+      def plusOne(i: Int): Try[Int] = Try(i + 1)
+    }
+
+    tryInt.mapK(fk).plusOne(3) should be(Some(4))
+    tryInt.mapK(fk).minusOne(2) should be(1)
+  }
+
 
   test("Alg with extra type parameters") {
 
@@ -140,6 +149,12 @@ object autoFunctorKTests {
   @autoFunctorK(autoDerivation = false)
   trait AlgWithoutAutoDerivation[F[_]] {
     def a(i: Int): F[Int]
+  }
+
+  @autoFunctorK
+  trait AlgWithDefaultImpl[F[_]] {
+    def plusOne(i: Int): F[Int]
+    def minusOne(i: Int): Int = i - 1
   }
 
 

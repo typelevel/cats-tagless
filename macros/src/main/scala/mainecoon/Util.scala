@@ -40,9 +40,9 @@ private[mainecoon] object Util {
     }
   }
 
-  def enrichAlgebra(defn: Any)(f: AlgDefn => TypeDefinition): Block = {
+  def enrichAlgebra(defn: Any, higherKinded: Boolean = true)(f: AlgDefn => TypeDefinition): Block = {
     enrichCompanion(defn){ cls: TypeDefinition =>
-      val ad = AlgDefn.from(cls).getOrElse(abort(s"${cls.name} does not have an higher-kinded type parameter, e.g. F[_]"))
+      val ad = AlgDefn.from(cls, higherKinded).getOrElse(abort(s"${cls.name} does not have an higher-kinded type parameter, e.g. F[_]"))
       f(ad)
     }
   }
@@ -70,16 +70,21 @@ private[mainecoon] object Util {
 
     def tArgs(effTpeName: String): Seq[Type.Name] = tArgs(Type.Name(effTpeName))
 
-    val typeLambdaVaryingEffect = t"({type λ[Ƒ[_]] = ${cls.name}[..${tArgs("Ƒ")}]})#λ"
+    lazy val typeLambdaVaryingHigherKindedEffect = t"({type λ[Ƒ[_]] = ${cls.name}[..${tArgs("Ƒ")}]})#λ"
+    lazy val typeLambdaVaryingEffect = t"({type λ[T] = ${cls.name}[..${tArgs("T")}]})#λ"
   }
 
   object AlgDefn {
-    def from(cls: TypeDefinition): Option[AlgDefn] = {
-      cls.tparams.collectFirst {
-        case tp: Type.Param if tp.tparams.nonEmpty => tp
-      }.map { effectType =>
-        AlgDefn(cls, effectType)
-      }
+    def from(cls: TypeDefinition, higherKinded: Boolean = true): Option[AlgDefn] = {
+      { if (higherKinded)
+          cls.tparams.collectFirst {
+            case tp: Type.Param if tp.tparams.nonEmpty => tp
+          }
+        else
+          cls.tparams.lastOption
+      }.map(
+        AlgDefn(cls, _)
+      )
     }
   }
 

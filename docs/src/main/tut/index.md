@@ -165,11 +165,13 @@ prod.num("2")
 If you want to combine more than 2 interpreters, the `@autoProductNK` attribute add a series of `product{n}K (n = 3..9)` methods to the companion object.
 
 For example.
-```tut:book
+```tut:silent
 
 val listInterpreter = ExpressionAlg[Option].mapK(λ[Option ~> List](_.toList))
 val vectorInterpreter = listInterpreter.mapK(λ[List ~> Vector](_.toVector))
 
+```
+```tut:book
 val prod4 = ExpressionAlg.product4K(ExpressionAlg[Try], ExpressionAlg[Option], listInterpreter, vectorInterpreter)
 
 prod4.num("3")
@@ -178,3 +180,40 @@ prod4.num("invalid")
 
 ```
 Unlike `productK` living in the `CartesianK` type class, currently we don't have a type class for these `product{n}K` operations yet.
+
+
+## `@autoFunctor` and `@autoInvariant`
+
+Mainecoon also provides two annotations that can generate `cats.Functor` and `cats.functor.Invariant` instance for your trait.
+
+### `@autoFunctor`
+```tut:silent
+@finalAlg @autoFunctor
+trait SimpleAlg[T] {
+  def foo(a: String): T
+}
+
+implicit object SimpleAlgInt extends SimpleAlg[Int] {
+  def foo(a: String): Int = a.length
+}
+```
+```tut:book
+SimpleAlg[Int].map(_ + 1).foo("blah")
+```
+
+### `@autoInvariant`
+```tut:silent
+@finalAlg @autoInvariant
+trait SimpleInvAlg[T] {
+  def foo(a: T): T
+}
+
+implicit object SimpleInvAlgInt extends SimpleInvAlg[String] {
+  def foo(a: String): String = a.reverse
+}
+```
+```tut:book
+SimpleInvAlg[String].imap(_.toInt)(_.toString).foo(12)
+```
+Note that if there are multiple type parameters on the trait, `@autoFunctor` and `@autoInvariant` will treat the last one as the target `T`.
+

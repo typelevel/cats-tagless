@@ -40,6 +40,10 @@ class FinalAlgTests extends MainecoonTestSuite {
     AlgWithExtraTP[Try, String].a(3) should be(Success("3"))
   }
 
+  test("simple effect Type") {
+    AlgWithSimpleEffectT[String].a(3) should be("3")
+  }
+
 }
 
 object FinalAlgTests {
@@ -49,7 +53,16 @@ object FinalAlgTests {
     def a(i: Int): F[T]
   }
 
+  @finalAlg
+  trait AlgWithSimpleEffectT[T] {
+    def a(i: Int): T
+  }
+
   implicit val algWithExtraTP: AlgWithExtraTP[Try, String] = new AlgWithExtraTP[Try, String] {
     def a(i: Int) = Try(i.toString)
+  }
+
+  implicit val algWithSimpleEffectT: AlgWithSimpleEffectT[String] = new AlgWithSimpleEffectT[String] {
+    def a(i: Int) = i.toString
   }
 }

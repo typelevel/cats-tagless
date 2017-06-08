@@ -16,6 +16,7 @@ addCompilerPlugin(
   ("org.scalameta" % "paradise" % "3.0.0-M9").cross(CrossVersion.full))
 
 libraryDependencies ++= Seq(
+  "org.scalameta"  %% "scalameta" % "1.8.0",
   "com.kailuowang" %% "mainecoon-macros" % "0.1.3")
 ```
 Note that `org.scalameta.paradise` is a fork of `org.scalamacros.paradise`. So if you already have the

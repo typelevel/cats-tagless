@@ -48,7 +48,7 @@ abstract class FunctorKInstanceGenerator(ad: AlgDefn) {
     }
 
   def fromExistingMethods[T <: Stat](pf: PartialFunction[Stat, T]): Seq[T] =
-    templ.stats.map(_.collect(pf)).getOrElse(Nil)
+    templ.stats.toList.flatMap(_.collect(pf))
 
   lazy val typeSignature: Type = {
     if(newTypeMember.isEmpty) t"$name[..${tArgs("G")}]" else t"$name[..${tArgs("G")}] { ..$newTypeMember }"

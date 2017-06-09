@@ -93,6 +93,10 @@ class autoInvariantKTests extends MainecoonTestSuite {
     illTyped { """ implicitly[AlgWithoutAutoDerivation[Option]] """}
   }
 
+  test("with default impl") {
+    implicit object foo extends AlgWithDefaultImpl[Try]
+    AlgWithDefaultImpl[Option].const(Option(1)) should be(3)
+  }
 }
 
 
@@ -143,5 +147,14 @@ object autoInvariantKTests {
     def a(i: F[Int]): F[Int]
   }
 
+  @autoInvariantK @finalAlg
+  trait AlgWithDef[F[_]] {
+    def a: F[Int]
+    def b(c: F[Int]): F[String]
+  }
 
+  @autoInvariantK @finalAlg
+  trait AlgWithDefaultImpl[F[_]] {
+    def const(i: F[Int]): Int = 3
+  }
 }

@@ -108,6 +108,14 @@ class autoFunctorKTests extends MainecoonTestSuite {
 
     illTyped { """ implicitly[AlgWithoutAutoDerivation[Option]] """}
   }
+
+  test("defs with no params") {
+    implicit object foo extends AlgWithDef[Try] {
+      def a = Try(1)
+    }
+
+    AlgWithDef[Option].a should be(Some(1))
+  }
 }
 
 
@@ -157,6 +165,11 @@ object autoFunctorKTests {
     def minusOne(i: Int): Int = i - 1
   }
 
+
+  @autoFunctorK @finalAlg
+  trait AlgWithDef[F[_]] {
+    def a: F[Int]
+  }
 
 
 }

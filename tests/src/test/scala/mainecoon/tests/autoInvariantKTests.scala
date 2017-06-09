@@ -170,4 +170,9 @@ object autoInvariantKTests {
   trait AlgWithTypeParam[F[_]] {
     def a[T](i: F[T]): F[String]
   }
+
+  @autoInvariantK @finalAlg
+  trait AlgWithCurryMethod[F[_]] {
+    def a(t: F[Int])(b: String): F[String]
+  }
 }

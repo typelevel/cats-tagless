@@ -50,4 +50,9 @@ object autoProductNKTests {
   trait algWithGenericType[F[_]] {
     def a[T](a: T): F[Unit]
   }
+
+  @autoProductNK
+  trait algWithCurry[F[_]] {
+    def a(b: String)(c: Int): F[Unit]
+  }
 }

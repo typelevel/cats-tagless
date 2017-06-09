@@ -42,6 +42,10 @@ object autoCartesianK {
 
         q"""def $methodName[..$mTParams](..$params): _root_.cats.data.Prod[F, G, $resultType] =
            _root_.cats.data.Prod(af.$methodName(..${arguments(params)}), ag.$methodName(..${arguments(params)}))"""
+      case q"def $methodName[..$mTParams](..$params)(..$params2): $f[$resultType]" =>
+
+        q"""def $methodName[..$mTParams](..$params)(..$params2): _root_.cats.data.Prod[F, G, $resultType] =
+           _root_.cats.data.Prod(af.$methodName(..${arguments(params)})(..${arguments(params2)}), ag.$methodName(..${arguments(params)})(..${arguments(params2)}))"""
       case st => abort(s"autoCartesianK does not support algebra with such statement: $st")
     }).getOrElse(Nil)
 

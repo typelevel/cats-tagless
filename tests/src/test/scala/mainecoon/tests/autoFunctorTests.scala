@@ -69,6 +69,11 @@ object autoFunctorTests {
     def foo: T
   }
 
+  @autoFunctor
+  trait AlgWithCurry[T] {
+    def foo(a: String)(b: Int): T
+  }
+
 
   object AlgWithNonEffectMethodFloat extends AlgWithNonEffectMethod[Float] {
     def foo(a: String): Float = a.length.toFloat

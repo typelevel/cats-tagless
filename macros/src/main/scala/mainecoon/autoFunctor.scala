@@ -48,6 +48,14 @@ object autoFunctor {
       case q"def $methodName[..$mTParams](..$params): $targetType" =>
         q"""def $methodName[..$mTParams](..$params): $targetType =
            delegatee_.$methodName(..${arguments(params)})"""
+      //abstract method with return type being effect type
+      case q"def $methodName[..$mTParams](..$params)(..$params2): ${Type.Name(`effectTypeName`)}" =>
+        q"""def $methodName[..$mTParams](..$params)(..$params2): TTarget =
+           mapFunction(delegatee_.$methodName(..${arguments(params)})(..${arguments(params2)}))"""
+      //abstract method with other return type
+      case q"def $methodName[..$mTParams](..$params)(..$params2): $targetType" =>
+        q"""def $methodName[..$mTParams](..$params)(..$params2): $targetType =
+           delegatee_.$methodName(..${arguments(params)})(..${arguments(params2)})"""
       case q"def $methodName[..$mTParams]: ${Type.Name(`effectTypeName`)}" =>
         q"""def $methodName[..$mTParams]: TTarget =
            mapFunction(delegatee_.$methodName)"""

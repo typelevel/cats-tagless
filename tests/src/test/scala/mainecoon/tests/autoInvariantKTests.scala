@@ -143,5 +143,9 @@ object autoInvariantKTests {
     def a(i: F[Int]): F[Int]
   }
 
-
+  @autoInvariantK @finalAlg
+  trait AlgWithDef[F[_]] {
+    def a: F[Int]
+    def b(c: F[Int]): F[String]
+  }
 }

@@ -83,7 +83,7 @@ class InvariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
           q"""def $methodName(..${pp.newParams}): $newResultType = $newImpl """
         }
 
-    }
+    } ++ defWithoutParams
 
     //create a mapK method in the companion object with more precise refined type signature
     Seq(q"""

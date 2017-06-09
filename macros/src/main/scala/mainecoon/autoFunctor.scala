@@ -32,12 +32,14 @@ class autoFunctor extends StaticAnnotation {
   }
 }
 
+
+
 object autoFunctor {
   private[mainecoon] def functorInst(ad: AlgDefn): TypeDefinition = {
     import ad._
     import cls._
 
-    val methods = templ.stats.map(_.collect {
+    val methods = templ.stats.toList.flatMap(_.collect {
       //abstract method with return type being effect type
       case q"def $methodName(..$params): ${Type.Name(`effectTypeName`)}" =>
         q"""def $methodName(..$params): TTarget =
@@ -46,8 +48,14 @@ object autoFunctor {
       case q"def $methodName(..$params): $targetType" =>
         q"""def $methodName(..$params): $targetType =
            delegatee_.$methodName(..${arguments(params)})"""
-
-    }).getOrElse(Nil)
+      case q"def $methodName: ${Type.Name(`effectTypeName`)}" =>
+        q"""def $methodName: TTarget =
+           mapFunction(delegatee_.$methodName)"""
+      //abstract method with other return type
+      case q"def $methodName: $targetType" =>
+        q"""def $methodName: $targetType =
+           delegatee_.$methodName"""
+    })
 
     val instanceDef = Seq(q"""
       implicit def ${Term.Name("functorFor" + name.value)}[..$extraTParams]: _root_.cats.Functor[$typeLambdaVaryingEffect] =

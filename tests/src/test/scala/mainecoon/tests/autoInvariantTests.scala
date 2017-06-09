@@ -74,6 +74,11 @@ object autoInvariantTests {
     def foo3(a: Float): String = a.toInt.toString
   }
 
+  @autoInvariant
+  trait AlgWithDef[T] {
+    def foo: T
+    def bar(t: T): T
+  }
 
   @autoInvariant
   trait AlgWithExtraTypeParam[T1, T] {

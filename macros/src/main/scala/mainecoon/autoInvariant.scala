@@ -57,23 +57,30 @@ object autoInvariant {
         }
     }
 
-    val methods = templ.stats.map(_.collect {
+    val methods = templ.stats.toList.flatMap(_.collect {
       //abstract method with return type being effect type
       case q"def $methodName(..$params): ${Type.Name(`effectTypeName`)}" =>
         val pp = new ParamParser(params)
         q"""def $methodName(..${pp.newParams}): TTarget =
-           mapFunctionTo(delegatee_.$methodName(..${pp.newArgs}))"""
+           mapFunction(delegatee_.$methodName(..${pp.newArgs}))"""
       //abstract method with other return type
       case q"def $methodName(..$params): $targetType" =>
         val pp = new ParamParser(params)
         q"""def $methodName(..${pp.newParams}): $targetType =
            delegatee_.$methodName(..${pp.newArgs})"""
-    }).getOrElse(Nil)
+      case q"def $methodName: ${Type.Name(`effectTypeName`)}" =>
+        q"""def $methodName: TTarget =
+           mapFunction(delegatee_.$methodName)"""
+      //abstract method with other return type
+      case q"def $methodName: $targetType" =>
+        q"""def $methodName: $targetType =
+           delegatee_.$methodName"""
+    })
 
     val instanceDef = Seq(q"""
       implicit def ${Term.Name("invariantFor" + name.value)}[..$extraTParams]: _root_.cats.functor.Invariant[$typeLambdaVaryingEffect] =
         new _root_.cats.functor.Invariant[$typeLambdaVaryingEffect] {
-          def imap[T, TTarget](delegatee_ : $name[..${tArgs("T")}])(mapFunctionTo: T => TTarget)(mapFunctionFrom: TTarget => T): $name[..${tArgs("TTarget")}] =
+          def imap[T, TTarget](delegatee_ : $name[..${tArgs("T")}])(mapFunction: T => TTarget)(mapFunctionFrom: TTarget => T): $name[..${tArgs("TTarget")}] =
             new ${Ctor.Ref.Name(name.value)}[..${tArgs("TTarget")}] {
               ..$methods
             }

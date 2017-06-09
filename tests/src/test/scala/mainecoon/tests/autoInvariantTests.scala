@@ -99,6 +99,11 @@ object autoInvariantTests {
   trait AlgWithCurry[T] {
     def foo(a: T)(b: Int): T
   }
+  
+  @autoInvariant
+  trait AlgWithCurry2[T] {
+    def foo(a: T)(b: Int): String
+  }
 
   object AlgWithExtraTypeParamFloat extends AlgWithExtraTypeParam[String, Float] {
     def foo(a: String, b: Float): Float = a.length.toFloat + b

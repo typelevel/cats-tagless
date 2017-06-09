@@ -67,6 +67,12 @@ However, there is also `mapK` function added to the companion object of the alge
 val barOption: Bar[Option] { type T = String } = Bar.mapK(tryInt)(fk)
 ```
 
+### I am seeing diverging implicit expansion for type MyAlgebra[F]
 
+If you see error likes the following when you try to summon a specific instance of `MyAlgebra`
 
+> diverging implicit expansion for type MyAlgebra[F]
+>
+> [error] starting with method autoDeriveFromFunctorK in object MyAlgebra
 
+It probably means that necessary implicit `MyAlgebra` instance and/or the corresponding `FunctionK` is missing in scope. 

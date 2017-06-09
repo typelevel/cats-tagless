@@ -90,6 +90,11 @@ object autoFunctorTests {
     def minusOne(i: Int): Int = i - 1
   }
 
+  @autoFunctor
+  trait AlgWithGenericMethod[T] {
+    def plusOne[A](i: A): T
+  }
+
   implicit def eqForSimpleAlg[T](implicit eqT: Eq[T]): Eq[SimpleAlg[T]] =
     Eq.by[SimpleAlg[T], String => T] { p =>
       (s: String) => p.foo(s)

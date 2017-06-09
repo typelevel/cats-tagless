@@ -64,9 +64,9 @@ abstract class FunctorKInstanceGenerator(ad: AlgDefn) {
 
   lazy val defWithoutParams: Seq[Stat] =
     fromExistingMethods {
-      case q"def $methodName: $resultType" =>
+      case q"def $methodName[..$mTParams]: $resultType" =>
         val (newResultType, newImpl) = covariantTransform(resultType, q"af.$methodName" )
-        q"""def $methodName: $newResultType = $newImpl"""
+        q"""def $methodName[..$mTParams]: $newResultType = $newImpl"""
     }
 }
 
@@ -76,9 +76,9 @@ class CovariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
 
   lazy val covariantKMethods: Seq[Stat] =
     fromExistingMethods {
-      case q"def $methodName(..$params): $resultType" =>
+      case q"def $methodName[..$mTParams](..$params): $resultType" =>
         val (newResultType, newImpl) = covariantTransform(resultType, q"af.$methodName(..${arguments(params)})" )
-        q"""def $methodName(..$params): $newResultType = $newImpl"""
+        q"""def $methodName[..$mTParams](..$params): $newResultType = $newImpl"""
     } ++ defWithoutParams
 
   lazy val instanceDef: Seq[Defn] = {

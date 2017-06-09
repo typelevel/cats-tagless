@@ -67,27 +67,27 @@ class InvariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
   }
 
   lazy val instanceDef: Seq[Defn] = {
-    def newMethod(methodName: Term.Name, params: Seq[Term.Param],  resultType: Type): Defn.Def = {
+    def newMethod(methodName: Term.Name, params: Seq[Term.Param],  resultType: Type, mTParams: Seq[Type.Param]): Defn.Def = {
       val pp = new ParamParser(params)
 
       if(pp.effParams.isEmpty) {
         val (newResultType, newImpl) = covariantTransform(resultType, q"af.$methodName(..${arguments(params)})" )
 
-        q"""override def $methodName(..$params): $newResultType = $newImpl"""
+        q"""override def $methodName[..$mTParams](..$params): $newResultType = $newImpl"""
       } else {
         val (newResultType, newImpl) = covariantTransform(resultType, q"af.$methodName(..${pp.newArgs})" )
-        q"""override def $methodName(..${pp.newParams}): $newResultType = $newImpl """
+        q"""override def $methodName[..$mTParams](..${pp.newParams}): $newResultType = $newImpl """
       }
     }
 
 
     val methods = fromExistingMethods {
-      case q"def $methodName(..$params ): $resultType" =>
-        newMethod(methodName, params, resultType)
-      case st @ q"def $methodName(..$params ) = $impl" =>
+      case q"def $methodName[..$mTParams](..$params ): $resultType" =>
+        newMethod(methodName, params, resultType, mTParams)
+      case st @ q"def $methodName[..$mTParams](..$params ) = $impl" =>
         abort(s"mainecoon.autoInvariantK does not support method without declared return type. as in $st ")
-      case q"def $methodName(..$params ): $resultType = $impl"  =>
-        newMethod(methodName, params, resultType.get)
+      case q"def $methodName[..$mTParams](..$params ): $resultType = $impl"  =>
+        newMethod(methodName, params, resultType.get, mTParams)
 
     } ++ defWithoutParams
 

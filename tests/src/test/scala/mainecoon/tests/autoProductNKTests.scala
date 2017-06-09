@@ -42,3 +42,12 @@ class autoProductNKTests extends MainecoonTestSuite {
   }
 
 }
+
+
+object autoProductNKTests {
+
+  @autoProductNK
+  trait algWithGenericType[F[_]] {
+    def a[T](a: T): F[Unit]
+  }
+}

@@ -79,6 +79,9 @@ class CovariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
       case q"def $methodName[..$mTParams](..$params): $resultType" =>
         val (newResultType, newImpl) = covariantTransform(resultType, q"af.$methodName(..${arguments(params)})" )
         q"""def $methodName[..$mTParams](..$params): $newResultType = $newImpl"""
+      case q"def $methodName[..$mTParams](..$params)(..$params2): $resultType" =>
+        val (newResultType, newImpl) = covariantTransform(resultType, q"af.$methodName(..${arguments(params)})(..${arguments(params2)})" )
+        q"""def $methodName[..$mTParams](..$params)(..$params2): $newResultType = $newImpl"""
     } ++ defWithoutParams
 
   lazy val instanceDef: Seq[Defn] = {

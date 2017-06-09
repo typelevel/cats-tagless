@@ -19,7 +19,7 @@ package tests
 
 
 import scala.util.Try
-import cats.~>
+import cats.{Show, ~>}
 import cats.laws.discipline.SerializableTests
 import mainecoon.laws.discipline.FunctorKTests
 import autoFunctorKTests._
@@ -183,6 +183,16 @@ object autoFunctorKTests {
   @autoFunctorK @finalAlg
   trait AlgWithTParamInMethod[F[_]] {
     def a[T](t: T): F[String]
+  }
+
+  @autoFunctorK @finalAlg
+  trait AlgWithContextBounds[F[_]] {
+    def a[T: Show](t: Int): F[String]
+  }
+
+  @autoFunctorK @finalAlg
+  trait AlgWithCurryMethod[F[_]] {
+    def a(t: Int)(b: String): F[String]
   }
 
 

@@ -90,6 +90,21 @@ object autoInvariantTests {
     def minusOne(i: Int): Int = i - 1
   }
 
+  @autoInvariant
+  trait AlgWithGenericType[T] {
+    def foo[A](i: T, a: A): T
+  }
+
+  @autoInvariant
+  trait AlgWithCurry[T] {
+    def foo(a: T)(b: Int): T
+  }
+  
+  @autoInvariant
+  trait AlgWithCurry2[T] {
+    def foo(a: T)(b: Int): String
+  }
+
   object AlgWithExtraTypeParamFloat extends AlgWithExtraTypeParam[String, Float] {
     def foo(a: String, b: Float): Float = a.length.toFloat + b
   }

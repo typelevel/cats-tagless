@@ -41,19 +41,27 @@ object autoFunctor {
 
     val methods = templ.stats.toList.flatMap(_.collect {
       //abstract method with return type being effect type
-      case q"def $methodName(..$params): ${Type.Name(`effectTypeName`)}" =>
-        q"""def $methodName(..$params): TTarget =
+      case q"def $methodName[..$mTParams](..$params): ${Type.Name(`effectTypeName`)}" =>
+        q"""def $methodName[..$mTParams](..$params): TTarget =
            mapFunction(delegatee_.$methodName(..${arguments(params)}))"""
       //abstract method with other return type
-      case q"def $methodName(..$params): $targetType" =>
-        q"""def $methodName(..$params): $targetType =
+      case q"def $methodName[..$mTParams](..$params): $targetType" =>
+        q"""def $methodName[..$mTParams](..$params): $targetType =
            delegatee_.$methodName(..${arguments(params)})"""
-      case q"def $methodName: ${Type.Name(`effectTypeName`)}" =>
-        q"""def $methodName: TTarget =
+      //abstract method with return type being effect type
+      case q"def $methodName[..$mTParams](..$params)(..$params2): ${Type.Name(`effectTypeName`)}" =>
+        q"""def $methodName[..$mTParams](..$params)(..$params2): TTarget =
+           mapFunction(delegatee_.$methodName(..${arguments(params)})(..${arguments(params2)}))"""
+      //abstract method with other return type
+      case q"def $methodName[..$mTParams](..$params)(..$params2): $targetType" =>
+        q"""def $methodName[..$mTParams](..$params)(..$params2): $targetType =
+           delegatee_.$methodName(..${arguments(params)})(..${arguments(params2)})"""
+      case q"def $methodName[..$mTParams]: ${Type.Name(`effectTypeName`)}" =>
+        q"""def $methodName[..$mTParams]: TTarget =
            mapFunction(delegatee_.$methodName)"""
       //abstract method with other return type
-      case q"def $methodName: $targetType" =>
-        q"""def $methodName: $targetType =
+      case q"def $methodName[..$mTParams]: $targetType" =>
+        q"""def $methodName[..$mTParams]: $targetType =
            delegatee_.$methodName"""
     })
 

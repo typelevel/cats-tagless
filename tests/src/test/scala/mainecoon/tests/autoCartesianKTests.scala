@@ -41,3 +41,18 @@ class autoCartesianKTests extends MainecoonTestSuite {
   checkAll("CartesianK[ParseAlg]", SerializableTests.serializable(CartesianK[SafeAlg]))
 }
 
+object autoCartesianKTests {
+
+  @autoCartesianK
+  trait algWithGenericType[F[_]] {
+    def a[T](a: T): F[Unit]
+  }
+
+  @autoCartesianK
+  trait algWithCurryMethod[F[_]] {
+    def a(b: String)(d: Int): F[Unit]
+  }
+
+
+}
+

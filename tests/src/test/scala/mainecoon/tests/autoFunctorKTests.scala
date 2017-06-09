@@ -19,7 +19,7 @@ package tests
 
 
 import scala.util.Try
-import cats.~>
+import cats.{Show, ~>}
 import cats.laws.discipline.SerializableTests
 import mainecoon.laws.discipline.FunctorKTests
 import autoFunctorKTests._
@@ -116,6 +116,15 @@ class autoFunctorKTests extends MainecoonTestSuite {
 
     AlgWithDef[Option].a should be(Some(1))
   }
+
+  test("method with type params") {
+   implicit object foo extends AlgWithTParamInMethod[Try] {
+      def a[T](t: T): Try[String] = Try(t.toString)
+    }
+    AlgWithTParamInMethod[Option].a(32) should be(Some("32"))
+  }
+
+
 }
 
 
@@ -169,6 +178,21 @@ object autoFunctorKTests {
   @autoFunctorK @finalAlg
   trait AlgWithDef[F[_]] {
     def a: F[Int]
+  }
+
+  @autoFunctorK @finalAlg
+  trait AlgWithTParamInMethod[F[_]] {
+    def a[T](t: T): F[String]
+  }
+
+  @autoFunctorK @finalAlg
+  trait AlgWithContextBounds[F[_]] {
+    def a[T: Show](t: Int): F[String]
+  }
+
+  @autoFunctorK @finalAlg
+  trait AlgWithCurryMethod[F[_]] {
+    def a(t: Int)(b: String): F[String]
   }
 
 

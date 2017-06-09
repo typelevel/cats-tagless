@@ -58,23 +58,41 @@ object autoInvariant {
     }
 
     val methods = templ.stats.toList.flatMap(_.collect {
+      //with no params
       //abstract method with return type being effect type
-      case q"def $methodName(..$params): ${Type.Name(`effectTypeName`)}" =>
-        val pp = new ParamParser(params)
-        q"""def $methodName(..${pp.newParams}): TTarget =
-           mapFunction(delegatee_.$methodName(..${pp.newArgs}))"""
-      //abstract method with other return type
-      case q"def $methodName(..$params): $targetType" =>
-        val pp = new ParamParser(params)
-        q"""def $methodName(..${pp.newParams}): $targetType =
-           delegatee_.$methodName(..${pp.newArgs})"""
-      case q"def $methodName: ${Type.Name(`effectTypeName`)}" =>
-        q"""def $methodName: TTarget =
+      case q"def $methodName[..$mTParams]: ${Type.Name(`effectTypeName`)}" =>
+        q"""def $methodName[..$mTParams]: TTarget =
            mapFunction(delegatee_.$methodName)"""
       //abstract method with other return type
-      case q"def $methodName: $targetType" =>
-        q"""def $methodName: $targetType =
+      case q"def $methodName[..$mTParams]: $targetType" =>
+        q"""def $methodName[..$mTParams]: $targetType =
            delegatee_.$methodName"""
+
+      //abstract method with return type being effect type
+      case q"def $methodName[..$mTParams](..$params): ${Type.Name(`effectTypeName`)}" =>
+        val pp = new ParamParser(params)
+        q"""def $methodName[..$mTParams](..${pp.newParams}): TTarget =
+           mapFunction(delegatee_.$methodName(..${pp.newArgs}))"""
+      //abstract method with other return type
+      case q"def $methodName[..$mTParams](..$params): $targetType" =>
+        val pp = new ParamParser(params)
+        q"""def $methodName[..$mTParams](..${pp.newParams}): $targetType =
+           delegatee_.$methodName(..${pp.newArgs})"""
+
+      //curried version
+      //abstract method with return type being effect type
+      case q"def $methodName[..$mTParams](..$params)(..$params2): ${Type.Name(`effectTypeName`)}" =>
+        val pp = new ParamParser(params)
+        val pp2 = new ParamParser(params2)
+        q"""def $methodName[..$mTParams](..${pp.newParams})(..${pp2.newParams}): TTarget =
+           mapFunction(delegatee_.$methodName(..${pp.newArgs})(..${pp2.newArgs}))"""
+      //abstract method with other return type
+      case q"def $methodName[..$mTParams](..$params)(..$params2): $targetType" =>
+        val pp = new ParamParser(params)
+        val pp2 = new ParamParser(params2)
+        q"""def $methodName[..$mTParams](..${pp.newParams})(..${pp2.newParams}): $targetType =
+           delegatee_.$methodName(..${pp.newArgs})(..${pp2.newArgs})"""
+
     })
 
     val instanceDef = Seq(q"""

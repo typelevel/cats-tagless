@@ -97,6 +97,14 @@ class autoInvariantKTests extends MainecoonTestSuite {
     implicit object foo extends AlgWithDefaultImpl[Try]
     AlgWithDefaultImpl[Option].const(Option(1)) should be(3)
   }
+
+  test("with methods with type param") {
+    implicit object foo extends AlgWithTypeParam[Try] {
+      def a[T](i: Try[T]): Try[String] = i.map(_.toString)
+    }
+    AlgWithTypeParam[Option].a(Option(1)) should be(Some("1"))
+  }
+
 }
 
 
@@ -156,5 +164,15 @@ object autoInvariantKTests {
   @autoInvariantK @finalAlg
   trait AlgWithDefaultImpl[F[_]] {
     def const(i: F[Int]): Int = 3
+  }
+
+  @autoInvariantK @finalAlg
+  trait AlgWithTypeParam[F[_]] {
+    def a[T](i: F[T]): F[String]
+  }
+
+  @autoInvariantK @finalAlg
+  trait AlgWithCurryMethod[F[_]] {
+    def a(t: F[Int])(b: String): F[String]
   }
 }

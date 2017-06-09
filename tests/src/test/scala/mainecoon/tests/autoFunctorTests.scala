@@ -69,6 +69,11 @@ object autoFunctorTests {
     def foo: T
   }
 
+  @autoFunctor
+  trait AlgWithCurry[T] {
+    def foo(a: String)(b: Int): T
+  }
+
 
   object AlgWithNonEffectMethodFloat extends AlgWithNonEffectMethod[Float] {
     def foo(a: String): Float = a.length.toFloat
@@ -88,6 +93,11 @@ object autoFunctorTests {
   trait AlgWithDefaultImpl[T] {
     def plusOne(i: Int): T
     def minusOne(i: Int): Int = i - 1
+  }
+
+  @autoFunctor
+  trait AlgWithGenericMethod[T] {
+    def plusOne[A](i: A): T
   }
 
   implicit def eqForSimpleAlg[T](implicit eqT: Eq[T]): Eq[SimpleAlg[T]] =

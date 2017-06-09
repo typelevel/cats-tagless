@@ -47,11 +47,18 @@ object autoProductNK {
       val productTypeName = Type.Name(s"_root_.mainecoon.Tuple${arity}K")
 
       val methods = templ.stats.map(_.map {
-        case q"def $methodName(..$params): $f[$resultType]" =>
+        case q"def $methodName[..$mTParams](..$params): $f[$resultType]" =>
           val returnItems = range.map { n =>
             q"${Term.Name("af" + n)}.$methodName(..${arguments(params)})"
           }
-          q"""def $methodName(..$params): $productTypeName[..$effectTypeParamsNames]#λ[$resultType] =
+          q"""def $methodName[..$mTParams](..$params): $productTypeName[..$effectTypeParamsNames]#λ[$resultType] =
+           (..$returnItems)"""
+        //curried version
+        case q"def $methodName[..$mTParams](..$params)(..$params2): $f[$resultType]" =>
+          val returnItems = range.map { n =>
+            q"${Term.Name("af" + n)}.$methodName(..${arguments(params)})(..${arguments(params2)})"
+          }
+          q"""def $methodName[..$mTParams](..$params)(..$params2): $productTypeName[..$effectTypeParamsNames]#λ[$resultType] =
            (..$returnItems)"""
         case st => abort(s"autoProductK does not support algebra with such statement: $st")
       }).getOrElse(Nil)

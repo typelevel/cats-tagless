@@ -17,7 +17,7 @@ addCompilerPlugin(
 
 libraryDependencies ++= Seq(
   "org.scalameta"  %% "scalameta" % "1.8.0",
-  "com.kailuowang" %% "mainecoon-macros" % "0.1.4")
+  "com.kailuowang" %% "mainecoon-macros" % "0.2.0")
 ```
 Note that `org.scalameta.paradise` is a fork of `org.scalamacros.paradise`. So if you already have the
 `org.scalamacros.paradise` dependency, you might need to replace it.

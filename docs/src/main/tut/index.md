@@ -76,6 +76,8 @@ Obviously [`FunctorK`](typeclasses.html#functorK) instance is only possible when
 covariant position (i.e. the return types). For algebras with effect type also appearing in the contravariant position (i.e. argument types), mainecoon provides a [`InvariantK`](typeclasses.html#invariantK) type class and an `autoInvariantK` annotation to automatically generate instances.
 
 ```tut:book
+import ExpressionAlg.autoDerive._
+
 ExpressionAlg[Option]
 ```
 This auto derivation can be turned off using an annotation argument: `@autoFunctorK(autoDerivation = false)`.
@@ -111,6 +113,7 @@ Now lets use auto derivation to lift the interpreter with `Try` into an interpre
 ```tut:silent
 import cats.free.Free
 import cats.arrow.FunctionK
+import Increment.autoDerive._
 
 implicit def toFree[F[_]]: F ~> Free[F, ?] = λ[F ~> Free[F, ?]](t => Free.liftF(t))
 ```
@@ -149,9 +152,10 @@ class StringCalculatorOption(implicit exp: ExpressionAlg[Option]) extends String
 }
 ```
 
-Note that the `ExpressionAlg` interpreter needed here is a `ExpressionAlg[Option]`, while we only defined a `ExpressionAlg[Try]`. However since we have a `fk: Try ~> Option` in scope, we automatically have `ExpressionAlg[Option]` in scope. We can just write
+Note that the `ExpressionAlg` interpreter needed here is a `ExpressionAlg[Option]`, while we only defined a `ExpressionAlg[Try]`. However since we have a `fk: Try ~> Option` in scope, we can automatically have `ExpressionAlg[Option]` in scope through `autoDerive`. We can just write
 
 ```tut:book
+import ExpressionAlg.autoDerive._
 new StringCalculatorOption
 ```
 

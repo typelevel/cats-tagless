@@ -19,7 +19,7 @@ package tests
 
 
 import scala.util.Try
-import cats.{Show, ~>}
+import cats.{Monad, Show, ~>}
 import cats.laws.discipline.SerializableTests
 import mainecoon.laws.discipline.FunctorKTests
 import autoFunctorKTests._
@@ -42,6 +42,13 @@ class autoFunctorKTests extends MainecoonTestSuite {
     implicit val listParse: SafeAlg[List] = Interpreters.tryInterpreter.mapK(λ[Try ~> List](_.toList))
     SafeAlg[List].parseInt("3") should be(List(3))
 
+    succeed
+  }
+
+  test("auto derive from functor k") {
+    import SafeAlg.autoDerive._
+    import Interpreters.tryInterpreter
+    SafeAlg[Option]
     succeed
   }
 
@@ -70,9 +77,10 @@ class autoFunctorKTests extends MainecoonTestSuite {
 
   test("Alg with extra type parameters") {
 
-    implicit val algWithExtraTP: AlgWithExtraTP[Try, String] = new AlgWithExtraTP[Try, String] {
+    implicit val foo: AlgWithExtraTP[Try, String] = new AlgWithExtraTP[Try, String] {
       def a(i: Int) = Try(i.toString)
     }
+    import AlgWithExtraTP.autoDerive._
     AlgWithExtraTP[Option, String].a(5) should be(Some("5"))
   }
 
@@ -80,8 +88,9 @@ class autoFunctorKTests extends MainecoonTestSuite {
     implicit val algWithExtraTP: AlgWithExtraTP2[String, Try] = new AlgWithExtraTP2[String, Try] {
       def a(i: Int) = Try(i.toString)
     }
-    AlgWithExtraTP2[String, Option].a(5) should be(Some("5"))
+    algWithExtraTP.mapK(fk).a(5) should be(Some("5"))
   }
+
 
   test("Alg with type member") {
     implicit val tryInt = new AlgWithTypeMember[Try] {
@@ -89,7 +98,7 @@ class autoFunctorKTests extends MainecoonTestSuite {
       def a(i: Int): Try[String] = Try(i.toString)
     }
 
-    AlgWithTypeMember[Option].a(3) should be(Some("3"))
+    tryInt.mapK(fk).a(3) should be(Some("3"))
     val algAux: AlgWithTypeMember.Aux[Option, String] = AlgWithTypeMember.mapK(tryInt)(fk)
     algAux.a(4) should be(Some("4"))
   }
@@ -113,7 +122,7 @@ class autoFunctorKTests extends MainecoonTestSuite {
       def a(i: Int): Try[Int] = util.Success(i)
     }
 
-    illTyped { """ implicitly[AlgWithoutAutoDerivation[Option]] """}
+    illTyped { """ AlgWithoutAutoDerivation.autoDerive """}
   }
 
   test("defs with no params") {
@@ -121,14 +130,20 @@ class autoFunctorKTests extends MainecoonTestSuite {
       def a = Try(1)
     }
 
-    AlgWithDef[Option].a should be(Some(1))
+    foo.mapK(fk).a should be(Some(1))
   }
 
   test("method with type params") {
    implicit object foo extends AlgWithTParamInMethod[Try] {
       def a[T](t: T): Try[String] = Try(t.toString)
     }
-    AlgWithTParamInMethod[Option].a(32) should be(Some("32"))
+
+    foo.mapK(fk).a(32) should be(Some("32"))
+  }
+
+  test("auto deriviation with existing derivation") {
+    AlgWithOwnDerivation[Option]
+    succeed
   }
 
 
@@ -200,6 +215,18 @@ object autoFunctorKTests {
   @autoFunctorK @finalAlg
   trait AlgWithCurryMethod[F[_]] {
     def a(t: Int)(b: String): F[String]
+  }
+
+  @autoFunctorK @finalAlg
+  trait AlgWithOwnDerivation[F[_]] {
+    def a(b: Int): F[String]
+  }
+
+  object AlgWithOwnDerivation {
+    implicit def fromMonad[F[_] : Monad]: AlgWithOwnDerivation[F] = new AlgWithOwnDerivation[F] {
+      def a(b: Int): F[String] = Monad[F].pure(b.toString)
+    }
+
   }
 
 

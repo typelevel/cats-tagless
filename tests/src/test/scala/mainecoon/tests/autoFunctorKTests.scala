@@ -38,6 +38,13 @@ class autoFunctorKTests extends MainecoonTestSuite {
 
   }
 
+  test("simple instance summon with autoDeriveFromFunctorK on") {
+    implicit val listParse: SafeAlg[List] = Interpreters.tryInterpreter.mapK(λ[Try ~> List](_.toList))
+    SafeAlg[List].parseInt("3") should be(List(3))
+
+    succeed
+  }
+
   checkAll("ParseAlg[Option]", FunctorKTests[SafeAlg].functorK[Try, Option, List, Int])
   checkAll("FunctorK[ParseAlg]", SerializableTests.serializable(FunctorK[SafeAlg]))
 

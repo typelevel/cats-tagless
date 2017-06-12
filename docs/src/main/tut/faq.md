@@ -27,6 +27,8 @@ implicit val tryFoo: Foo[Try, String] = new Foo[Try, String] {
 }
 
 implicit val fk: Try ~> Option = λ[Try ~> Option](_.toOption)
+
+import Foo.autoDerive._
 ```
 ```tut:book
 
@@ -39,15 +41,18 @@ Yes but with some caveats.
 The `FunctorK` instance it generates does not refine to the type member. E.g.
 
 ```tut:silent
- @autoFunctorK @finalAlg
-  trait Bar[F[_]] {
-    type T
-    def a(i: Int): F[T]
-  }
-  implicit val tryInt = new Bar[Try] {
-     type T = String
-     def a(i: Int): Try[String] = Try(i.toString)
-  }
+@autoFunctorK @finalAlg
+trait Bar[F[_]] {
+  type T
+  def a(i: Int): F[T]
+}
+
+implicit val tryInt = new Bar[Try] {
+   type T = String
+   def a(i: Int): Try[String] = Try(i.toString)
+}
+
+import Bar.autoDerive._
 ```
 
 If you try to map this tryInt to a `Bar[Option]`, the `type T` of the `Bar[Option]` isn't refined.  That is, you can do

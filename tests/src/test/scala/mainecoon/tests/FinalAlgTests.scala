@@ -17,10 +17,8 @@
 package mainecoon
 package tests
 
-import cats.arrow.FunctionK
 
 import scala.util.{Success, Try}
-import cats.~>
 import FinalAlgTests._
 
 
@@ -28,12 +26,6 @@ class FinalAlgTests extends MainecoonTestSuite {
   test("companion apply") {
     import Interpreters.tryInterpreter
     SafeAlg[Try].parseInt("10") should be(Success(10))
-  }
-
-  test("auto derive") {
-    implicit val fk: Try ~> Option = λ[FunctionK[Try, Option]](_.toOption)
-    import Interpreters.tryInterpreter
-    SafeAlg[Option].parseInt("10") should be(Some(10))
   }
 
   test("extra TP") {

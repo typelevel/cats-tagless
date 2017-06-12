@@ -104,11 +104,13 @@ class CovariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
 
   lazy val autoDerivationDef: Seq[Defn] = if(autoDerivation)
       Seq(q"""
-           implicit def autoDeriveFromFunctorK[${effectType}, G[_], ..${extraTParams}](
-             implicit af: $name[..${tArgs()}],
-             FK: _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffect],
-             fk: _root_.cats.~>[F, G])
-             : $name[..${tArgs("G")}] = FK.mapK(af)(fk)
+           object autoDerive {
+             implicit def autoDeriveFromFunctorK[${effectType}, G[_], ..${extraTParams}](
+               implicit fk: _root_.cats.~>[F, G],
+               FK: _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffect],
+               af: $name[..${tArgs()}])
+               : $name[..${tArgs("G")}] = FK.mapK(af)(fk)
+           }
           """)
     else Nil
 

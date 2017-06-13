@@ -21,7 +21,6 @@ import scala.meta.{Defn, Stat, Template, Term, Tree, Type}
 import scala.meta._
 
 case class AlgDefn(cls: TypeDefinition, effectType: Type.Param){
-
   lazy val abstractTypeMembers: Seq[Decl.Type] = {
     fromExistingStats {
       case dt : Decl.Type => dt
@@ -74,7 +73,12 @@ object AlgDefn {
   }
 }
 
-case class TypeDefinition(name: Type.Name, templ: Template, tparams: Seq[Type.Param], companion: Defn.Object, defn: Defn)
+case class TypeDefinition(name: Type.Name, templ: Template, tparams: Seq[Type.Param], companion: Defn.Object, defn: Defn) {
+  def toDefn: Defn = defn match {
+    case t: Defn.Class => t.copy(templ = templ)
+    case t: Defn.Trait => t.copy(templ = templ)
+  }
+}
 
 object TypeDefinition {
 
@@ -98,5 +102,6 @@ object TypeDefinition {
 
     }
   }
+
 }
 

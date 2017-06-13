@@ -29,7 +29,7 @@ import collection.immutable.Seq
 @compileTimeOnly("Cannot expand @autoProductK")
 class autoProductNK extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
-    enrichCompanion(defn)(productKInst)
+    enrich(defn)(productKInst)
   }
 }
 

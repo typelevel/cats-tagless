@@ -37,18 +37,18 @@ private[mainecoon] object Util {
     typeParam(typeDecl.name.value, typeDecl.tparams.size)
 
 
-  def enrichCompanion(defn: Any)(f: TypeDefinition => TypeDefinition) : Block = {
+  def enrich(defn: Any)(f: TypeDefinition => TypeDefinition) : Block = {
     defn match {
       case TypeDefinition.FromAny(td) =>
         val enriched = f(td)
-        Block(Seq(enriched.defn, enriched.companion))
+        Block(Seq(enriched.toDefn, enriched.companion))
       case t =>
         abort(s"$defn is not a class or trait.")
     }
   }
 
   def enrichAlgebra(defn: Any, higherKinded: Boolean = true)(f: AlgDefn => TypeDefinition): Block = {
-    enrichCompanion(defn){ cls: TypeDefinition =>
+    enrich(defn){ cls: TypeDefinition =>
       val ad = AlgDefn.from(cls, higherKinded).getOrElse(abort(s"${cls.name} does not have an higher-kinded type parameter, e.g. F[_]"))
       f(ad)
     }

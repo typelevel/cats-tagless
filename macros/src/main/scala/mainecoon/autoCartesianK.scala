@@ -29,7 +29,7 @@ import collection.immutable.Seq
 @compileTimeOnly("Cannot expand @autoCartesianK")
 class autoCartesianK extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
-    enrichCompanion(defn)(cartesianKInst)
+    enrich(defn)(cartesianKInst)
   }
 }
 

@@ -146,6 +146,15 @@ class autoFunctorKTests extends MainecoonTestSuite {
     succeed
   }
 
+  test("alg with abstract type class") {
+    implicit object foo extends AlgWithAbstractTypeClass[Try] {
+      type TC[T] = Show[T]
+      def a[T: TC](t: T): Try[String] = Try(t.show)
+    }
+    import AlgWithAbstractTypeClass.autoDerive._
+
+    AlgWithAbstractTypeClass[Option].a(true) should be(Some("true"))
+  }
 
 }
 
@@ -213,6 +222,12 @@ object autoFunctorKTests {
   }
 
   @autoFunctorK @finalAlg
+  trait AlgWithAbstractTypeClass[F[_]] {
+    type TC[T]
+    def a[T: TC](t: T): F[String]
+  }
+
+  @autoFunctorK @finalAlg
   trait AlgWithCurryMethod[F[_]] {
     def a(t: Int)(b: String): F[String]
   }
@@ -226,7 +241,6 @@ object autoFunctorKTests {
     implicit def fromMonad[F[_] : Monad]: AlgWithOwnDerivation[F] = new AlgWithOwnDerivation[F] {
       def a(b: Int): F[String] = Monad[F].pure(b.toString)
     }
-
   }
 
 

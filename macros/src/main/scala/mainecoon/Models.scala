@@ -28,8 +28,11 @@ case class AlgDefn(cls: TypeDefinition, effectType: Type.Param){
   }
 
   def newTypeMember(definedAt: Term.Name): Seq[Defn.Type] = {
-    abstractTypeMembers.map { t =>
-      q"type ${t.name} = ${Type.Select(definedAt, t.name)}"
+    abstractTypeMembers.map {
+      case q"type $t" =>
+        q"type $t = $definedAt.$t"
+      case q"type $t[..$tparams]" =>
+        q"type $t[..$tparams] = $definedAt.$t[..${tparams.map(tp => Type.Name(tp.name.value))}]"
     }
   }
 

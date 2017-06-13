@@ -103,7 +103,7 @@ class InvariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
     }
 
 
-    val methods = fromExistingMethods {
+    val methods = fromExistingStats {
       case q"def $methodName[..$mTParams](..$params): $resultType" =>
         newMethod(methodName, params, resultType, mTParams)
       case st @ q"def $methodName[..$mTParams](..$params) = $impl" =>
@@ -122,9 +122,9 @@ class InvariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
 
     //create a mapK method in the companion object with more precise refined type signature
     Seq(q"""
-      def imapK[F[_], G[_], ..$extraTParams](af: $name[..${tArgs()}])(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): ${typeSignature} =
+      def imapK[F[_], G[_], ..$extraTParams](af: $name[..${tArgs()}])(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): ${refinedFullTypeSig("G", "af")} =
         new ${Ctor.Ref.Name(name.value)}[..${tArgs("G")}] {
-          ..${methods ++ newTypeMember}
+          ..${methods ++ newTypeMember("af")}
         }""",
       q"""
         implicit def ${Term.Name("invariantKFor" + name.value)}[..$extraTParams]: _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffect] =

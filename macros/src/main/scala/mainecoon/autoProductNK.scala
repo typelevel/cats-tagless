@@ -64,7 +64,7 @@ object autoProductNK {
       }).getOrElse(Nil)
 
       // tparam"F1[_], F2[_], F3[_]"
-      val effectTypeParams: Seq[Type.Param] = range.map(n => highKindedTypeParam(s"F$n"))
+      val effectTypeParams: Seq[Type.Param] = range.map(n => typeParam(s"F$n", 1))
 
       // param"af1: A[F1]"
       def inboundInterpreter(idx: String): Term.Param =

@@ -39,20 +39,6 @@ class autoFunctorK(autoDerivation: Boolean) extends StaticAnnotation {
 
 abstract class FunctorKInstanceGenerator(ad: AlgDefn) {
   import ad._
-  import cls._
-
-  lazy val newTypeMember: Seq[Defn.Type] =
-    fromExistingMethods {
-      case q"type $t" =>
-        q"type $t = ${Type.Select(Term.Name("af"), Type.Name(t.value))}"
-    }
-
-  def fromExistingMethods[T <: Stat](pf: PartialFunction[Stat, T]): Seq[T] =
-    templ.stats.toList.flatMap(_.collect(pf))
-
-  lazy val typeSignature: Type = {
-    if(newTypeMember.isEmpty) t"$name[..${tArgs("G")}]" else t"$name[..${tArgs("G")}] { ..$newTypeMember }"
-  }
 
   def covariantTransform(resultType: Type, originImpl: Term): (Type, Term) = {
     resultType match {
@@ -63,7 +49,7 @@ abstract class FunctorKInstanceGenerator(ad: AlgDefn) {
   }
 
   lazy val defWithoutParams: Seq[Stat] =
-    fromExistingMethods {
+    fromExistingStats {
       case q"def $methodName[..$mTParams]: $resultType" =>
         val (newResultType, newImpl) = covariantTransform(resultType, q"af.$methodName" )
         q"""def $methodName[..$mTParams]: $newResultType = $newImpl"""
@@ -75,7 +61,7 @@ class CovariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
   import cls._
 
   lazy val covariantKMethods: Seq[Stat] =
-    fromExistingMethods {
+    fromExistingStats {
       case q"def $methodName[..$mTParams](..$params): $resultType" =>
         val (newResultType, newImpl) = covariantTransform(resultType, q"af.$methodName(..${arguments(params)})" )
         q"""def $methodName[..$mTParams](..$params): $newResultType = $newImpl"""
@@ -88,9 +74,9 @@ class CovariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
 
     //create a mapK method in the companion object with more precise refined type signature
     Seq(q"""
-      def mapK[F[_], G[_], ..$extraTParams](af: $name[..${tArgs()}])(fk: _root_.cats.~>[F, G]): ${typeSignature} =
+      def mapK[F[_], G[_], ..$extraTParams](af: $name[..${tArgs()}])(fk: _root_.cats.~>[F, G]): ${refinedFullTypeSig("G", "af")} =
         new ${Ctor.Ref.Name(name.value)}[..${tArgs("G")}] {
-          ..${covariantKMethods ++ newTypeMember}
+          ..${covariantKMethods ++ newTypeMember("af")}
         }""",
       q"""
         implicit def ${Term.Name("functorKFor" + name.value)}[..$extraTParams]: _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffect] =

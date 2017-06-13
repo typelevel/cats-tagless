@@ -19,6 +19,7 @@ package mainecoon
 import scala.meta.Term.Block
 import scala.meta._
 import scala.collection.immutable.Seq
+import cats.implicits._
 
 private[mainecoon] object Util {
 
@@ -27,8 +28,14 @@ private[mainecoon] object Util {
    * @param name e.g. "F" gives a `tparam"F[_]"`
    * @return
    */
-  def highKindedTypeParam(name: String): Type.Param =
-    Type.Param(Nil, Type.Name(name), Seq(Type.Param(Nil, Name.Anonymous(), Nil, Type.Bounds(None, None), Nil, Nil)), Type.Bounds(None, None), Nil, Nil)
+  def typeParam(name: String, numOfTParams: Int = 1): Type.Param = {
+    val tparams = Range(0, numOfTParams).toList.as(Type.Param(Nil, Name.Anonymous(), Nil, Type.Bounds(None, None), Nil, Nil))
+    Type.Param(Nil, Type.Name(name), tparams, Type.Bounds(None, None), Nil, Nil)
+  }
+
+  def typeParam(typeDecl: Decl.Type): Type.Param =
+    typeParam(typeDecl.name.value, typeDecl.tparams.size)
+
 
   def enrichCompanion(defn: Any)(f: TypeDefinition => TypeDefinition) : Block = {
     defn match {
@@ -54,65 +61,6 @@ private[mainecoon] object Util {
 
   }
 
-
-  case class AlgDefn(cls: TypeDefinition, effectType: Type.Param){
-
-    val extraTParams = cls.tparams.filterNot(Set(effectType))
-
-    val effectTypeArg: Type.Name = Type.Name(effectType.name.value)
-
-    val effectTypeName: String = effectType.name.value
-
-    def tArgs(effTpeName: Type.Name = effectTypeArg): Seq[Type.Name] = cls.tparams.map {
-      case `effectType` => effTpeName
-      case tp =>  Type.Name(tp.name.value)
-    }
-
-    def tArgs(effTpeName: String): Seq[Type.Name] = tArgs(Type.Name(effTpeName))
-
-    lazy val typeLambdaVaryingHigherKindedEffect = t"({type λ[Ƒ[_]] = ${cls.name}[..${tArgs("Ƒ")}]})#λ"
-    lazy val typeLambdaVaryingEffect = t"({type λ[T] = ${cls.name}[..${tArgs("T")}]})#λ"
-  }
-
-  object AlgDefn {
-    def from(cls: TypeDefinition, higherKinded: Boolean = true): Option[AlgDefn] = {
-      { if (higherKinded)
-          cls.tparams.collectFirst {
-            case tp: Type.Param if tp.tparams.nonEmpty => tp
-          }
-        else
-          cls.tparams.lastOption
-      }.map(
-        AlgDefn(cls, _)
-      )
-    }
-  }
-
-  case class TypeDefinition(name: Type.Name, templ: Template, tparams: Seq[Type.Param], companion: Defn.Object, defn: Defn)
-
-  object TypeDefinition {
-
-    object FromAny {
-      def unapply(defn: Any): Option[TypeDefinition] = {
-        def createCompanion(name: Type.Name): Defn.Object = q"object ${Term.Name(name.value)} { }"
-        defn match {
-
-          case Term.Block(Seq(t: Defn.Class, companion: Defn.Object)) =>
-              Some(TypeDefinition(t.name, t.templ, t.tparams, companion, t))
-
-          case Term.Block(Seq(t: Defn.Trait, companion: Defn.Object)) =>
-            Some(TypeDefinition(t.name, t.templ, t.tparams, companion, t))
-
-          case t: Defn.Class =>
-            Some(TypeDefinition(t.name, t.templ, t.tparams, createCompanion(t.name), t))
-
-          case t: Defn.Trait =>
-            Some(TypeDefinition(t.name, t.templ, t.tparams, createCompanion(t.name), t))
-        }
-
-      }
-    }
-  }
 
   def arguments(params: Seq[Term.Param]) =
      params.map(p => Term.Name(p.name.value))

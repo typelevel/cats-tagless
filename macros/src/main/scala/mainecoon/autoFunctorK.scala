@@ -60,29 +60,29 @@ class CovariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
   import algDefn._
   import cls._
 
-  lazy val covariantKMethods: Seq[Stat] =
+  def covariantKMethods(from: Term.Name): Seq[Stat] =
     fromExistingStats {
       case q"def $methodName[..$mTParams](..$params): $resultType" =>
-        val (newResultType, newImpl) = covariantTransform(resultType, q"af.$methodName(..${arguments(params)})" )
+        val (newResultType, newImpl) = covariantTransform(resultType, q"$from.$methodName(..${arguments(params)})" )
         q"""def $methodName[..$mTParams](..$params): $newResultType = $newImpl"""
       case q"def $methodName[..$mTParams](..$params)(..$params2): $resultType" =>
-        val (newResultType, newImpl) = covariantTransform(resultType, q"af.$methodName(..${arguments(params)})(..${arguments(params2)})" )
+        val (newResultType, newImpl) = covariantTransform(resultType, q"$from.$methodName(..${arguments(params)})(..${arguments(params2)})" )
         q"""def $methodName[..$mTParams](..$params)(..$params2): $newResultType = $newImpl"""
     } ++ defWithoutParams
 
   lazy val instanceDef: Seq[Defn] = {
-
+    val from = Term.Name("af")
     //create a mapK method in the companion object with more precise refined type signature
     Seq(q"""
-      def mapK[F[_], G[_], ..$extraTParams](af: $name[..${tArgs()}])(fk: _root_.cats.~>[F, G]): ${refinedFullTypeSig("G", "af")} =
+      def mapK[F[_], G[_], ..$extraTParams]($from: $name[..${tArgs()}])(fk: _root_.cats.~>[F, G]): ${refinedFullTypeSig("G", from)} =
         new ${Ctor.Ref.Name(name.value)}[..${tArgs("G")}] {
-          ..${covariantKMethods ++ newTypeMember("af")}
+          ..${covariantKMethods(from) ++ newTypeMember(from)}
         }""",
       q"""
         implicit def ${Term.Name("functorKFor" + name.value)}[..$extraTParams]: _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffect] =
           new _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffect] {
-            def mapK[F[_], G[_]](af: $name[..${tArgs("F")}])(fk: _root_.cats.~>[F, G]): $name[..${tArgs("G")}] =
-              ${Term.Name(name.value)}.mapK(af)(fk)
+            def mapK[F[_], G[_]]($from: $name[..${tArgs("F")}])(fk: _root_.cats.~>[F, G]): $name[..${tArgs("G")}] =
+              ${Term.Name(name.value)}.mapK($from)(fk)
           }
       """
     )

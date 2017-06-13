@@ -120,17 +120,18 @@ class InvariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
 
     } ++ defWithoutParams
 
+    val from = Term.Name("af")
     //create a mapK method in the companion object with more precise refined type signature
     Seq(q"""
-      def imapK[F[_], G[_], ..$extraTParams](af: $name[..${tArgs()}])(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): ${refinedFullTypeSig("G", "af")} =
+      def imapK[F[_], G[_], ..$extraTParams]($from: $name[..${tArgs()}])(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): ${refinedFullTypeSig("G", from)} =
         new ${Ctor.Ref.Name(name.value)}[..${tArgs("G")}] {
-          ..${methods ++ newTypeMember("af")}
+          ..${methods ++ newTypeMember(from)}
         }""",
       q"""
         implicit def ${Term.Name("invariantKFor" + name.value)}[..$extraTParams]: _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffect] =
           new _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffect] {
-            def imapK[F[_], G[_]](af: $name[..${tArgs("F")}])(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): $name[..${tArgs("G")}] =
-              ${Term.Name(name.value)}.imapK(af)(fk)(gk)
+            def imapK[F[_], G[_]]($from: $name[..${tArgs("F")}])(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): $name[..${tArgs("G")}] =
+              ${Term.Name(name.value)}.imapK($from)(fk)(gk)
           }
        """)
   }

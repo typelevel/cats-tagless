@@ -27,13 +27,16 @@ case class AlgDefn(cls: TypeDefinition, effectType: Type.Param){
     }
   }
 
-  def newTypeMember(definedAt: String): Seq[Defn.Type] =
-    abstractTypeMembers.map(t => q"type ${t.name} = ${Type.Select(Term.Name(definedAt), t.name)}")
+  def newTypeMember(definedAt: Term.Name): Seq[Defn.Type] = {
+    abstractTypeMembers.map { t =>
+      q"type ${t.name} = ${Type.Select(definedAt, t.name)}"
+    }
+  }
 
   def fromExistingStats[T <: Tree](pf: PartialFunction[Stat, T]): Seq[T] =
     cls.templ.stats.toList.flatMap(_.collect(pf))
 
-  def refinedFullTypeSig(newEffectTypeName: String, fromInstance: String): Type = {
+  def refinedFullTypeSig(newEffectTypeName: String, fromInstance: Term.Name): Type = {
     import cls.name
     if(abstractTypeMembers.isEmpty)
       t"$name[..${tArgs(newEffectTypeName)}]"
@@ -41,7 +44,9 @@ case class AlgDefn(cls: TypeDefinition, effectType: Type.Param){
       t"$name[..${tArgs(newEffectTypeName)}] { ..${newTypeMember(fromInstance)} }"
   }
 
-  lazy val extraTParams = cls.tparams.filterNot(Set(effectType))
+  lazy val extraTParams: Seq[Type.Param] = cls.tparams.filterNot(Set(effectType))
+
+  lazy val refinedTParams: Seq[Type.Param] = abstractTypeMembers.map(Util.typeParam)
 
   lazy val effectTypeArg: Type.Name = Type.Name(effectType.name.value)
 

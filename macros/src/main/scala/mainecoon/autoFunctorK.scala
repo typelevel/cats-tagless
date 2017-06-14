@@ -81,6 +81,10 @@ class CovariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
   lazy val instanceDef: Seq[Defn] = {
     Seq(
       q"""
+        def mapK[F[_], G[_], ..$extraTParams]($from: ${newTypeSig("F")})(fk: _root_.cats.~>[F, G]): ${dependentRefinedTypeSig("G", from)} =
+          ${newInstance(newTypeMember(from))}
+      """,
+      q"""
         implicit def ${Term.Name("functorKFor" + name.value)}[..$extraTParams]: _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffect] =
           new _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffect] {
             def mapK[F[_], G[_]]($from: ${newTypeSig("F")})(fk: _root_.cats.~>[F, G]): ${newTypeSig("G")} =
@@ -96,16 +100,16 @@ class CovariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
        object fullyRefined {
          implicit def ${Term.Name("functorKForFullyRefined" + name.value)}[..${fullyRefinedTParams}]: _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffectFullyRefined] =
            new _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffectFullyRefined] {
-             def mapK[F[_], G[_]]($from: ${refinedFullTypeSig("F")})(fk: _root_.cats.~>[F, G]):${refinedFullTypeSig("G")} =
-                ${newInstance(newTypeMemberRefined)}
+             def mapK[F[_], G[_]]($from: ${fullyRefinedTypeSig("F")})(fk: _root_.cats.~>[F, G]):${fullyRefinedTypeSig("G")} =
+                ${newInstance(newTypeMemberFullyRefined)}
          }
 
          object autoDerive {
            implicit def fromFunctorK[${effectType}, G[_], ..${fullyRefinedTParams}](
              implicit fk: _root_.cats.~>[${effectTypeArg}, G],
              FK: _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffectFullyRefined],
-             af: ${refinedFullTypeSig()})
-             : ${refinedFullTypeSig("G")} = FK.mapK(af)(fk)
+             af: ${fullyRefinedTypeSig()})
+             : ${fullyRefinedTypeSig("G")} = FK.mapK(af)(fk)
            }
        }
       """

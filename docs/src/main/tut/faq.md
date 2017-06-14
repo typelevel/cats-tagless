@@ -72,6 +72,59 @@ However, there is also `mapK` function added to the companion object of the alge
 val barOption: Bar[Option] { type T = String } = Bar.mapK(tryInt)(fk)
 ```
 
+Also since the `FunctorK` (or `InvariantK`) instance uses a dependent type on the original interpreter, you may run into dependent type related issues. In those cases, this `mapK` (or `imapK`) on the companion object may give better result.
+Here are two examples.
+
+#### Cannot resolve implicit defined by the dependent type
+
+```tut:silent
+import cats.Show
+import cats.implicits._
+
+@autoFunctorK
+trait Algebra[F[_]] {
+  type TC[T]
+  def a[T: TC](t: T): F[String]
+}
+
+object tryInt extends Algebra[Try] {
+  type TC[T] = Show[T]
+  def a[T: TC](t: T): Try[String] = Try(t.show)
+}
+```
+`FunctorK.mapK` will result in unusable interpreter due to scalac's difficulty in resolving implicit based on dependent type.
+```tut:fail
+FunctorK[Algebra].mapK(tryInt)(fk).a(List(1,2,3))
+```
+The `mapK` on the companion will work fine.
+```tut:book
+Algebra.mapK(tryInt)(fk).a(List(1,2,3))
+```
+
+#### Cannot take in argument whose type is a dependent type
+```tut:silent
+@autoInvariantK
+trait InvAlg[F[_]] {
+  type T
+  def a(i: F[T]): F[T]
+}
+
+object tryInt extends InvAlg[Try] {
+  type T = String
+  def a(i: Try[String]): Try[String] = i.map(_ + "a")
+}
+implicit val rk: Option ~> Try = λ[Option ~> Try](o => Try(o.get))
+
+```
+`InvariantK.imapK` will result in unusable interpreter because method `a`'s argument type is a dependent type on original interpreter.
+```tut:fail
+InvariantK[InvAlg].imapK(tryInt)(fk)(rk).a(Some("4"))
+```
+The `imapK` on the companion will work fine
+```tut:book
+InvAlg.imapK(tryInt)(fk)(rk).a(Some("4"))
+```
+
 ### I am seeing diverging implicit expansion for type MyAlgebra[F]
 
 If you see error likes the following when you try to summon a specific instance of `MyAlgebra`

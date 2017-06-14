@@ -75,17 +75,17 @@ class autoInvariantKTests extends MainecoonTestSuite {
     AlgWithExtraTP2[String, Option].a(Some(5)) should be(Some("5"))
   }
 
-//  test("Alg with type member") {
-//    implicit val tryInt = new AlgWithTypeMember[Try] {
-//      type T = String
-//      def a(i: Try[String]): Try[String] = i.map(_ + "a")
-//    }
-//
-//    tryInt.imapK(toFk)(otFk).a(Some("4")) should be(Some("4a"))
-//  }
-
-
   test("Alg with type member") {
+    implicit val tryInt = new AlgWithTypeMember[Try] {
+      type T = String
+      def a(i: Try[String]): Try[String] = i.map(_ + "a")
+    }
+
+    AlgWithTypeMember.imapK(tryInt)(toFk)(otFk).a(Some("4")) should be(Some("4a"))
+  }
+
+
+  test("Alg with type member fully refined") {
     implicit val tryInt = new AlgWithTypeMember[Try] {
       type T = String
       def a(i: Try[String]): Try[String] = i.map(_ + "a")
@@ -117,7 +117,6 @@ class autoInvariantKTests extends MainecoonTestSuite {
     }
     foo.imapK(toFk)(otFk).a(Option(1)) should be(Some("1"))
   }
-
 }
 
 

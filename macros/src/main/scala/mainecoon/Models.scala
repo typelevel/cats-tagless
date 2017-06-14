@@ -36,7 +36,7 @@ case class AlgDefn(cls: TypeDefinition, effectType: Type.Param){
     }
   }
 
-  lazy val newTypeMemberRefined: Seq[Defn.Type] = {
+  lazy val newTypeMemberFullyRefined: Seq[Defn.Type] = {
     abstractTypeMembers.map { td =>
       val typeDefBody =
         if(td.tparams.nonEmpty)
@@ -51,11 +51,17 @@ case class AlgDefn(cls: TypeDefinition, effectType: Type.Param){
     cls.templ.stats.toList.flatMap(_.collect(pf))
 
 
-  def refinedFullTypeSig(newEffectTypeName: String = effectTypeName): Type = {
+  def fullyRefinedTypeSig(newEffectTypeName: String = effectTypeName): Type =
+    refinedTypeSig(newEffectTypeName, newTypeMemberFullyRefined)
+
+  def dependentRefinedTypeSig(newEffectTypeName: String = effectTypeName, dependent: Term.Name): Type =
+    refinedTypeSig(newEffectTypeName, newTypeMember(dependent))
+
+  def refinedTypeSig(newEffectTypeName: String, refinedTypes: Seq[Defn.Type]): Type = {
     if(abstractTypeMembers.isEmpty)
       newTypeSig(newEffectTypeName)
     else
-      t"${cls.name}[..${tArgs(newEffectTypeName)}] { ..$newTypeMemberRefined }"
+      t"${cls.name}[..${tArgs(newEffectTypeName)}] { ..$refinedTypes } "
   }
 
   /**
@@ -70,7 +76,7 @@ case class AlgDefn(cls: TypeDefinition, effectType: Type.Param){
   lazy val fullyRefinedTParams: Seq[Type.Param] = extraTParams ++ refinedTParams
 
   lazy val refinedTParams: Seq[Type.Param] =
-    newTypeMemberRefined.map { defn =>
+    newTypeMemberFullyRefined.map { defn =>
       val (n, s) = if(defn.tparams.nonEmpty) {
         val t"${Type.Name(name)}[..$tparams]" = defn.body
         (name, tparams.size)
@@ -94,7 +100,7 @@ case class AlgDefn(cls: TypeDefinition, effectType: Type.Param){
   def tArgs(effTpeName: String): Seq[Type.Name] = tArgs(Type.Name(effTpeName))
 
   lazy val typeLambdaVaryingHigherKindedEffect = t"({type λ[Ƒ[_]] = ${newTypeSig("Ƒ")}})#λ"
-  lazy val typeLambdaVaryingHigherKindedEffectFullyRefined = t"({type λ[Ƒ[_]] = ${refinedFullTypeSig("Ƒ")}})#λ"
+  lazy val typeLambdaVaryingHigherKindedEffectFullyRefined = t"({type λ[Ƒ[_]] = ${fullyRefinedTypeSig("Ƒ")}})#λ"
 
   lazy val typeLambdaVaryingEffect = t"({type λ[T] = ${cls.name}[..${tArgs("T")}]})#λ"
 }

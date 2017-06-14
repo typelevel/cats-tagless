@@ -159,15 +159,15 @@ class autoFunctorKTests extends MainecoonTestSuite {
     implicit val fShow : FunctorK[AlgWithAbstractTypeClass.Aux[?[_], Show]] = functorKForFullyRefinedAlgWithAbstractTypeClass[Show]  //scalac needs help when abstract type is high order
     fShow.mapK(foo)(fk).a(true) should be(Some("true"))
   }
-//
-//  test("alg with abstract type class") {
-//    implicit object foo extends AlgWithAbstractTypeClass[Try] {
-//      type TC[T] = Show[T]
-//      def a[T: TC](t: T): Try[String] = Try(t.show)
-//    }
-//
-//    foo.mapK(fk).a(true) should be(Some("true"))
-//  }
+
+  test("alg with abstract type class") {
+    implicit object foo extends AlgWithAbstractTypeClass[Try] {
+      type TC[T] = Show[T]
+      def a[T: TC](t: T): Try[String] = Try(t.show)
+    }
+
+    AlgWithAbstractTypeClass.mapK(foo)(fk).a(true) should be(Some("true"))
+  }
 
 }
 

@@ -132,6 +132,10 @@ class InvariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
        """
     Seq(
       q"""
+        def imapK[F[_], G[_], ..$extraTParams]($from: ${newTypeSig("F")})(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): ${dependentRefinedTypeSig("G", from)} =
+          ${newInstance(newTypeMember(from))}
+      """,
+      q"""
         implicit def ${Term.Name("invariantKFor" + name.value)}[..$extraTParams]: _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffect] =
           new _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffect] {
             def imapK[F[_], G[_]]($from: $name[..${tArgs("F")}])(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): $name[..${tArgs("G")}] =
@@ -142,20 +146,18 @@ class InvariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
        object fullyRefined {
          implicit def ${Term.Name("invariantKForFullyRefined" + name.value)}[..$fullyRefinedTParams]: _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffectFullyRefined] =
             new _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffectFullyRefined] {
-              def imapK[F[_], G[_]]($from: ${refinedFullTypeSig("F")})(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): ${refinedFullTypeSig("G")} =
-                ${newInstance(newTypeMemberRefined)}
+              def imapK[F[_], G[_]]($from: ${fullyRefinedTypeSig("F")})(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): ${fullyRefinedTypeSig("G")} =
+                ${newInstance(newTypeMemberFullyRefined)}
             }
          object autoDerive {
            implicit def fromInvariantK[${effectType}, G[_], ..${fullyRefinedTParams}](
-             implicit af: ${refinedFullTypeSig()},
+             implicit af: ${fullyRefinedTypeSig()},
              IK: _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffectFullyRefined],
              fk: _root_.cats.~>[F, G],
              gk: _root_.cats.~>[G, F])
-               : ${refinedFullTypeSig("G")}= IK.imapK(af)(fk)(gk)
+               : ${fullyRefinedTypeSig("G")}= IK.imapK(af)(fk)(gk)
          }
        }
-
-
       """)
   }
 

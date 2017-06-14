@@ -62,7 +62,7 @@ class autoInvariantKTests extends MainecoonTestSuite {
       def a(i: Try[String]) = i
       def b(i: Try[Int]) = i.map(_.toString)
     }
-
+    import WithExtraTpeParam.autoDerive._
     WithExtraTpeParam[Option, String].a(Some("5")) should be(Some("5"))
     WithExtraTpeParam[Option, String].b(Some(5)) should be(Some("5"))
   }
@@ -71,7 +71,7 @@ class autoInvariantKTests extends MainecoonTestSuite {
     implicit val algWithExtraTP: AlgWithExtraTP2[String, Try] = new AlgWithExtraTP2[String, Try] {
       def a(i: Try[Int]) = i.map(_.toString)
     }
-
+    import AlgWithExtraTP2.autoDerive._
     AlgWithExtraTP2[String, Option].a(Some(5)) should be(Some("5"))
   }
 
@@ -103,19 +103,19 @@ class autoInvariantKTests extends MainecoonTestSuite {
       def a(i: Try[Int]): Try[Int] = i
     }
 
-    illTyped { """ implicitly[AlgWithoutAutoDerivation[Option]] """}
+    illTyped { """ AlgWithoutAutoDerivation.autoDerive """}
   }
 
   test("with default impl") {
     implicit object foo extends AlgWithDefaultImpl[Try]
-    AlgWithDefaultImpl[Option].const(Option(1)) should be(3)
+    foo.imapK(toFk)(otFk).const(Option(1)) should be(3)
   }
 
   test("with methods with type param") {
     implicit object foo extends AlgWithTypeParam[Try] {
       def a[T](i: Try[T]): Try[String] = i.map(_.toString)
     }
-    AlgWithTypeParam[Option].a(Option(1)) should be(Some("1"))
+    foo.imapK(toFk)(otFk).a(Option(1)) should be(Some("1"))
   }
 
 }

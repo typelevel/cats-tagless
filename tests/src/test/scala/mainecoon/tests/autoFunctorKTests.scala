@@ -155,11 +155,9 @@ class autoFunctorKTests extends MainecoonTestSuite {
     }
 
     import AlgWithAbstractTypeClass.fullyRefined._
-    import AlgWithAbstractTypeClass.fullyRefined.autoDerive._
 
     implicit val fShow : FunctorK[AlgWithAbstractTypeClass.Aux[?[_], Show]] = functorKForFullyRefinedAlgWithAbstractTypeClass[Show]  //scalac needs help when abstract type is high order
-    val op: AlgWithAbstractTypeClass.Aux[Option, Show] = autoDerive.fromFunctorK[Try, Option, Show]
-    op.a(true) should be(Some("true"))
+    fShow.mapK(foo)(fk).a(true) should be(Some("true"))
   }
 //
 //  test("alg with abstract type class") {

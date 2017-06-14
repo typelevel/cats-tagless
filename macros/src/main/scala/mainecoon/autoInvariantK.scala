@@ -161,12 +161,14 @@ class InvariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
 
   lazy val autoDerivationDef  = if(autoDerivation)
       Seq(q"""
-          implicit def autoDeriveFromInvariantK[${effectType}, G[_], ..${extraTParams}](
-            implicit af: $name[..${tArgs()}],
-            IK: _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffect],
-            fk: _root_.cats.~>[F, G],
-            gk: _root_.cats.~>[G, F])
-              : $name[..${tArgs("G")}] = IK.imapK(af)(fk)(gk)
+          object autoDerive {
+            implicit def autoDeriveFromInvariantK[${effectType}, G[_], ..${extraTParams}](
+              implicit af: $name[..${tArgs()}],
+              IK: _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffect],
+              fk: _root_.cats.~>[F, G],
+              gk: _root_.cats.~>[G, F])
+                : $name[..${tArgs("G")}] = IK.imapK(af)(fk)(gk)
+          }
         """)
     else Nil
 

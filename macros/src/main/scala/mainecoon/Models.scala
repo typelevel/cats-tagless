@@ -36,20 +36,51 @@ case class AlgDefn(cls: TypeDefinition, effectType: Type.Param){
     }
   }
 
+  lazy val newTypeMemberRefined: Seq[Defn.Type] = {
+    abstractTypeMembers.map { td =>
+      val typeDefBody =
+        if(td.tparams.nonEmpty)
+          t"${Type.Name(td.name.value + "0")}[..${td.tparams.map(tp => Type.Name(tp.name.value))}]"
+        else
+          t"${Type.Name(td.name.value + "0")}"
+      Defn.Type(td.mods, td.name, td.tparams, typeDefBody)
+    }
+  }
+
   def fromExistingStats[T <: Tree](pf: PartialFunction[Stat, T]): Seq[T] =
     cls.templ.stats.toList.flatMap(_.collect(pf))
 
-  def refinedFullTypeSig(newEffectTypeName: String = effectTypeName, fromInstance: Term.Name): Type = {
-    import cls.name
+
+  def refinedFullTypeSig(newEffectTypeName: String = effectTypeName): Type = {
     if(abstractTypeMembers.isEmpty)
-      t"$name[..${tArgs(newEffectTypeName)}]"
+      newTypeSig(newEffectTypeName)
     else
-      t"$name[..${tArgs(newEffectTypeName)}] { ..${newTypeMember(fromInstance)} }"
+      t"${cls.name}[..${tArgs(newEffectTypeName)}] { ..$newTypeMemberRefined }"
   }
+
+  /**
+   * new type signature with a different effect type name
+   * @param newEffectTypeName
+   */
+  def newTypeSig(newEffectTypeName: String = effectTypeName): Type =
+    t"${cls.name}[..${tArgs(newEffectTypeName)}]"
 
   lazy val extraTParams: Seq[Type.Param] = cls.tparams.filterNot(Set(effectType))
 
-  lazy val refinedTParams: Seq[Type.Param] = abstractTypeMembers.map(Util.typeParam)
+  lazy val fullyRefinedTParams: Seq[Type.Param] = extraTParams ++ refinedTParams
+
+  lazy val refinedTParams: Seq[Type.Param] =
+    newTypeMemberRefined.map { defn =>
+      val (n, s) = if(defn.tparams.nonEmpty) {
+        val t"${Type.Name(name)}[..$tparams]" = defn.body
+        (name, tparams.size)
+      } else {
+        val t"${Type.Name(name)}" = defn.body
+        (name, 0)
+      }
+
+      Util.typeParam(n, s)
+    }
 
   lazy val effectTypeArg: Type.Name = Type.Name(effectType.name.value)
 
@@ -62,7 +93,8 @@ case class AlgDefn(cls: TypeDefinition, effectType: Type.Param){
 
   def tArgs(effTpeName: String): Seq[Type.Name] = tArgs(Type.Name(effTpeName))
 
-  lazy val typeLambdaVaryingHigherKindedEffect = t"({type λ[Ƒ[_]] = ${cls.name}[..${tArgs("Ƒ")}]})#λ"
+  lazy val typeLambdaVaryingHigherKindedEffect = t"({type λ[Ƒ[_]] = ${newTypeSig("Ƒ")}})#λ"
+  lazy val typeLambdaVaryingHigherKindedEffectFullyRefined = t"({type λ[Ƒ[_]] = ${refinedFullTypeSig("Ƒ")}})#λ"
 
   lazy val typeLambdaVaryingEffect = t"({type λ[T] = ${cls.name}[..${tArgs("T")}]})#λ"
 }

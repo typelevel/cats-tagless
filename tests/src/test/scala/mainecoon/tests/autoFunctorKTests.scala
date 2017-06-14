@@ -93,14 +93,16 @@ class autoFunctorKTests extends MainecoonTestSuite {
 
 
   test("Alg with type member") {
-    implicit val tryInt = new AlgWithTypeMember[Try] {
+    implicit val tryInt: AlgWithTypeMember.Aux[Try, String] = new AlgWithTypeMember[Try] {
       type T = String
       def a(i: Int): Try[String] = Try(i.toString)
     }
 
     tryInt.mapK(fk).a(3) should be(Some("3"))
-    val algAux: AlgWithTypeMember.Aux[Option, String] = AlgWithTypeMember.mapK(tryInt)(fk)
-    algAux.a(4) should be(Some("4"))
+    import AlgWithTypeMember.fullyRefined._
+    import AlgWithTypeMember.fullyRefined.autoDerive._
+    val op: AlgWithTypeMember.Aux[Option, String] = implicitly
+    op.a(3) should be(Some("3"))
   }
 
   test("Stack safety with Free") {
@@ -146,15 +148,28 @@ class autoFunctorKTests extends MainecoonTestSuite {
     succeed
   }
 
-  test("alg with abstract type class") {
+  test("alg with abstract type class fully refined resolve instance") {
     implicit object foo extends AlgWithAbstractTypeClass[Try] {
       type TC[T] = Show[T]
       def a[T: TC](t: T): Try[String] = Try(t.show)
     }
-    import AlgWithAbstractTypeClass.autoDerive._
 
-    AlgWithAbstractTypeClass[Option].a(true) should be(Some("true"))
+    import AlgWithAbstractTypeClass.fullyRefined._
+    import AlgWithAbstractTypeClass.fullyRefined.autoDerive._
+
+    implicit val fShow : FunctorK[AlgWithAbstractTypeClass.Aux[?[_], Show]] = functorKForFullyRefinedAlgWithAbstractTypeClass[Show]  //scalac needs help when abstract type is high order
+    val op: AlgWithAbstractTypeClass.Aux[Option, Show] = autoDerive.fromFunctorK[Try, Option, Show]
+    op.a(true) should be(Some("true"))
   }
+//
+//  test("alg with abstract type class") {
+//    implicit object foo extends AlgWithAbstractTypeClass[Try] {
+//      type TC[T] = Show[T]
+//      def a[T: TC](t: T): Try[String] = Try(t.show)
+//    }
+//
+//    foo.mapK(fk).a(true) should be(Some("true"))
+//  }
 
 }
 
@@ -225,6 +240,10 @@ object autoFunctorKTests {
   trait AlgWithAbstractTypeClass[F[_]] {
     type TC[T]
     def a[T: TC](t: T): F[String]
+  }
+
+  object AlgWithAbstractTypeClass {
+    type Aux[F[_], TC0[_]] = AlgWithAbstractTypeClass[F] { type TC[T] = TC0[T] }
   }
 
   @autoFunctorK @finalAlg

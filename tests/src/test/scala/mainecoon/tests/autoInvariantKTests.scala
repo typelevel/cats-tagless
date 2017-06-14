@@ -75,13 +75,26 @@ class autoInvariantKTests extends MainecoonTestSuite {
     AlgWithExtraTP2[String, Option].a(Some(5)) should be(Some("5"))
   }
 
+//  test("Alg with type member") {
+//    implicit val tryInt = new AlgWithTypeMember[Try] {
+//      type T = String
+//      def a(i: Try[String]): Try[String] = i.map(_ + "a")
+//    }
+//
+//    tryInt.imapK(toFk)(otFk).a(Some("4")) should be(Some("4a"))
+//  }
+
+
   test("Alg with type member") {
     implicit val tryInt = new AlgWithTypeMember[Try] {
       type T = String
       def a(i: Try[String]): Try[String] = i.map(_ + "a")
     }
 
-    val algAux: AlgWithTypeMember.Aux[Option, String] = AlgWithTypeMember.imapK(tryInt)(toFk)(otFk)
+    import AlgWithTypeMember.fullyRefined._
+    import AlgWithTypeMember.fullyRefined.autoDerive._
+
+    val algAux: AlgWithTypeMember.Aux[Option, String] = implicitly
     algAux.a(Some("4")) should be(Some("4a"))
   }
 

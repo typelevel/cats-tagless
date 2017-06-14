@@ -29,9 +29,9 @@ case class AlgDefn(cls: TypeDefinition, effectType: Type.Param){
 
   def newTypeMember(definedAt: Term.Name): Seq[Defn.Type] = {
     abstractTypeMembers.map {
-      case q"type $t" =>
+      case q"type $t  >: $lowBound <: $upBound" =>
         q"type $t = $definedAt.$t"
-      case q"type $t[..$tparams]" =>
+      case q"type $t[..$tparams] >: $lowBound <: $upBound" =>
         q"type $t[..$tparams] = $definedAt.$t[..${tparams.map(tp => Type.Name(tp.name.value))}]"
     }
   }
@@ -39,7 +39,7 @@ case class AlgDefn(cls: TypeDefinition, effectType: Type.Param){
   def fromExistingStats[T <: Tree](pf: PartialFunction[Stat, T]): Seq[T] =
     cls.templ.stats.toList.flatMap(_.collect(pf))
 
-  def refinedFullTypeSig(newEffectTypeName: String, fromInstance: Term.Name): Type = {
+  def refinedFullTypeSig(newEffectTypeName: String = effectTypeName, fromInstance: Term.Name): Type = {
     import cls.name
     if(abstractTypeMembers.isEmpty)
       t"$name[..${tArgs(newEffectTypeName)}]"

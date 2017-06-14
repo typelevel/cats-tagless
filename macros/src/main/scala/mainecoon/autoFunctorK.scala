@@ -39,20 +39,6 @@ class autoFunctorK(autoDerivation: Boolean) extends StaticAnnotation {
 
 abstract class FunctorKInstanceGenerator(ad: AlgDefn) {
   import ad._
-  import cls._
-
-  lazy val newTypeMember: Seq[Defn.Type] =
-    fromExistingMethods {
-      case q"type $t" =>
-        q"type $t = ${Type.Select(Term.Name("af"), Type.Name(t.value))}"
-    }
-
-  def fromExistingMethods[T <: Stat](pf: PartialFunction[Stat, T]): Seq[T] =
-    templ.stats.toList.flatMap(_.collect(pf))
-
-  lazy val typeSignature: Type = {
-    if(newTypeMember.isEmpty) t"$name[..${tArgs("G")}]" else t"$name[..${tArgs("G")}] { ..$newTypeMember }"
-  }
 
   def covariantTransform(resultType: Type, originImpl: Term): (Type, Term) = {
     resultType match {
@@ -63,7 +49,7 @@ abstract class FunctorKInstanceGenerator(ad: AlgDefn) {
   }
 
   lazy val defWithoutParams: Seq[Stat] =
-    fromExistingMethods {
+    fromExistingStats {
       case q"def $methodName[..$mTParams]: $resultType" =>
         val (newResultType, newImpl) = covariantTransform(resultType, q"af.$methodName" )
         q"""def $methodName[..$mTParams]: $newResultType = $newImpl"""
@@ -74,30 +60,58 @@ class CovariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
   import algDefn._
   import cls._
 
-  lazy val covariantKMethods: Seq[Stat] =
-    fromExistingMethods {
+  def covariantKMethods(from: Term.Name): Seq[Stat] =
+    fromExistingStats {
       case q"def $methodName[..$mTParams](..$params): $resultType" =>
-        val (newResultType, newImpl) = covariantTransform(resultType, q"af.$methodName(..${arguments(params)})" )
+        val (newResultType, newImpl) = covariantTransform(resultType, q"$from.$methodName(..${arguments(params)})" )
         q"""def $methodName[..$mTParams](..$params): $newResultType = $newImpl"""
       case q"def $methodName[..$mTParams](..$params)(..$params2): $resultType" =>
-        val (newResultType, newImpl) = covariantTransform(resultType, q"af.$methodName(..${arguments(params)})(..${arguments(params2)})" )
+        val (newResultType, newImpl) = covariantTransform(resultType, q"$from.$methodName(..${arguments(params)})(..${arguments(params2)})" )
         q"""def $methodName[..$mTParams](..$params)(..$params2): $newResultType = $newImpl"""
     } ++ defWithoutParams
 
-  lazy val instanceDef: Seq[Defn] = {
+  val from = Term.Name("af")
 
-    //create a mapK method in the companion object with more precise refined type signature
-    Seq(q"""
-      def mapK[F[_], G[_], ..$extraTParams](af: $name[..${tArgs()}])(fk: _root_.cats.~>[F, G]): ${typeSignature} =
-        new ${Ctor.Ref.Name(name.value)}[..${tArgs("G")}] {
-          ..${covariantKMethods ++ newTypeMember}
-        }""",
+  def  newInstance(typeMembers: Seq[Defn.Type]): Term.New =
+    q"""new ${Ctor.Ref.Name(name.value)}[..${tArgs("G")}] {
+          ..$typeMembers
+          ..${covariantKMethods(from)}
+     }"""
+
+  lazy val instanceDef: Seq[Defn] = {
+    Seq(
+      q"""
+        def mapK[F[_], G[_], ..$extraTParams]($from: ${newTypeSig("F")})(fk: _root_.cats.~>[F, G]): ${dependentRefinedTypeSig("G", from)} =
+          ${newInstance(newTypeMember(from))}
+      """,
       q"""
         implicit def ${Term.Name("functorKFor" + name.value)}[..$extraTParams]: _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffect] =
           new _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffect] {
-            def mapK[F[_], G[_]](af: $name[..${tArgs("F")}])(fk: _root_.cats.~>[F, G]): $name[..${tArgs("G")}] =
-              ${Term.Name(name.value)}.mapK(af)(fk)
+            def mapK[F[_], G[_]]($from: ${newTypeSig("F")})(fk: _root_.cats.~>[F, G]): ${newTypeSig("G")} =
+              ${newInstance(newTypeMember(from))}
           }
+      """
+    )
+  }
+
+  lazy val instanceDefFullyRefined: Seq[Defn] = {
+    Seq(
+      q"""
+       object fullyRefined {
+         implicit def ${Term.Name("functorKForFullyRefined" + name.value)}[..${fullyRefinedTParams}]: _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffectFullyRefined] =
+           new _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffectFullyRefined] {
+             def mapK[F[_], G[_]]($from: ${fullyRefinedTypeSig("F")})(fk: _root_.cats.~>[F, G]):${fullyRefinedTypeSig("G")} =
+                ${newInstance(newTypeMemberFullyRefined)}
+         }
+
+         object autoDerive {
+           implicit def fromFunctorK[${effectType}, G[_], ..${fullyRefinedTParams}](
+             implicit fk: _root_.cats.~>[${effectTypeArg}, G],
+             FK: _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffectFullyRefined],
+             af: ${fullyRefinedTypeSig()})
+             : ${fullyRefinedTypeSig("G")} = FK.mapK(af)(fk)
+           }
+       }
       """
     )
   }
@@ -105,16 +119,18 @@ class CovariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
   lazy val autoDerivationDef: Seq[Defn] = if(autoDerivation)
       Seq(q"""
            object autoDerive {
-             implicit def autoDeriveFromFunctorK[${effectType}, G[_], ..${extraTParams}](
-               implicit fk: _root_.cats.~>[F, G],
+             implicit def fromFunctorK[${effectType}, G[_], ..${extraTParams}](
+               implicit fk: _root_.cats.~>[${effectTypeArg}, G],
                FK: _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffect],
-               af: $name[..${tArgs()}])
-               : $name[..${tArgs("G")}] = FK.mapK(af)(fk)
+               af: ${newTypeSig("F")})
+               : ${newTypeSig("G")} = FK.mapK(af)(fk)
            }
           """)
     else Nil
 
-  lazy val newDef: TypeDefinition = cls.copy(companion = cls.companion.addStats(instanceDef ++ autoDerivationDef))
+  lazy val newDef: TypeDefinition = cls.copy(companion = cls.companion.addStats(instanceDef ++ autoDerivationDef ++ instanceDefFullyRefined))
 }
+
+
 
 

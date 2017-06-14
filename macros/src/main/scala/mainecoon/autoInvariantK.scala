@@ -103,7 +103,7 @@ class InvariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
     }
 
 
-    val methods = fromExistingMethods {
+    val methods = fromExistingStats {
       case q"def $methodName[..$mTParams](..$params): $resultType" =>
         newMethod(methodName, params, resultType, mTParams)
       case st @ q"def $methodName[..$mTParams](..$params) = $impl" =>
@@ -120,29 +120,57 @@ class InvariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
 
     } ++ defWithoutParams
 
+    val from = Term.Name("af")
     //create a mapK method in the companion object with more precise refined type signature
-    Seq(q"""
-      def imapK[F[_], G[_], ..$extraTParams](af: $name[..${tArgs()}])(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): ${typeSignature} =
-        new ${Ctor.Ref.Name(name.value)}[..${tArgs("G")}] {
-          ..${methods ++ newTypeMember}
-        }""",
+
+    def newInstance(newTypeMembers: Seq[Defn.Type]): Term.New =
+      q"""
+         new ${Ctor.Ref.Name(name.value)}[..${tArgs("G")}] {
+                  ..$newTypeMembers
+                   ..$methods
+                 }
+       """
+    Seq(
+      q"""
+        def imapK[F[_], G[_], ..$extraTParams]($from: ${newTypeSig("F")})(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): ${dependentRefinedTypeSig("G", from)} =
+          ${newInstance(newTypeMember(from))}
+      """,
       q"""
         implicit def ${Term.Name("invariantKFor" + name.value)}[..$extraTParams]: _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffect] =
           new _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffect] {
-            def imapK[F[_], G[_]](af: $name[..${tArgs("F")}])(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): $name[..${tArgs("G")}] =
-              ${Term.Name(name.value)}.imapK(af)(fk)(gk)
+            def imapK[F[_], G[_]]($from: $name[..${tArgs("F")}])(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): $name[..${tArgs("G")}] =
+            ${newInstance(newTypeMember(from))}
           }
-       """)
+       """,
+      q"""
+       object fullyRefined {
+         implicit def ${Term.Name("invariantKForFullyRefined" + name.value)}[..$fullyRefinedTParams]: _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffectFullyRefined] =
+            new _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffectFullyRefined] {
+              def imapK[F[_], G[_]]($from: ${fullyRefinedTypeSig("F")})(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): ${fullyRefinedTypeSig("G")} =
+                ${newInstance(newTypeMemberFullyRefined)}
+            }
+         object autoDerive {
+           implicit def fromInvariantK[${effectType}, G[_], ..${fullyRefinedTParams}](
+             implicit af: ${fullyRefinedTypeSig()},
+             IK: _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffectFullyRefined],
+             fk: _root_.cats.~>[F, G],
+             gk: _root_.cats.~>[G, F])
+               : ${fullyRefinedTypeSig("G")}= IK.imapK(af)(fk)(gk)
+         }
+       }
+      """)
   }
 
   lazy val autoDerivationDef  = if(autoDerivation)
       Seq(q"""
-          implicit def autoDeriveFromInvariantK[${effectType}, G[_], ..${extraTParams}](
-            implicit af: $name[..${tArgs()}],
-            IK: _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffect],
-            fk: _root_.cats.~>[F, G],
-            gk: _root_.cats.~>[G, F])
-              : $name[..${tArgs("G")}] = IK.imapK(af)(fk)(gk)
+          object autoDerive {
+            implicit def autoDeriveFromInvariantK[${effectType}, G[_], ..${extraTParams}](
+              implicit af: $name[..${tArgs()}],
+              IK: _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffect],
+              fk: _root_.cats.~>[F, G],
+              gk: _root_.cats.~>[G, F])
+                : $name[..${tArgs("G")}] = IK.imapK(af)(fk)(gk)
+          }
         """)
     else Nil
 

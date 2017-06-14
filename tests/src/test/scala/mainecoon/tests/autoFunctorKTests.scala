@@ -93,14 +93,16 @@ class autoFunctorKTests extends MainecoonTestSuite {
 
 
   test("Alg with type member") {
-    implicit val tryInt = new AlgWithTypeMember[Try] {
+    implicit val tryInt: AlgWithTypeMember.Aux[Try, String] = new AlgWithTypeMember[Try] {
       type T = String
       def a(i: Int): Try[String] = Try(i.toString)
     }
 
     tryInt.mapK(fk).a(3) should be(Some("3"))
-    val algAux: AlgWithTypeMember.Aux[Option, String] = AlgWithTypeMember.mapK(tryInt)(fk)
-    algAux.a(4) should be(Some("4"))
+    import AlgWithTypeMember.fullyRefined._
+    import AlgWithTypeMember.fullyRefined.autoDerive._
+    val op: AlgWithTypeMember.Aux[Option, String] = implicitly
+    op.a(3) should be(Some("3"))
   }
 
   test("Stack safety with Free") {
@@ -146,6 +148,26 @@ class autoFunctorKTests extends MainecoonTestSuite {
     succeed
   }
 
+  test("alg with abstract type class fully refined resolve instance") {
+    implicit object foo extends AlgWithAbstractTypeClass[Try] {
+      type TC[T] = Show[T]
+      def a[T: TC](t: T): Try[String] = Try(t.show)
+    }
+
+    import AlgWithAbstractTypeClass.fullyRefined._
+
+    implicit val fShow : FunctorK[AlgWithAbstractTypeClass.Aux[?[_], Show]] = functorKForFullyRefinedAlgWithAbstractTypeClass[Show]  //scalac needs help when abstract type is high order
+    fShow.mapK(foo)(fk).a(true) should be(Some("true"))
+  }
+
+  test("alg with abstract type class") {
+    implicit object foo extends AlgWithAbstractTypeClass[Try] {
+      type TC[T] = Show[T]
+      def a[T: TC](t: T): Try[String] = Try(t.show)
+    }
+
+    AlgWithAbstractTypeClass.mapK(foo)(fk).a(true) should be(Some("true"))
+  }
 
 }
 
@@ -213,6 +235,16 @@ object autoFunctorKTests {
   }
 
   @autoFunctorK @finalAlg
+  trait AlgWithAbstractTypeClass[F[_]] {
+    type TC[T]
+    def a[T: TC](t: T): F[String]
+  }
+
+  object AlgWithAbstractTypeClass {
+    type Aux[F[_], TC0[_]] = AlgWithAbstractTypeClass[F] { type TC[T] = TC0[T] }
+  }
+
+  @autoFunctorK @finalAlg
   trait AlgWithCurryMethod[F[_]] {
     def a(t: Int)(b: String): F[String]
   }
@@ -226,7 +258,6 @@ object autoFunctorKTests {
     implicit def fromMonad[F[_] : Monad]: AlgWithOwnDerivation[F] = new AlgWithOwnDerivation[F] {
       def a(b: Int): F[String] = Monad[F].pure(b.toString)
     }
-
   }
 
 

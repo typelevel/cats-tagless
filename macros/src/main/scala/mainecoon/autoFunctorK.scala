@@ -105,6 +105,7 @@ class CovariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
          }
 
          object autoDerive {
+           @SuppressWarnings(Array("org.wartremover.warts.ImplicitParameter"))
            implicit def fromFunctorK[${effectType}, G[_], ..${fullyRefinedTParams}](
              implicit fk: _root_.cats.~>[${effectTypeArg}, G],
              FK: _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffectFullyRefined],
@@ -119,6 +120,7 @@ class CovariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
   lazy val autoDerivationDef: Seq[Defn] = if(autoDerivation)
       Seq(q"""
            object autoDerive {
+             @SuppressWarnings(Array("org.wartremover.warts.ImplicitParameter"))
              implicit def fromFunctorK[${effectType}, G[_], ..${extraTParams}](
                implicit fk: _root_.cats.~>[${effectTypeArg}, G],
                FK: _root_.mainecoon.FunctorK[$typeLambdaVaryingHigherKindedEffect],

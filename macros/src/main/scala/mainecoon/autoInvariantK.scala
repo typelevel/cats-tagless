@@ -150,6 +150,7 @@ class InvariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
                 ${newInstance(newTypeMemberFullyRefined)}
             }
          object autoDerive {
+           @SuppressWarnings(Array("org.wartremover.warts.ImplicitParameter"))
            implicit def fromInvariantK[${effectType}, G[_], ..${fullyRefinedTParams}](
              implicit af: ${fullyRefinedTypeSig()},
              IK: _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffectFullyRefined],
@@ -164,6 +165,7 @@ class InvariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
   lazy val autoDerivationDef  = if(autoDerivation)
       Seq(q"""
           object autoDerive {
+            @SuppressWarnings(Array("org.wartremover.warts.ImplicitParameter"))
             implicit def autoDeriveFromInvariantK[${effectType}, G[_], ..${extraTParams}](
               implicit af: $name[..${tArgs()}],
               IK: _root_.mainecoon.InvariantK[$typeLambdaVaryingHigherKindedEffect],

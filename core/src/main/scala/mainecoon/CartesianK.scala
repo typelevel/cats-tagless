@@ -16,9 +16,9 @@
 
 package mainecoon
 
-import cats.data.Prod
+import cats.data.Tuple2K
 import simulacrum.typeclass
 
 @typeclass trait CartesianK[A[_[_]]] {
-  def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Prod[F, G, ?]]
+  def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Tuple2K[F, G, ?]]
 }

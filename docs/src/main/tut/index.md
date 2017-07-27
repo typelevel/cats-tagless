@@ -161,7 +161,7 @@ new StringCalculatorOption
 
 ## <a id="horizontal-comp" href="#horizontal-comp"></a>Horizontal composition
 
-You can use the [`CartesianK`](typeclasses.html#cartesianK) type class to create a new interpreter that runs two interpreters simultaneously and return the result as a `cats.Prod`. The `@autoCartesianK` attribute add an instance of `CartesianK` to the companion object. Example:
+You can use the [`CartesianK`](typeclasses.html#cartesianK) type class to create a new interpreter that runs two interpreters simultaneously and return the result as a `cats.Tuple2K`. The `@autoCartesianK` attribute add an instance of `CartesianK` to the companion object. Example:
 ```tut:book
 val prod = ExpressionAlg[Option].productK(ExpressionAlg[Try])
 prod.num("2")

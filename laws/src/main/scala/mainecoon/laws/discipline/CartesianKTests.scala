@@ -20,7 +20,7 @@ package discipline
 
 
 import cats.{Eq, ~>}
-import cats.data.Prod
+import cats.data.Tuple2K
 import mainecoon.laws.discipline.CartesianKTests.IsomorphismsK
 import org.scalacheck.Prop._
 import org.scalacheck.{Arbitrary, Prop}
@@ -57,8 +57,8 @@ object CartesianKTests {
 
   object IsomorphismsK {
     
-    type ProdA_BC[A[_], B[_], C[_]]  = { type λ[T] = Prod[A, Prod[B, C, ?], T] } 
-    type ProdAB_C[A[_], B[_], C[_]]  = { type λ[T] = Prod[Prod[A, B, ?], C, T] }
+    type ProdA_BC[A[_], B[_], C[_]]  = { type λ[T] = Tuple2K[A, Tuple2K[B, C, ?], T] }
+    type ProdAB_C[A[_], B[_], C[_]]  = { type λ[T] = Tuple2K[Tuple2K[A, B, ?], C, T] }
 
     import cats.kernel.laws._
     implicit def invariantK[F[_[_]]](implicit F: InvariantK[F]): IsomorphismsK[F] =
@@ -66,10 +66,10 @@ object CartesianKTests {
         def associativity[A[_], B[_], C[_]](fs: (F[ProdA_BC[A, B, C]#λ], F[ProdAB_C[A, B, C]#λ]))
                                            (implicit EqFGH: Eq[F[Tuple3K[A, B, C]#λ]]): Prop = {
 
-          val fkA_BC_T3 = λ[ProdA_BC[A, B, C]#λ ~> Tuple3K[A, B, C]#λ ]{ case Prod(a, Prod(b, c)) => (a, b, c) }
-          val fkAB_C_T3 = λ[ProdAB_C[A, B, C]#λ ~> Tuple3K[A, B, C]#λ ]{ case Prod(Prod(a, b), c) => (a, b, c) }
-          val fkT3_AB_C = λ[Tuple3K[A, B, C]#λ ~> ProdAB_C[A, B, C]#λ]{ case (a, b, c) => Prod(Prod(a, b), c) }
-          val fkT3_A_BC = λ[Tuple3K[A, B, C]#λ ~> ProdA_BC[A, B, C]#λ]{ case (a, b, c) => Prod(a, Prod(b, c)) }
+          val fkA_BC_T3 = λ[ProdA_BC[A, B, C]#λ ~> Tuple3K[A, B, C]#λ ]{ case Tuple2K(a, Tuple2K(b, c)) => (a, b, c) }
+          val fkAB_C_T3 = λ[ProdAB_C[A, B, C]#λ ~> Tuple3K[A, B, C]#λ ]{ case Tuple2K(Tuple2K(a, b), c) => (a, b, c) }
+          val fkT3_AB_C = λ[Tuple3K[A, B, C]#λ ~> ProdAB_C[A, B, C]#λ]{ case (a, b, c) => Tuple2K(Tuple2K(a, b), c) }
+          val fkT3_A_BC = λ[Tuple3K[A, B, C]#λ ~> ProdA_BC[A, B, C]#λ]{ case (a, b, c) => Tuple2K(a, Tuple2K(b, c)) }
 
           F.imapK[ProdA_BC[A, B, C]#λ, Tuple3K[A, B, C]#λ](fs._1)(fkA_BC_T3)(fkT3_A_BC) ?==
             F.imapK[ProdAB_C[A, B, C]#λ, Tuple3K[A, B, C]#λ](fs._2)(fkAB_C_T3)(fkT3_AB_C)

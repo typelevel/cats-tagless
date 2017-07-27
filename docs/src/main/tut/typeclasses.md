@@ -27,7 +27,7 @@ For tagless final algebras whose effect `F` appears in both the covariant positi
 
 ### <a id="cartesianK" href="#cartesianK"></a>`CartesianK` 
 ```
- def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Prod[F, G, ?]]
+ def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Tuple2K[F, G, ?]]
 ```
 
 For tagless final algebras that

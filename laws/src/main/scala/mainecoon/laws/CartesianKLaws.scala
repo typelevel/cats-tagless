@@ -17,13 +17,13 @@
 package mainecoon
 package laws
 
-import cats.data.Prod
+import cats.data.Tuple2K
 
 trait CartesianKLaws[F[_[_]]] {
   implicit def F: CartesianK[F]
 
   def cartesianAssociativity[A[_], B[_], C[_]](af: F[A], ag: F[B], ah: F[C]):
-  (F[Prod[A, Prod[B, C, ?], ?]], F[Prod[Prod[A, B, ?], C, ?]]) =
+  (F[Tuple2K[A, Tuple2K[B, C, ?], ?]], F[Tuple2K[Tuple2K[A, B, ?], C, ?]]) =
     (F.productK(af, F.productK(ag, ah)), F.productK(F.productK(af, ag), ah))
 
 }

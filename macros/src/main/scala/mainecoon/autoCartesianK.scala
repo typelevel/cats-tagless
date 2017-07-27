@@ -40,20 +40,20 @@ object autoCartesianK {
     val methods = templ.stats.map(_.map {
       case q"def $methodName[..$mTParams](..$params): $f[$resultType]" =>
 
-        q"""def $methodName[..$mTParams](..$params): _root_.cats.data.Prod[F, G, $resultType] =
-           _root_.cats.data.Prod(af.$methodName(..${arguments(params)}), ag.$methodName(..${arguments(params)}))"""
+        q"""def $methodName[..$mTParams](..$params): _root_.cats.data.Tuple2K[F, G, $resultType] =
+           _root_.cats.data.Tuple2K(af.$methodName(..${arguments(params)}), ag.$methodName(..${arguments(params)}))"""
       case q"def $methodName[..$mTParams](..$params)(..$params2): $f[$resultType]" =>
 
-        q"""def $methodName[..$mTParams](..$params)(..$params2): _root_.cats.data.Prod[F, G, $resultType] =
-           _root_.cats.data.Prod(af.$methodName(..${arguments(params)})(..${arguments(params2)}), ag.$methodName(..${arguments(params)})(..${arguments(params2)}))"""
+        q"""def $methodName[..$mTParams](..$params)(..$params2): _root_.cats.data.Tuple2K[F, G, $resultType] =
+           _root_.cats.data.Tuple2K(af.$methodName(..${arguments(params)})(..${arguments(params2)}), ag.$methodName(..${arguments(params)})(..${arguments(params2)}))"""
       case st => abort(s"autoCartesianK does not support algebra with such statement: $st")
     }).getOrElse(Nil)
 
     val instanceDef = Seq(q"""
       implicit def ${Term.Name("cartesianKFor" + name.value)}: _root_.mainecoon.CartesianK[$name] =
         new _root_.mainecoon.CartesianK[$name] {
-          def productK[F[_], G[_]](af: $name[F], ag: $name[G]): $name[({type λ[A]=_root_.cats.data.Prod[F, G, A]})#λ] =
-            new ${Ctor.Ref.Name(name.value)}[({type λ[A]=_root_.cats.data.Prod[F, G, A]})#λ] {
+          def productK[F[_], G[_]](af: $name[F], ag: $name[G]): $name[({type λ[A]=_root_.cats.data.Tuple2K[F, G, A]})#λ] =
+            new ${Ctor.Ref.Name(name.value)}[({type λ[A]=_root_.cats.data.Tuple2K[F, G, A]})#λ] {
               ..$methods
             }
         }""")

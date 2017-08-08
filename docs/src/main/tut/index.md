@@ -49,7 +49,7 @@ implicit object tryExpression extends ExpressionAlg[Try] {
 }
 ```
 
-Similar to [simularcum](https://github.com/mpilquist/simulacrum), `@finalAlg` adds an `apply` method in the companion object so that you can do implicit calling.
+Similar to [simulacrum](https://github.com/mpilquist/simulacrum), `@finalAlg` adds an `apply` method in the companion object so that you can do implicit calling.
 ```tut:book
 ExpressionAlg[Try]
 ```

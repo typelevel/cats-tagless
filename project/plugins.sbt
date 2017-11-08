@@ -1,4 +1,4 @@
-addSbtPlugin("org.typelevel" % "sbt-catalysts" % "0.2.6")
+addSbtPlugin("org.typelevel" % "sbt-catalysts" % "0.3.0")
 
 addSbtPlugin("org.lyranthe.sbt" % "partial-unification" % "1.0.0")
 

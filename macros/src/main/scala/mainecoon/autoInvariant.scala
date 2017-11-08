@@ -96,8 +96,8 @@ object autoInvariant {
     })
 
     val instanceDef = Seq(q"""
-      implicit def ${Term.Name("invariantFor" + name.value)}[..$extraTParams]: _root_.cats.functor.Invariant[$typeLambdaVaryingEffect] =
-        new _root_.cats.functor.Invariant[$typeLambdaVaryingEffect] {
+      implicit def ${Term.Name("invariantFor" + name.value)}[..$extraTParams]: _root_.cats.Invariant[$typeLambdaVaryingEffect] =
+        new _root_.cats.Invariant[$typeLambdaVaryingEffect] {
           def imap[T, TTarget](delegatee_ : $name[..${tArgs("T")}])(mapFunction: T => TTarget)(mapFunctionFrom: TTarget => T): $name[..${tArgs("TTarget")}] =
             new ${Ctor.Ref.Name(name.value)}[..${tArgs("TTarget")}] {
               ..$methods

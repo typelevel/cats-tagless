@@ -1,4 +1,3 @@
-import com.typesafe.sbt.SbtGhPages.GhPagesKeys.ghpagesNoJekyll
 import com.typesafe.sbt.SbtGit.git
 import org.typelevel.Dependencies._
 import de.heikoseeberger.sbtheader.license.Apache2_0
@@ -114,7 +113,7 @@ lazy val docs = project
       "white-color"       -> "#FFFFFF"),
     ghpagesNoJekyll := false,
     micrositeAuthor := "Kailuo Wang",
-    tutScalacOptions ~= (_.filterNot(Set("-Ywarn-unused-import", "-Ywarn-dead-code"))),
+    scalacOptions in Tut ~= (_.filterNot(Set("-Ywarn-unused-import", "-Ywarn-dead-code"))),
     git.remoteRepo := gh.repo,
     includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md")
 

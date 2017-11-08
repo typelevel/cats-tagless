@@ -60,7 +60,6 @@ object CartesianKTests {
     type ProdA_BC[A[_], B[_], C[_]]  = { type λ[T] = Tuple2K[A, Tuple2K[B, C, ?], T] }
     type ProdAB_C[A[_], B[_], C[_]]  = { type λ[T] = Tuple2K[Tuple2K[A, B, ?], C, T] }
 
-    import cats.kernel.laws._
     implicit def invariantK[F[_[_]]](implicit F: InvariantK[F]): IsomorphismsK[F] =
       new IsomorphismsK[F] {
         def associativity[A[_], B[_], C[_]](fs: (F[ProdA_BC[A, B, C]#λ], F[ProdAB_C[A, B, C]#λ]))
@@ -71,8 +70,10 @@ object CartesianKTests {
           val fkT3_AB_C = λ[Tuple3K[A, B, C]#λ ~> ProdAB_C[A, B, C]#λ]{ case (a, b, c) => Tuple2K(Tuple2K(a, b), c) }
           val fkT3_A_BC = λ[Tuple3K[A, B, C]#λ ~> ProdA_BC[A, B, C]#λ]{ case (a, b, c) => Tuple2K(a, Tuple2K(b, c)) }
 
-          F.imapK[ProdA_BC[A, B, C]#λ, Tuple3K[A, B, C]#λ](fs._1)(fkA_BC_T3)(fkT3_A_BC) ?==
+          EqFGH.eqv(
+            F.imapK[ProdA_BC[A, B, C]#λ, Tuple3K[A, B, C]#λ](fs._1)(fkA_BC_T3)(fkT3_A_BC),
             F.imapK[ProdAB_C[A, B, C]#λ, Tuple3K[A, B, C]#λ](fs._2)(fkAB_C_T3)(fkT3_AB_C)
+          )
         }
 
       }

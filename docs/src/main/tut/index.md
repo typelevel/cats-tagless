@@ -7,18 +7,27 @@ position: 1
 
 Mainecoon is a small library built to facilitate composing tagless final encoded algebras.
 
+[![Typelevel incubator](https://img.shields.io/badge/typelevel-incubator-F51C2B.svg)](http://typelevel.org)
+[![Build Status](https://travis-ci.org/kailuowang/mainecoon.svg?branch=master)](https://travis-ci.org/kailuowang/mainecoon)
+[![codecov](https://codecov.io/gh/kailuowang/mainecoon/branch/master/graph/badge.svg)](https://codecov.io/gh/kailuowang/mainecoon)
+[![Join the chat at https://gitter.im/kailuowang/mainecoon](https://badges.gitter.im/kailuowang/mainecoon.svg)](https://gitter.im/kailuowang/mainecoon?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Scala.js](http://scala-js.org/assets/badges/scalajs-0.6.15.svg)](http://scala-js.org)
+[![Latest version](https://index.scala-lang.org/kailuowang/mainecoon/mainecoon-core/latest.svg?color=orange)](https://index.scala-lang.org/kailuowang/mainecoon/mainecoon-core)
+
+
 ## Installation
 
 Mainecoon is available on scala 2.11, 2.12, and scalajs. The macro annotations are developed using [scalameta](http://scalameta.org/), so there are a few dependencies to add in your `build.sbt`.
+
 
 ```scala
 addCompilerPlugin(
   ("org.scalameta" % "paradise" % "3.0.0-M9").cross(CrossVersion.full))
 
-libraryDependencies ++= Seq(
-  "org.scalameta"  %% "scalameta" % "1.8.0",
-  "com.kailuowang" %% "mainecoon-macros" % "0.3.0")
+libraryDependencies += 
+  "com.kailuowang" %% "mainecoon-macros" % latestVersion  //latest version indicated in the badge above
 ```
+
 Note that `org.scalameta.paradise` is a fork of `org.scalamacros.paradise`. So if you already have the
 `org.scalamacros.paradise` dependency, you might need to replace it.
 

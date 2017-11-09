@@ -118,7 +118,7 @@ program[Free[Try, ?]](0).foldMap(FunctionK.id)
 Again the magic here is that mainecoon auto derive an `Increment[Free[Try, ?]]` when there is an implicit `Try ~> Free[Try, ?]` and a `Increment[Try]` in scope. This auto derivation can be turned off using an annotation argument: `@autoFunctorK(autoDerivation = false)`.
 
 
-## <a id="horizontal-comp" href="#horizontal-comp"></a>Horizontal composition with @autoCartesianK
+## <a id="horizontal-comp" href="#horizontal-comp"></a>Horizontal composition with `@autoCartesianK`
 
 You can use the [`CartesianK`](typeclasses.html#cartesianK) type class to create a new interpreter that runs both interpreters and return the result as a `cats.Tuple2K`. The `@autoCartesianK` attribute add an instance of `CartesianK` to the companion object. Example:
 

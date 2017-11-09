@@ -21,7 +21,7 @@ package tests
 import cats.laws.discipline.SerializableTests
 import cats.laws.discipline.InvariantTests
 import autoInvariantTests._
-import cats.functor.Invariant
+import cats.Invariant
 import cats.kernel.Eq
 import org.scalacheck.{Arbitrary, Cogen}
 import cats.laws.discipline.eq._

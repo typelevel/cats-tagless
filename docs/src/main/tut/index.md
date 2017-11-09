@@ -189,7 +189,7 @@ Unlike `productK` living in the `CartesianK` type class, currently we don't have
 
 ## `@autoFunctor` and `@autoInvariant`
 
-Mainecoon also provides two annotations that can generate `cats.Functor` and `cats.functor.Invariant` instance for your trait.
+Mainecoon also provides two annotations that can generate `cats.Functor` and `cats.Invariant` instance for your trait.
 
 ### `@autoFunctor`
 ```tut:silent

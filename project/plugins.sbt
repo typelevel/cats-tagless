@@ -1,5 +1,3 @@
-addSbtPlugin("org.typelevel" % "sbt-catalysts" % "0.3.1")
-
-addSbtPlugin("org.lyranthe.sbt" % "partial-unification" % "1.0.0")
+addSbtPlugin("org.typelevel" % "sbt-catalysts" % "0.5.1")
 
 addSbtPlugin("de.heikoseeberger" % "sbt-header" % "1.8.0")

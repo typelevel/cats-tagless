@@ -123,9 +123,8 @@ lazy val buildSettings = sharedBuildSettings(gh, vAll)
 
 lazy val commonSettings = sharedCommonSettings ++ Seq(
   parallelExecution in Test := false,
-  scalacOptions ++= scalacAllOptions,
   crossScalaVersions := Seq(vAll.vers("scalac_2.11"), scalaVersion.value)
-) ++ xlintSettings ++ warnUnusedImport ++ unidocCommonSettings ++
+) ++ scalacAllSettings ++ unidocCommonSettings ++
   addCompilerPlugins(vAll, "kind-projector") ++ copyrightHeader
 
 lazy val commonJsSettings = Seq(scalaJSStage in Global := FastOptStage)

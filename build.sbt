@@ -146,5 +146,7 @@ lazy val metaMacroSettings: Seq[Def.Setting[_]] = Seq(
 )
 
 lazy val copyrightHeader = Seq(
-  startYear := Some(2017)
+  startYear := Some(2017),
+  organizationName := "Kailuo Wang"
+
 )

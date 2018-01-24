@@ -1,6 +1,5 @@
 import com.typesafe.sbt.SbtGit.git
 import org.typelevel.Dependencies._
-import de.heikoseeberger.sbtheader.license.Apache2_0
 
 addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVersion.value.get + \"-SNAPSHOT\"")
 
@@ -9,7 +8,6 @@ addCommandAlias("validateJVM", ";testsJVM/test ; docs/makeMicrosite")
 
 val apache2 = "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")
 val gh = GitHubSettings(org = "kailuowang", proj = "mainecoon", publishOrg = "com.kailuowang", license = apache2)
-val devs = Seq(Dev("Kailuo Wang", "kailuowang"))
 
 val vAll = Versions(versions, libraries, scalacPlugins)
 
@@ -122,7 +120,8 @@ lazy val buildSettings = sharedBuildSettings(gh, vAll)
 
 lazy val commonSettings = sharedCommonSettings ++ Seq(
   parallelExecution in Test := false,
-  crossScalaVersions := Seq(vAll.vers("scalac_2.11"), scalaVersion.value)
+  crossScalaVersions := Seq(vAll.vers("scalac_2.11"), scalaVersion.value),
+  developers := List(Developer("Kailuo Wang", "@kailuowang", "kailuo.wang@gmail.com", new java.net.URL("http://kailuowang.com")))
 ) ++ scalacAllSettings ++ unidocCommonSettings ++
   addCompilerPlugins(vAll, "kind-projector") ++ copyrightHeader
 
@@ -130,8 +129,7 @@ lazy val commonJsSettings = Seq(scalaJSStage in Global := FastOptStage)
 
 lazy val commonJvmSettings = Seq()
 
-lazy val publishSettings = sharedPublishSettings(gh, devs) ++ credentialSettings ++ sharedReleaseProcess
-
+lazy val publishSettings = sharedPublishSettings(gh) ++ credentialSettings ++ sharedReleaseProcess
 
 lazy val scoverageSettings = sharedScoverageSettings(60)
 
@@ -148,7 +146,5 @@ lazy val metaMacroSettings: Seq[Def.Setting[_]] = Seq(
 )
 
 lazy val copyrightHeader = Seq(
-  headers := Map(
-    "scala" -> Apache2_0("2017", "Kailuo Wang"),
-    "java" -> Apache2_0("2017", "Kailuo Wang"))
-  )
+  startYear := Some(2017)
+)

@@ -72,7 +72,7 @@ It works like this
 ```scala
 import ExpressionAlg.autoDerive._
 
-implicictly[ExpressionAlg[Option]]  //implicitly derived from a `ExpressionAlg[Try]` and a `Try ~> Option`
+implicitly[ExpressionAlg[Option]]  //implicitly derived from a `ExpressionAlg[Try]` and a `Try ~> Option`
 ```
 This auto derivation can be turned off using an annotation argument: `@autoFunctorK(autoDerivation = false)`.
 

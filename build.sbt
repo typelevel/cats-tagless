@@ -120,6 +120,7 @@ lazy val buildSettings = sharedBuildSettings(gh, vAll)
 
 lazy val commonSettings = sharedCommonSettings ++ Seq(
   parallelExecution in Test := false,
+  scalaVersion := vAll.vers("scalac_2.12"),
   crossScalaVersions := Seq(vAll.vers("scalac_2.11"), scalaVersion.value),
   developers := List(Developer("Kailuo Wang", "@kailuowang", "kailuo.wang@gmail.com", new java.net.URL("http://kailuowang.com")))
 ) ++ scalacAllSettings ++ unidocCommonSettings ++
@@ -140,7 +141,7 @@ lazy val metaMacroSettings: Seq[Def.Setting[_]] = Seq(
   resolvers += Resolver.bintrayRepo("scalameta", "maven"),
   libraryDependencies += "org.scalameta" %% "scalameta" % "1.8.0",
   scalacOptions in (Compile, console) := Seq(), // macroparadise plugin doesn't work in repl yet.
-  addCompilerPlugin("org.scalameta" % "paradise" % "3.0.0-M10" cross CrossVersion.full),
+  addCompilerPlugin("org.scalameta" % "paradise" % "3.0.0-M11" cross CrossVersion.full),
   scalacOptions += "-Xplugin-require:macroparadise",
   sources in (Compile, doc) := Nil // macroparadise doesn't work with scaladoc yet.
 )

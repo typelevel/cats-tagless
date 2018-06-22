@@ -15,7 +15,7 @@ Mainecoon is available on scala 2.11, 2.12, and scalajs. The macro annotations a
 
 ```scala
 addCompilerPlugin(
-  ("org.scalameta" % "paradise" % "3.0.0-M10").cross(CrossVersion.full))
+  ("org.scalameta" % "paradise" % "3.0.0-M11").cross(CrossVersion.full))
 
 libraryDependencies += 
   "com.kailuowang" %% "mainecoon-macros" % latestVersion  //latest version indicated in the badge above

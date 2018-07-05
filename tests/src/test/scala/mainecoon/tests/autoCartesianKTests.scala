@@ -19,11 +19,11 @@ package tests
 
 
 import cats.laws.discipline.SerializableTests
-import mainecoon.laws.discipline.CartesianKTests
+import mainecoon.laws.discipline.SemigroupalKTests
 
 import util.{Success, Try}
 
-class autoCartesianKTests extends MainecoonTestSuite {
+class autoSemigroupalKTests extends MainecoonTestSuite {
   test("simple product") {
 
     val prodInterpreter = Interpreters.tryInterpreter.productK(Interpreters.lazyInterpreter)
@@ -37,18 +37,18 @@ class autoCartesianKTests extends MainecoonTestSuite {
 
   implicit def eqT32 = SafeAlg.eqForSafeAlg[Tuple3K[Try, Option, List]#λ] //have to help scalac here
 
-  checkAll("ParseAlg[Option]", CartesianKTests[SafeAlg].cartesianK[Try, Option, List])
-  checkAll("CartesianK[ParseAlg]", SerializableTests.serializable(CartesianK[SafeAlg]))
+  checkAll("ParseAlg[Option]", SemigroupalKTests[SafeAlg].semigroupalK[Try, Option, List])
+  checkAll("SemigroupalK[ParseAlg]", SerializableTests.serializable(SemigroupalK[SafeAlg]))
 }
 
-object autoCartesianKTests {
+object autoSemigroupalKTests {
 
-  @autoCartesianK
+  @autoSemigroupalK
   trait algWithGenericType[F[_]] {
     def a[T](a: T): F[Unit]
   }
 
-  @autoCartesianK
+  @autoSemigroupalK
   trait algWithCurryMethod[F[_]] {
     def a(b: String)(d: Int): F[Unit]
   }

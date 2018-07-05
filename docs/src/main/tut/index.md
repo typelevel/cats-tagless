@@ -40,7 +40,7 @@ import mainecoon._
 
 @finalAlg
 @autoFunctorK
-@autoCartesianK
+@autoSemigroupalK
 @autoProductNK
 trait ExpressionAlg[F[_]] {
   def num(i: String): F[Float]
@@ -170,7 +170,7 @@ new StringCalculatorOption
 
 ## <a id="horizontal-comp" href="#horizontal-comp"></a>Horizontal composition
 
-You can use the [`CartesianK`](typeclasses.html#cartesianK) type class to create a new interpreter that runs two interpreters simultaneously and return the result as a `cats.Tuple2K`. The `@autoCartesianK` attribute add an instance of `CartesianK` to the companion object. Example:
+You can use the [`SemigroupalK`](typeclasses.html#semigroupalK) type class to create a new interpreter that runs two interpreters simultaneously and return the result as a `cats.Tuple2K`. The `@autoSemigroupalK` attribute add an instance of `SemigroupalK` to the companion object. Example:
 ```tut:book
 val prod = ExpressionAlg[Option].productK(ExpressionAlg[Try])
 prod.num("2")
@@ -193,7 +193,7 @@ prod4.num("3")
 prod4.num("invalid")
 
 ```
-Unlike `productK` living in the `CartesianK` type class, currently we don't have a type class for these `product{n}K` operations yet.
+Unlike `productK` living in the `SemigroupalK` type class, currently we don't have a type class for these `product{n}K` operations yet.
 
 
 ## `@autoFunctor` and `@autoInvariant`

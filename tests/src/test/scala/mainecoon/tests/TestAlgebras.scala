@@ -25,7 +25,7 @@ import scala.util.Try
 import cats.laws.discipline.eq._
 import cats.implicits._
 
-@finalAlg @autoFunctorK @autoCartesianK @autoProductNK
+@finalAlg @autoFunctorK @autoSemigroupalK @autoProductNK
 trait SafeAlg[F[_]] {
   def parseInt(i: String): F[Int]
   def divide(dividend: Float, divisor: Float): F[Float]

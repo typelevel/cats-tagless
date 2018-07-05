@@ -118,12 +118,12 @@ program[Free[Try, ?]](0).foldMap(FunctionK.id)
 Again the magic here is that mainecoon auto derive an `Increment[Free[Try, ?]]` when there is an implicit `Try ~> Free[Try, ?]` and a `Increment[Try]` in scope. This auto derivation can be turned off using an annotation argument: `@autoFunctorK(autoDerivation = false)`.
 
 
-## <a id="horizontal-comp" href="#horizontal-comp"></a>Horizontal composition with `@autoCartesianK`
+## <a id="horizontal-comp" href="#horizontal-comp"></a>Horizontal composition with `@autoSemigroupalK`
 
-You can use the [`CartesianK`](typeclasses.html#cartesianK) type class to create a new interpreter that runs both interpreters and return the result as a `cats.Tuple2K`. The `@autoCartesianK` attribute add an instance of `CartesianK` to the companion object. Example:
+You can use the [`SemigroupalK`](typeclasses.html#semigroupalK) type class to create a new interpreter that runs both interpreters and return the result as a `cats.Tuple2K`. The `@autoSemigroupalK` attribute add an instance of `SemigroupalK` to the companion object. Example:
 
 ```scala
-@autoCartesianK
+@autoSemigroupalK
 trait ExpressionAlg[F[_]] {
   def num(i: String): F[Float]
   def divide(dividend: Float, divisor: Float): F[Float]
@@ -135,7 +135,7 @@ prod.num("2")
 // res11: cats.data.Tuple2K[Option,scala.util.Try,Float] = Tuple2K(Some(2.0),Success(2.0))
 ```
 
-If you want to combine more than 2 interpreters, the `@autoProductNK` attribute add a series of `product{n}K (n = 3..9)` methods to the companion object. Unlike `productK` living in the `CartesianK` type class, currently we don't have a type class for these `product{n}K` operations yet.
+If you want to combine more than 2 interpreters, the `@autoProductNK` attribute add a series of `product{n}K (n = 3..9)` methods to the companion object. Unlike `productK` living in the `SemigroupalK` type class, currently we don't have a type class for these `product{n}K` operations yet.
 
 
 ## `@autoFunctor` and `@autoInvariant`

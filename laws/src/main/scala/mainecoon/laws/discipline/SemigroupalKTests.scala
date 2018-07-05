@@ -21,15 +21,15 @@ package discipline
 
 import cats.{Eq, ~>}
 import cats.data.Tuple2K
-import mainecoon.laws.discipline.CartesianKTests.IsomorphismsK
+import mainecoon.laws.discipline.SemigroupalKTests.IsomorphismsK
 import org.scalacheck.Prop._
 import org.scalacheck.{Arbitrary, Prop}
 import org.typelevel.discipline.Laws
 
-trait CartesianKTests[F[_[_]]] extends Laws {
-  def laws: CartesianKLaws[F]
+trait SemigroupalKTests[F[_[_]]] extends Laws {
+  def laws: SemigroupalKLaws[F]
 
-  def cartesianK[A[_], B[_], C[_]](implicit
+  def semigroupalK[A[_], B[_], C[_]](implicit
                                                ArbCF: Arbitrary[F[A]],
                                                ArbCG: Arbitrary[F[B]],
                                                ArbCH: Arbitrary[F[C]],
@@ -37,16 +37,16 @@ trait CartesianKTests[F[_[_]]] extends Laws {
                                                EqFGH: Eq[F[Tuple3K[A, B, C]#λ]]
                                               ): RuleSet = {
     new DefaultRuleSet(
-      name = "CartesianK",
+      name = "SemigroupalK",
       parent = None,
-      "cartesian associativity" -> forAll((af: F[A], ag: F[B], ah: F[C]) => iso.associativity(laws.cartesianAssociativity[A, B, C](af, ag, ah))))
+      "semigroupal associativity" -> forAll((af: F[A], ag: F[B], ah: F[C]) => iso.associativity(laws.semigroupalAssociativity[A, B, C](af, ag, ah))))
   }
 }
 
 
-object CartesianKTests {
-  def apply[F[_[_]]: CartesianK]: CartesianKTests[F] =
-    new CartesianKTests[F] { def laws: CartesianKLaws[F] = CartesianKLaws[F] }
+object SemigroupalKTests {
+  def apply[F[_[_]]: SemigroupalK]: SemigroupalKTests[F] =
+    new SemigroupalKTests[F] { def laws: SemigroupalKLaws[F] = SemigroupalKLaws[F] }
 
   import IsomorphismsK._
 

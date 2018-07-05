@@ -15,10 +15,20 @@
  */
 
 package mainecoon
+package laws
 
 import cats.data.Tuple2K
-import simulacrum.typeclass
 
-@typeclass trait CartesianK[A[_[_]]] {
-  def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Tuple2K[F, G, ?]]
+trait SemigroupalKLaws[F[_[_]]] {
+  implicit def F: SemigroupalK[F]
+
+  def semigroupalAssociativity[A[_], B[_], C[_]](af: F[A], ag: F[B], ah: F[C]):
+  (F[Tuple2K[A, Tuple2K[B, C, ?], ?]], F[Tuple2K[Tuple2K[A, B, ?], C, ?]]) =
+    (F.productK(af, F.productK(ag, ah)), F.productK(F.productK(af, ag), ah))
+
+}
+
+object SemigroupalKLaws {
+  def apply[F[_[_]]](implicit ev: SemigroupalK[F]): SemigroupalKLaws[F] =
+    new SemigroupalKLaws[F] { val F = ev }
 }

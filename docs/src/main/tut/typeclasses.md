@@ -8,7 +8,9 @@ position: 4
 
 ## Type classes
 
-Currently there are three type classes defined in mainecoon: [FunctorK](#functorK), [InvariantK](#invariantK), and [SemigroupalK](#semigroupalK). They can be deemed as somewhat higher kinded versions of the corresponding type classes in cats.
+
+Currently there are four type classes defined in mainecoon: [FunctorK](#functorK), [InvariantK](#invariantK), [SemigroupalK](#semigroupalK), and [ApplyK](#applyK). They can be deemed as somewhat higher kinded versions of the corresponding type classes in cats.
+
 
 
 ### <a id="functorK" href="#functorK"></a>`FunctorK` 
@@ -35,6 +37,21 @@ For tagless final algebras that
 2. whose effect `F` appears only in the covariant position for **all members**,
 
 instance of `SemigroupalK` can be auto generated through `autoSemigroupalK` annotation.
+
+
+### <a id="applyK" href="#applyK"></a>`ApplyK`
+```
+ def map2K[F[_], G[_], H[_]](af: A[F], ag: A[G])(f: Tuple2K[F, G, ?] ~> H): A[H]
+```
+
+`ApplyK` extends both `SemigroupalK` and `FunctorK` just like their lower kinded counterparts.
+
+For tagless final algebras that
+1. has no extra type parameters or abstract type members, and
+2. whose effect `F` appears only in the covariant position for **all members**,
+
+instance of `ApplyK` can be auto generated through `autoApplyK` annotation.
+
 
 
 Their laws are defined in `mainecoon.laws`. To test your instance (if you decide to roll your own) against these laws please follow the examples in `mainecoon.tests`, especially the ones that test against `SafeAlg`.

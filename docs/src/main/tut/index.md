@@ -198,31 +198,64 @@ Unlike `productK` living in the `SemigroupalK` type class, currently we don't ha
 
 ## `@autoFunctor` and `@autoInvariant`
 
-Mainecoon also provides two annotations that can generate `cats.Functor` and `cats.Invariant` instance for your trait.
+Mainecoon also provides three annotations that can generate `cats.Functor`, `cats.FlatMap` and `cats.Invariant` instance for your trait.
 
 ### `@autoFunctor`
 ```tut:silent
 @finalAlg @autoFunctor
 trait SimpleAlg[T] {
   def foo(a: String): T
+  def bar(d: Double): Double
 }
 
 implicit object SimpleAlgInt extends SimpleAlg[Int] {
   def foo(a: String): Int = a.length
+  def bar(d: Double): Double = 2 * d
 }
 ```
 ```tut:book
 SimpleAlg[Int].map(_ + 1).foo("blah")
 ```
 
+Methods which return not the effect type are unaffected by the `map` function.
+```tut:book
+SimpleAlg[Int].map(_ + 1).bar(2)
+```
+
+### `@autoFlatMap`
+```tut:silent
+@autoFlatMap
+trait StringAlg[T] {
+  def foo(a: String): T
+}
+
+object LengthAlg extends StringAlg[Int] {
+  def foo(a: String): Int = a.length
+}
+
+object HeadAlg extends StringAlg[Char] {
+  def foo(a: String): Char = a.headOption.getOrElse(' ')
+}
+
+val hintAlg = for {
+  length <- LengthAlg
+  head <- HeadAlg
+} yield head.toString ++ "*" * (length - 1)
+```
+
+```tut:book
+hintAlg.foo("Password")
+```
+
 ### `@autoInvariant`
+
 ```tut:silent
 @finalAlg @autoInvariant
 trait SimpleInvAlg[T] {
   def foo(a: T): T
 }
 
-implicit object SimpleInvAlgInt extends SimpleInvAlg[String] {
+implicit object SimpleInvAlgString extends SimpleInvAlg[String] {
   def foo(a: String): String = a.reverse
 }
 ```
@@ -230,4 +263,3 @@ implicit object SimpleInvAlgInt extends SimpleInvAlg[String] {
 SimpleInvAlg[String].imap(_.toInt)(_.toString).foo(12)
 ```
 Note that if there are multiple type parameters on the trait, `@autoFunctor` and `@autoInvariant` will treat the last one as the target `T`.
-

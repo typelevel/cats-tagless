@@ -33,10 +33,6 @@ private[mainecoon] object Util {
     Type.Param(Nil, Type.Name(name), tparams, Type.Bounds(None, None), Nil, Nil)
   }
 
-  def typeParam(typeDecl: Decl.Type): Type.Param =
-    typeParam(typeDecl.name.value, typeDecl.tparams.size)
-
-
   def enrich(defn: Any)(f: TypeDefinition => TypeDefinition) : Block = {
     defn match {
       case TypeDefinition.FromAny(td) =>
@@ -62,6 +58,9 @@ private[mainecoon] object Util {
   }
 
 
-  def arguments(params: Seq[Term.Param]) =
+  def arguments(params: Seq[Term.Param]): Seq[Term.Name] =
      params.map(p => Term.Name(p.name.value))
+
+  def argumentss(params: Seq[Seq[Term.Param]]): Seq[Seq[Term.Name]] =
+    params.map(arguments)
 }

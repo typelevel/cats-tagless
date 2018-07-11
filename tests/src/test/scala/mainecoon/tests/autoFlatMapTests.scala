@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
-package mainecoon
-package tests
+package mainecoon.tests
 
-
-import cats.Functor
+import cats.FlatMap
 import cats.kernel.Eq
 import cats.kernel.instances.string._
 import cats.kernel.instances.tuple._
 import cats.laws.discipline.eq._
-import cats.laws.discipline.{FunctorTests, SerializableTests}
-import mainecoon.tests.autoFunctorTests._
+import cats.laws.discipline.{FlatMapTests, SerializableTests}
+import mainecoon.autoFlatMap
+import mainecoon.tests.autoFlatMapTests._
 import org.scalacheck.{Arbitrary, Cogen}
 
-class autoFunctorTests extends MainecoonTestSuite {
+class autoFlatMapTests extends MainecoonTestSuite {
 
-  checkAll("Functor[TestAlgebra]", FunctorTests[TestAlgebra].functor[Long, String, Int])
-  checkAll("Serializable Functor[TestAlgebra]", SerializableTests.serializable(Functor[TestAlgebra]))
+  checkAll("FlatMap[TestAlgebra]", FlatMapTests[TestAlgebra].flatMap[Float, String, Int])
+  checkAll("serializable FlatMap[TestAlgebra]", SerializableTests.serializable(FlatMap[TestAlgebra]))
 
   test("extra type param correctly handled") {
     val doubleAlg = AlgWithExtraTypeParamFloat.map(_.toDouble)
@@ -38,9 +37,9 @@ class autoFunctorTests extends MainecoonTestSuite {
   }
 }
 
-object autoFunctorTests {
+object autoFlatMapTests {
 
-  @autoFunctor
+  @autoFlatMap
   trait TestAlgebra[T] {
     def abstractEffect(a: String): T
 
@@ -53,12 +52,7 @@ object autoFunctorTests {
     def withoutParams: T
   }
 
-  @autoFunctor
-  trait AlgWithCurry[T] {
-    def foo(a: String)(b: Int): T
-  }
-
-  @autoFunctor
+  @autoFlatMap
   trait AlgWithExtraTypeParam[T1, T] {
     def foo(a: T1): T
   }
@@ -67,7 +61,7 @@ object autoFunctorTests {
     def foo(a: String): Float = a.length.toFloat
   }
 
-  @autoFunctor
+  @autoFlatMap
   trait AlgWithGenericMethod[T] {
     def plusOne[A](i: A): T
   }

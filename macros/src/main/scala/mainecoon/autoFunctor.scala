@@ -16,11 +16,11 @@
 
 package mainecoon
 
-import scala.annotation.{StaticAnnotation, compileTimeOnly}
-import scala.meta._
-import Util._
+import mainecoon.Util._
 
-import collection.immutable.Seq
+import scala.annotation.{StaticAnnotation, compileTimeOnly}
+import scala.collection.immutable.Seq
+import scala.meta._
 
 /**
  * auto generates an instance of `cats.Functor`
@@ -33,48 +33,21 @@ class autoFunctor extends StaticAnnotation {
 }
 
 
-
 object autoFunctor {
   private[mainecoon] def functorInst(ad: AlgDefn): TypeDefinition = {
     import ad._
     import cls._
 
-    val methods = templ.stats.toList.flatMap(_.collect {
-      //abstract method with return type being effect type
-      case q"def $methodName[..$mTParams](..$params): ${Type.Name(`effectTypeName`)}" =>
-        q"""def $methodName[..$mTParams](..$params): TTarget =
-           mapFunction(delegatee_.$methodName(..${arguments(params)}))"""
-      //abstract method with other return type
-      case q"def $methodName[..$mTParams](..$params): $targetType" =>
-        q"""def $methodName[..$mTParams](..$params): $targetType =
-           delegatee_.$methodName(..${arguments(params)})"""
-      //abstract method with return type being effect type
-      case q"def $methodName[..$mTParams](..$params)(..$params2): ${Type.Name(`effectTypeName`)}" =>
-        q"""def $methodName[..$mTParams](..$params)(..$params2): TTarget =
-           mapFunction(delegatee_.$methodName(..${arguments(params)})(..${arguments(params2)}))"""
-      //abstract method with other return type
-      case q"def $methodName[..$mTParams](..$params)(..$params2): $targetType" =>
-        q"""def $methodName[..$mTParams](..$params)(..$params2): $targetType =
-           delegatee_.$methodName(..${arguments(params)})(..${arguments(params2)})"""
-      case q"def $methodName[..$mTParams]: ${Type.Name(`effectTypeName`)}" =>
-        q"""def $methodName[..$mTParams]: TTarget =
-           mapFunction(delegatee_.$methodName)"""
-      //abstract method with other return type
-      case q"def $methodName[..$mTParams]: $targetType" =>
-        q"""def $methodName[..$mTParams]: $targetType =
-           delegatee_.$methodName"""
-    })
+    val instanceDef =
+      q"""
+    implicit def ${Term.Name("functorFor" + name.value)}[..$extraTParams]: _root_.cats.Functor[$typeLambdaVaryingEffect] =
+      new _root_.cats.Functor[$typeLambdaVaryingEffect] {
+        def map[T, TTarget](delegatee_ : $name[..${tArgs("T")}])(mapFunction: T => TTarget): $name[..${tArgs("TTarget")}] =
+          new ${Ctor.Ref.Name(name.value)}[..${tArgs("TTarget")}] {
+            ..${autoFlatMap.mapMethods(templ, effectTypeName)}
+          }
+      }"""
 
-    val instanceDef = Seq(q"""
-      implicit def ${Term.Name("functorFor" + name.value)}[..$extraTParams]: _root_.cats.Functor[$typeLambdaVaryingEffect] =
-        new _root_.cats.Functor[$typeLambdaVaryingEffect] {
-          def map[T, TTarget](delegatee_ : $name[..${tArgs("T")}])(mapFunction: T => TTarget): $name[..${tArgs("TTarget")}] =
-            new ${Ctor.Ref.Name(name.value)}[..${tArgs("TTarget")}] {
-              ..$methods
-            }
-        }""")
-
-    cls.copy(companion = cls.companion.addStats(instanceDef))
-
+    cls.copy(companion = cls.companion.addStats(Seq(instanceDef)))
   }
 }

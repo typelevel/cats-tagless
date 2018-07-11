@@ -92,12 +92,12 @@ case class AlgDefn(cls: TypeDefinition, effectType: Type.Param){
 
   lazy val effectTypeName: String = effectType.name.value
 
-  def tArgs(effTpeName: Type.Name = effectTypeArg): Seq[Type.Name] = cls.tparams.map {
+  def tArgs(effTpeName: Type = effectTypeArg): Seq[Type] = cls.tparams.map {
     case `effectType` => effTpeName
     case tp =>  Type.Name(tp.name.value)
   }
 
-  def tArgs(effTpeName: String): Seq[Type.Name] = tArgs(Type.Name(effTpeName))
+  def tArgs(effTpeName: String): Seq[Type] = tArgs(Type.Name(effTpeName))
 
   lazy val typeLambdaVaryingHigherKindedEffect = t"({type λ[Ƒ[_]] = ${newTypeSig("Ƒ")}})#λ"
   lazy val typeLambdaVaryingHigherKindedEffectFullyRefined = t"({type λ[Ƒ[_]] = ${fullyRefinedTypeSig("Ƒ")}})#λ"

@@ -14,14 +14,14 @@ Currently there are four type classes defined in mainecoon: [FunctorK](#functorK
 
 
 ### <a id="functorK" href="#functorK"></a>`FunctorK` 
-```tut:silent
+```
   def mapK[F[_], G[_]](af: A[F])(fk: F ~> G): A[G]
 ```
 
 For tagless final algebras whose effect `F` appears only in the covariant position, instance of `FunctorK` can be auto generated through the `autoFunctorK` annotation.
 
 ### <a id="invariantK" href="#invariantK"></a>`InvariantK` 
-```tut:silent
+```
   def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gK: G ~> F): A[G]
 ```
 

@@ -37,6 +37,18 @@ object autoSemigroupalK {
   private[mainecoon] def semigroupalKInst(cls: TypeDefinition): TypeDefinition = {
     import cls._
 
+    val instanceDef = Seq(q"""
+      implicit def ${Term.Name("semigroupalKFor" + name.value)}: _root_.mainecoon.SemigroupalK[$name] =
+        new _root_.mainecoon.SemigroupalK[$name] {
+          ${semigroupalKMethods(cls)}
+        }""")
+
+    cls.copy(companion = cls.companion.addStats(instanceDef))
+  }
+
+  private[mainecoon] def semigroupalKMethods(cls: TypeDefinition): Defn = {
+    import cls._
+
     val methods = templ.stats.map(_.map {
       case q"def $methodName[..$mTParams](..$params): $f[$resultType]" =>
 
@@ -49,16 +61,14 @@ object autoSemigroupalK {
       case st => abort(s"autoSemigroupalK does not support algebra with such statement: $st")
     }).getOrElse(Nil)
 
-    val instanceDef = Seq(q"""
-      implicit def ${Term.Name("semigroupalKFor" + name.value)}: _root_.mainecoon.SemigroupalK[$name] =
-        new _root_.mainecoon.SemigroupalK[$name] {
-          def productK[F[_], G[_]](af: $name[F], ag: $name[G]): $name[({type λ[A]=_root_.cats.data.Tuple2K[F, G, A]})#λ] =
-            new ${Ctor.Ref.Name(name.value)}[({type λ[A]=_root_.cats.data.Tuple2K[F, G, A]})#λ] {
-              ..$methods
-            }
-        }""")
+    q"""
+      def productK[F[_], G[_]](af: $name[F], ag: $name[G]): $name[({type λ[A]=_root_.cats.data.Tuple2K[F, G, A]})#λ] =
+        new ${Ctor.Ref.Name(name.value)}[({type λ[A]=_root_.cats.data.Tuple2K[F, G, A]})#λ] {
+          ..$methods
+        }
+    """
 
-    cls.copy(companion = cls.companion.addStats(instanceDef))
+
   }
 }
 

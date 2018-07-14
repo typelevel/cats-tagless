@@ -7,7 +7,7 @@ addCommandAlias("validateJVM", ";testsJVM/test ; docs/makeMicrosite")
 
 
 val apache2 = "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")
-val gh = GitHubSettings(org = "kailuowang", proj = "mainecoon", publishOrg = "com.kailuowang", license = apache2)
+val gh = GitHubSettings(org = "typelevel", proj = "cats-tagless", publishOrg = "org.typelevel", license = apache2)
 
 val vAll = Versions(versions, libraries, scalacPlugins)
 
@@ -92,11 +92,11 @@ lazy val docs = project
   .settings(
     organization  := gh.organisation,
     autoAPIMappings := true,
-    micrositeName := "Mainecoon",
-    micrositeDescription := "A library for transforming and composing tagless final algebras",
-    micrositeBaseUrl := "mainecoon",
-    micrositeGithubOwner := "kailuowang",
-    micrositeGithubRepo := "mainecoon",
+    micrositeName := "Cats-tagless",
+    micrositeDescription := "A library of utilities for tagless final algebras",
+    micrositeBaseUrl := "cats-tagless",
+    micrositeGithubOwner := "typelevel",
+    micrositeGithubRepo := "cats-tagless",
     micrositeHighlightTheme := "atom-one-light",
     fork in tut := true,
     micrositePalette := Map(
@@ -109,7 +109,7 @@ lazy val docs = project
       "gray-lighter"      -> "#F4F3F4",
       "white-color"       -> "#FFFFFF"),
     ghpagesNoJekyll := false,
-    micrositeAuthor := "Kailuo Wang",
+    micrositeAuthor := "cats-tagless Contributors",
     scalacOptions in Tut ~= (_.filterNot(Set("-Ywarn-unused-import", "-Ywarn-dead-code"))),
     git.remoteRepo := gh.repo,
     includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md")

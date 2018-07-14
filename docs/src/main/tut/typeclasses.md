@@ -9,7 +9,7 @@ position: 4
 ## Type classes
 
 
-Currently there are four type classes defined in mainecoon: [FunctorK](#functorK), [InvariantK](#invariantK), [SemigroupalK](#semigroupalK), and [ApplyK](#applyK). They can be deemed as somewhat higher kinded versions of the corresponding type classes in cats.
+Currently there are four type classes defined in Cats-tagless: [FunctorK](#functorK), [InvariantK](#invariantK), [SemigroupalK](#semigroupalK), and [ApplyK](#applyK). They can be deemed as somewhat higher kinded versions of the corresponding type classes in cats.
 
 
 
@@ -54,6 +54,6 @@ instance of `ApplyK` can be auto generated through `autoApplyK` annotation.
 
 
 
-Their laws are defined in `mainecoon.laws`. To test your instance (if you decide to roll your own) against these laws please follow the examples in `mainecoon.tests`, especially the ones that test against `SafeAlg`.
+Their laws are defined in `cats.tagless.laws`. To test your instance (if you decide to roll your own) against these laws please follow the examples in `cats.tagless.tests`, especially the ones that test against `SafeAlg`.
 
 

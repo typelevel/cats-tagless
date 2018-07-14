@@ -8,12 +8,12 @@ position: 2
 
 ## FAQs
 
-### Does mainecoon support algebras with extra type parameters?
+### Does cats-tagless support algebras with extra type parameters?
 
 Yes. e.g.
 
 ```tut:silent
-import mainecoon._
+import cats.tagless._
 import cats.~>
 import util.Try
 
@@ -35,7 +35,7 @@ import Foo.autoDerive._
 Foo[Option, String].a(3)
 ```
 
-### Does mainecoon support algebras with abstract type member?
+### Does Cats-tagless support algebras with abstract type member?
 
 Yes but with some caveats.
 The `FunctorK` instance it generates does not refine to the type member. E.g.

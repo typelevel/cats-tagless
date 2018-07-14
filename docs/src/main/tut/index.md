@@ -5,19 +5,19 @@ section: home
 position: 1
 ---
 
-Mainecoon is a small library built to facilitate composing tagless final encoded algebras.
+Cats-tagless is a small library built to facilitate composing tagless final encoded algebras.
 
 [![Typelevel incubator](https://img.shields.io/badge/typelevel-incubator-F51C2B.svg)](http://typelevel.org)
-[![Build Status](https://travis-ci.org/kailuowang/mainecoon.svg?branch=master)](https://travis-ci.org/kailuowang/mainecoon)
-[![codecov](https://codecov.io/gh/kailuowang/mainecoon/branch/master/graph/badge.svg)](https://codecov.io/gh/kailuowang/mainecoon)
-[![Join the chat at https://gitter.im/kailuowang/mainecoon](https://badges.gitter.im/kailuowang/mainecoon.svg)](https://gitter.im/kailuowang/mainecoon?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build Status](https://travis-ci.org/typelevel/cats-tagless.svg?branch=master)](https://travis-ci.org/typelevel/cats-tagless)
+[![codecov](https://codecov.io/gh/typelevel/cats-tagless/branch/master/graph/badge.svg)](https://codecov.io/gh/typelevel/cats-tagless)
+[![Join the chat at https://gitter.im/typelevel/cats-tagless](https://badges.gitter.im/typelevel/cats-tagless.svg)](https://gitter.im/typelevel/cats-tagless?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Scala.js](http://scala-js.org/assets/badges/scalajs-0.6.15.svg)](http://scala-js.org)
-[![Latest version](https://index.scala-lang.org/kailuowang/mainecoon/mainecoon-core/latest.svg?color=orange)](https://index.scala-lang.org/kailuowang/mainecoon/mainecoon-core)
+[![Latest version](https://index.scala-lang.org/typelevel/cats-tagless/cats-tagless-core/latest.svg?color=orange)](https://index.scala-lang.org/typelevel/cats-tagless/cats-tagless-core)
 
 
 ## Installation
 
-Mainecoon is available on scala 2.11, 2.12, and scalajs. The macro annotations are developed using [scalameta](http://scalameta.org/), so there are a few dependencies to add in your `build.sbt`.
+Cats-tagless is available on scala 2.11, 2.12, and scalajs. The macro annotations are developed using [scalameta](http://scalameta.org/), so there are a few dependencies to add in your `build.sbt`.
 
 
 ```scala
@@ -25,7 +25,7 @@ addCompilerPlugin(
   ("org.scalameta" % "paradise" % "3.0.0-M11").cross(CrossVersion.full))
 
 libraryDependencies += 
-  "com.kailuowang" %% "mainecoon-macros" % latestVersion  //latest version indicated in the badge above
+  "org.typelevel" %% "cats-tagless-macros" % latestVersion  //latest version indicated in the badge above
 ```
 
 Note that `org.scalameta.paradise` is a fork of `org.scalamacros.paradise`. So if you already have the
@@ -36,7 +36,7 @@ Note that `org.scalameta.paradise` is a fork of `org.scalamacros.paradise`. So i
 Say we have a typical tagless encoded algebra `ExpressionAlg[F[_]]`
 
 ```tut:silent
-import mainecoon._
+import cats.tagless._
 
 @finalAlg
 @autoFunctorK
@@ -63,12 +63,12 @@ Similar to [simulacrum](https://github.com/mpilquist/simulacrum), `@finalAlg` ad
 ExpressionAlg[Try]
 ```
 
-Mainecoon provides a [`FunctorK`](typeclasses.html#functorK) type class to map over algebras using [cats](http://typelevel.org/cats)' [`FunctionK`](http://typelevel.org/cats/datatypes/functionk.html).
+Cats-tagless provides a [`FunctorK`](typeclasses.html#functorK) type class to map over algebras using [cats](http://typelevel.org/cats)' [`FunctionK`](http://typelevel.org/cats/datatypes/functionk.html).
 The `@autoFunctorK` annotation automatically generate an instance of `FunctorK` for `ExpressionAlg` so that you can map
  an `ExpressionAlg[F]` to a `ExpressionAlg[G]` using a `FunctionK[F, G]`, a.k.a. `F ~> G`.
 
 ```tut:silent
-import mainecoon.implicits._
+import cats.tagless.implicits._
 import cats.implicits._
 import cats._
 ```
@@ -82,7 +82,7 @@ Note that the `Try ~> Option` is implemented using [kind projector's polymorphic
 `F ~> G`, you automatically have a `ExpressionAlg[G]`.
 
 Obviously [`FunctorK`](typeclasses.html#functorK) instance is only possible when the effect type `F[_]` appears only in the
-covariant position (i.e. the return types). For algebras with effect type also appearing in the contravariant position (i.e. argument types), mainecoon provides a [`InvariantK`](typeclasses.html#invariantK) type class and an `autoInvariantK` annotation to automatically generate instances.
+covariant position (i.e. the return types). For algebras with effect type also appearing in the contravariant position (i.e. argument types), Cats-tagless provides a [`InvariantK`](typeclasses.html#invariantK) type class and an `autoInvariantK` annotation to automatically generate instances.
 
 ```tut:book
 import ExpressionAlg.autoDerive._
@@ -130,7 +130,7 @@ implicit def toFree[F[_]]: F ~> Free[F, ?] = λ[F ~> Free[F, ?]](t => Free.liftF
 program[Free[Try, ?]](0).foldMap(FunctionK.id)
 ```
 
-Again the magic here is that mainecoon auto derive an `Increment[Free[Try, ?]]` when there is an implicit `Try ~> Free[Try, ?]` and a `Increment[Try]` in scope. This auto derivation can be turned off using an annotation argument: `@autoFunctorK(autoDerivation = false)`.
+Again the magic here is that Cats-tagless auto derive an `Increment[Free[Try, ?]]` when there is an implicit `Try ~> Free[Try, ?]` and a `Increment[Try]` in scope. This auto derivation can be turned off using an annotation argument: `@autoFunctorK(autoDerivation = false)`.
 
 
 
@@ -198,7 +198,7 @@ Unlike `productK` living in the `SemigroupalK` type class, currently we don't ha
 
 ## `@autoFunctor` and `@autoInvariant`
 
-Mainecoon also provides three annotations that can generate `cats.Functor`, `cats.FlatMap` and `cats.Invariant` instance for your trait.
+Cats-tagless also provides three annotations that can generate `cats.Functor`, `cats.FlatMap` and `cats.Invariant` instance for your trait.
 
 ### `@autoFunctor`
 ```tut:silent

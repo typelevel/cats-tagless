@@ -1,0 +1,61 @@
+@import url(https://fonts.googleapis.com/css?family=Lato:400,300,700);
+.technologies {
+  background: #EDAF79; }
+
+#site-header .navbar-wrapper a {
+  color: #fff; }
+
+#site-footer {
+  background: #96A694; }
+
+::-moz-selection {
+  background: #51839A;
+  color: #FFFFFF; }
+
+::selection {
+  background: #51839A;
+  color: #FFFFFF; }
+
+.jumbotron {
+  background-color: #EDAF79; }
+  .jumbotron .btn-outline-inverse {
+    border: 2px solid #FFFFFF;
+    color: #FFFFFF; }
+    .jumbotron .btn-outline-inverse:hover, .jumbotron .btn-outline-inverse:focus {
+      background: #FFFFFF;
+      color: #EDAF79; }
+
+pre {
+  background: rgba(244, 243, 244, 0.6); }
+  pre code {
+    color: inherit;
+    background-color: transparent; }
+  pre .hljs {
+    background: none; }
+
+body.docs {
+  background: #F4F3F4; }
+
+#content code {
+  color: #424F67;
+  background-color: #F4F3F4; }
+
+#sidebar-wrapper {
+  background: #EDAF79; }
+
+#page-content-wrapper .nav a {
+  color: #424F67; }
+  #page-content-wrapper .nav a:hover {
+    color: #192946; }
+  #page-content-wrapper .nav a i {
+    font-size: 18px; }
+
+.sidebar-nav > li a:hover {
+  background: #96A694; }
+.sidebar-nav > li a.active {
+  border-left: 3px solid #51839A;
+  color: #fff; }
+.sidebar-nav > .sidebar-brand a {
+  background: #96A694; }
+  .sidebar-nav > .sidebar-brand a:hover {
+    background: #96A694; }

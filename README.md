@@ -142,7 +142,7 @@ If you want to combine more than 2 interpreters, the `@autoProductNK` attribute 
 
 Cats-tagless also provides two annotations that can generate `cats.Functor` and `cats.Invariant` instance for your trait.
 
-#### For documentation/FAQ/guides, go to [typelevel.github.io/cats-tagless](typelevel.github.io/cats-tagless).
+#### For documentation/FAQ/guides, go to [typelevel.github.io/cats-tagless](https://typelevel.github.io/cats-tagless).
 
 ### Community
 Any contribution is more than welcome. Also feel free to report bugs, request features using github issues or gitter. 

@@ -24,14 +24,14 @@ lazy val rootPrj = project
 
 lazy val rootJVM = project
   .configure(mkRootJvmConfig(gh.proj, rootSettings, commonJvmSettings))
-  .aggregate(coreJVM, lawsJVM, testsJVM, macrosJVM, docs)
-  .dependsOn(coreJVM, lawsJVM, testsJVM, macrosJVM)
+  .aggregate(coreJVM, optimizeJVM, lawsJVM, testsJVM, macrosJVM, docs)
+  .dependsOn(coreJVM, optimizeJVM, lawsJVM, testsJVM, macrosJVM)
   .settings(noPublishSettings)
 
 
 lazy val rootJS = project
   .configure(mkRootJsConfig(gh.proj, rootSettings, commonJsSettings))
-  .aggregate(coreJS, lawsJS)
+  .aggregate(coreJS, optimizeJS, lawsJS)
   .settings(noPublishSettings)
 
 
@@ -41,6 +41,14 @@ lazy val coreJS  = coreM.js
 lazy val coreM   = module("core", CrossType.Pure)
   .settings(addLibs(vAll, "cats-core"))
   .settings(simulacrumSettings(vAll))
+  .enablePlugins(AutomateHeaderPlugin)
+
+
+lazy val optimize    = prj(optimizeM)
+lazy val optimizeJVM = optimizeM.jvm
+lazy val optimizeJS  = optimizeM.js
+lazy val optimizeM   = module("optimize", CrossType.Pure)
+  .dependsOn(coreM)
   .enablePlugins(AutomateHeaderPlugin)
 
 
@@ -69,11 +77,11 @@ lazy val testsJVM = testsM.jvm
 lazy val testsJS  = testsM.js
 lazy val testsM   = module("tests", CrossType.Pure)
   .settings(addLibs(vAll, "shapeless"))
-  .dependsOn(coreM, lawsM, macrosM)
+  .dependsOn(coreM, lawsM, macrosM, optimizeM)
   .settings(disciplineDependencies)
   .settings(metaMacroSettings)
   .settings(noPublishSettings)
-  .settings(addTestLibs(vAll, "scalatest", "cats-free"))
+  .settings(addTestLibs(vAll, "scalatest", "cats-free", "cats-effect"))
   .enablePlugins(AutomateHeaderPlugin)
 
 

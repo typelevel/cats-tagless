@@ -17,8 +17,10 @@
 package cats.tagless
 package tests
 
-import cats.Eval
+import cats.{Eval, Monoid, ~>}
+import cats.data.Tuple2K
 import cats.kernel.Eq
+import cats.effect.IO
 import org.scalacheck.{Arbitrary, Cogen}
 
 import scala.util.Try
@@ -80,6 +82,41 @@ object SafeInvAlg {
     }
 }
 
+trait KVStore[F[_]] {
+  def get(key: String): F[Option[String]]
+  def put(key: String, a: String): F[Unit]
+}
+
+object KVStore {
+  implicit val applyKForKVStore: ApplyK[KVStore] = new ApplyK[KVStore] {
+    def mapK[F[_], G[_]](algf: KVStore[F])(f: ~>[F, G]): KVStore[G] = new KVStore[G] {
+      def get(key: String): G[Option[String]] = f(algf.get(key))
+
+      def put(key: String, a: String): G[Unit] = f(algf.put(key, a))
+    }
+
+    def productK[F[_], G[_]](af: KVStore[F], ag: KVStore[G]): KVStore[Tuple2K[F, G, ?]] =
+      new KVStore[Tuple2K[F, G, ?]] {
+        def get(key: String): Tuple2K[F, G, Option[String]] =
+          Tuple2K(af.get(key), ag.get(key))
+
+        def put(key: String, a: String): Tuple2K[F, G, Unit] =
+          Tuple2K(af.put(key, a), ag.put(key, a))
+      }
+  }
+}
+
+case class KVStoreInfo(queries: Set[String], cache: Map[String, String])
+
+object KVStoreInfo {
+  implicit val infoMonoid: Monoid[KVStoreInfo] = new Monoid[KVStoreInfo] {
+    def combine(a: KVStoreInfo, b: KVStoreInfo): KVStoreInfo =
+      KVStoreInfo(a.queries |+| b.queries, a.cache |+| b.cache)
+
+    def empty: KVStoreInfo = KVStoreInfo(Set.empty, Map.empty)
+  }
+}
+
 
 
 object Interpreters {
@@ -92,6 +129,29 @@ object Interpreters {
   implicit object lazyInterpreter extends SafeAlg[Eval] {
     def parseInt(s: String): Eval[Int] = Eval.later(s.toInt)
     def divide(dividend: Float, divisor: Float): Eval[Float] = Eval.later(dividend / divisor)
+  }
+
+  trait CrazyInterpreter extends KVStore[IO] {
+    def searches: Map[String, Int]
+    def inserts: Map[String, Int]
+  }
+
+  object CrazyInterpreter {
+
+    def create: IO[CrazyInterpreter] = IO(new CrazyInterpreter {
+
+      var searches: Map[String, Int] = Map.empty
+      var inserts: Map[String, Int] = Map.empty
+
+      def get(key: String) = IO {
+        searches = searches.updated(key, searches.get(key).getOrElse(0) + 1)
+        Option(key + "!")
+      }
+
+      def put(key: String, a: String) = IO {
+        inserts = inserts.updated(key, inserts.get(key).getOrElse(0) + 1)
+      }
+    })
   }
 
 }

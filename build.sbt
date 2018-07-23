@@ -44,6 +44,7 @@ lazy val coreM   = module("core", CrossType.Pure)
   .enablePlugins(AutomateHeaderPlugin)
 
 
+
 lazy val laws    = prj(lawsM)
 lazy val lawsJVM = lawsM.jvm
 lazy val lawsJS  = lawsM.js
@@ -73,7 +74,7 @@ lazy val testsM   = module("tests", CrossType.Pure)
   .settings(disciplineDependencies)
   .settings(metaMacroSettings)
   .settings(noPublishSettings)
-  .settings(addTestLibs(vAll, "scalatest", "cats-free"))
+  .settings(addTestLibs(vAll, "scalatest", "cats-free", "cats-effect"))
   .enablePlugins(AutomateHeaderPlugin)
 
 

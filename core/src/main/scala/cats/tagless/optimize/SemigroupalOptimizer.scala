@@ -16,7 +16,6 @@
 
 package cats.tagless.optimize
 
-
 import cats.{FlatMap, Apply, Semigroup}
 import cats.data.Const
 

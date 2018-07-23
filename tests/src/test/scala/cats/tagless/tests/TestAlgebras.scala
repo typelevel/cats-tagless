@@ -20,8 +20,8 @@ package tests
 import cats.{Eval, Monoid, ~>}
 import cats.data.Tuple2K
 import cats.kernel.Eq
-import cats.effect.IO
 import org.scalacheck.{Arbitrary, Cogen}
+import cats.data.State
 
 import scala.util.Try
 import cats.laws.discipline.eq._
@@ -131,27 +131,19 @@ object Interpreters {
     def divide(dividend: Float, divisor: Float): Eval[Float] = Eval.later(dividend / divisor)
   }
 
-  trait CrazyInterpreter extends KVStore[IO] {
-    def searches: Map[String, Int]
-    def inserts: Map[String, Int]
+  object KVStoreInterpreter extends KVStore[State[StateInfo, ?]] {
+    def get(key: String): State[StateInfo, Option[String]] =
+      State.modify[StateInfo](s => s.copy(searches = s.searches.updated(key, s.searches.get(key).getOrElse(0) + 1)))
+        .as(Option(key + "!"))
+
+    def put(key: String, a: String): State[StateInfo, Unit] =
+      State.modify[StateInfo](s => s.copy(inserts = s.inserts.updated(key, s.inserts.get(key).getOrElse(0) + 1)))
   }
 
-  object CrazyInterpreter {
+  case class StateInfo(searches: Map[String, Int], inserts: Map[String, Int])
 
-    def create: IO[CrazyInterpreter] = IO(new CrazyInterpreter {
-
-      var searches: Map[String, Int] = Map.empty
-      var inserts: Map[String, Int] = Map.empty
-
-      def get(key: String) = IO {
-        searches = searches.updated(key, searches.get(key).getOrElse(0) + 1)
-        Option(key + "!")
-      }
-
-      def put(key: String, a: String) = IO {
-        inserts = inserts.updated(key, inserts.get(key).getOrElse(0) + 1)
-      }
-    })
+  object StateInfo {
+    def empty = StateInfo(Map.empty, Map.empty)
   }
 
 }

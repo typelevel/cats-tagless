@@ -24,14 +24,14 @@ lazy val rootPrj = project
 
 lazy val rootJVM = project
   .configure(mkRootJvmConfig(gh.proj, rootSettings, commonJvmSettings))
-  .aggregate(coreJVM, optimizeJVM, lawsJVM, testsJVM, macrosJVM, docs)
-  .dependsOn(coreJVM, optimizeJVM, lawsJVM, testsJVM, macrosJVM)
+  .aggregate(coreJVM, lawsJVM, testsJVM, macrosJVM, docs)
+  .dependsOn(coreJVM, lawsJVM, testsJVM, macrosJVM)
   .settings(noPublishSettings)
 
 
 lazy val rootJS = project
   .configure(mkRootJsConfig(gh.proj, rootSettings, commonJsSettings))
-  .aggregate(coreJS, optimizeJS, lawsJS)
+  .aggregate(coreJS, lawsJS)
   .settings(noPublishSettings)
 
 
@@ -43,13 +43,6 @@ lazy val coreM   = module("core", CrossType.Pure)
   .settings(simulacrumSettings(vAll))
   .enablePlugins(AutomateHeaderPlugin)
 
-
-lazy val optimize    = prj(optimizeM)
-lazy val optimizeJVM = optimizeM.jvm
-lazy val optimizeJS  = optimizeM.js
-lazy val optimizeM   = module("optimize", CrossType.Pure)
-  .dependsOn(coreM)
-  .enablePlugins(AutomateHeaderPlugin)
 
 
 lazy val laws    = prj(lawsM)
@@ -77,7 +70,7 @@ lazy val testsJVM = testsM.jvm
 lazy val testsJS  = testsM.js
 lazy val testsM   = module("tests", CrossType.Pure)
   .settings(addLibs(vAll, "shapeless"))
-  .dependsOn(coreM, lawsM, macrosM, optimizeM)
+  .dependsOn(coreM, lawsM, macrosM)
   .settings(disciplineDependencies)
   .settings(metaMacroSettings)
   .settings(noPublishSettings)

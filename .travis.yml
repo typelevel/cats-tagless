@@ -2,17 +2,12 @@ language: scala
 sudo: required
 dist: trusty
 
-scala:
-  - 2.12.6
-
-jdk:
-  - oraclejdk8
-
 matrix:
   include:
   - scala: 2.11.12
     jdk: oraclejdk8
-
+  - scala: 2.12.6
+    jdk: oraclejdk8
 cache:
   directories:
     - $HOME/.ivy2/cache

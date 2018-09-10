@@ -23,9 +23,11 @@ import cats.tagless.ApplyK
 import cats.tagless.optimize._
 import cats.tagless.tests.Interpreters.StateInfo
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 class OptimizerTests extends CatsTaglessTestSuite {
+
+  implicit val cs = IO.contextShift(ExecutionContext.global)
 
   type StateO[A] = State[StateInfo, A]
 

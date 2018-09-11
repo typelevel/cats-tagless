@@ -3,7 +3,7 @@
 [![codecov](https://codecov.io/gh/typelevel/cats-tagless/branch/master/graph/badge.svg)](https://codecov.io/gh/typelevel/cats-tagless)
 [![Join the chat at https://gitter.im/typelevel/cats-tagless](https://badges.gitter.im/typelevel/cats-tagless.svg)](https://gitter.im/typelevel/cats-tagless?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Scala.js](http://scala-js.org/assets/badges/scalajs-0.6.15.svg)](http://scala-js.org)
-[![Latest version](https://index.scala-lang.org/typelevel/cats-tagless/cats-tagless-core/latest.svg?color=orange)](https://index.scala-lang.org/typelevel/cats-tagless/Cats-tagless-core)
+[![Latest version](https://index.scala-lang.org/typelevel/cats-tagless/cats-tagless-core/latest.svg?color=orange)](https://index.scala-lang.org/typelevel/cats-tagless/cats-tagless-core)
 
 
 Cats-tagless is a small library built to facilitate transforming and composing tagless final encoded algebras.

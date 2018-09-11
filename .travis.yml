@@ -15,15 +15,11 @@ cache:
     - $HOME/.coursier
 
 before_install:
-#  - export PATH=${PATH}:./vendor/bundle
+  - export PATH=${PATH}:./vendor/bundle
 
 install:
   - pip install --user codecov
-#  the following are needed once website publishing is enabled on CI
-#  - rvm use 2.2.5 --install --fuzzy
-#  - gem update --system
-#  - gem install sass
-#  - gem install jekyll -v 3.2.1
+  - gem install jekyll -v 2.5
 
 script:
   - sbt ++$TRAVIS_SCALA_VERSION clean testsJS/test; #todo: combine the two tests on scalajs after https://github.com/scalameta/paradise/issues/201 is fixed.

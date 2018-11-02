@@ -262,4 +262,20 @@ implicit object SimpleInvAlgString extends SimpleInvAlg[String] {
 ```tut:book
 SimpleInvAlg[String].imap(_.toInt)(_.toString).foo(12)
 ```
-Note that if there are multiple type parameters on the trait, `@autoFunctor` and `@autoInvariant` will treat the last one as the target `T`.
+
+### `@autoContravariant`
+
+```tut:silent
+@finalAlg @autoContravariant
+trait SimpleInvAlg[T] {
+  def foo(a: T): String
+}
+
+implicit object SimpleInvAlgString extends SimpleInvAlg[String] {
+  def foo(a: String): String = a.reverse
+}
+```
+```tut:book
+SimpleInvAlg[String].contramap[Int](_.toString).foo(12)
+```
+Note that if there are multiple type parameters on the trait, `@autoFunctor`, `@autoInvariant`, `@autoContravariant` will treat the last one as the target `T`.

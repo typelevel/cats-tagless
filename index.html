@@ -14,7 +14,6 @@
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="n">addCompilerPlugin</span><span class="o">(</span>
   <span class="o">(</span><span class="s">"org.scalameta"</span> <span class="o">%</span> <span class="s">"paradise"</span> <span class="o">%</span> <span class="s">"3.0.0-M11"</span><span class="o">).</span><span class="n">cross</span><span class="o">(</span><span class="nc">CrossVersion</span><span class="o">.</span><span class="n">full</span><span class="o">))</span>
 
-
 <span class="n">libraryDependencies</span> <span class="o">+=</span> 
  <span class="err"> </span><span class="s">"org.typelevel"</span> <span class="o">%%</span> <span class="s">"cats-tagless-macros"</span> <span class="o">%</span> <span class="n">latestVersion</span>  <span class="c1">//latest version indicated in the badge above
 </span></code></pre>
@@ -52,7 +51,7 @@
 
 <p>Similar to <a href="https://github.com/mpilquist/simulacrum">simulacrum</a>, <code class="highlighter-rouge">@finalAlg</code> adds an <code class="highlighter-rouge">apply</code> method in the companion object so that you can do implicit calling.</p>
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="nc">ExpressionAlg</span><span class="o">[</span><span class="kt">Try</span><span class="o">]</span>
-<span class="c1">// res0: ExpressionAlg[scala.util.Try] = tryExpression$@7c5c53e5
+<span class="c1">// res0: ExpressionAlg[scala.util.Try] = tryExpression$@2ff2eb48
 </span></code></pre>
 </div>
 
@@ -66,10 +65,10 @@ The <code class="highlighter-rouge">@autoFunctorK</code> annotation automaticall
 </code></pre>
 </div>
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">implicit</span> <span class="k">val</span> <span class="n">fk</span> <span class="k">:</span> <span class="kt">Try</span> <span class="kt">~&gt;</span> <span class="kt">Option</span> <span class="o">=</span> <span class="n">λ</span><span class="o">[</span><span class="kt">Try</span> <span class="kt">~&gt;</span> <span class="kt">Option</span><span class="o">](</span><span class="k">_</span><span class="o">.</span><span class="n">toOption</span><span class="o">)</span>
-<span class="c1">// fk: scala.util.Try ~&gt; Option = $anon$1@b9f2b2
+<span class="c1">// fk: scala.util.Try ~&gt; Option = $anon$1@1bedc2d9
 </span>
 <span class="n">tryExpression</span><span class="o">.</span><span class="n">mapK</span><span class="o">(</span><span class="n">fk</span><span class="o">)</span>
-<span class="c1">// res1: ExpressionAlg[Option] = ExpressionAlg$$anon$1$$anon$5@3701eaad
+<span class="c1">// res1: ExpressionAlg[Option] = ExpressionAlg$$anon$1$$anon$5@57e21535
 </span></code></pre>
 </div>
 <p>Note that the <code class="highlighter-rouge">Try ~&gt; Option</code> is implemented using <a href="https://github.com/non/kind-projector#polymorphic-lambda-values">kind projector’s polymorphic lambda syntax</a>. <br />
@@ -83,7 +82,7 @@ covariant position (i.e. the return types). For algebras with effect type also a
 <span class="c1">// import ExpressionAlg.autoDerive._
 </span>
 <span class="nc">ExpressionAlg</span><span class="o">[</span><span class="kt">Option</span><span class="o">]</span>
-<span class="c1">// res2: ExpressionAlg[Option] = ExpressionAlg$$anon$1$$anon$5@39cb9630
+<span class="c1">// res2: ExpressionAlg[Option] = ExpressionAlg$$anon$1$$anon$5@6c44a1e
 </span></code></pre>
 </div>
 <p>This auto derivation can be turned off using an annotation argument: <code class="highlighter-rouge">@autoFunctorK(autoDerivation = false)</code>.</p>
@@ -163,7 +162,7 @@ covariant position (i.e. the return types). For algebras with effect type also a
 <span class="c1">// import ExpressionAlg.autoDerive._
 </span>
 <span class="k">new</span> <span class="nc">StringCalculatorOption</span>
-<span class="c1">// res4: StringCalculatorOption = StringCalculatorOption@4c37f296
+<span class="c1">// res4: StringCalculatorOption = StringCalculatorOption@207f3981
 </span></code></pre>
 </div>
 
@@ -171,7 +170,7 @@ covariant position (i.e. the return types). For algebras with effect type also a
 
 <p>You can use the <a href="typeclasses.html#semigroupalK"><code class="highlighter-rouge">SemigroupalK</code></a> type class to create a new interpreter that runs two interpreters simultaneously and return the result as a <code class="highlighter-rouge">cats.Tuple2K</code>. The <code class="highlighter-rouge">@autoSemigroupalK</code> attribute add an instance of <code class="highlighter-rouge">SemigroupalK</code> to the companion object. Example:</p>
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">val</span> <span class="n">prod</span> <span class="k">=</span> <span class="nc">ExpressionAlg</span><span class="o">[</span><span class="kt">Option</span><span class="o">].</span><span class="n">productK</span><span class="o">(</span><span class="nc">ExpressionAlg</span><span class="o">[</span><span class="kt">Try</span><span class="o">])</span>
-<span class="c1">// prod: ExpressionAlg[[γ$0$]cats.data.Tuple2K[Option,scala.util.Try,γ$0$]] = ExpressionAlg$$anon$3$$anon$7@3ae06458
+<span class="c1">// prod: ExpressionAlg[[γ$0$]cats.data.Tuple2K[Option,scala.util.Try,γ$0$]] = ExpressionAlg$$anon$3$$anon$7@44ff0f83
 </span>
 <span class="n">prod</span><span class="o">.</span><span class="n">num</span><span class="o">(</span><span class="s">"2"</span><span class="o">)</span>
 <span class="c1">// res5: cats.data.Tuple2K[Option,scala.util.Try,Float] = Tuple2K(Some(2.0),Success(2.0))
@@ -188,7 +187,7 @@ covariant position (i.e. the return types). For algebras with effect type also a
 </code></pre>
 </div>
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">val</span> <span class="n">prod4</span> <span class="k">=</span> <span class="nc">ExpressionAlg</span><span class="o">.</span><span class="n">product4K</span><span class="o">(</span><span class="nc">ExpressionAlg</span><span class="o">[</span><span class="kt">Try</span><span class="o">],</span> <span class="nc">ExpressionAlg</span><span class="o">[</span><span class="kt">Option</span><span class="o">],</span> <span class="n">listInterpreter</span><span class="o">,</span> <span class="n">vectorInterpreter</span><span class="o">)</span>
-<span class="c1">// prod4: ExpressionAlg[[T](scala.util.Try[T], Option[T], List[T], Vector[T])] = ExpressionAlg$$anon$9@6f9721c2
+<span class="c1">// prod4: ExpressionAlg[[T](scala.util.Try[T], Option[T], List[T], Vector[T])] = ExpressionAlg$$anon$9@454c3dc0
 </span>
 <span class="n">prod4</span><span class="o">.</span><span class="n">num</span><span class="o">(</span><span class="s">"3"</span><span class="o">)</span>
 <span class="c1">// res6: (scala.util.Try[Float], Option[Float], List[Float], Vector[Float]) = (Success(3.0),Some(3.0),List(3.0),Vector(3.0))
@@ -269,7 +268,24 @@ covariant position (i.e. the return types). For algebras with effect type also a
 <span class="c1">// res11: Int = 21
 </span></code></pre>
 </div>
-<p>Note that if there are multiple type parameters on the trait, <code class="highlighter-rouge">@autoFunctor</code> and <code class="highlighter-rouge">@autoInvariant</code> will treat the last one as the target <code class="highlighter-rouge">T</code>.</p>
+
+<h3 id="autocontravariant"><code class="highlighter-rouge">@autoContravariant</code></h3>
+
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="nd">@finalAlg</span> <span class="nd">@autoContravariant</span>
+<span class="k">trait</span> <span class="nc">SimpleInvAlg</span><span class="o">[</span><span class="kt">T</span><span class="o">]</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="n">foo</span><span class="o">(</span><span class="n">a</span><span class="k">:</span> <span class="kt">T</span><span class="o">)</span><span class="k">:</span> <span class="kt">String</span>
+<span class="o">}</span>
+
+<span class="k">implicit</span> <span class="k">object</span> <span class="nc">SimpleInvAlgString</span> <span class="k">extends</span> <span class="nc">SimpleInvAlg</span><span class="o">[</span><span class="kt">String</span><span class="o">]</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="n">foo</span><span class="o">(</span><span class="n">a</span><span class="k">:</span> <span class="kt">String</span><span class="o">)</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">reverse</span>
+<span class="o">}</span>
+</code></pre>
+</div>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="nc">SimpleInvAlg</span><span class="o">[</span><span class="kt">String</span><span class="o">].</span><span class="n">contramap</span><span class="o">[</span><span class="kt">Int</span><span class="o">](</span><span class="k">_</span><span class="o">.</span><span class="n">toString</span><span class="o">).</span><span class="n">foo</span><span class="o">(</span><span class="mi">12</span><span class="o">)</span>
+<span class="c1">// res12: String = 21
+</span></code></pre>
+</div>
+<p>Note that if there are multiple type parameters on the trait, <code class="highlighter-rouge">@autoFunctor</code>, <code class="highlighter-rouge">@autoInvariant</code>, <code class="highlighter-rouge">@autoContravariant</code> will treat the last one as the target <code class="highlighter-rouge">T</code>.</p>
 </div></div></section><section class="technologies"><div class="container"><div class="row"></div></div></section></main><footer id="site-footer"><div class="container"><div class="row"><div class="col-xs-6"><p>Cats-tagless is designed and developed by <a href="https://github.com/typelevel/cats-tagless" target="_blank">cats-tagless Contributors</a></p></div><div class="col-xs-6"><p class="text-right"><a href="https://github.com/typelevel/cats-tagless"><span class="fa fa-github"></span>View on GitHub</a></p></div></div><div class="row"><div class="col-xs-6"><p>Website built with <a href="https://47deg.github.io/sbt-microsites/" target="_blank">Sbt-microsites</a> - © 2016 <a href="https://www.47deg.com/" target="_blank">47 Degrees</a></p></div></div></div></footer><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script><script src="/cats-tagless/highlight/highlight.pack.js"></script><script>hljs.configure({
 languages:['scala','java','bash']
 });

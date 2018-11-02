@@ -138,9 +138,9 @@ prod.num("2")
 If you want to combine more than 2 interpreters, the `@autoProductNK` attribute add a series of `product{n}K (n = 3..9)` methods to the companion object. Unlike `productK` living in the `SemigroupalK` type class, currently we don't have a type class for these `product{n}K` operations yet.
 
 
-## `@autoFunctor` and `@autoInvariant`
+## `@autoFunctor`, `@autoInvariant` and `@autoContravariant`
 
-Cats-tagless also provides two annotations that can generate `cats.Functor` and `cats.Invariant` instance for your trait.
+Cats-tagless also provides three annotations that can generate `cats.Functor`, `cats.Invariant` `cats.Contravariant` instance for traits.
 
 #### For documentation/FAQ/guides, go to [typelevel.github.io/cats-tagless](https://typelevel.github.io/cats-tagless).
 

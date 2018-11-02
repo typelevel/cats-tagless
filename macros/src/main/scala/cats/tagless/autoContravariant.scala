@@ -23,17 +23,17 @@ import Util._
 import collection.immutable.Seq
 
 /**
- * auto generates an instance of `cats.Invariant`
+ * auto generates an instance of `cats.Contravariant`
  */
-@compileTimeOnly("Cannot expand @autoInvariant")
-class autoInvariant extends StaticAnnotation {
+@compileTimeOnly("Cannot expand @autoContravariant")
+class autoContravariant extends StaticAnnotation {
   inline def apply(defn: Any): Any = meta {
-    enrichAlgebra(defn, higherKinded = false)(autoInvariant.invariantInst)
+    enrichAlgebra(defn, higherKinded = false)(autoContravariant.contravariantInst)
   }
 }
 
-object autoInvariant {
-  private[tagless] def invariantInst(ad: AlgDefn): TypeDefinition = {
+object autoContravariant {
+  private[tagless] def contravariantInst(ad: AlgDefn): TypeDefinition = {
     import ad._
     import cls._
 
@@ -58,12 +58,6 @@ object autoInvariant {
     }
 
     val methods = templ.stats.toList.flatMap(_.collect {
-      //abstract method with return type being effect type
-      case q"def $methodName[..$mTParams](...$params): ${Type.Name(`effectTypeName`)}" =>
-        val pps = params.map(new ParamParser(_))
-        q"""def $methodName[..$mTParams](...${pps.map(_.newParams)}): TTarget =
-           mapFunction(delegatee_.$methodName(...${pps.map(_.newArgs)}))"""
-
       //abstract method with other return type
       case q"def $methodName[..$mTParams](...$params): $targetType" =>
         val pps = params.map(new ParamParser(_))
@@ -72,9 +66,9 @@ object autoInvariant {
     })
 
     val instanceDef = Seq(q"""
-      implicit def ${Term.Name("invariantFor" + name.value)}[..$extraTParams]: _root_.cats.Invariant[$typeLambdaVaryingEffect] =
-        new _root_.cats.Invariant[$typeLambdaVaryingEffect] {
-          def imap[T, TTarget](delegatee_ : $name[..${tArgs("T")}])(mapFunction: T => TTarget)(mapFunctionFrom: TTarget => T): $name[..${tArgs("TTarget")}] =
+      implicit def ${Term.Name("contravariantFor" + name.value)}[..$extraTParams]: _root_.cats.Contravariant[$typeLambdaVaryingEffect] =
+        new _root_.cats.Contravariant[$typeLambdaVaryingEffect] {
+          def contramap[T, TTarget](delegatee_ : $name[..${tArgs("T")}])(mapFunctionFrom: TTarget => T): $name[..${tArgs("TTarget")}] =
             new ${Ctor.Ref.Name(name.value)}[..${tArgs("TTarget")}] {
               ..$methods
             }

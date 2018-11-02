@@ -40,7 +40,7 @@ class autoContravariantTests extends CatsTaglessTestSuite {
 
   test("extra type param correctly handled") {
     val doubleAlg = AlgWithExtraTypeParamFloat.contramap[String](_.toFloat)
-    doubleAlg.foo("big", "3") should be("6.0")
+    doubleAlg.foo("big", "3") should be(6)
   }
 
   test("Alg with non effect method with default Impl") {
@@ -73,7 +73,7 @@ object autoContravariantTest {
 
   @autoContravariant
   trait AlgWithExtraTypeParam[T1, T] {
-    def foo(a: T1, b: T): String
+    def foo(a: T1, b: T): Int
   }
 
   @autoContravariant
@@ -98,7 +98,7 @@ object autoContravariantTest {
   }
 
   object AlgWithExtraTypeParamFloat extends AlgWithExtraTypeParam[String, Float] {
-    def foo(a: String, b: Float): String = (a.length.toFloat + b).toString
+    def foo(a: String, b: Float): Int = (a.length.toFloat + b).toInt
   }
 
 

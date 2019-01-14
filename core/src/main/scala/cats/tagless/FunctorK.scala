@@ -19,6 +19,12 @@ package cats.tagless
 import cats.~>
 import simulacrum.typeclass
 
+/**
+ * Sort of a higher kinded Functor, but, well, it's complcated. 
+ * See Daniel Spiewak's comment here
+ * @https://github.com/typelevel/cats/issues/2697#issuecomment-453883055
+ * Also explains why this isn't in `cats-core`. 
+**/ 
 @typeclass
 trait FunctorK[A[_[_]]] extends InvariantK[A] {
   def mapK[F[_], G[_]](af: A[F])(fk: F ~> G): A[G]

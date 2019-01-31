@@ -151,7 +151,7 @@ Discussion around Cats-tagless is encouraged in the
 [Gitter channel](https://gitter.im/typelevel/cats-tagless) as well as on Github issue and PR pages.
 
 We adopted the
-[Typelevel Code of Conduct](http://typelevel.org/conduct.html). People are expected to follow it when
+[Scala Code of Conduct](https://www.scala-lang.org/conduct/). People are expected to follow it when
 discussing Cats-tagless on the Github page, Gitter channel, or other venues.
 
 ### Copyright

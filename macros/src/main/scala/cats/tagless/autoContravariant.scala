@@ -67,12 +67,8 @@ object autoContravariant {
 
     val instanceDef = Seq(q"""
       implicit def ${Term.Name("contravariantFor" + name.value)}[..$extraTParams]: _root_.cats.Contravariant[$typeLambdaVaryingEffect] =
-        new _root_.cats.Contravariant[$typeLambdaVaryingEffect] {
-          def contramap[T, TTarget](delegatee_ : $name[..${tArgs("T")}])(mapFunctionFrom: TTarget => T): $name[..${tArgs("TTarget")}] =
-            new ${Ctor.Ref.Name(name.value)}[..${tArgs("TTarget")}] {
-              ..$methods
-            }
-        }""")
+        _root_.cats.tagless.Derive.contravariant[$typeLambdaVaryingEffect]
+    """)
 
     cls.copy(companion = cls.companion.addStats(instanceDef))
 

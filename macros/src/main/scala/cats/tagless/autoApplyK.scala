@@ -46,10 +46,7 @@ class ApplyKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) extends
       companionMapKDef,
       q"""
         implicit def ${Term.Name("applyKFor" + name.value)}[..$extraTParams]: _root_.cats.tagless.ApplyK[$typeLambdaVaryingHigherKindedEffect] =
-          new _root_.cats.tagless.ApplyK[$typeLambdaVaryingHigherKindedEffect] {
-            $instanceMapKDef
-            ${autoSemigroupalK.semigroupalKMethods(cls)}
-          }
+          _root_.cats.tagless.Derive.applyK[$typeLambdaVaryingHigherKindedEffect]
       """
     )
   }

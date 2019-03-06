@@ -64,9 +64,7 @@ class CovariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
       companionMapKDef,
       q"""
         implicit def ${Term.Name("functorKFor" + name.value)}[..$extraTParams]: _root_.cats.tagless.FunctorK[$typeLambdaVaryingHigherKindedEffect] =
-          new _root_.cats.tagless.FunctorK[$typeLambdaVaryingHigherKindedEffect] {
-            $instanceMapKDef
-          }
+          _root_.cats.tagless.Derive.functorK[$typeLambdaVaryingHigherKindedEffect]
       """
     )
   }
@@ -76,10 +74,7 @@ class CovariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
       q"""
        object fullyRefined {
          implicit def ${Term.Name("functorKForFullyRefined" + name.value)}[..${fullyRefinedTParams}]: _root_.cats.tagless.FunctorK[$typeLambdaVaryingHigherKindedEffectFullyRefined] =
-           new _root_.cats.tagless.FunctorK[$typeLambdaVaryingHigherKindedEffectFullyRefined] {
-             def mapK[F[_], G[_]]($from: ${fullyRefinedTypeSig("F")})(fk: _root_.cats.~>[F, G]):${fullyRefinedTypeSig("G")} =
-                ${newInstance(newTypeMemberFullyRefined)}
-         }
+            _root_.cats.tagless.Derive.functorK[$typeLambdaVaryingHigherKindedEffectFullyRefined]
 
          object autoDerive {
            @SuppressWarnings(Array("org.wartremover.warts.ImplicitParameter"))

@@ -137,18 +137,12 @@ class InvariantKInstanceGenerator(algDefn: AlgDefn, autoDerivation: Boolean) ext
       """,
       q"""
         implicit def ${Term.Name("invariantKFor" + name.value)}[..$extraTParams]: _root_.cats.tagless.InvariantK[$typeLambdaVaryingHigherKindedEffect] =
-          new _root_.cats.tagless.InvariantK[$typeLambdaVaryingHigherKindedEffect] {
-            def imapK[F[_], G[_]]($from: $name[..${tArgs("F")}])(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): $name[..${tArgs("G")}] =
-            ${newInstance(newTypeMember(from))}
-          }
+          _root_.cats.tagless.Derive.invariantK[$typeLambdaVaryingHigherKindedEffect]
        """,
       q"""
        object fullyRefined {
          implicit def ${Term.Name("invariantKForFullyRefined" + name.value)}[..$fullyRefinedTParams]: _root_.cats.tagless.InvariantK[$typeLambdaVaryingHigherKindedEffectFullyRefined] =
-            new _root_.cats.tagless.InvariantK[$typeLambdaVaryingHigherKindedEffectFullyRefined] {
-              def imapK[F[_], G[_]]($from: ${fullyRefinedTypeSig("F")})(fk: _root_.cats.~>[F, G])(gk: _root_.cats.~>[G, F]): ${fullyRefinedTypeSig("G")} =
-                ${newInstance(newTypeMemberFullyRefined)}
-            }
+           _root_.cats.tagless.Derive.invariantK[$typeLambdaVaryingHigherKindedEffectFullyRefined]
          object autoDerive {
            @SuppressWarnings(Array("org.wartremover.warts.ImplicitParameter"))
            implicit def fromInvariantK[${effectType}, G[_], ..${fullyRefinedTParams}](

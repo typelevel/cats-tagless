@@ -39,9 +39,7 @@ object autoSemigroupalK {
 
     val instanceDef = Seq(q"""
       implicit def ${Term.Name("semigroupalKFor" + name.value)}: _root_.cats.tagless.SemigroupalK[$name] =
-        new _root_.cats.tagless.SemigroupalK[$name] {
-          ${semigroupalKMethods(cls)}
-        }""")
+        _root_.cats.tagless.Derive.semigroupalK[$name]""")
 
     cls.copy(companion = cls.companion.addStats(instanceDef))
   }

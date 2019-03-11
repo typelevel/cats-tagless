@@ -94,22 +94,8 @@ object autoFlatMap {
 
     val instanceDef = Seq(q"""
       implicit def ${Term.Name("monadFor" + name.value)}[..$extraTParams]: _root_.cats.FlatMap[$typeLambdaVaryingEffect] =
-        new _root_.cats.FlatMap[$typeLambdaVaryingEffect] {
-          override def map[T, TTarget](delegatee_ : $name[..${tArgs("T")}])(mapFunction: T => TTarget): $name[..${tArgs("TTarget")}] =
-            new ${Ctor.Ref.Name(name.value)}[..${tArgs("TTarget")}] {
-              ..${mapMethods(templ, effectTypeName)}
-            }
-
-          override def flatMap[T, TTarget](delegatee_ : $name[..${tArgs("T")}])(flatMapFunction: T => $name[..${tArgs("TTarget")}]): $name[..${tArgs("TTarget")}] =
-            new ${Ctor.Ref.Name(name.value)}[..${tArgs("TTarget")}] {
-              ..$flatMapMethods
-            }
-
-          override def tailRecM[TInit, TTarget](init: TInit)(fn: TInit => $name[..${tArgs(t"Either[TInit, TTarget]")}]): $name[..${tArgs("TTarget")}] =
-            new ${Ctor.Ref.Name(name.value)}[..${tArgs("TTarget")}] {
-              ..$tailRecMMethods
-            }
-        }""")
+        _root_.cats.tagless.Derive.flatMap[$typeLambdaVaryingEffect]
+    """)
 
     cls.copy(companion = cls.companion.addStats(instanceDef))
 

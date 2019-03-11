@@ -38,15 +38,10 @@ object autoFunctor {
     import ad._
     import cls._
 
-    val instanceDef =
-      q"""
-    implicit def ${Term.Name("functorFor" + name.value)}[..$extraTParams]: _root_.cats.Functor[$typeLambdaVaryingEffect] =
-      new _root_.cats.Functor[$typeLambdaVaryingEffect] {
-        def map[T, TTarget](delegatee_ : $name[..${tArgs("T")}])(mapFunction: T => TTarget): $name[..${tArgs("TTarget")}] =
-          new ${Ctor.Ref.Name(name.value)}[..${tArgs("TTarget")}] {
-            ..${autoFlatMap.mapMethods(templ, effectTypeName)}
-          }
-      }"""
+    val instanceDef = q"""
+      implicit def ${Term.Name("functorFor" + name.value)}[..$extraTParams]: _root_.cats.Functor[$typeLambdaVaryingEffect] =
+        _root_.cats.tagless.Derive.functor[$typeLambdaVaryingEffect]
+    """
 
     cls.copy(companion = cls.companion.addStats(Seq(instanceDef)))
   }

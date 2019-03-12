@@ -25,6 +25,7 @@ class DeriveMacros(val c: blackbox.Context) {
   import c.internal._
   import c.universe._
 
+  /** A reified method definition with some useful methods for transforming it. */
   case class Method(m: MethodSymbol, tps: List[TypeDef], pss: List[List[ValDef]], rt: Type, body: Tree) {
     def typeArgs: List[Type] = for (tp <- tps) yield typeRef(NoPrefix, tp.symbol, Nil)
     def paramLists(f: Type => Type): List[List[ValDef]] = for (ps <- pss)
@@ -39,6 +40,28 @@ class DeriveMacros(val c: blackbox.Context) {
     import definitions._
     val exclude = Set[Symbol](AnyClass, AnyRefClass, AnyValClass, ObjectClass)
     tpe.members.filterNot(m => m.isConstructor || exclude(m.owner))
+  }
+
+  /** Temporarily refresh type parameter names, type-check the `tree` and restore the original names.
+    *
+    * The purpose is to avoid warnings about type parameter shadowing, which can be problematic when
+    * `-Xfatal-warnings` is enabled. We know the warnings are harmless because we deal with types directly.
+    * Unfortunately `c.typecheck(tree, silent = true)` does not suppress warnings.
+    */
+  def typeCheckWithFreshTypeParams(tree: Tree): Tree = {
+    val typeParams = tree.collect {
+      case method: DefDef => method.tparams.map(_.symbol)
+    }.flatten
+
+    val originalNames = for (tp <- typeParams) yield {
+      val original = tp.name.toTypeName
+      setName(tp, TypeName(c.freshName(original.toString)))
+      original
+    }
+
+    val typed = c.typecheck(tree)
+    for ((tp, original) <- typeParams zip originalNames) setName(tp, original)
+    typed
   }
 
   /** Delegate the definition of type members and aliases in `algebra`. */
@@ -76,7 +99,7 @@ class DeriveMacros(val c: blackbox.Context) {
       case method => method.copy(body = q"_root_.scala.Predef.???")
     }
 
-    val Block(List(declaration), _) = c.typecheck(q"new $instance { ..$stubs }")
+    val Block(List(declaration), _) = typeCheckWithFreshTypeParams(q"new $instance { ..$stubs }")
     declaration
   }
 
@@ -103,7 +126,7 @@ class DeriveMacros(val c: blackbox.Context) {
   def instantiate(typeClass: TypeSymbol, algebra: Type)(rhs: (String, Type => Tree)*): Tree = {
     val impl = rhs.toMap
     val TcA = appliedType(typeClass, algebra)
-    val declaration @ ClassDef(_, _, _, Template(parents, self, members)) = c.typecheck(declare(TcA))
+    val declaration @ ClassDef(_, _, _, Template(parents, self, members)) = declare(TcA)
     val implementations = for (member <- members) yield member match {
       case dd: DefDef =>
         val method = member.symbol.asMethod
@@ -112,7 +135,7 @@ class DeriveMacros(val c: blackbox.Context) {
     }
 
     val definition = classDef(declaration.symbol, Template(parents, self, implementations))
-    q"{ $definition; new ${declaration.symbol} }"
+    typeCheckWithFreshTypeParams(q"{ $definition; new ${declaration.symbol} }")
   }
 
   def mapK(algebra: Type): (String, Type => Tree) =

@@ -92,7 +92,7 @@ object autoInvariantTests {
 
   @autoInvariant
   trait AlgWithGenericType[T] {
-    def foo[U](i: T, a: U): T
+    def foo[A](i: T, a: A): T
   }
 
   @autoInvariant

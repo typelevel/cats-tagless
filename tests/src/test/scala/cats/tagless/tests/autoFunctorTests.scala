@@ -69,7 +69,7 @@ object autoFunctorTests {
 
   @autoFunctor
   trait AlgWithGenericMethod[T] {
-    def plusOne[U](i: U): T
+    def plusOne[A](i: A): T
   }
 
   implicit def eqForTestAlgebra[T](implicit eqT: Eq[T]): Eq[TestAlgebra[T]] =

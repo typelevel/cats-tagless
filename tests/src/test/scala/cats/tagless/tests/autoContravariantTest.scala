@@ -84,7 +84,7 @@ object autoContravariantTest {
 
   @autoContravariant
   trait AlgWithGenericType[T] {
-    def foo[U](i: T, a: U): Int
+    def foo[A](i: T, a: A): Int
   }
 
   @autoContravariant

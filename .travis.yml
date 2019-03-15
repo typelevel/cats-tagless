@@ -31,6 +31,7 @@ jobs:
       script: sbt coverage rootJVM/test coverageReport && codecov
 
     - &js_tests
+      env: TEST="JS tests"
       script: sbt ++$TRAVIS_SCALA_VERSION! rootJS/test
       scala: *scala_version_211
     - <<: *js_tests

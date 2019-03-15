@@ -31,9 +31,6 @@ jobs:
       script: sbt coverage rootJVM/test coverageReport && codecov
 
     - &js_tests
-      env: TEST="JS tests"
-      # http://austinpray.com/ops/2015/09/20/change-travis-node-version.html
-      install: rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
       script: sbt ++$TRAVIS_SCALA_VERSION! rootJS/test
       scala: *scala_version_211
     - <<: *js_tests

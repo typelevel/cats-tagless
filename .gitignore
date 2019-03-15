@@ -17,6 +17,3 @@ project/plugins/project/
 # Scala-IDE specific
 .scala_dependencies
 .worksheet
-
-# Created by .ignore support plugin (hsz.mobi)
-/build.sbt

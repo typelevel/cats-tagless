@@ -29,13 +29,17 @@ lazy val rootJVM = project
   .configure(mkRootJvmConfig(gh.proj, rootSettings, commonJvmSettings))
   .aggregate(coreJVM, lawsJVM, testsJVM, macrosJVM, docs)
   .dependsOn(coreJVM, lawsJVM, testsJVM, macrosJVM)
-  .settings(noPublishSettings)
+  .settings(noPublishSettings,
+    crossScalaVersions := Nil)
 
 
 lazy val rootJS = project
   .configure(mkRootJsConfig(gh.proj, rootSettings, commonJsSettings))
   .aggregate(coreJS, lawsJS)
-  .settings(noPublishSettings)
+  .settings(
+    noPublishSettings,
+    crossScalaVersions := Nil
+  )
 
 
 lazy val core    = prj(coreM)

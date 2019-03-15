@@ -1,28 +1,72 @@
 language: scala
+
 sudo: required
+
 dist: trusty
 
-matrix:
-  include:
-  - scala: 2.11.12
-    jdk: oraclejdk8
-  - scala: 2.12.6
-    jdk: oraclejdk8
-cache:
-  directories:
-    - $HOME/.ivy2/cache
-    - $HOME/.sbt/boot
-    - $HOME/.coursier
+group: edge
+
+git:
+  depth: 9999
+
+jdk:
+  - oraclejdk8
+
+scala_version_211: &scala_version_211 2.11.12
+scala_version_212: &scala_version_212 2.12.7
 
 before_install:
-  - export PATH=${PATH}:./vendor/bundle
+ - export PATH=${PATH}:./vendor/bundle
 
-install:
-  - pip install --user codecov
-  - gem install jekyll -v 2.5
+stages:
+  - name: test
+  - name: publish snapshot
+    if: (branch = master AND type = push)
 
-script:
-  - sbt ++$TRAVIS_SCALA_VERSION clean testsJS/test; #todo: combine the two tests on scalajs after https://github.com/scalameta/paradise/issues/201 is fixed.
-  - sbt ++$TRAVIS_SCALA_VERSION clean coverage validateJVM;
-  - sbt ++$TRAVIS_SCALA_VERSION coverageReport && codecov;
+jobs:
+  include:
+    # it can speed up the overall build to have the longer-running jobs at the top of this list.
+    - env: TEST="coverage"
+      install: pip install --user codecov
+      script: sbt coverage rootJVM/test coverageReport && codecov
 
+    - &js_tests
+      env: TEST="JS tests"
+      # http://austinpray.com/ops/2015/09/20/change-travis-node-version.html
+      install: rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install $TRAVIS_NODE_VERSION
+      script: sbt ++$TRAVIS_SCALA_VERSION! rootJS/test
+      scala: *scala_version_211
+    - <<: *js_tests
+      scala: *scala_version_212
+
+    - &jvm_tests
+      env: TEST="JVM tests"
+      script: sbt ++$TRAVIS_SCALA_VERSION! rootJVM/test
+      scala: *scala_version_211
+    - <<: *jvm_tests
+      scala: *scala_version_212
+
+    - env: TEST="docs"
+      install: gem install jekyll -v 2.5
+      script: sbt docs/makeMicrosite
+
+    - &publish_snapshot
+      stage: publish snapshot
+      script: |
+        if [[ $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
+          sbt ++$TRAVIS_SCALA_VERSION! publish gitSnapshots publish
+        else
+          echo Not publishing a snapshot because the version does not end with -SNAPSHOT for version $TRAVIS_SCALA_VERSION
+        fi
+      scala: *scala_version_211
+    - <<: *publish_snapshot
+      scala: *scala_version_212
+
+cache:
+  directories:
+    - $HOME/.m2
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt
+    - $HOME/.coursier
+    # Pants cache
+    - $HOME/.cache

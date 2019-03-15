@@ -44,9 +44,10 @@ jobs:
     - <<: *jvm_tests
       scala: *scala_version_212
 
-    - env: TEST="docs"
-      install: gem install jekyll -v 2.5
-      script: sbt docs/makeMicrosite
+    # temporarily disabled due to random error resulted from conflict between scalameta macro and scala.reflect macro.
+    #- env: TEST="docs"
+    #  install: gem install jekyll -v 2.5
+    #  script: sbt docs/makeMicrosite
 
     - &publish_snapshot
       stage: publish snapshot

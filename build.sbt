@@ -1,5 +1,4 @@
 import com.typesafe.sbt.SbtGit.git
-import org.typelevel.Dependencies._
 import _root_.sbtcrossproject.CrossPlugin.autoImport.CrossType
 
 addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVersion.value.get + \"-SNAPSHOT\"")
@@ -20,7 +19,10 @@ lazy val rootPrj = project
   .configure(mkRootConfig(rootSettings,rootJVM))
   .aggregate(rootJVM, rootJS, testsJS, macrosJS)
   .dependsOn(rootJVM, rootJS, testsJS, macrosJS)
-  .settings(noPublishSettings)
+  .settings(
+    noPublishSettings,
+    crossScalaVersions := Nil
+  )
 
 
 lazy val rootJVM = project

@@ -37,40 +37,6 @@ object autoInvariant {
     import ad._
     import cls._
 
-    class ParamParser(params: Seq[Term.Param]) {
-      lazy val effParams: Seq[Term.Param] =
-        params.collect {
-          case p @ Term.Param(_, _, Some(Type.Name(`effectTypeName`)), _) => p
-        }
-
-      lazy val newArgs: Seq[Term] =
-        params.map {
-          case p if effParams.contains(p) => q"mapFunctionFrom(${Term.Name(p.name.value)})"
-          case p => Term.Name(p.name.value)
-        }
-
-      lazy val newParams: Seq[Term.Param] =
-        params.map { p =>
-          effParams.find(_ == p).fold(p) { effP =>
-            effP.copy(decltpe = Some(Type.Name("TTarget")))
-          }
-        }
-    }
-
-    val methods = templ.stats.toList.flatMap(_.collect {
-      //abstract method with return type being effect type
-      case q"def $methodName[..$mTParams](...$params): ${Type.Name(`effectTypeName`)}" =>
-        val pps = params.map(new ParamParser(_))
-        q"""def $methodName[..$mTParams](...${pps.map(_.newParams)}): TTarget =
-           mapFunction(delegatee_.$methodName(...${pps.map(_.newArgs)}))"""
-
-      //abstract method with other return type
-      case q"def $methodName[..$mTParams](...$params): $targetType" =>
-        val pps = params.map(new ParamParser(_))
-        q"""def $methodName[..$mTParams](...${pps.map(_.newParams)}): $targetType =
-           delegatee_.$methodName(...${pps.map(_.newArgs)})"""
-    })
-
     val instanceDef = Seq(q"""
       implicit def ${Term.Name("invariantFor" + name.value)}[..$extraTParams]: _root_.cats.Invariant[$typeLambdaVaryingEffect] =
         _root_.cats.tagless.Derive.invariant[$typeLambdaVaryingEffect]

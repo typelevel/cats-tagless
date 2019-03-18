@@ -49,17 +49,13 @@ jobs:
     #  install: gem install jekyll -v 2.5
     #  script: sbt docs/makeMicrosite
 
-    - &publish_snapshot
-      stage: publish snapshot
+    - stage: publish snapshot
       script: |
         if [[ $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
-          sbt ++$TRAVIS_SCALA_VERSION! publish gitSnapshots publish
+          sbt +publish gitSnapshots +publish
         else
           echo Not publishing a snapshot because the version does not end with -SNAPSHOT for version $TRAVIS_SCALA_VERSION
         fi
-      scala: *scala_version_211
-    - <<: *publish_snapshot
-      scala: *scala_version_212
 
 cache:
   directories:

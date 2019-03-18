@@ -1,15 +1,15 @@
 import com.typesafe.sbt.SbtGit.git
-import org.typelevel.Dependencies._
+import _root_.sbtcrossproject.CrossPlugin.autoImport.CrossType
 
 addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVersion.value.get + \"-SNAPSHOT\"")
 
 addCommandAlias("validateJVM", ";testsJVM/test ; docs/makeMicrosite")
 
+lazy val libs = org.typelevel.libraries
 
 val apache2 = "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")
 val gh = GitHubSettings(org = "typelevel", proj = "cats-tagless", publishOrg = "org.typelevel", license = apache2)
 
-val vAll = Versions(versions, libraries, scalacPlugins)
 
 lazy val rootSettings = buildSettings ++ commonSettings ++ publishSettings ++ scoverageSettings
 lazy val module = mkModuleFactory(gh.proj, mkConfig(rootSettings, commonJvmSettings, commonJsSettings))
@@ -19,28 +19,35 @@ lazy val rootPrj = project
   .configure(mkRootConfig(rootSettings,rootJVM))
   .aggregate(rootJVM, rootJS, testsJS, macrosJS)
   .dependsOn(rootJVM, rootJS, testsJS, macrosJS)
-  .settings(noPublishSettings)
+  .settings(
+    noPublishSettings,
+    crossScalaVersions := Nil
+  )
 
 
 lazy val rootJVM = project
   .configure(mkRootJvmConfig(gh.proj, rootSettings, commonJvmSettings))
   .aggregate(coreJVM, lawsJVM, testsJVM, macrosJVM, docs)
   .dependsOn(coreJVM, lawsJVM, testsJVM, macrosJVM)
-  .settings(noPublishSettings)
+  .settings(noPublishSettings,
+    crossScalaVersions := Nil)
 
 
 lazy val rootJS = project
   .configure(mkRootJsConfig(gh.proj, rootSettings, commonJsSettings))
   .aggregate(coreJS, lawsJS)
-  .settings(noPublishSettings)
+  .settings(
+    noPublishSettings,
+    crossScalaVersions := Nil
+  )
 
 
 lazy val core    = prj(coreM)
 lazy val coreJVM = coreM.jvm
 lazy val coreJS  = coreM.js
 lazy val coreM   = module("core", CrossType.Pure)
-  .settings(addLibs(vAll, "cats-core"))
-  .settings(simulacrumSettings(vAll))
+  .settings(libs.dependency("cats-core"))
+  .settings(simulacrumSettings(libs))
   .enablePlugins(AutomateHeaderPlugin)
 
 
@@ -50,7 +57,7 @@ lazy val lawsJVM = lawsM.jvm
 lazy val lawsJS  = lawsM.js
 lazy val lawsM   = module("laws", CrossType.Pure)
   .dependsOn(coreM)
-  .settings(addLibs(vAll, "cats-laws"))
+  .settings(libs.dependency("cats-laws"))
   .settings(disciplineDependencies)
   .enablePlugins(AutomateHeaderPlugin)
 
@@ -69,12 +76,12 @@ lazy val tests    = prj(testsM)
 lazy val testsJVM = testsM.jvm
 lazy val testsJS  = testsM.js
 lazy val testsM   = module("tests", CrossType.Pure)
-  .settings(addLibs(vAll, "shapeless"))
+  .settings(libs.dependency("shapeless"))
   .dependsOn(coreM, lawsM, macrosM)
   .settings(disciplineDependencies)
   .settings(metaMacroSettings)
   .settings(noPublishSettings)
-  .settings(addTestLibs(vAll, "scalatest", "cats-free", "cats-effect"))
+  .settings(addTestLibs(libs, "scalatest", "cats-free", "cats-effect"))
   .enablePlugins(AutomateHeaderPlugin)
 
 
@@ -84,10 +91,10 @@ lazy val docs = project
   .settings(moduleName := gh.proj + "-docs")
   .settings(noPublishSettings)
   .settings(unidocCommonSettings)
-  .settings(simulacrumSettings(vAll))
+  .settings(simulacrumSettings(libs))
   .settings(commonJvmSettings)
   .settings(metaMacroSettings)
-  .settings(addLibs(vAll, "cats-free"))
+  .settings(libs.dependency("cats-free"))
   .dependsOn(List(coreJVM, macrosJVM).map( ClasspathDependency(_, Some("compile;test->test"))):_*)
   .enablePlugins(MicrositesPlugin)
   .settings(
@@ -117,15 +124,15 @@ lazy val docs = project
 
 
 
-lazy val buildSettings = sharedBuildSettings(gh, vAll)
+lazy val buildSettings = sharedBuildSettings(gh, libs)
 
 lazy val commonSettings = sharedCommonSettings ++ Seq(
   parallelExecution in Test := false,
-  scalaVersion := vAll.vers("scalac_2.12"),
-  crossScalaVersions := Seq(vAll.vers("scalac_2.11"), scalaVersion.value),
+  scalaVersion := libs.vers("scalac_2.12"),
+  crossScalaVersions := Seq(libs.vers("scalac_2.11"), scalaVersion.value),
   developers := List(Developer("Kailuo Wang", "@kailuowang", "kailuo.wang@gmail.com", new java.net.URL("http://kailuowang.com")))
 ) ++ scalacAllSettings ++ unidocCommonSettings ++
-  addCompilerPlugins(vAll, "kind-projector") ++ copyrightHeader
+  addCompilerPlugins(libs, "kind-projector") ++ copyrightHeader
 
 lazy val commonJsSettings = Seq(scalaJSStage in Global := FastOptStage)
 
@@ -135,7 +142,7 @@ lazy val publishSettings = sharedPublishSettings(gh) ++ credentialSettings ++ sh
 
 lazy val scoverageSettings = sharedScoverageSettings(60)
 
-lazy val disciplineDependencies = addLibs(vAll, "discipline", "scalacheck")
+lazy val disciplineDependencies = libs.dependencies("discipline", "scalacheck")
 
 lazy val metaMacroSettings: Seq[Def.Setting[_]] = Seq(
   resolvers += Resolver.sonatypeRepo("releases"),

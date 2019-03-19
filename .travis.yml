@@ -50,6 +50,10 @@ jobs:
     #  script: sbt docs/makeMicrosite
 
     - stage: publish snapshot
+      env:
+        - PUBLISH="SNAPSHOT"
+        - secure: "J7xbGkQqLVimxHTvJwCjih3+fWvA1STjH+LCF3ytVaHA69mpZJqyzj8wzdhE8weTq0INTGkogqKxsO8Rcp0h5eRUU8g20Ku/7BaVqth681P+dEF+sgKmEV5W1f44jUEJ1uQQe6cRF9aiqaZt5BpfxJfz/v1GnysyztrvNhWTUrEMxAHD11ughvMf1PpexS/6Qq4qmVitrLt5pQ9vjqosjZ0R8vBA/YIFASdG6mnOSVHQ01HLWLbz3r/napEZmSTFw4jGIdAsxOCPibxyJaiNr2oz6dJCk0XEtrVMMYyBvMHraVI/QlQFgMrIfl1/5i281FcbXluZJnKI00Yvq2STxPfJMFaEXWMdxwrHfbOTNDuBFA3ery7iLEWPMKSzCFmL6rmX//KhPbxru8aI0EwIDAB0VteC41QPuTMTBDS+jqCttAbe7VvBwZBSPjm8n0HMb0sj7cYvEWHzbb1DOXss2CiyUsBiBosA3u7ouSPDA4eJgV3Sir42Ddc0ALGRi2s3YaOdKTVZX8zdCTirbsc6KtSZ9i+gZSdfth4kqRC6MWbjxs+JOvK3A+mavwxzJ72ErqgnRrqdm978w/qtIZjyDfzqLG3mFXGohAsDLuKBLevfZy1QvZin7r1AD3oDAAV8S7aqRoG14KPdorOX9GlLI2v4UwEDP8WBbAST8pGUar8="
+        - secure: "dwjFRJoFpQRYtpTZz7GHi75KhjrIjfIuBAHFexklbfESdPt2RvIKmDzBDeyX2XCyB9jjcjfZPo/N0kive8aaN8YhJxI80vKxLaQQLWfFANQ+s/xxAN3fr58ijGVG8An8yl3fbXpxMikjghCIbKZmvF2f4rqoB718f6L4bDDtDK6RKDZsADwApbkNbowaYJ147xzeA6pFPnx6FeBbkiZSjDAoys2NlE4dcl60qnKFPcBtXsbAN2LqgLew+2zWJDHVmh9XHOhxKCblQd/OOiqmsMYIbrkBG/PlILMarhB4xdoBWtsq9XgfFvrIWw7v9ByR5WJXt5ubnoWhbLAuM4wLj7Cz1T978103JMFd4+H+m6jY2Fro5loIhwlFZwL8ILvtwTHDw1IfbVWrv47Z66BxVB3vpBkMxO4XFXDhPysWr5iVw4A1ipRCnnlJ+glHrO2njgfTShI48Vc5+HAbbV+jGDl0qBN8HZ1lVhwYY+99ISYqoinqhRZzDWx8xsWyC/oLpgrzh3+0Nb8Pdr3oIbLEftUu2kmqmLYHivCeLpk6p32S09PLFan49kYKCD1IkgRgX/YJJq4teYP0IYoZNTg363y7UglxtLOCwpzNxUYRjRMF4T9L+wGejuCpfNehnwKQR5ahOwMHi9PxzljSxs3PNzyOkH5ift/4rN+JVVWEYWw="
       script: |
         if [[ $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
           sbt +publish gitSnapshots +publish

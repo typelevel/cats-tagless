@@ -69,6 +69,7 @@ lazy val legacyMacrosM   = module("legacy-macros", CrossType.Pure)
   .dependsOn(macrosM)
   .settings(metaMacroSettings)
   .settings(copyrightHeader)
+  .disablePlugins(DoctestPlugin)
   .enablePlugins(AutomateHeaderPlugin)
 
 lazy val macros    = prj(macrosM)
@@ -78,6 +79,10 @@ lazy val macrosM   = module("macros", CrossType.Pure)
   .dependsOn(coreM)
   .settings(scalaMacroDependencies(libs))
   .settings(copyrightHeader)
+  .settings(
+    libs.testDependencies("scalatest", "scalacheck"),
+    doctestTestFramework := DoctestTestFramework.ScalaTest
+  )
   .enablePlugins(AutomateHeaderPlugin)
 
 
@@ -88,9 +93,9 @@ lazy val testsM   = module("tests", CrossType.Pure)
   .settings(libs.dependency("shapeless"))
   .dependsOn(coreM, lawsM, legacyMacrosM)
   .settings(disciplineDependencies)
+  .settings(libs.testDependencies("scalatest", "cats-free", "cats-effect"))
   .settings(metaMacroSettings)
   .settings(noPublishSettings)
-  .settings(addTestLibs(libs, "scalatest", "cats-free", "cats-effect"))
   .enablePlugins(AutomateHeaderPlugin)
 
 
@@ -143,7 +148,12 @@ lazy val commonSettings = sharedCommonSettings ++ Seq(
 ) ++ scalacAllSettings ++ unidocCommonSettings ++
   addCompilerPlugins(libs, "kind-projector") ++ copyrightHeader
 
-lazy val commonJsSettings = Seq(scalaJSStage in Global := FastOptStage)
+lazy val commonJsSettings = Seq(
+  scalaJSStage in Global := FastOptStage,
+  // currently sbt-doctest doesn't work in JS builds
+  // https://github.com/tkawachi/sbt-doctest/issues/52
+  doctestGenTests := Seq.empty
+)
 
 lazy val commonJvmSettings = Seq()
 

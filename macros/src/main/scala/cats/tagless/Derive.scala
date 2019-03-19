@@ -19,11 +19,35 @@ package cats.tagless
 import cats.{Contravariant, FlatMap, Functor, Invariant}
 
 object Derive {
+
   def functor[F[_]]: Functor[F] = macro DeriveMacros.functor[F]
   def contravariant[F[_]]: Contravariant[F] = macro DeriveMacros.contravariant[F]
   def invariant[F[_]]: Invariant[F] = macro DeriveMacros.invariant[F]
   def flatMap[F[_]]: FlatMap[F] = macro DeriveMacros.flatMap[F]
+
+  /**
+   * Generates a FunctorK instance
+   * {{{
+   * scala> import util.Try
+   * scala> import cats.~>
+   * scala> trait StringAlg[F[_]] {
+   *      |   def head(s: String): F[String]
+   *      | }
+   * scala> val tryInterpreter = new StringAlg[Try] {
+   *      |    //for simplicity we use a Try here, but we are not encouraging it.
+   *      |    def head(s: String): Try[String] = Try(s.head).map(_.toString)
+   *      | }
+   * scala> val derived = cats.tagless.Derive.functorK[StringAlg]
+   * scala> val optionInterpreter = derived.mapK(tryInterpreter)(λ[Try ~> Option]{ _.toOption })
+   * scala> optionInterpreter.head("blah")
+   * res1: Option[String] = Some(b)
+   * scala> optionInterpreter.head("")
+   * res2: Option[String] = None
+   *
+   * }}}
+   */
   def functorK[Alg[_[_]]]: FunctorK[Alg] = macro DeriveMacros.functorK[Alg]
+
   def invariantK[Alg[_[_]]]: InvariantK[Alg] = macro DeriveMacros.invariantK[Alg]
   def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = macro DeriveMacros.semigroupalK[Alg]
   def applyK[Alg[_[_]]]: ApplyK[Alg] = macro DeriveMacros.applyK[Alg]

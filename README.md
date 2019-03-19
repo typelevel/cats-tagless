@@ -37,7 +37,7 @@ trait ExpressionAlg[F[_]] {
   def divide(dividend: Float, divisor: Float): F[Float]
 }
 ```
-With Cats-tagless you can transform this interpreter using [Cats](http://typelevel.org/cats)' [`FunctionK`](http://typelevel.org/cats/datatypes/functionk.html). I.e, you can transform an `ExpressionAlg[F]` to a `ExpressionAlg[G]` using a `FunctionK[F, G]`, a.k.a. `F ~> G`.
+With Cats-tagless you can transform this interpreter using [Cats](http://typelevel.org/cats)' [`FunctionK`](http://typelevel.org/cats/datatypes/functionk.html), i.e, you can transform an `ExpressionAlg[F]` to an `ExpressionAlg[G]` using a `FunctionK[F, G]`, a.k.a. `F ~> G`.
 
 For example, if you have an interpreter of `ExpressionAlg[Try]`
 
@@ -63,7 +63,7 @@ tryExpression.mapK(fk)
 Note that the `Try ~> Option` is implemented using [kind projector's polymorphic lambda syntax](https://github.com/non/kind-projector#polymorphic-lambda-values).   
 
 
-Obviously [`FunctorK`](typeclasses.html#functorK) instance is only possible when the effect type `F[_]` appears only in the
+Obviously, [`FunctorK`](typeclasses.html#functorK) instance is only possible when the effect type `F[_]` appears only in the
 covariant position (i.e. the return types). For algebras with effect type also appearing in the contravariant position (i.e. argument types), Cats-tagless provides a [`InvariantK`](typeclasses.html#invariantK) type class and an `autoInvariantK` annotation to automatically generate instances.
 
 `@autoFunctorK` also add an auto implicit derivation, so that if you have an implicit  `ExpressionAlg[F]` and an implicit
@@ -102,7 +102,7 @@ Obviously, this program is not stack safe.
 program[Try](0)
 //throws java.lang.StackOverflowError
 ```
-Now lets use auto derivation to lift the interpreter with `Try` into an interpreter with `Free`
+Now, let's use auto derivation to lift the interpreter with `Try` into an interpreter with `Free`
 
 ```scala
 import cats.free.Free
@@ -115,12 +115,12 @@ program[Free[Try, ?]](0).foldMap(FunctionK.id)
 // res9: scala.util.Try[Int] = Success(10000)
 ```
 
-Again the magic here is that Cats-tagless auto derive an `Increment[Free[Try, ?]]` when there is an implicit `Try ~> Free[Try, ?]` and a `Increment[Try]` in scope. This auto derivation can be turned off using an annotation argument: `@autoFunctorK(autoDerivation = false)`.
+Again, the magic here is that Cats-tagless auto derive an `Increment[Free[Try, ?]]` when there is an implicit `Try ~> Free[Try, ?]` and a `Increment[Try]` in scope. This auto derivation can be turned off using an annotation argument: `@autoFunctorK(autoDerivation = false)`.
 
 
 ## <a id="horizontal-comp" href="#horizontal-comp"></a>Horizontal composition with `@autoSemigroupalK`
 
-You can use the [`SemigroupalK`](typeclasses.html#semigroupalK) type class to create a new interpreter that runs both interpreters and return the result as a `cats.Tuple2K`. The `@autoSemigroupalK` attribute add an instance of `SemigroupalK` to the companion object. Example:
+You can use the [`SemigroupalK`](typeclasses.html#semigroupalK) type class to create a new interpreter that runs both interpreters and return the result as a `cats.Tuple2K`. The `@autoSemigroupalK` attribute adds an instance of `SemigroupalK` to the companion object. Example:
 
 ```scala
 @autoSemigroupalK
@@ -135,7 +135,7 @@ prod.num("2")
 // res11: cats.data.Tuple2K[Option,scala.util.Try,Float] = Tuple2K(Some(2.0),Success(2.0))
 ```
 
-If you want to combine more than 2 interpreters, the `@autoProductNK` attribute add a series of `product{n}K (n = 3..9)` methods to the companion object. Unlike `productK` living in the `SemigroupalK` type class, currently we don't have a type class for these `product{n}K` operations yet.
+If you want to combine more than 2 interpreters, the `@autoProductNK` attribute adds a series of `product{n}K (n = 3..9)` methods to the companion object. Unlike `productK` living in the `SemigroupalK` type class, currently we don't have a type class for these `product{n}K` operations yet.
 
 
 ## `@autoFunctor`, `@autoInvariant` and `@autoContravariant`

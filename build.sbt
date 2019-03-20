@@ -17,8 +17,8 @@ lazy val prj = mkPrjFactory(rootSettings)
 
 lazy val rootPrj = project
   .configure(mkRootConfig(rootSettings,rootJVM))
-  .aggregate(rootJVM, rootJS, testsJS, macrosJS)
-  .dependsOn(rootJVM, rootJS, testsJS, macrosJS)
+  .aggregate(rootJVM, rootJS, testsJS, legacyMacrosJS, macrosJS)
+  .dependsOn(rootJVM, rootJS, testsJS, legacyMacrosJS, macrosJS)
   .settings(
     noPublishSettings,
     crossScalaVersions := Nil
@@ -27,8 +27,8 @@ lazy val rootPrj = project
 
 lazy val rootJVM = project
   .configure(mkRootJvmConfig(gh.proj, rootSettings, commonJvmSettings))
-  .aggregate(coreJVM, lawsJVM, testsJVM, macrosJVM, docs)
-  .dependsOn(coreJVM, lawsJVM, testsJVM, macrosJVM)
+  .aggregate(coreJVM, lawsJVM, testsJVM, legacyMacrosJVM, macrosJVM, docs)
+  .dependsOn(coreJVM, lawsJVM, testsJVM, legacyMacrosJVM, macrosJVM)
   .settings(noPublishSettings,
     crossScalaVersions := Nil)
 
@@ -62,13 +62,27 @@ lazy val lawsM   = module("laws", CrossType.Pure)
   .enablePlugins(AutomateHeaderPlugin)
 
 
+lazy val legacyMacros    = prj(legacyMacrosM)
+lazy val legacyMacrosJVM = legacyMacrosM.jvm
+lazy val legacyMacrosJS  = legacyMacrosM.js
+lazy val legacyMacrosM   = module("legacy-macros", CrossType.Pure)
+  .dependsOn(macrosM)
+  .settings(metaMacroSettings)
+  .settings(copyrightHeader)
+  .disablePlugins(DoctestPlugin)
+  .enablePlugins(AutomateHeaderPlugin)
+
 lazy val macros    = prj(macrosM)
 lazy val macrosJVM = macrosM.jvm
 lazy val macrosJS  = macrosM.js
 lazy val macrosM   = module("macros", CrossType.Pure)
   .dependsOn(coreM)
-  .settings(metaMacroSettings)
+  .settings(scalaMacroDependencies(libs))
   .settings(copyrightHeader)
+  .settings(
+    libs.testDependencies("scalatest", "scalacheck"),
+    doctestTestFramework := DoctestTestFramework.ScalaTest
+  )
   .enablePlugins(AutomateHeaderPlugin)
 
 
@@ -77,11 +91,11 @@ lazy val testsJVM = testsM.jvm
 lazy val testsJS  = testsM.js
 lazy val testsM   = module("tests", CrossType.Pure)
   .settings(libs.dependency("shapeless"))
-  .dependsOn(coreM, lawsM, macrosM)
+  .dependsOn(coreM, lawsM, legacyMacrosM)
   .settings(disciplineDependencies)
+  .settings(libs.testDependencies("scalatest", "cats-free", "cats-effect"))
   .settings(metaMacroSettings)
   .settings(noPublishSettings)
-  .settings(addTestLibs(libs, "scalatest", "cats-free", "cats-effect"))
   .enablePlugins(AutomateHeaderPlugin)
 
 
@@ -95,7 +109,7 @@ lazy val docs = project
   .settings(commonJvmSettings)
   .settings(metaMacroSettings)
   .settings(libs.dependency("cats-free"))
-  .dependsOn(List(coreJVM, macrosJVM).map( ClasspathDependency(_, Some("compile;test->test"))):_*)
+  .dependsOn(List(coreJVM, legacyMacrosJVM).map( ClasspathDependency(_, Some("compile;test->test"))):_*)
   .enablePlugins(MicrositesPlugin)
   .settings(
     organization  := gh.organisation,
@@ -134,7 +148,12 @@ lazy val commonSettings = sharedCommonSettings ++ Seq(
 ) ++ scalacAllSettings ++ unidocCommonSettings ++
   addCompilerPlugins(libs, "kind-projector") ++ copyrightHeader
 
-lazy val commonJsSettings = Seq(scalaJSStage in Global := FastOptStage)
+lazy val commonJsSettings = Seq(
+  scalaJSStage in Global := FastOptStage,
+  // currently sbt-doctest doesn't work in JS builds
+  // https://github.com/tkawachi/sbt-doctest/issues/52
+  doctestGenTests := Seq.empty
+)
 
 lazy val commonJvmSettings = Seq()
 

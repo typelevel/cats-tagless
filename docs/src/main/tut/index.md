@@ -17,19 +17,33 @@ Cats-tagless is a small library built to facilitate composing tagless final enco
 
 ## Installation
 
-Cats-tagless is available on scala 2.11, 2.12, and scalajs. The macro annotations are developed using [scalameta](http://scalameta.org/), so there are a few dependencies to add in your `build.sbt`.
+Cats-tagless is available on scala 2.11, 2.12, and scalajs. If you only need semi-auto derivation (e.g. `implicit val fkMA = cats.tagless.Derive.functorK[MyAlg]`), 
+you just need to add the following dependency with scalamacro paradise in `build.sbt`
 
+```scala
+libraryDependencies += 
+  "org.typelevel" %% "cats-tagless-macros" % latestVersion  //latest version indicated in the badge above
+ 
+ // For Scala 2.10-2.12
+ addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
+ 
+ // For Scala 2.13+
+ scalacOptions += "-Ymacro-annotations"
+```
+
+
+The macro annotations (`@finalAlg`, `@autoFunctorK`, `@autoInvariantK`, etc.) still depends on [scalameta](http://scalameta.org/), so you need to add scalameta dependencies in `build.sbt`. We plan to port annotations from this scalameta dependent module to the other `cats-tagless-macro` module. 
 
 ```scala
 addCompilerPlugin(
   ("org.scalameta" % "paradise" % "3.0.0-M11").cross(CrossVersion.full))
 
-libraryDependencies += 
-  "org.typelevel" %% "cats-tagless-macros" % latestVersion  //latest version indicated in the badge above
+libraryDependencies +=
+  "org.typelevel" %% "cats-tagless-legacy-macros" % latestVersion  //latest version indicated in the badge above
 ```
-
 Note that `org.scalameta.paradise` is a fork of `org.scalamacros.paradise`. So if you already have the
 `org.scalamacros.paradise` dependency, you might need to replace it.
+
 
 ## <a id="auto-transform" href="#auto-transform"></a>Auto-transforming interpreters
 
@@ -64,8 +78,18 @@ ExpressionAlg[Try]
 ```
 
 Cats-tagless provides a [`FunctorK`](typeclasses.html#functorK) type class to map over algebras using [cats](http://typelevel.org/cats)' [`FunctionK`](http://typelevel.org/cats/datatypes/functionk.html).
-The `@autoFunctorK` annotation automatically generate an instance of `FunctorK` for `ExpressionAlg` so that you can map
- an `ExpressionAlg[F]` to a `ExpressionAlg[G]` using a `FunctionK[F, G]`, a.k.a. `F ~> G`.
+More specifically With an instance of `FunctorK[ExpressionAlg]`, you can transform an `ExpressionAlg[F]` to a `ExpressionAlg[G]` using a `FunctionK[F, G]`, a.k.a. `F ~> G`.
+
+The `@autoFunctorK` annotation adds the following line (among some other code) in the companion object.  
+```scala
+object ExpressionAlg {
+  implicit def functorKForExpressionAlg: FunctorK[ExpressionAlg] =
+      Derive.functorK[ExpressionAlg]
+}
+```
+This `functorKForExpressionAlg` is a `FunctorK` instance for `ExpressionAlg` generated using `cats.tagless.Derive.functorK`. Note that the usage of `@autoFunctorK`, like all other `@autoXXXX` annotations provided by cats-tagless, is optional, you can manually add this instance yourself and avoid the extra dependencies needed by this annotation.
+
+With this implicit instance in scope, you can call the syntax `.mapK` method to perform the transformation.
 
 ```tut:silent
 import cats.tagless.implicits._
@@ -198,9 +222,10 @@ Unlike `productK` living in the `SemigroupalK` type class, currently we don't ha
 
 ## `@autoFunctor` and `@autoInvariant`
 
-Cats-tagless also provides three annotations that can generate `cats.Functor`, `cats.FlatMap` and `cats.Invariant` instance for your trait.
+Cats-tagless also provides three derivations that can generate `cats.Functor`, `cats.FlatMap` and `cats.Invariant` instance for your trait.
 
 ### `@autoFunctor`
+
 ```tut:silent
 @finalAlg @autoFunctor
 trait SimpleAlg[T] {

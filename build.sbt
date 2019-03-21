@@ -5,7 +5,7 @@ addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVe
 
 addCommandAlias("validateJVM", ";testsJVM/test ; docs/makeMicrosite")
 
-lazy val libs = org.typelevel.libraries
+lazy val libs = org.typelevel.libraries.add("kind-projector", "0.9.9")
 
 val apache2 = "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")
 val gh = GitHubSettings(org = "typelevel", proj = "cats-tagless", publishOrg = "org.typelevel", license = apache2)
@@ -137,7 +137,6 @@ lazy val docs = project
     scalacOptions in Tut ~= (_.filterNot(Set("-Ywarn-unused-import", "-Ywarn-dead-code"))),
     git.remoteRepo := gh.repo,
     includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md")
-
 
 
 lazy val buildSettings = sharedBuildSettings(gh, libs)

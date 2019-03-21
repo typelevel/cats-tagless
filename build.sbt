@@ -42,7 +42,7 @@ lazy val rootJS = project
   )
 
 
-lazy val core    = prj(coreM)
+lazy val core    = prj(coreM).settings(scala213Setting)
 lazy val coreJVM = coreM.jvm
 lazy val coreJS  = coreM.js
 lazy val coreM   = module("core", CrossType.Pure)
@@ -62,9 +62,7 @@ lazy val lawsM   = module("laws", CrossType.Pure)
   .enablePlugins(AutomateHeaderPlugin)
 
 
-lazy val legacyMacros    = prj(legacyMacrosM).settings(
-  crossScalaVersions := crossScalaVersions.value.filterNot(_ == libs.vers("scalac_2.13"))
-)
+lazy val legacyMacros    = prj(legacyMacrosM)
 lazy val legacyMacrosJVM = legacyMacrosM.jvm
 lazy val legacyMacrosJS  = legacyMacrosM.js
 lazy val legacyMacrosM   = module("legacy-macros", CrossType.Pure)
@@ -74,7 +72,7 @@ lazy val legacyMacrosM   = module("legacy-macros", CrossType.Pure)
   .disablePlugins(DoctestPlugin)
   .enablePlugins(AutomateHeaderPlugin)
 
-lazy val macros    = prj(macrosM)
+lazy val macros    = prj(macrosM).settings(scala213Setting)
 lazy val macrosJVM = macrosM.jvm
 lazy val macrosJS  = macrosM.js
 lazy val macrosM   = module("macros", CrossType.Pure)
@@ -82,7 +80,10 @@ lazy val macrosM   = module("macros", CrossType.Pure)
   .settings(scalaMacroDependencies(libs))
   .settings(copyrightHeader)
   .settings(
-    libs.testDependencies("scalatest", "scalacheck"),
+    libraryDependencies ++= Seq(
+      "org.scalatest" %%% "scalatest" % scalatestVersion(scalaVersion.value) % "test",
+      "org.scalacheck" %%% "scalacheck" % scalaCheckVersion(scalaVersion.value) % "test"
+    ),
     doctestTestFramework := DoctestTestFramework.ScalaTest
   )
   .enablePlugins(AutomateHeaderPlugin)
@@ -173,6 +174,15 @@ lazy val metaMacroSettings: Seq[Def.Setting[_]] = Seq(
   scalacOptions += "-Xplugin-require:macroparadise",
   sources in (Compile, doc) := Nil // macroparadise doesn't work with scaladoc yet.
 )
+
+def scalatestVersion(scalaVersion: String): String =
+  if (priorTo2_13(scalaVersion)) "3.0.5" else "3.0.6-SNAP5"
+
+def scalaCheckVersion(scalaVersion: String): String =
+  if (priorTo2_13(scalaVersion)) "1.13.5" else "1.14.0"
+
+lazy val scala213Setting =
+  crossScalaVersions += libs.vers("scalac_2.13")
 
 lazy val copyrightHeader = Seq(
   startYear := Some(2017),

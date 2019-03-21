@@ -46,7 +46,7 @@ jobs:
       scala: *scala_version_212
 
     - env: TEST="Macro tests scala 2.13"
-      script: sbt ++$TRAVIS_SCALA_VERSION! macroJVM/test
+      script: sbt ++$TRAVIS_SCALA_VERSION! macrosJVM/test
       scala: *scala_version_213
 
     # temporarily disabled due to random error resulted from conflict between scalameta macro and scala.reflect macro.

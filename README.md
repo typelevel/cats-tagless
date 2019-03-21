@@ -11,24 +11,21 @@ Cats-tagless is a small library built to facilitate transforming and composing t
 
 ## Installation
 
-Cats-tagless is available on scala 2.11, 2.12, and scalajs. 
+Cats-tagless is currently in the process of migrating from `scala.meta` to `scala.reflect` macro annotations. The current release includes blackbox macros for semi-auto derivation under the `cats-tagless-macros` module available for Scala 2.11, 2.12 and 2.13. The scala.meta macro annotations have been moved to the cats-tagless-legacy-macros module, available for Scala 2.11 and 2.12. The next release will port the macro annotations to scala.reflect.
 
 If you only need semi-auto derivation (e.g. `implicit val fkMA = cats.tagless.Derive.functorK[MyAlg]`), 
-you just need to add the following dependency with scalamacro paradise in `build.sbt`
+you just need to add the following dependency as well as scalamacro paradise in `build.sbt`
 
 ```scala
 libraryDependencies += 
   "org.typelevel" %% "cats-tagless-macros" % latestVersion  //latest version indicated in the badge above
  
- // For Scala 2.10-2.12
+ // For Scala 2.10-2.12 only. scalamacros paradise is included in scala 2.13
  addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
  
- // For Scala 2.13+
- scalacOptions += "-Ymacro-annotations"
 ```
 
-
-The macro annotations (`@finalAlg`, `@autoFunctorK`, `@autoInvariantK`, etc.) still depends on [scalameta](http://scalameta.org/), so you need to add scalameta dependencies in `build.sbt`. We plan to port annotations from this scalameta dependent module to the other `cats-tagless-macro` module. 
+The macro annotations (`@finalAlg`, `@autoFunctorK`, `@autoInvariantK`, etc.) still depends on [scalameta](http://scalameta.org/), so you need to add scalameta dependencies in `build.sbt`.  
 
 ```scala
 addCompilerPlugin(

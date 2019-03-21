@@ -62,7 +62,9 @@ lazy val lawsM   = module("laws", CrossType.Pure)
   .enablePlugins(AutomateHeaderPlugin)
 
 
-lazy val legacyMacros    = prj(legacyMacrosM)
+lazy val legacyMacros    = prj(legacyMacrosM).settings(
+  crossScalaVersions := crossScalaVersions.value.filterNot(_ == libs.vers("scalac_2.13"))
+)
 lazy val legacyMacrosJVM = legacyMacrosM.jvm
 lazy val legacyMacrosJS  = legacyMacrosM.js
 lazy val legacyMacrosM   = module("legacy-macros", CrossType.Pure)
@@ -143,7 +145,7 @@ lazy val buildSettings = sharedBuildSettings(gh, libs)
 lazy val commonSettings = sharedCommonSettings ++ Seq(
   parallelExecution in Test := false,
   scalaVersion := libs.vers("scalac_2.12"),
-  crossScalaVersions := Seq(libs.vers("scalac_2.11"), scalaVersion.value),
+  crossScalaVersions := Seq(libs.vers("scalac_2.11"), scalaVersion.value, libs.vers("scalac_2.13")),
   developers := List(Developer("Kailuo Wang", "@kailuowang", "kailuo.wang@gmail.com", new java.net.URL("http://kailuowang.com")))
 ) ++ scalacAllSettings ++ unidocCommonSettings ++
   addCompilerPlugins(libs, "kind-projector") ++ copyrightHeader

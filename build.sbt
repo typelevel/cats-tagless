@@ -5,7 +5,7 @@ addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVe
 
 addCommandAlias("validateJVM", ";testsJVM/test ; docs/makeMicrosite")
 
-lazy val libs = org.typelevel.libraries.add("kind-projector", "0.9.9")
+lazy val libs = org.typelevel.libraries
 
 val apache2 = "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")
 val gh = GitHubSettings(org = "typelevel", proj = "cats-tagless", publishOrg = "org.typelevel", license = apache2)

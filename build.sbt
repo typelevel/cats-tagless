@@ -108,11 +108,10 @@ lazy val docs = project
   .settings(moduleName := gh.proj + "-docs")
   .settings(noPublishSettings)
   .settings(unidocCommonSettings)
-  .settings(simulacrumSettings(libs))
   .settings(commonJvmSettings)
   .settings(metaMacroSettings)
   .settings(libs.dependency("cats-free"))
-  .dependsOn(List(coreJVM, legacyMacrosJVM).map( ClasspathDependency(_, Some("compile;test->test"))):_*)
+  .dependsOn(List(legacyMacrosJVM).map( ClasspathDependency(_, Some("compile;test->test"))):_*)
   .enablePlugins(MicrositesPlugin)
   .settings(
     organization  := gh.organisation,

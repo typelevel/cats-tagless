@@ -11,14 +11,28 @@ Cats-tagless is a small library built to facilitate transforming and composing t
 
 ## Installation
 
-Cats-tagless is available on scala 2.11, 2.12, and scalajs. The macro annotations are developed using [scalameta](http://scalameta.org/), so there are a few dependencies to add in your `build.sbt`.
+Cats-tagless is currently in the process of migrating from `scala.meta` to `scala.reflect` macro annotations. The current release includes blackbox macros for semi-auto derivation under the `cats-tagless-macros` module available for Scala 2.11, 2.12 and 2.13. The scala.meta macro annotations have been moved to the cats-tagless-legacy-macros module, available for Scala 2.11 and 2.12. The next release will port the macro annotations to scala.reflect.
+
+If you only need semi-auto derivation (e.g. `implicit val fkMA = cats.tagless.Derive.functorK[MyAlg]`), 
+you just need to add the following dependency as well as scalamacro paradise in `build.sbt`
+
+```scala
+libraryDependencies += 
+  "org.typelevel" %% "cats-tagless-macros" % latestVersion  //latest version indicated in the badge above
+ 
+ // For Scala 2.10-2.12 only. scalamacros paradise is included in scala 2.13
+ addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
+ 
+```
+
+The macro annotations (`@finalAlg`, `@autoFunctorK`, `@autoInvariantK`, etc.) still depends on [scalameta](http://scalameta.org/), so you need to add scalameta dependencies in `build.sbt`.  
 
 ```scala
 addCompilerPlugin(
   ("org.scalameta" % "paradise" % "3.0.0-M11").cross(CrossVersion.full))
 
-libraryDependencies += 
-  "org.typelevel" %% "cats-tagless-macros" % latestVersion  //latest version indicated in the badge above
+libraryDependencies +=
+  "org.typelevel" %% "cats-tagless-legacy-macros" % latestVersion  //latest version indicated in the badge above
 ```
 Note that `org.scalameta.paradise` is a fork of `org.scalamacros.paradise`. So if you already have the
 `org.scalamacros.paradise` dependency, you might need to replace it.
@@ -37,7 +51,20 @@ trait ExpressionAlg[F[_]] {
   def divide(dividend: Float, divisor: Float): F[Float]
 }
 ```
-With Cats-tagless you can transform this interpreter using [Cats](http://typelevel.org/cats)' [`FunctionK`](http://typelevel.org/cats/datatypes/functionk.html), i.e, you can transform an `ExpressionAlg[F]` to an `ExpressionAlg[G]` using a `FunctionK[F, G]`, a.k.a. `F ~> G`.
+
+With Cats-tagless you can transform this interpreter using [Cats](http://typelevel.org/cats)' [`FunctionK`](http://typelevel.org/cats/datatypes/functionk.html), i.e, you can transform an `ExpressionAlg[F]` to an `ExpressionAlg[G]` using a `FunctionK[F, G]`, a.k.a. `F ~> G`. Cats-tagless generates a `FunctorK` instance for your algebra.
+
+The `@autoFunctorK` annotation adds the following line (among some other code) in the companion object.  
+```scala
+object ExpressionAlg {
+  implicit def functorKForExpressionAlg: FunctorK[ExpressionAlg] =
+      Derive.functorK[ExpressionAlg]
+}
+```
+This `functorKForExpressionAlg` is a `FunctorK` instance for `ExpressionAlg` which can map a `ExpressionAlg[F]` to a `ExpressionAlg[G]` using a `FunctionK[F, G]`.
+
+
+Note that the usage of `@autoFunctorK`, like all other `@autoXXXX` annotations provided by cats-tagless, is optional, you can manually add this instance yourself and avoid the extra dependencies needed by this annotation.
 
 For example, if you have an interpreter of `ExpressionAlg[Try]`
 

@@ -42,11 +42,12 @@ lazy val rootJS = project
   )
 
 
-lazy val core    = prj(coreM).settings(scala213Setting)
+lazy val core    = prj(coreM)
 lazy val coreJVM = coreM.jvm
 lazy val coreJS  = coreM.js
 lazy val coreM   = module("core", CrossType.Pure)
   .settings(libs.dependency("cats-core"))
+  .settings(scala213Setting)
   .settings(simulacrumSettings(libs))
   .enablePlugins(AutomateHeaderPlugin)
 
@@ -72,11 +73,13 @@ lazy val legacyMacrosM   = module("legacy-macros", CrossType.Pure)
   .disablePlugins(DoctestPlugin)
   .enablePlugins(AutomateHeaderPlugin)
 
-lazy val macros    = prj(macrosM).settings(scala213Setting)
+lazy val macros    = prj(macrosM)
 lazy val macrosJVM = macrosM.jvm
 lazy val macrosJS  = macrosM.js
 lazy val macrosM   = module("macros", CrossType.Pure)
   .dependsOn(coreM)
+  .aggregate(coreM)
+  .settings(scala213Setting)
   .settings(scalaMacroDependencies(libs))
   .settings(copyrightHeader)
   .settings(

@@ -14,6 +14,7 @@ jdk:
 
 scala_version_211: &scala_version_211 2.11.12
 scala_version_212: &scala_version_212 2.12.7
+scala_version_213: &scala_version_213 2.13.0-M5
 
 before_install:
  - export PATH=${PATH}:./vendor/bundle
@@ -47,6 +48,10 @@ jobs:
     - env: TEST="docs"
       install: gem install jekyll -v 2.5
       script: sbt docs/makeMicrosite
+
+    - env: TEST="Macro tests scala 2.13"
+      script: sbt ++$TRAVIS_SCALA_VERSION! macrosJVM/test
+      scala: *scala_version_213
 
     - stage: publish snapshot
       env:

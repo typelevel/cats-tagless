@@ -51,7 +51,7 @@
 
 <p>Similar to <a href="https://github.com/mpilquist/simulacrum">simulacrum</a>, <code class="highlighter-rouge">@finalAlg</code> adds an <code class="highlighter-rouge">apply</code> method in the companion object so that you can do implicit calling.</p>
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="nc">ExpressionAlg</span><span class="o">[</span><span class="kt">Try</span><span class="o">]</span>
-<span class="c1">// res0: ExpressionAlg[scala.util.Try] = tryExpression$@2ff2eb48
+<span class="c1">// res0: ExpressionAlg[scala.util.Try] = tryExpression$@618854a3
 </span></code></pre>
 </div>
 
@@ -65,10 +65,10 @@ The <code class="highlighter-rouge">@autoFunctorK</code> annotation automaticall
 </code></pre>
 </div>
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">implicit</span> <span class="k">val</span> <span class="n">fk</span> <span class="k">:</span> <span class="kt">Try</span> <span class="kt">~&gt;</span> <span class="kt">Option</span> <span class="o">=</span> <span class="n">λ</span><span class="o">[</span><span class="kt">Try</span> <span class="kt">~&gt;</span> <span class="kt">Option</span><span class="o">](</span><span class="k">_</span><span class="o">.</span><span class="n">toOption</span><span class="o">)</span>
-<span class="c1">// fk: scala.util.Try ~&gt; Option = $anon$1@1bedc2d9
+<span class="c1">// fk: scala.util.Try ~&gt; Option = $anon$1@2d11f08a
 </span>
 <span class="n">tryExpression</span><span class="o">.</span><span class="n">mapK</span><span class="o">(</span><span class="n">fk</span><span class="o">)</span>
-<span class="c1">// res1: ExpressionAlg[Option] = ExpressionAlg$$anon$1$$anon$5@57e21535
+<span class="c1">// res1: ExpressionAlg[Option] = ExpressionAlg$$anon$1$$anon$5@4a0374bb
 </span></code></pre>
 </div>
 <p>Note that the <code class="highlighter-rouge">Try ~&gt; Option</code> is implemented using <a href="https://github.com/non/kind-projector#polymorphic-lambda-values">kind projector’s polymorphic lambda syntax</a>. <br />
@@ -82,7 +82,7 @@ covariant position (i.e. the return types). For algebras with effect type also a
 <span class="c1">// import ExpressionAlg.autoDerive._
 </span>
 <span class="nc">ExpressionAlg</span><span class="o">[</span><span class="kt">Option</span><span class="o">]</span>
-<span class="c1">// res2: ExpressionAlg[Option] = ExpressionAlg$$anon$1$$anon$5@6c44a1e
+<span class="c1">// res2: ExpressionAlg[Option] = ExpressionAlg$$anon$1$$anon$5@5565b93f
 </span></code></pre>
 </div>
 <p>This auto derivation can be turned off using an annotation argument: <code class="highlighter-rouge">@autoFunctorK(autoDerivation = false)</code>.</p>
@@ -162,7 +162,7 @@ covariant position (i.e. the return types). For algebras with effect type also a
 <span class="c1">// import ExpressionAlg.autoDerive._
 </span>
 <span class="k">new</span> <span class="nc">StringCalculatorOption</span>
-<span class="c1">// res4: StringCalculatorOption = StringCalculatorOption@207f3981
+<span class="c1">// res4: StringCalculatorOption = StringCalculatorOption@10cba07
 </span></code></pre>
 </div>
 
@@ -170,7 +170,7 @@ covariant position (i.e. the return types). For algebras with effect type also a
 
 <p>You can use the <a href="typeclasses.html#semigroupalK"><code class="highlighter-rouge">SemigroupalK</code></a> type class to create a new interpreter that runs two interpreters simultaneously and return the result as a <code class="highlighter-rouge">cats.Tuple2K</code>. The <code class="highlighter-rouge">@autoSemigroupalK</code> attribute add an instance of <code class="highlighter-rouge">SemigroupalK</code> to the companion object. Example:</p>
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">val</span> <span class="n">prod</span> <span class="k">=</span> <span class="nc">ExpressionAlg</span><span class="o">[</span><span class="kt">Option</span><span class="o">].</span><span class="n">productK</span><span class="o">(</span><span class="nc">ExpressionAlg</span><span class="o">[</span><span class="kt">Try</span><span class="o">])</span>
-<span class="c1">// prod: ExpressionAlg[[γ$0$]cats.data.Tuple2K[Option,scala.util.Try,γ$0$]] = ExpressionAlg$$anon$3$$anon$7@44ff0f83
+<span class="c1">// prod: ExpressionAlg[[γ$0$]cats.data.Tuple2K[Option,scala.util.Try,γ$0$]] = ExpressionAlg$$anon$3$$anon$7@56773dba
 </span>
 <span class="n">prod</span><span class="o">.</span><span class="n">num</span><span class="o">(</span><span class="s">"2"</span><span class="o">)</span>
 <span class="c1">// res5: cats.data.Tuple2K[Option,scala.util.Try,Float] = Tuple2K(Some(2.0),Success(2.0))
@@ -187,7 +187,7 @@ covariant position (i.e. the return types). For algebras with effect type also a
 </code></pre>
 </div>
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">val</span> <span class="n">prod4</span> <span class="k">=</span> <span class="nc">ExpressionAlg</span><span class="o">.</span><span class="n">product4K</span><span class="o">(</span><span class="nc">ExpressionAlg</span><span class="o">[</span><span class="kt">Try</span><span class="o">],</span> <span class="nc">ExpressionAlg</span><span class="o">[</span><span class="kt">Option</span><span class="o">],</span> <span class="n">listInterpreter</span><span class="o">,</span> <span class="n">vectorInterpreter</span><span class="o">)</span>
-<span class="c1">// prod4: ExpressionAlg[[T](scala.util.Try[T], Option[T], List[T], Vector[T])] = ExpressionAlg$$anon$9@454c3dc0
+<span class="c1">// prod4: ExpressionAlg[[T](scala.util.Try[T], Option[T], List[T], Vector[T])] = ExpressionAlg$$anon$9@42ce1fd1
 </span>
 <span class="n">prod4</span><span class="o">.</span><span class="n">num</span><span class="o">(</span><span class="s">"3"</span><span class="o">)</span>
 <span class="c1">// res6: (scala.util.Try[Float], Option[Float], List[Float], Vector[Float]) = (Success(3.0),Some(3.0),List(3.0),Vector(3.0))

@@ -149,8 +149,16 @@ lazy val commonSettings = sharedCommonSettings ++ Seq(
   parallelExecution in Test := false,
   scalaVersion := libs.vers("scalac_2.12"),
   crossScalaVersions := Seq(libs.vers("scalac_2.11"), scalaVersion.value),
-  developers := List(Developer("Kailuo Wang", "@kailuowang", "kailuo.wang@gmail.com", new java.net.URL("http://kailuowang.com")))
-) ++ scalacAllSettings ++ unidocCommonSettings ++
+  //todo: re-enable disable scaladoc on 2.13 due to https://github.com/scala/bug/issues/11045
+  sources in (Compile, doc) := {
+    val docSource = (sources in (Compile, doc)).value
+    if (priorTo2_13(scalaVersion.value)) docSource else Nil
+  },
+  developers := List(
+    Developer("Georgi Krastev", "@joroKr21", "joro.kr.21@gmail.com", new java.net.URL("https://www.linkedin.com/in/georgykr")),
+    Developer("Kailuo Wang", "@kailuowang", "kailuo.wang@gmail.com", new java.net.URL("http://kailuowang.com")),
+    Developer("Luka Jacobowitz", "@LukaJCB", "luka.jacobowitz@fh-duesseldorf.de", new java.net.URL("http://stackoverflow.com/users/3795501/luka-jacobowitz")))
+  ) ++ scalacAllSettings ++ unidocCommonSettings ++
   addCompilerPlugins(libs, "kind-projector") ++ copyrightHeader
 
 lazy val commonJsSettings = Seq(

@@ -154,9 +154,15 @@ We adopted the
 [Scala Code of Conduct](https://www.scala-lang.org/conduct/). People are expected to follow it when
 discussing Cats-tagless on the Github page, Gitter channel, or other venues.
 
+### Maintainers
+ 
+* [Georgi Krastev](https://github.com/joroKr21)
+* [Kailuo Wang](https://github.com/kailuowang)
+* [Luka Jacobowitz](https://github.com/LukaJCB)
+
 ### Copyright
 
-Copyright (C) 2017 Kailuo Wang [http://kailuowang.com](http://kailuowang.com)
+Copyright (C) 2019 Maintainers of Cats-tagless
 
 ### License 
 

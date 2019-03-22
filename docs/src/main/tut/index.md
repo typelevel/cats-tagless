@@ -24,11 +24,9 @@ you just need to add the following dependency with scalamacro paradise in `build
 libraryDependencies += 
   "org.typelevel" %% "cats-tagless-macros" % latestVersion  //latest version indicated in the badge above
  
- // For Scala 2.10-2.12
+ // For Scala 2.10-2.12, scalamacros paradise is needed as well. 
  addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
- 
- // For Scala 2.13+
- scalacOptions += "-Ymacro-annotations"
+
 ```
 
 

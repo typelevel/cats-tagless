@@ -145,7 +145,7 @@ lazy val buildSettings = sharedBuildSettings(gh, libs)
 lazy val commonSettings = sharedCommonSettings ++ Seq(
   parallelExecution in Test := false,
   scalaVersion := libs.vers("scalac_2.12"),
-  crossScalaVersions := Seq(libs.vers("scalac_2.11"), scalaVersion.value, libs.vers("scalac_2.13")),
+  crossScalaVersions := Seq(libs.vers("scalac_2.11"), scalaVersion.value),
   developers := List(Developer("Kailuo Wang", "@kailuowang", "kailuo.wang@gmail.com", new java.net.URL("http://kailuowang.com")))
 ) ++ scalacAllSettings ++ unidocCommonSettings ++
   addCompilerPlugins(libs, "kind-projector") ++ copyrightHeader

@@ -169,6 +169,34 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
     AlgWithAbstractTypeClass.mapK(foo)(fk).a(true) should be(Some("true"))
   }
 
+  test("alg with default parameter") {
+    implicit object foo extends AlgWithDefaultParameter[Try] {
+      def greet(name: String) = Try(s"Hello $name")
+    }
+
+    val bar = AlgWithDefaultParameter.mapK(foo)(fk)
+    bar.greet() should be(Some("Hello World"))
+    bar.greet("John Doe") should be(Some("Hello John Doe"))
+  }
+
+  test("alg with final method") {
+    implicit object foo extends AlgWithFinalMethod[Try] {
+      def log(msg: String) = Try(msg)
+    }
+
+    val bar = AlgWithFinalMethod.mapK(foo)(fk)
+    bar.info("green") should be(Some("[info] green"))
+    bar.warn("yellow") should be(Some("[warn] yellow"))
+  }
+
+  test("alg with by-name parameter") {
+    implicit object foo extends AlgWithByNameParameter[Try] {
+      def log(msg: => String) = Try(msg)
+    }
+
+    val bar = AlgWithByNameParameter.mapK(foo)(fk)
+    bar.log("level".reverse) should be(Some("level"))
+  }
 }
 
 
@@ -260,5 +288,20 @@ object autoFunctorKTests {
     }
   }
 
+  @autoFunctorK
+  trait AlgWithDefaultParameter[F[_]] {
+    def greet(name: String = "World"): F[String]
+  }
 
+  @autoFunctorK
+  trait AlgWithFinalMethod[F[_]] {
+    def log(msg: String): F[String]
+    final def info(msg: String): F[String] = log(s"[info] $msg")
+    final def warn(msg: String): F[String] = log(s"[warn] $msg")
+  }
+
+  @autoFunctorK
+  trait AlgWithByNameParameter[F[_]] {
+    def log(msg: => String): F[String]
+  }
 }

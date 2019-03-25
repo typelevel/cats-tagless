@@ -30,16 +30,17 @@ class DeriveMacros(val c: blackbox.Context) {
     def typeArgs: List[Type] = for (tp <- tps) yield typeRef(NoPrefix, tp.symbol, Nil)
     def paramLists(f: Type => Type): List[List[ValDef]] = for (ps <- pss)
       yield for (p <- ps) yield ValDef(p.mods, p.name, TypeTree(f(p.tpt.tpe)), p.rhs)
-    def argLists(f: TermSymbol => Tree): List[List[Tree]] = for (ps <- pss)
-      yield for (p <- ps) yield f(p.symbol.asTerm)
+    def argLists(f: (TermName, Type) => Tree): List[List[Tree]] = for (ps <- pss)
+      yield for (p <- ps) yield f(p.name, p.tpt.tpe)
     def definition: Tree = q"override def ${m.name}[..$tps](...$pss): $rt = $body"
   }
 
-  /** Return the set of members of `tpe`, excluding some undesired cases. */
-  def membersOf(tpe: Type): Iterable[Symbol] = {
+  /** Return the set of overridable members of `tpe`, excluding some undesired cases. */
+  // TODO: Figure out what to do about different visibility modifiers.
+  def overridableMembersOf(tpe: Type): Iterable[Symbol] = {
     import definitions._
     val exclude = Set[Symbol](AnyClass, AnyRefClass, AnyValClass, ObjectClass)
-    tpe.members.filterNot(m => m.isConstructor || exclude(m.owner))
+    tpe.members.filterNot(m => m.isConstructor || m.isFinal || m.isImplementationArtifact || m.isSynthetic || exclude(m.owner))
   }
 
   /** Temporarily refresh type parameter names, type-check the `tree` and restore the original names.
@@ -86,7 +87,12 @@ class DeriveMacros(val c: blackbox.Context) {
     val signature = method.typeSignatureIn(algebra)
     val typeParams = for (tp <- signature.typeParams) yield typeDef(tp)
     val typeArgs = for (tp <- signature.typeParams) yield typeRef(NoPrefix, tp, Nil)
-    val paramLists = for (ps <- signature.paramLists) yield for (p <- ps) yield valDef(p)
+    val paramLists = for (ps <- signature.paramLists) yield for (p <- ps) yield {
+      // Only preserve the implicit modifier (e.g. drop the default parameter flag).
+      val modifiers = if (p.isImplicit) Modifiers(Flag.IMPLICIT) else Modifiers()
+      ValDef(modifiers, p.name.toTermName, TypeTree(p.typeSignatureIn(algebra)), EmptyTree)
+    }
+
     val argLists = for (ps <- signature.paramLists) yield for (p <- ps) yield p.name.toTermName
     val delegate = q"$instance.$method[..$typeArgs](...$argLists)"
     val reified = Method(method, typeParams, paramLists, signature.finalResultType, delegate)
@@ -95,7 +101,7 @@ class DeriveMacros(val c: blackbox.Context) {
 
   /** Type-check a definition of type `instance` with stubbed methods to gain more type information. */
   def declare(instance: Type): Tree = {
-    val stubs = delegateMethods(instance, membersOf(instance).filter(_.isAbstract), NoSymbol) {
+    val stubs = delegateMethods(instance, overridableMembersOf(instance).filter(_.isAbstract), NoSymbol) {
       case method => method.copy(body = q"_root_.scala.Predef.???")
     }
 
@@ -141,7 +147,7 @@ class DeriveMacros(val c: blackbox.Context) {
   def mapK(algebra: Type): (String, Type => Tree) =
     "mapK" -> { case PolyType(List(f, g), MethodType(List(af), MethodType(List(fk), _))) =>
       val Af = singleType(NoPrefix, af)
-      val members = membersOf(Af)
+      val members = overridableMembersOf(Af)
       val types = delegateAbstractTypes(Af, members, Af)
       val methods = delegateMethods(Af, members, af.asTerm) {
         case method @ Method(_, _, _, rt, delegate) if rt.typeSymbol == f =>
@@ -154,12 +160,12 @@ class DeriveMacros(val c: blackbox.Context) {
   def contramapK(algebra: Type): (String, Type => Tree) =
     "contramapK" -> { case PolyType(List(f, g), MethodType(List(af), MethodType(List(fk), _))) =>
       val Af = singleType(NoPrefix, af)
-      val members = membersOf(Af)
+      val members = overridableMembersOf(Af)
       val types = delegateAbstractTypes(Af, members, Af)
       val methods = delegateMethods(Af, members, af.asTerm) {
         case method @ Method(m, _, pss, _, _) if pss.iterator.flatten.exists(_.tpt.symbol == f) =>
           val paramLists = method.paramLists(tpe => if (tpe.typeSymbol == f) appliedType(g, tpe.typeArgs) else tpe)
-          val argLists = method.argLists(p => if (p.typeSignatureIn(Af).typeSymbol == f) q"$fk(${p.name})" else Ident(p.name))
+          val argLists = method.argLists((pn, pt) => if (pt.typeSymbol == f) q"$fk($pn)" else Ident(pn))
           val delegate = q"$af.$m[..${method.typeArgs}](...$argLists)"
           method.copy(pss = paramLists, body = delegate)
       }
@@ -170,12 +176,12 @@ class DeriveMacros(val c: blackbox.Context) {
   def imapK(algebra: Type): (String, Type => Tree) =
     "imapK" -> { case PolyType(List(f, g), MethodType(List(af), MethodType(List(fk), MethodType(List(gk), _)))) =>
       val Af = singleType(NoPrefix, af)
-      val members = membersOf(Af)
+      val members = overridableMembersOf(Af)
       val types = delegateAbstractTypes(Af, members, Af)
       val methods = delegateMethods(Af, members, af.asTerm) {
         case method @ Method(m, _, pss, rt, _) if rt.typeSymbol == f || pss.iterator.flatten.exists(_.tpt.symbol == f) =>
           val paramLists = method.paramLists(tpe => if (tpe.typeSymbol == f) appliedType(g, tpe.typeArgs) else tpe)
-          val argLists = method.argLists(p => if (p.typeSignatureIn(Af).typeSymbol == f) q"$gk(${p.name})" else Ident(p.name))
+          val argLists = method.argLists((pn, pt) => if (pt.typeSymbol == f) q"$gk($pn)" else Ident(pn))
           val returnType = if (rt.typeSymbol == f) appliedType(g, rt.typeArgs) else rt
           val delegate = q"$af.$m[..${method.typeArgs}](...$argLists)"
           val body = if (rt.typeSymbol == f) q"$fk($delegate)" else delegate
@@ -191,11 +197,11 @@ class DeriveMacros(val c: blackbox.Context) {
       val F = f.asType.toTypeConstructor
       val G = g.asType.toTypeConstructor
       val Af = singleType(NoPrefix, af)
-      val members = membersOf(Af)
+      val members = overridableMembersOf(Af)
       val types = delegateAbstractTypes(Af, members, Af)
       val methods = delegateMethods(Af, members, af.asTerm) {
         case method @ Method(m, _, _, rt, delegate) if rt.typeSymbol == f =>
-          val argLists = method.argLists(p => Ident(p.name))
+          val argLists = method.argLists((pn, _) => Ident(pn))
           val FGA = F :: G :: rt.typeArgs
           val returnType = appliedType(Tuple2K, FGA)
           val body = q"new $Tuple2K[..$FGA]($delegate, $ag.$m[..${method.typeArgs}](...$argLists))"
@@ -212,11 +218,11 @@ class DeriveMacros(val c: blackbox.Context) {
   def flatMapK(algebra: Type): (String, Type => Tree) =
     "flatMapK" -> { case PolyType(List(f, g), MethodType(List(af), MethodType(List(fk), _))) =>
       val Af = singleType(NoPrefix, af)
-      val members = membersOf(Af)
+      val members = overridableMembersOf(Af)
       val types = delegateAbstractTypes(Af, members, Af)
       val methods = delegateMethods(Af, members, af.asTerm) {
         case method @ Method(m, _, _, rt, delegate) if rt.typeSymbol == f =>
-          val argLists = method.argLists(p => Ident(p.name))
+          val argLists = method.argLists((pn, _) => Ident(pn))
           val body = q"$fk($delegate).$m[..${method.typeArgs}](...$argLists)"
           method.copy(rt = appliedType(g, rt.typeArgs), body = body)
       }
@@ -227,9 +233,9 @@ class DeriveMacros(val c: blackbox.Context) {
   def tailRecM(algebra: Type): (String, Type => Tree) =
     "tailRecM" -> { case PolyType(List(a, b), MethodType(List(x), MethodType(List(f), _))) =>
       val Fa = appliedType(algebra, a.asType.toType)
-      val methods = delegateMethods(Fa, membersOf(Fa), NoSymbol) {
+      val methods = delegateMethods(Fa, overridableMembersOf(Fa), NoSymbol) {
         case method @ Method(m, _, _, rt, _) =>
-          val argLists = method.argLists(p => Ident(p.name))
+          val argLists = method.argLists((pn, _) => Ident(pn))
           if (rt.typeSymbol == a) {
             val step = TermName(c.freshName("step"))
             val current = TermName(c.freshName("current"))

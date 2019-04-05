@@ -65,7 +65,7 @@ The <code class="highlighter-rouge">FunctorK</code> instance it generates does n
 <p>However, there is also <code class="highlighter-rouge">mapK</code> function added to the companion object of the algebra which gives you more precise type.</p>
 
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">val</span> <span class="n">barOption</span><span class="k">:</span> <span class="kt">Bar</span><span class="o">[</span><span class="kt">Option</span><span class="o">]</span> <span class="o">{</span> <span class="k">type</span> <span class="kt">T</span> <span class="o">=</span> <span class="nc">String</span> <span class="o">}</span> <span class="k">=</span> <span class="nc">Bar</span><span class="o">.</span><span class="n">mapK</span><span class="o">(</span><span class="n">tryInt</span><span class="o">)(</span><span class="n">fk</span><span class="o">)</span>
-<span class="c1">// barOption: Bar[Option]{type T = String} = Bar$$anon$3@7a074642
+<span class="c1">// barOption: Bar[Option]{type T = String} = Bar$$anon$3@92d12d5
 </span></code></pre>
 </div>
 

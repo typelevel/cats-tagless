@@ -16,6 +16,7 @@
 
 package cats.tagless
 
+import cats.arrow.Profunctor
 import cats.data.Tuple2K
 import cats.{Contravariant, FlatMap, Functor, Invariant}
 
@@ -148,6 +149,8 @@ class DeriveMacros(val c: blackbox.Context) {
     typeCheckWithFreshTypeParams(q"{ $definition; new ${declaration.symbol} }")
   }
 
+  // def map[A, B](fa: F[A])(f: A => B): F[B]
+  // def mapK[F[_], G[_]](af: A[F])(fk: F ~> G): A[G]
   def mapK(algebra: Type): (String, Type => Tree) =
     "mapK" -> { case PolyType(List(f, g), MethodType(List(af), MethodType(List(fk), _))) =>
       val Af = singleType(NoPrefix, af)
@@ -161,6 +164,7 @@ class DeriveMacros(val c: blackbox.Context) {
       implement(appliedType(algebra, g.asType.toTypeConstructor), types ++ methods)
     }
 
+  // def contramap[A, B](fa: F[A])(f: B => A): F[B]
   def contramapK(algebra: Type): (String, Type => Tree) =
     "contramapK" -> { case PolyType(List(f, g), MethodType(List(af), MethodType(List(fk), _))) =>
       val Af = singleType(NoPrefix, af)
@@ -177,6 +181,8 @@ class DeriveMacros(val c: blackbox.Context) {
       implement(appliedType(algebra, g.asType.toTypeConstructor), types ++ methods)
     }
 
+  // def imap[A, B](fa: F[A])(f: A => B)(g: B => A): F[B]
+  // def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gK: G ~> F): A[G]
   def imapK(algebra: Type): (String, Type => Tree) =
     "imapK" -> { case PolyType(List(f, g), MethodType(List(af), MethodType(List(fk), MethodType(List(gk), _)))) =>
       val Af = singleType(NoPrefix, af)
@@ -195,6 +201,7 @@ class DeriveMacros(val c: blackbox.Context) {
       implement(appliedType(algebra, g.asType.toTypeConstructor), types ++ methods)
     }
 
+  // def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Tuple2K[F, G, ?]]
   def productK(algebra: Type): (String, Type => Tree) = {
     val Tuple2K = symbolOf[Tuple2K[Any, Any, Any]]
     "productK" -> { case PolyType(List(f, g), MethodType(List(af, ag), _)) =>
@@ -219,6 +226,7 @@ class DeriveMacros(val c: blackbox.Context) {
     }
   }
 
+  // def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B]
   def flatMapK(algebra: Type): (String, Type => Tree) =
     "flatMapK" -> { case PolyType(List(f, g), MethodType(List(af), MethodType(List(fk), _))) =>
       val Af = singleType(NoPrefix, af)
@@ -234,6 +242,7 @@ class DeriveMacros(val c: blackbox.Context) {
       implement(appliedType(algebra, g.asType.toTypeConstructor), types ++ methods)
     }
 
+  // def tailRecM[A, B](a: A)(f: A => F[Either[A, B]]): F[B]
   def tailRecM(algebra: Type): (String, Type => Tree) =
     "tailRecM" -> { case PolyType(List(a, b), MethodType(List(x), MethodType(List(f), _))) =>
       val Fa = appliedType(algebra, a.asType.toType)
@@ -263,6 +272,27 @@ class DeriveMacros(val c: blackbox.Context) {
       implement(appliedType(algebra, b.asType.toTypeConstructor), methods)
     }
 
+  // def dimap[A, B, C, D](fab: F[A, B])(f: C => A)(g: B => D): F[C, D]
+  def dimap(algebra: Type): (String, Type => Tree) =
+    "dimap" -> { case PolyType(List(a, b, c, d), MethodType(List(fab), MethodType(List(f), MethodType(List(g), _)))) =>
+      val Fab = singleType(NoPrefix, fab)
+      val members = overridableMembersOf(Fab)
+      val types = delegateAbstractTypes(Fab, members, Fab)
+      val methods = delegateMethods(Fab, members, fab.asTerm) {
+        case method @ Method(m, _, pss, rt, _) if rt.typeSymbol == b || pss.iterator.flatten.exists(_.tpt.symbol == a) =>
+          val paramLists = method.paramLists(tpe => if (tpe.typeSymbol == a) appliedType(c, tpe.typeArgs) else tpe)
+          val argLists = method.argLists((pn, pt) => if (pt.typeSymbol == a) q"$f($pn)" else Ident(pn))
+          val returnType = if (rt.typeSymbol == b) appliedType(d, rt.typeArgs) else rt
+          val delegate = q"$fab.$m[..${method.typeArgs}](...$argLists)"
+          val body = if (rt.typeSymbol == b) q"$g($delegate)" else delegate
+          method.copy(pss = paramLists, rt = returnType, body = body)
+      }
+
+      val C = c.asType.toTypeConstructor
+      val D = d.asType.toTypeConstructor
+      implement(appliedType(algebra, C, D), types ++ methods)
+    }
+
   def functor[F[_]](implicit tag: c.WeakTypeTag[F[Any]]): c.Tree = {
     val F = normalizedTypeConstructor(tag)
     instantiate(symbolOf[Functor[Any]], F)(mapK(F).copy(_1 = "map"))
@@ -276,6 +306,11 @@ class DeriveMacros(val c: blackbox.Context) {
   def invariant[F[_]](implicit tag: c.WeakTypeTag[F[Any]]): c.Tree = {
     val F = normalizedTypeConstructor(tag)
     instantiate(symbolOf[Invariant[Any]], F)(imapK(F).copy(_1 = "imap"))
+  }
+
+  def profunctor[F[_, _]](implicit tag: c.WeakTypeTag[F[Any, Any]]): c.Tree = {
+    val F = normalizedTypeConstructor(tag)
+    instantiate(symbolOf[Profunctor[F]], F)(dimap(F))
   }
 
   def flatMap[F[_]](implicit tag: c.WeakTypeTag[F[Any]]): c.Tree = {

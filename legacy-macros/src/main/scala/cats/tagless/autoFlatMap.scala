@@ -38,60 +38,6 @@ object autoFlatMap {
     import ad._
     import cls._
 
-    val flatMapMethods = templ.stats.toList.flatMap(_.collect {
-      // abstract method with return type being effect type
-      case q"def $methodName[..$mTParams](...$params): ${Type.Name(`effectTypeName`)}" =>
-        q"""def $methodName[..$mTParams](...$params): TTarget =
-           flatMapFunction(delegatee_.$methodName(...${argumentss(params)})).$methodName(...${argumentss(params)})"""
-      // concrete method with return type being effect type
-      case q"def $methodName[..$mTParams](...$params): ${Some(targetType)} = $_" if targetType.toString == effectTypeName =>
-        q"""override def $methodName[..$mTParams](...$params): TTarget =
-           flatMapFunction(delegatee_.$methodName(...${argumentss(params)})).$methodName(...${argumentss(params)})"""
-      // abstract method with other return type
-      case q"def $methodName[..$mTParams](...$params): $targetType" =>
-        q"""def $methodName[..$mTParams](...$params): $targetType =
-           delegatee_.$methodName(...${argumentss(params)})"""
-      // concrete method with other return type
-      case q"def $methodName[..$mTParams](...$params): $targetType = $_" =>
-        q"""override def $methodName[..$mTParams](...$params): $targetType =
-           delegatee_.$methodName(...${argumentss(params)})"""
-    })
-
-    val tailRecMMethods = templ.stats.toList.flatMap(_.collect{
-      // abstract method with return type being effect type
-      case q"def $methodName[..$mTParams](...$params): ${Type.Name(`effectTypeName`)}" =>
-        q"""def $methodName[..$mTParams](...$params): TTarget = {
-              @_root_.scala.annotation.tailrec
-              def step(current: TInit): TTarget =
-                fn(current).$methodName(...${argumentss(params)}) match {
-                  case Right(target) => target
-                  case Left(next) => step(next)
-                }
-
-              step(init)
-            }"""
-      // concrete method with return type being effect type
-      case q"def $methodName[..$mTParams](...$params): ${Some(targetType)} = $_" if targetType.toString == effectTypeName =>
-        q"""override def $methodName[..$mTParams](...$params): TTarget = {
-              @_root_.scala.annotation.tailrec
-              def step(current: TInit): TTarget =
-                fn(current).$methodName(...${argumentss(params)}) match {
-                  case Right(target) => target
-                  case Left(next) => step(next)
-                }
-
-              step(init)
-            }"""
-      // abstract method with other return type
-      case q"def $methodName[..$mTParams](..$params): $targetType" =>
-        q"""def $methodName[..$mTParams](..$params): $targetType =
-           fn(init).$methodName(..${arguments(params)})"""
-      // concrete method with other return type
-      case q"def $methodName[..$mTParams](...$params): $targetType = $_" =>
-        q"""override def $methodName[..$mTParams](...$params): $targetType =
-           fn(init).$methodName(...${argumentss(params)})"""
-    })
-
     val instanceDef = Seq(q"""
       implicit def ${Term.Name("monadFor" + name.value)}[..$extraTParams]: _root_.cats.FlatMap[$typeLambdaVaryingEffect] =
         _root_.cats.tagless.Derive.flatMap[$typeLambdaVaryingEffect]
@@ -99,27 +45,6 @@ object autoFlatMap {
 
     cls.copy(companion = cls.companion.addStats(instanceDef))
 
-  }
-
-  private[tagless] def mapMethods(template: Template, effectTypeName: String): List[Defn.Def] = {
-    template.stats.toList.flatMap(_.collect {
-      // abstract method with return type being effect type
-      case q"def $methodName[..$mTParams](...$params): ${Type.Name(`effectTypeName`)}" =>
-        q"""def $methodName[..$mTParams](...$params): TTarget =
-           mapFunction(delegatee_.$methodName(...${argumentss(params)}))"""
-      // concrete method with return type being effect type
-      case q"def $methodName[..$mTParams](...$params): ${Some(targetType)} = $_" if targetType.toString == effectTypeName =>
-        q"""override def $methodName[..$mTParams](...$params): TTarget =
-           mapFunction(delegatee_.$methodName(...${argumentss(params)}))"""
-      // abstract method with other return type
-      case q"def $methodName[..$mTParams](...$params): $targetType" =>
-        q"""def $methodName[..$mTParams](...$params): $targetType =
-           delegatee_.$methodName(...${argumentss(params)})"""
-      // concrete method with other return type
-      case q"def $methodName[..$mTParams](...$params): $targetType = $_" =>
-        q"""override def $methodName[..$mTParams](...$params): $targetType =
-           delegatee_.$methodName(...${argumentss(params)})"""
-    })
   }
 }
 

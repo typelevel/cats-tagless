@@ -5,7 +5,7 @@ addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVe
 
 addCommandAlias("validateJVM", ";testsJVM/test ; docs/makeMicrosite")
 
-lazy val libs = org.typelevel.libraries.add("cats", "2.0.0-M1")
+lazy val libs = org.typelevel.libraries
 
 val apache2 = "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")
 val gh = GitHubSettings(org = "typelevel", proj = "cats-tagless", publishOrg = "org.typelevel", license = apache2)
@@ -83,10 +83,7 @@ lazy val macrosM   = module("macros", CrossType.Pure)
   .settings(scalaMacroDependencies(libs))
   .settings(copyrightHeader)
   .settings(
-    libraryDependencies ++= Seq(
-      "org.scalatest" %%% "scalatest" % scalatestVersion(scalaVersion.value) % "test",
-      "org.scalacheck" %%% "scalacheck" % scalaCheckVersion(scalaVersion.value) % "test"
-    ),
+    libs.testDependencies("scalatest", "scalacheck"),
     doctestTestFramework := DoctestTestFramework.ScalaTest
   )
   .enablePlugins(AutomateHeaderPlugin)
@@ -184,12 +181,6 @@ lazy val metaMacroSettings: Seq[Def.Setting[_]] = Seq(
   scalacOptions += "-Xplugin-require:macroparadise",
   sources in (Compile, doc) := Nil // macroparadise doesn't work with scaladoc yet.
 )
-
-def scalatestVersion(scalaVersion: String): String =
-  if (priorTo2_13(scalaVersion)) "3.0.5" else "3.0.6-SNAP5"
-
-def scalaCheckVersion(scalaVersion: String): String =
-  if (priorTo2_13(scalaVersion)) "1.13.5" else "1.14.0"
 
 lazy val scala213Setting =
   crossScalaVersions += libs.vers("scalac_2.13")

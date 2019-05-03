@@ -5,7 +5,7 @@ addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVe
 
 addCommandAlias("validateJVM", ";testsJVM/test ; docs/makeMicrosite")
 
-lazy val libs = org.typelevel.libraries
+lazy val libs = org.typelevel.libraries.add("cats", "2.0.0-M1")
 
 val apache2 = "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")
 val gh = GitHubSettings(org = "typelevel", proj = "cats-tagless", publishOrg = "org.typelevel", license = apache2)

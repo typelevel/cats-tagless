@@ -58,6 +58,7 @@ lazy val lawsJVM = lawsM.jvm
 lazy val lawsJS  = lawsM.js
 lazy val lawsM   = module("laws", CrossType.Pure)
   .dependsOn(coreM)
+  .settings(scala213Setting)
   .settings(libs.dependency("cats-laws"))
   .settings(disciplineDependencies)
   .enablePlugins(AutomateHeaderPlugin)
@@ -83,11 +84,8 @@ lazy val macrosM   = module("macros", CrossType.Pure)
   .settings(scalaMacroDependencies(libs))
   .settings(copyrightHeader)
   .settings(
-    libraryDependencies ++= Seq(
-      "org.scalatest" %%% "scalatest" % scalatestVersion(scalaVersion.value) % "test",
-      "org.scalacheck" %%% "scalacheck" % scalaCheckVersion(scalaVersion.value) % "test"
-    ),
-    doctestTestFramework := DoctestTestFramework.ScalaTest
+    libs.testDependencies("scalatest", "scalacheck"),
+    doctestTestFramework := DoctestTestFramework.ScalaCheck
   )
   .enablePlugins(AutomateHeaderPlugin)
 
@@ -96,10 +94,11 @@ lazy val tests    = prj(testsM)
 lazy val testsJVM = testsM.jvm
 lazy val testsJS  = testsM.js
 lazy val testsM   = module("tests", CrossType.Pure)
-  .settings(libs.dependency("shapeless"))
   .dependsOn(coreM, lawsM, legacyMacrosM)
+  .settings(libs.dependency("shapeless"))
   .settings(disciplineDependencies)
-  .settings(libs.testDependencies("scalatest", "cats-free", "cats-effect"))
+  .settings(libs.testDependencies("scalatest", "cats-free", "cats-effect", "cats-testkit"))
+  .settings(scalacOptions in Test := (scalacOptions in Test).value.filter(_ != "-Xfatal-warnings"))
   .settings(metaMacroSettings)
   .settings(noPublishSettings)
   .enablePlugins(AutomateHeaderPlugin)
@@ -184,12 +183,6 @@ lazy val metaMacroSettings: Seq[Def.Setting[_]] = Seq(
   scalacOptions += "-Xplugin-require:macroparadise",
   sources in (Compile, doc) := Nil // macroparadise doesn't work with scaladoc yet.
 )
-
-def scalatestVersion(scalaVersion: String): String =
-  if (priorTo2_13(scalaVersion)) "3.0.5" else "3.0.6-SNAP5"
-
-def scalaCheckVersion(scalaVersion: String): String =
-  if (priorTo2_13(scalaVersion)) "1.13.5" else "1.14.0"
 
 lazy val scala213Setting =
   crossScalaVersions += libs.vers("scalac_2.13")

@@ -15,18 +15,16 @@
  */
 
 package cats.tagless.tests
-
+import cats.tests.CatsSuite
 import cats.arrow.FunctionK
 import cats.instances.AllInstances
 import cats.kernel.Eq
 import cats.tagless.syntax.AllSyntax
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest.{FunSuite, Matchers}
-import org.typelevel.discipline.scalatest.Discipline
 
 import scala.util.Try
 
-class CatsTaglessTestSuite extends FunSuite with Matchers with Discipline with TestInstances with AllInstances with AllSyntax with cats.syntax.AllSyntax
+class CatsTaglessTestSuite extends CatsSuite with TestInstances with AllInstances with AllSyntax
 
 
 trait TestInstances {

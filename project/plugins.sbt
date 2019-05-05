@@ -1,4 +1,4 @@
-addSbtPlugin("org.typelevel" %% "sbt-catalysts" % "0.14")
+addSbtPlugin("org.typelevel" %% "sbt-catalysts" % "0.15")
 
 addSbtPlugin("de.heikoseeberger" % "sbt-header" % "4.1.0")
 

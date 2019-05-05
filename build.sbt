@@ -58,6 +58,7 @@ lazy val lawsJVM = lawsM.jvm
 lazy val lawsJS  = lawsM.js
 lazy val lawsM   = module("laws", CrossType.Pure)
   .dependsOn(coreM)
+  .settings(scala213Setting)
   .settings(libs.dependency("cats-laws"))
   .settings(disciplineDependencies)
   .enablePlugins(AutomateHeaderPlugin)

@@ -28,9 +28,6 @@ trait FunctorKTests[F[_[_]]] extends InvariantKTests[F] {
 
   def functorK[A[_], B[_], C[_], T: Arbitrary](implicit
                                                ArbFA: Arbitrary[F[A]],
-                                               ArbitraryG: Arbitrary[A[T]],
-                                               ArbitraryH: Arbitrary[B[T]],
-                                               ArbitraryI: Arbitrary[C[T]],
                                                ArbitraryFK: Arbitrary[A ~> B],
                                                ArbitraryFK2: Arbitrary[B ~> C],
                                                ArbitraryFK3: Arbitrary[B ~> A],

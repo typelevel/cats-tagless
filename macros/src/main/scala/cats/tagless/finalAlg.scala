@@ -17,27 +17,23 @@
 package cats.tagless
 
 import scala.annotation.{StaticAnnotation, compileTimeOnly}
-import Util._
-
-import scala.meta._
-import collection.immutable.Seq
+import scala.reflect.macros.whitebox
 
 @compileTimeOnly("Cannot expand @finalAlg")
 class finalAlg extends StaticAnnotation {
-  inline def apply(defn: Any): Any = meta {
-
-    def enrich(ad: AlgDefn): TypeDefinition = {
-      import ad._
-      import cls._
-
-     cls.copy(
-        companion = companion.addStats( Seq[Stat](
-          q"def apply[..${cls.tparams}](implicit inst: $name[..${tArgs()}]): $name[..${tArgs()}] = inst"
-        ))
-      )
-    }
-    enrichAlgebra(defn, false)(enrich)
-  }
+  def macroTransform(annottees: Any*): Any = macro finalAlgMacros.inst
 }
 
 
+private[tagless] class finalAlgMacros(override val c: whitebox.Context) extends MacroUtils {
+  import c.universe._
+
+  private def generateApply(algebraType: Tree, tparams: Seq[TypeDef]) =
+    q"def apply[..$tparams](implicit inst: $algebraType): $algebraType = inst"
+
+  def inst(annottees: c.Tree*): c.Tree =
+    enrichAlgebra(annottees.toList, higherKinded = false)(
+      _.forAlgebraType(generateApply)
+    )
+
+}

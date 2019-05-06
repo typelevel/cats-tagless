@@ -50,7 +50,7 @@ jobs:
       script: sbt docs/makeMicrosite
 
     - env: TEST="Macro tests scala 2.13"
-      script: sbt ++$TRAVIS_SCALA_VERSION! macrosJVM/test
+      script: sbt ++$TRAVIS_SCALA_VERSION! macrosJVM/test lawsJVM/test
       scala: *scala_version_213
 
     - stage: publish snapshot

@@ -187,16 +187,9 @@ private[tagless] abstract class MacroUtils {
     }
 
   lazy val autoDerive: Boolean = c.prefix.tree match {
-    case Apply(
-        _,
-        AssignOrNamedArg(
-          Ident(TermName("autoDerivation")),
-          Literal(Constant(b))
-        ) :: Nil
-        ) =>
-      b.asInstanceOf[Boolean]
-    case Apply(_, Literal(Constant(b)) :: Nil) => b.asInstanceOf[Boolean]
-    case _                                     => true
+    case q"new ${_}(${arg: Boolean})"                  => arg
+    case q"new ${_}(autoDerivation = ${arg: Boolean})" => arg
+    case _                                             => true
   }
 
 }

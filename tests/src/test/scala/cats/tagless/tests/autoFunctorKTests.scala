@@ -217,8 +217,8 @@ object autoFunctorKTests {
 
   object AlgWithTypeMember {
     type Aux[F[_], T0] = AlgWithTypeMember[F] { type T = T0 }
+    Derive.functorK[AlgWithTypeMember { type T = Int }]
   }
-
 
   @autoFunctorK @finalAlg
   trait AlgWithExtraTP[F[_], T] {
@@ -270,6 +270,7 @@ object autoFunctorKTests {
 
   object AlgWithAbstractTypeClass {
     type Aux[F[_], TC0[_]] = AlgWithAbstractTypeClass[F] { type TC[T] = TC0[T] }
+    Derive.functorK[AlgWithAbstractTypeClass { type TC[T] = List[T] }]
   }
 
   @autoFunctorK @finalAlg

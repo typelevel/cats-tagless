@@ -35,6 +35,10 @@ class DeriveMacros(val c: blackbox.Context) {
     def definition: Tree = q"override def ${m.name}[..$tps](...$pss): $rt = $body"
   }
 
+  /** Extract a normalized type constructor from the type tag, suitable to work with in macros. */
+  def normalizedTypeConstructor(tag: WeakTypeTag[_]): Type =
+    tag.tpe.typeConstructor.dealias.etaExpand
+
   /** Return the set of overridable members of `tpe`, excluding some undesired cases. */
   // TODO: Figure out what to do about different visibility modifiers.
   def overridableMembersOf(tpe: Type): Iterable[Symbol] = {
@@ -260,42 +264,42 @@ class DeriveMacros(val c: blackbox.Context) {
     }
 
   def functor[F[_]](implicit tag: c.WeakTypeTag[F[Any]]): c.Tree = {
-    val F = tag.tpe.typeConstructor.dealias
+    val F = normalizedTypeConstructor(tag)
     instantiate(symbolOf[Functor[Any]], F)(mapK(F).copy(_1 = "map"))
   }
 
   def contravariant[F[_]](implicit tag: c.WeakTypeTag[F[Any]]): c.Tree = {
-    val F = tag.tpe.typeConstructor.dealias
+    val F = normalizedTypeConstructor(tag)
     instantiate(symbolOf[Contravariant[Any]], F)(contramapK(F).copy(_1 = "contramap"))
   }
 
   def invariant[F[_]](implicit tag: c.WeakTypeTag[F[Any]]): c.Tree = {
-    val F = tag.tpe.typeConstructor.dealias
+    val F = normalizedTypeConstructor(tag)
     instantiate(symbolOf[Invariant[Any]], F)(imapK(F).copy(_1 = "imap"))
   }
 
   def flatMap[F[_]](implicit tag: c.WeakTypeTag[F[Any]]): c.Tree = {
-    val F = tag.tpe.typeConstructor.dealias
+    val F = normalizedTypeConstructor(tag)
     instantiate(symbolOf[FlatMap[Any]], F)(mapK(F).copy(_1 = "map"), flatMapK(F).copy(_1 = "flatMap"), tailRecM(F))
   }
 
   def functorK[Alg[_[_]]](implicit tag: c.WeakTypeTag[Alg[Any]]): c.Tree = {
-    val Alg = tag.tpe.typeConstructor.dealias
+    val Alg = normalizedTypeConstructor(tag)
     instantiate(symbolOf[FunctorK[Any]], Alg)(mapK(Alg))
   }
 
   def invariantK[Alg[_[_]]](implicit tag: c.WeakTypeTag[Alg[Any]]): c.Tree = {
-    val Alg = tag.tpe.typeConstructor.dealias
+    val Alg = normalizedTypeConstructor(tag)
     instantiate(symbolOf[InvariantK[Any]], Alg)(imapK(Alg))
   }
 
   def semigroupalK[Alg[_[_]]](implicit tag: c.WeakTypeTag[Alg[Any]]): c.Tree = {
-    val Alg = tag.tpe.typeConstructor.dealias
+    val Alg = normalizedTypeConstructor(tag)
     instantiate(symbolOf[SemigroupalK[Any]], Alg)(productK(Alg))
   }
 
   def applyK[Alg[_[_]]](implicit tag: c.WeakTypeTag[Alg[Any]]): c.Tree = {
-    val Alg = tag.tpe.typeConstructor.dealias
+    val Alg = normalizedTypeConstructor(tag)
     instantiate(symbolOf[ApplyK[Any]], Alg)(mapK(Alg), productK(Alg))
   }
 }

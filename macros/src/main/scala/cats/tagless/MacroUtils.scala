@@ -39,26 +39,23 @@ private[tagless] abstract class MacroUtils {
     lazy val abstractTypeMembers: Seq[TypeDef] = defn.impl.body.collect { case dt: TypeDef if dt.mods.hasFlag(Flag.DEFERRED) => dt }
     def hasAbstractTypeMembers = abstractTypeMembers.nonEmpty
 
+    private def Name0(name: TypeName) = TypeName(name.decodedName.toString + "0")
     lazy val fullyRefinedTypeMembers: Seq[TypeDef] = {
       abstractTypeMembers.map { td =>
-        val Name0 = Ident(TypeName(td.name.decodedName.toString + "0"))
         val typeDefBody =
           if(td.tparams.nonEmpty)
-            AppliedTypeTree(Name0, tArgs(td.tparams))
+            AppliedTypeTree(Ident(Name0(td.name)), tArgs(td.tparams))
           else
-            Name0
+            Ident(Name0(td.name))
         TypeDef(Modifiers(), td.name, td.tparams, typeDefBody)
       }
     }
 
     lazy val refinedTParams: Seq[TypeDef] =
-      fullyRefinedTypeMembers.map { defn =>
-        val (n, s) = defn.rhs match {
-          case AppliedTypeTree(Ident(_name), _tparams) => (_name, _tparams.size)
-          case Ident(_name)                            => (_name, 0)
-        }
-        createTypeParam(n, s)
-      }
+      abstractTypeMembers.map(
+        defn =>
+          TypeDef(Modifiers(Flag.PARAM), Name0(defn.name), defn.tparams, defn.rhs)
+      )
 
     def newDependentTypeMembers(definedAt: TermName) = {
       abstractTypeMembers.map(
@@ -171,15 +168,36 @@ private[tagless] abstract class MacroUtils {
     ModuleDef(obj.mods, obj.name, Template(impl.parents, impl.self, impl.body ++ stats))
   }
 
-  def createTypeParam(name: Name, arity: Int): TypeDef = {
-    val tparams = List.fill(arity)(TypeDef(Modifiers(Flag.PARAM), typeNames.WILDCARD, Nil, TypeBoundsTree(EmptyTree, EmptyTree)))
+  def createTypeParam(name: Name, tparamsTemplate: List[TypeDef]) = {
+    val tparams = tparamsTemplate.map {
+      case TypeDef(mods, _, _, typeBounds @ TypeBoundsTree(_, _)) =>
+        TypeDef(
+          Modifiers(Flag.PARAM | mods.flags),
+          typeNames.WILDCARD,
+          Nil,
+          typeBounds
+        )
+      case _ =>
+        TypeDef(
+          Modifiers(Flag.PARAM),
+          typeNames.WILDCARD,
+          Nil,
+          TypeBoundsTree(EmptyTree, EmptyTree)
+        )
+    }
+    TypeDef(Modifiers(Flag.PARAM), name.toTypeName, tparams, TypeBoundsTree(EmptyTree, EmptyTree))
+  }
+
+  def createTypeParam(name: Name, arity: Int, flags: FlagSet = NoFlags): TypeDef = {
+    val tparams = List.fill(arity)(TypeDef(Modifiers(Flag.PARAM | flags), typeNames.WILDCARD, Nil, TypeBoundsTree(EmptyTree, EmptyTree)))
     TypeDef(Modifiers(Flag.PARAM), name.toTypeName, tparams, TypeBoundsTree(EmptyTree, EmptyTree))
   }
   def createTypeParam(name: String, arity: Int): TypeDef = createTypeParam(TypeName(name), arity)
   def createFreshTypeParam(name: String, arity: Int): TypeDef = createTypeParam(c.freshName(name), arity)
 
-  def tArgs(tparams: List[TypeDef]): List[Ident] = tparams.map(tp => Ident(tp.name))
-  def tArgs(tparams: TypeDef*): List[Ident] = tArgs(tparams.toList)
+  def tArgs(tparam: TypeDef): Ident = Ident(tparam.name)
+  def tArgs(tparam1: TypeDef, tparam2: TypeDef): List[Ident] = List(tArgs(tparam1), tArgs(tparam2))
+  def tArgs(tparams: List[TypeDef]): List[Ident] = tparams.map(tArgs)
 
   def arguments(params: Seq[Tree]): Seq[TermName] =
     params.collect {

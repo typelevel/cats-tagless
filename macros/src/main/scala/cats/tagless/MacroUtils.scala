@@ -169,28 +169,8 @@ private[tagless] abstract class MacroUtils {
     ModuleDef(obj.mods, obj.name, Template(impl.parents, impl.self, impl.body ++ stats))
   }
 
-  def createTypeParam(name: Name, tparamsTemplate: List[TypeDef]) = {
-    val tparams = tparamsTemplate.map {
-      case TypeDef(mods, _, _, typeBounds @ TypeBoundsTree(_, _)) =>
-        TypeDef(
-          Modifiers(Flag.PARAM | mods.flags),
-          typeNames.WILDCARD,
-          Nil,
-          typeBounds
-        )
-      case _ =>
-        TypeDef(
-          Modifiers(Flag.PARAM),
-          typeNames.WILDCARD,
-          Nil,
-          TypeBoundsTree(EmptyTree, EmptyTree)
-        )
-    }
-    TypeDef(Modifiers(Flag.PARAM), name.toTypeName, tparams, TypeBoundsTree(EmptyTree, EmptyTree))
-  }
-
-  def createTypeParam(name: Name, arity: Int, flags: FlagSet = NoFlags): TypeDef = {
-    val tparams = List.fill(arity)(TypeDef(Modifiers(Flag.PARAM | flags), typeNames.WILDCARD, Nil, TypeBoundsTree(EmptyTree, EmptyTree)))
+  def createTypeParam(name: Name, arity: Int): TypeDef = {
+    val tparams = List.fill(arity)(TypeDef(Modifiers(Flag.PARAM), typeNames.WILDCARD, Nil, TypeBoundsTree(EmptyTree, EmptyTree)))
     TypeDef(Modifiers(Flag.PARAM), name.toTypeName, tparams, TypeBoundsTree(EmptyTree, EmptyTree))
   }
   def createTypeParam(name: String, arity: Int): TypeDef = createTypeParam(TypeName(name), arity)

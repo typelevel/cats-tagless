@@ -105,6 +105,20 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
     op.a(3) should be(Some("3"))
   }
 
+  test("Alg with type bound") {
+    import AlgWithTypeBound._
+    implicit val tryB: AlgWithTypeBound.Aux[Try, B.type] = new AlgWithTypeBound[Try] {
+      type T = B.type
+      override def t = Try(B)
+    }
+
+    tryB.mapK(fk).t should be(Some(B))
+    import AlgWithTypeBound.fullyRefined._
+    import AlgWithTypeBound.fullyRefined.autoDerive._
+    val op: AlgWithTypeBound.Aux[Option, B.type] = implicitly
+    op.t should be(Some(B))
+  }
+
   test("Stack safety with Free") {
     val incTry: Increment[Try] = new Increment[Try] {
       def plusOne(i: Int) = Try(i + 1)
@@ -217,8 +231,22 @@ object autoFunctorKTests {
 
   object AlgWithTypeMember {
     type Aux[F[_], T0] = AlgWithTypeMember[F] { type T = T0 }
+    Derive.functorK[AlgWithTypeMember { type T = Int }]
   }
 
+  @autoFunctorK
+  trait AlgWithTypeBound[F[_]] {
+    type T <: AlgWithTypeBound.A
+    def t: F[T]
+  }
+
+  object AlgWithTypeBound {
+    sealed abstract class A
+    case object B extends A
+    case object C extends A
+
+    type Aux[F[_], T0 <: A] = AlgWithTypeBound[F] { type T = T0 }
+  }
 
   @autoFunctorK @finalAlg
   trait AlgWithExtraTP[F[_], T] {
@@ -270,6 +298,7 @@ object autoFunctorKTests {
 
   object AlgWithAbstractTypeClass {
     type Aux[F[_], TC0[_]] = AlgWithAbstractTypeClass[F] { type TC[T] = TC0[T] }
+    Derive.functorK[AlgWithAbstractTypeClass { type TC[T] = List[T] }]
   }
 
   @autoFunctorK @finalAlg
@@ -304,4 +333,5 @@ object autoFunctorKTests {
   trait AlgWithByNameParameter[F[_]] {
     def log(msg: => String): F[String]
   }
+
 }

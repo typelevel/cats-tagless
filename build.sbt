@@ -35,7 +35,7 @@ lazy val rootJVM = project
 
 lazy val rootJS = project
   .configure(mkRootJsConfig(gh.proj, rootSettings, commonJsSettings))
-  .aggregate(coreJS, lawsJS)
+  .aggregate(coreJS, lawsJS, testsJS, macrosJS)
   .settings(
     noPublishSettings,
     crossScalaVersions := Nil

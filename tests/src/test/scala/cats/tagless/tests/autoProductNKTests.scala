@@ -52,7 +52,12 @@ object autoProductNKTests {
   }
 
   @autoProductNK
-  trait algWithCurry[F[_]] {
-    def a(b: String)(c: Int): F[Unit]
+  trait algWithDifferentParameterLists[F[_]] {
+    def parameterLess: F[Unit]
+    def nullary(): F[Unit]
+    def singular(a: String): F[Unit]
+    def binary(a: String)(b: Int): F[Unit]
+    def complex(a: String, b: Int)()(c: Long)(implicit d: Double, e: Char): F[Unit]
+    def varArg(a: String, xs: Int*): F[Unit]
   }
 }

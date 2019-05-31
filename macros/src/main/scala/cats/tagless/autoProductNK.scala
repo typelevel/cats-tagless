@@ -45,23 +45,14 @@ private [tagless] class autoProductNKMacros(override val c: whitebox.Context) ex
     val productTypeName = tq"_root_.cats.tagless.${TypeName("Tuple" + arity + "K")}"
 
     val methods = typedef.impl.body.map {
-      case q"def $methodName[..$mTParams](..$params): ${_}[$resultType]" =>
-        val returnItems = range.map { n =>
-          q"${af(n)}.$methodName(..${arguments(params)})"
-        }
-        q"""def $methodName[..$mTParams](..$params): $productTypeName[..$effectTypeParamsNames]#λ[$resultType] =
-           (..$returnItems)"""
-      //curried version
-      case q"def $methodName[..$mTParams](..$params1)(..$params2): ${_}[$resultType]" =>
-        val returnItems = range.map { n =>
-          q"${af(n)}.$methodName(..${arguments(params1)})(..${arguments(params2)})"
-        }
-        q"""def $methodName[..$mTParams](..$params1)(..$params2): $productTypeName[..$effectTypeParamsNames]#λ[$resultType] =
-           (..$returnItems)"""
-      case st =>
-        abort(
-          s"autoProductK does not support algebra with such statement: $st"
-        )
+      case q"def $method[..$typeParams](...$paramLists): ${_}[$resultType]" =>
+        val returnItems = range.map(n => q"${af(n)}.$method(...${argumentLists(paramLists)})")
+        q"""def $method[..$typeParams](...$paramLists): $productTypeName[..$effectTypeParamsNames]#λ[$resultType] =
+           (..$returnItems)
+        """
+
+      case statement =>
+        abort(s"autoProductK does not support algebra with such statement: $statement")
     }
 
     //af1: A[F1], af2: A[F2], af3: A[F3]

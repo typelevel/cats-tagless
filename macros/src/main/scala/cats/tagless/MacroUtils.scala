@@ -180,10 +180,15 @@ private[tagless] abstract class MacroUtils {
   def tArgs(tparam1: TypeDef, tparam2: TypeDef): List[Ident] = List(tArgs(tparam1), tArgs(tparam2))
   def tArgs(tparams: List[TypeDef]): List[Ident] = tparams.map(tArgs)
 
-  def arguments(params: Seq[Tree]): Seq[TermName] =
+  def arguments(params: Seq[Tree]): Seq[Tree] =
     params.collect {
-      case ValDef(_, name, _, _) => name
+      case ValDef(_, name, AppliedTypeTree(ref: RefTree, _ :: Nil), _)
+        if ref.name == definitions.RepeatedParamClass.name => q"$name: _*"
+      case ValDef(_, name, _, _) => Ident(name)
     }
+
+  def argumentLists(paramLists: Seq[Seq[Tree]]): Seq[Seq[Tree]] =
+    paramLists.map(arguments)
 
   lazy val autoDerive: Boolean = c.prefix.tree match {
     case q"new ${_}(${arg: Boolean})"                  => arg

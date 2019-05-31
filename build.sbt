@@ -125,7 +125,7 @@ lazy val docs = project
       "white-color"       -> "#FFFFFF"),
     ghpagesNoJekyll := false,
     micrositeAuthor := "cats-tagless Contributors",
-    scalacOptions in Tut ~= (_.filterNot(Set("-Ywarn-unused-import", "-Ywarn-dead-code"))),
+    scalacOptions in Tut ~= (_.filterNot(Set("-Ywarn-unused-import", "-Ywarn-unused:imports", "-Ywarn-dead-code"))),
     git.remoteRepo := gh.repo,
     includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md")
 

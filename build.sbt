@@ -17,8 +17,8 @@ lazy val prj = mkPrjFactory(rootSettings)
 
 lazy val rootPrj = project
   .configure(mkRootConfig(rootSettings,rootJVM))
-  .aggregate(rootJVM, rootJS, testsJS, macrosJS)
-  .dependsOn(rootJVM, rootJS, testsJS, macrosJS)
+  .aggregate(rootJVM, rootJS, docs)
+  .dependsOn(rootJVM, rootJS)
   .settings(
     noPublishSettings,
     crossScalaVersions := Nil
@@ -27,7 +27,7 @@ lazy val rootPrj = project
 
 lazy val rootJVM = project
   .configure(mkRootJvmConfig(gh.proj, rootSettings, commonJvmSettings))
-  .aggregate(coreJVM, lawsJVM, testsJVM, macrosJVM, docs)
+  .aggregate(coreJVM, lawsJVM, testsJVM, macrosJVM)
   .dependsOn(coreJVM, lawsJVM, testsJVM, macrosJVM)
   .settings(noPublishSettings,
     crossScalaVersions := Nil)
@@ -36,6 +36,7 @@ lazy val rootJVM = project
 lazy val rootJS = project
   .configure(mkRootJsConfig(gh.proj, rootSettings, commonJsSettings))
   .aggregate(coreJS, lawsJS, testsJS, macrosJS)
+  .dependsOn(coreJS, lawsJS, testsJS, macrosJS)
   .settings(
     noPublishSettings,
     crossScalaVersions := Nil

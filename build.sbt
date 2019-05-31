@@ -47,7 +47,6 @@ lazy val coreJVM = coreM.jvm
 lazy val coreJS  = coreM.js
 lazy val coreM   = module("core", CrossType.Pure)
   .settings(libs.dependency("cats-core"))
-  .settings(scala213Setting)
   .settings(simulacrumSettings(libs))
   .enablePlugins(AutomateHeaderPlugin)
 
@@ -58,7 +57,6 @@ lazy val lawsJVM = lawsM.jvm
 lazy val lawsJS  = lawsM.js
 lazy val lawsM   = module("laws", CrossType.Pure)
   .dependsOn(coreM)
-  .settings(scala213Setting)
   .settings(libs.dependency("cats-laws"))
   .settings(disciplineDependencies)
   .enablePlugins(AutomateHeaderPlugin)
@@ -70,7 +68,6 @@ lazy val macrosJS  = macrosM.js
 lazy val macrosM   = module("macros", CrossType.Pure)
   .dependsOn(coreM)
   .aggregate(coreM)
-  .settings(scala213Setting)
   .settings(scalaMacroDependencies(libs))
   .settings(paradiseSettings(libs))
   .settings(copyrightHeader)
@@ -90,7 +87,7 @@ lazy val testsM   = module("tests", CrossType.Pure)
   .settings(disciplineDependencies)
   .settings(libs.testDependencies("scalatest", "cats-free", "cats-effect", "cats-testkit"))
   .settings(scalacOptions in Test := (scalacOptions in Test).value.filter(_ != "-Xfatal-warnings"))
-  .settings(metaMacroSettings)
+  .settings(scalaMacroDependencies(libs))
   .settings(noPublishSettings)
   .enablePlugins(AutomateHeaderPlugin)
 
@@ -102,7 +99,7 @@ lazy val docs = project
   .settings(noPublishSettings)
   .settings(unidocCommonSettings)
   .settings(commonJvmSettings)
-  .settings(metaMacroSettings)
+  .settings(scalaMacroDependencies(libs))
   .settings(libs.dependency("cats-free"))
   .dependsOn(List(macrosJVM).map( ClasspathDependency(_, Some("compile;test->test"))):_*)
   .enablePlugins(MicrositesPlugin)
@@ -137,12 +134,8 @@ lazy val buildSettings = sharedBuildSettings(gh, libs)
 lazy val commonSettings = sharedCommonSettings ++ Seq(
   parallelExecution in Test := false,
   scalaVersion := libs.vers("scalac_2.12"),
-  crossScalaVersions := Seq(libs.vers("scalac_2.11"), scalaVersion.value),
-  //todo: re-enable disable scaladoc on 2.13 due to https://github.com/scala/bug/issues/11045
-  sources in (Compile, doc) := {
-    val docSource = (sources in (Compile, doc)).value
-    if (priorTo2_13(scalaVersion.value)) docSource else Nil
-  },
+  crossScalaVersions := Seq(libs.vers("scalac_2.11"), scalaVersion.value, libs.vers("scalac_2.13")),
+  resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
   developers := List(
     Developer("Georgi Krastev", "@joroKr21", "joro.kr.21@gmail.com", new java.net.URL("https://www.linkedin.com/in/georgykr")),
     Developer("Kailuo Wang", "@kailuowang", "kailuo.wang@gmail.com", new java.net.URL("http://kailuowang.com")),
@@ -163,20 +156,7 @@ lazy val publishSettings = sharedPublishSettings(gh) ++ credentialSettings ++ sh
 
 lazy val scoverageSettings = sharedScoverageSettings(60)
 
-lazy val disciplineDependencies = libs.dependencies("discipline", "scalacheck")
-
-lazy val metaMacroSettings: Seq[Def.Setting[_]] = Seq(
-  resolvers += Resolver.sonatypeRepo("releases"),
-  resolvers += Resolver.bintrayRepo("scalameta", "maven"),
-  libraryDependencies += "org.scalameta" %% "scalameta" % "1.8.0",
-  scalacOptions in (Compile, console) := Seq(), // macroparadise plugin doesn't work in repl yet.
-  addCompilerPlugin("org.scalameta" % "paradise" % "3.0.0-M11" cross CrossVersion.full),
-  scalacOptions += "-Xplugin-require:macroparadise",
-  sources in (Compile, doc) := Nil // macroparadise doesn't work with scaladoc yet.
-)
-
-lazy val scala213Setting =
-  crossScalaVersions += libs.vers("scalac_2.13")
+lazy val disciplineDependencies = libs.dependencies("discipline-core", "scalacheck")
 
 lazy val copyrightHeader = Seq(
   startYear := Some(2017),

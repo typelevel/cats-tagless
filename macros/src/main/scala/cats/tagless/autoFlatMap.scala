@@ -15,12 +15,12 @@
  */
 
 package cats.tagless
+
 import scala.annotation.{StaticAnnotation, compileTimeOnly}
+import scala.collection.immutable.Seq
 import scala.reflect.macros.whitebox
 
-/**
-  * auto generates an instance of `cats.FlatMap`
-  */
+/** Auto generates an instance of `cats.FlatMap`. */
 @compileTimeOnly("Cannot expand @autoFlatMap")
 class autoFlatMap extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoFlatMapMacros.flatMapInst
@@ -30,17 +30,16 @@ class autoFlatMap extends StaticAnnotation {
 private[tagless] class autoFlatMapMacros(override val c: whitebox.Context) extends MacroUtils {
   import c.universe._
 
-  private def generateFlatMapFor(algebraName: String)(algebraType: Tree,
-                                                    tparams: Seq[TypeDef]) = {
-    val name = TermName("flatMapFor" + algebraName)
-    q"""
-      implicit def $name[..$tparams]: _root_.cats.FlatMap[$algebraType] =
-        _root_.cats.tagless.Derive.flatMap[$algebraType]
-    """
-  }
+  private def generateFlatMapFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =
+    typeClassInstance(
+      TermName("flatMapFor" + algebraName),
+      typeParams,
+      tq"_root_.cats.FlatMap[$algebraType]",
+      q"_root_.cats.tagless.Derive.flatMap[$algebraType]"
+    )
 
   def flatMapInst(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList, higherKinded = false)(
-      ad => ad.forVaryingEffectType(generateFlatMapFor(ad.name))
-    )
+    enrichAlgebra(annottees.toList, higherKinded = false) { algebra =>
+      algebra.forVaryingEffectType(generateFlatMapFor(algebra.name))
+    }
 }

@@ -17,11 +17,10 @@
 package cats.tagless
 
 import scala.annotation.{StaticAnnotation, compileTimeOnly}
+import scala.collection.immutable.Seq
 import scala.reflect.macros.whitebox
 
-/**
-  * auto generates an instance of `cats.Invariant`
-  */
+/** Auto generates an instance of `cats.Invariant`. */
 @compileTimeOnly("Cannot expand @autoContravariant")
 class autoContravariant extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoContravariantMacros.contravariantInst
@@ -30,18 +29,16 @@ class autoContravariant extends StaticAnnotation {
 private[tagless] class autoContravariantMacros(override val c: whitebox.Context) extends MacroUtils  {
   import c.universe._
 
-  private def generateContravariantFor(
-    algebraName: String
-  )(algebraType: Tree, tparams: Seq[TypeDef]) = {
-    val name = TermName("contravariantFor" + algebraName)
-    q"""
-      implicit def $name[..$tparams]: _root_.cats.Contravariant[$algebraType] =
-        _root_.cats.tagless.Derive.contravariant[$algebraType]
-    """
-  }
+  private def generateContravariantFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =
+    typeClassInstance(
+      TermName("contravariantFor" + algebraName),
+      typeParams,
+      tq"_root_.cats.Contravariant[$algebraType]",
+      q"_root_.cats.tagless.Derive.contravariant[$algebraType]"
+    )
 
   def contravariantInst(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList, higherKinded = false)(
-      ad => ad.forVaryingEffectType(generateContravariantFor(ad.name))
-    )
+    enrichAlgebra(annottees.toList, higherKinded = false) { algebra =>
+      algebra.forVaryingEffectType(generateContravariantFor(algebra.name))
+    }
 }

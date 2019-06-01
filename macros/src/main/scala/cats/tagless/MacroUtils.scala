@@ -190,6 +190,10 @@ private[tagless] abstract class MacroUtils {
   def argumentLists(paramLists: Seq[Seq[Tree]]): Seq[Seq[Tree]] =
     paramLists.map(arguments)
 
+  def typeClassInstance(name: TermName, typeParams: Seq[TypeDef], resultType: Tree, rhs: Tree): Tree =
+    if (typeParams.isEmpty) q"implicit val $name: $resultType = $rhs"
+    else q"implicit def $name[..$typeParams]: $resultType = $rhs"
+
   lazy val autoDerive: Boolean = c.prefix.tree match {
     case q"new ${_}(${arg: Boolean})"                  => arg
     case q"new ${_}(autoDerivation = ${arg: Boolean})" => arg

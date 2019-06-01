@@ -15,12 +15,12 @@
  */
 
 package cats.tagless
+
 import scala.annotation.{StaticAnnotation, compileTimeOnly}
+import scala.collection.immutable.Seq
 import scala.reflect.macros.whitebox
 
-/**
-  * auto generates an instance of [[ApplyK]]
-  */
+/** Auto generates an instance of [[ApplyK]]. */
 @compileTimeOnly("Cannot expand @autoApplyK")
 class autoApplyK(autoDerivation: Boolean = true) extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoApplyKMacros.newDef
@@ -29,18 +29,17 @@ class autoApplyK(autoDerivation: Boolean = true) extends StaticAnnotation {
 private [tagless] class autoApplyKMacros(override val c: whitebox.Context) extends MacroUtils with CovariantKMethodsGenerator {
   import c.universe._
 
-  private def generateApplyKFor(algebraName: String)(algebraType: Tree, tparams: Seq[TypeDef]) = {
-    val name = TermName("applyKFor" + algebraName)
-    q"""
-        implicit def $name[..$tparams]: _root_.cats.tagless.ApplyK[$algebraType] =
-          _root_.cats.tagless.Derive.applyK[$algebraType]
-      """
-  }
-
-  def instanceDef(algDefn: AlgDefn): AlgDefn =
-    algDefn.forVaryingHigherKindedEffectType(
-      generateApplyKFor(algDefn.name)
+  private def generateApplyKFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =
+    typeClassInstance(
+      TermName("applyKFor" + algebraName),
+      typeParams,
+      tq"_root_.cats.tagless.ApplyK[$algebraType]",
+      q"_root_.cats.tagless.Derive.applyK[$algebraType]"
     )
 
-  def newDef(annottees: c.Tree*): c.Tree = enrichAlgebra(annottees.toList)(instanceDef _ andThen companionMapKDef andThen autoDerivationDef)
+  def instanceDef(algebra: AlgDefn): AlgDefn =
+    algebra.forVaryingHigherKindedEffectType(generateApplyKFor(algebra.name))
+
+  def newDef(annottees: c.Tree*): c.Tree =
+    enrichAlgebra(annottees.toList)(instanceDef _ andThen companionMapKDef andThen autoDerivationDef)
 }

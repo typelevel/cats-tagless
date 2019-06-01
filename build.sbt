@@ -104,7 +104,10 @@ lazy val docs = project
   .settings(libs.dependency("cats-free"))
   .dependsOn(List(macrosJVM).map( ClasspathDependency(_, Some("compile;test->test"))):_*)
   .enablePlugins(MicrositesPlugin)
+  .enablePlugins(SiteScaladocPlugin)
   .settings(
+    docsMappingsAPIDir := "api",
+    addMappingsToSiteDir(mappings in packageDoc in Compile in coreJVM, docsMappingsAPIDir),
     organization  := gh.organisation,
     autoAPIMappings := true,
     micrositeName := "Cats-tagless",
@@ -129,6 +132,7 @@ lazy val docs = project
     git.remoteRepo := gh.repo,
     includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md")
 
+lazy val docsMappingsAPIDir = settingKey[String]("Name of subdirectory in site target directory for api docs")
 
 lazy val buildSettings = sharedBuildSettings(gh, libs)
 

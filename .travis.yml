@@ -33,7 +33,7 @@ jobs:
 
     - &js_tests
       env: TEST="JS tests"
-      script: sbt ++$TRAVIS_SCALA_VERSION rootJS/test
+      script: sbt ";project rootJS;++$TRAVIS_SCALA_VERSION test"
       scala: *scala_version_211
     - <<: *js_tests
       scala: *scala_version_212
@@ -42,7 +42,7 @@ jobs:
 
     - &jvm_tests
       env: TEST="JVM tests"
-      script: sbt ++$TRAVIS_SCALA_VERSION rootJVM/test
+      script: sbt ";project rootJVM; ++$TRAVIS_SCALA_VERSION test"
       scala: *scala_version_211
     - <<: *jvm_tests
       scala: *scala_version_212

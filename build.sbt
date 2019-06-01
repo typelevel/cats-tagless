@@ -70,7 +70,7 @@ lazy val macrosM   = module("macros", CrossType.Pure)
   .dependsOn(coreM)
   .aggregate(coreM)
   .settings(scalaMacroDependencies(libs))
-  .settings(paradiseSettings(libs))
+  .settings(macroAnnotationsSettings)
   .settings(copyrightHeader)
   .settings(
     libs.testDependencies("scalatest", "scalacheck"),
@@ -83,13 +83,14 @@ lazy val tests    = prj(testsM)
 lazy val testsJVM = testsM.jvm
 lazy val testsJS  = testsM.js
 lazy val testsM   = module("tests", CrossType.Pure)
-  .settings(libs.dependency("shapeless"))
-  .dependsOn(coreM, lawsM, macrosM)
-  .settings(disciplineDependencies)
-  .settings(libs.testDependencies("scalatest", "cats-free", "cats-effect", "cats-testkit"))
-  .settings(scalacOptions in Test := (scalacOptions in Test).value.filter(_ != "-Xfatal-warnings"))
-  .settings(scalaMacroDependencies(libs))
-  .settings(noPublishSettings)
+  .dependsOn(macrosM, lawsM)
+  .settings(
+    libs.testDependencies("shapeless", "scalatest", "cats-free", "cats-effect", "cats-testkit"),
+    scalacOptions in Test := (scalacOptions in Test).value.filter(_ != "-Xfatal-warnings"),
+    scalaMacroDependencies(libs),
+    macroAnnotationsSettings,
+    noPublishSettings
+  )
   .enablePlugins(AutomateHeaderPlugin)
 
 

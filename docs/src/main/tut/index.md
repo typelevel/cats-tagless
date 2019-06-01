@@ -17,8 +17,8 @@ Cats-tagless is a small library built to facilitate composing tagless final enco
 
 ## Installation
 
-Cats-tagless is available on scala 2.11, 2.12, and scalajs. If you only need semi-auto derivation (e.g. `implicit val fkMA = cats.tagless.Derive.functorK[MyAlg]`), 
-you just need to add the following dependency with scalamacro paradise in `build.sbt`
+Cats-tagless is available on scala 2.11, 2.12, 2.13 and scalajs. 
+Add the following dependency in `build.sbt`
 
 ```scala
 libraryDependencies += 
@@ -28,20 +28,6 @@ libraryDependencies +=
  addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 
 ```
-
-
-The macro annotations (`@finalAlg`, `@autoFunctorK`, `@autoInvariantK`, etc.) still depends on [scalameta](http://scalameta.org/), so you need to add scalameta dependencies in `build.sbt`. We plan to port annotations from this scalameta dependent module to the other `cats-tagless-macro` module. 
-
-```scala
-addCompilerPlugin(
-  ("org.scalameta" % "paradise" % "3.0.0-M11").cross(CrossVersion.full))
-
-libraryDependencies +=
-  "org.typelevel" %% "cats-tagless-legacy-macros" % latestVersion  //latest version indicated in the badge above
-```
-Note that `org.scalameta.paradise` is a fork of `org.scalamacros.paradise`. So if you already have the
-`org.scalamacros.paradise` dependency, you might need to replace it.
-
 
 ## <a id="auto-transform" href="#auto-transform"></a>Auto-transforming interpreters
 
@@ -85,7 +71,7 @@ object ExpressionAlg {
       Derive.functorK[ExpressionAlg]
 }
 ```
-This `functorKForExpressionAlg` is a `FunctorK` instance for `ExpressionAlg` generated using `cats.tagless.Derive.functorK`. Note that the usage of `@autoFunctorK`, like all other `@autoXXXX` annotations provided by cats-tagless, is optional, you can manually add this instance yourself and avoid the extra dependencies needed by this annotation.
+This `functorKForExpressionAlg` is a `FunctorK` instance for `ExpressionAlg` generated using `cats.tagless.Derive.functorK`. Note that the usage of `@autoFunctorK`, like all other `@autoXXXX` annotations provided by cats-tagless, is optional, you can manually add this instance yourself.
 
 With this implicit instance in scope, you can call the syntax `.mapK` method to perform the transformation.
 

@@ -17,8 +17,8 @@ lazy val prj = mkPrjFactory(rootSettings)
 
 lazy val rootPrj = project
   .configure(mkRootConfig(rootSettings,rootJVM))
-  .aggregate(rootJVM, rootJS, testsJS, macrosJS)
-  .dependsOn(rootJVM, rootJS, testsJS, macrosJS)
+  .aggregate(rootJVM, rootJS, docs)
+  .dependsOn(rootJVM, rootJS)
   .settings(
     noPublishSettings,
     crossScalaVersions := Nil
@@ -27,7 +27,7 @@ lazy val rootPrj = project
 
 lazy val rootJVM = project
   .configure(mkRootJvmConfig(gh.proj, rootSettings, commonJvmSettings))
-  .aggregate(coreJVM, lawsJVM, testsJVM, macrosJVM, docs)
+  .aggregate(coreJVM, lawsJVM, testsJVM, macrosJVM)
   .dependsOn(coreJVM, lawsJVM, testsJVM, macrosJVM)
   .settings(noPublishSettings,
     crossScalaVersions := Nil)
@@ -35,7 +35,8 @@ lazy val rootJVM = project
 
 lazy val rootJS = project
   .configure(mkRootJsConfig(gh.proj, rootSettings, commonJsSettings))
-  .aggregate(coreJS, lawsJS)
+  .aggregate(coreJS, lawsJS, testsJS, macrosJS)
+  .dependsOn(coreJS, lawsJS, testsJS, macrosJS)
   .settings(
     noPublishSettings,
     crossScalaVersions := Nil
@@ -47,7 +48,6 @@ lazy val coreJVM = coreM.jvm
 lazy val coreJS  = coreM.js
 lazy val coreM   = module("core", CrossType.Pure)
   .settings(libs.dependency("cats-core"))
-  .settings(scala213Setting)
   .settings(simulacrumSettings(libs))
   .enablePlugins(AutomateHeaderPlugin)
 
@@ -58,7 +58,6 @@ lazy val lawsJVM = lawsM.jvm
 lazy val lawsJS  = lawsM.js
 lazy val lawsM   = module("laws", CrossType.Pure)
   .dependsOn(coreM)
-  .settings(scala213Setting)
   .settings(libs.dependency("cats-laws"))
   .settings(disciplineDependencies)
   .enablePlugins(AutomateHeaderPlugin)
@@ -70,9 +69,8 @@ lazy val macrosJS  = macrosM.js
 lazy val macrosM   = module("macros", CrossType.Pure)
   .dependsOn(coreM)
   .aggregate(coreM)
-  .settings(scala213Setting)
   .settings(scalaMacroDependencies(libs))
-  .settings(paradiseSettings(libs))
+  .settings(macroAnnotationsSettings)
   .settings(copyrightHeader)
   .settings(
     libs.testDependencies("scalatest", "scalacheck"),
@@ -85,13 +83,14 @@ lazy val tests    = prj(testsM)
 lazy val testsJVM = testsM.jvm
 lazy val testsJS  = testsM.js
 lazy val testsM   = module("tests", CrossType.Pure)
-  .settings(libs.dependency("shapeless"))
-  .dependsOn(coreM, lawsM, macrosM)
-  .settings(disciplineDependencies)
-  .settings(libs.testDependencies("scalatest", "cats-free", "cats-effect", "cats-testkit"))
-  .settings(scalacOptions in Test := (scalacOptions in Test).value.filter(_ != "-Xfatal-warnings"))
-  .settings(metaMacroSettings)
-  .settings(noPublishSettings)
+  .dependsOn(macrosM, lawsM)
+  .settings(
+    libs.testDependencies("shapeless", "scalatest", "cats-free", "cats-effect", "cats-testkit"),
+    scalacOptions in Test := (scalacOptions in Test).value.filter(_ != "-Xfatal-warnings"),
+    scalaMacroDependencies(libs),
+    macroAnnotationsSettings,
+    noPublishSettings
+  )
   .enablePlugins(AutomateHeaderPlugin)
 
 
@@ -102,11 +101,14 @@ lazy val docs = project
   .settings(noPublishSettings)
   .settings(unidocCommonSettings)
   .settings(commonJvmSettings)
-  .settings(metaMacroSettings)
+  .settings(scalaMacroDependencies(libs))
   .settings(libs.dependency("cats-free"))
   .dependsOn(List(macrosJVM).map( ClasspathDependency(_, Some("compile;test->test"))):_*)
   .enablePlugins(MicrositesPlugin)
+  .enablePlugins(SiteScaladocPlugin)
   .settings(
+    docsMappingsAPIDir := "api",
+    addMappingsToSiteDir(mappings in packageDoc in Compile in coreJVM, docsMappingsAPIDir),
     organization  := gh.organisation,
     autoAPIMappings := true,
     micrositeName := "Cats-tagless",
@@ -127,22 +129,19 @@ lazy val docs = project
       "white-color"       -> "#FFFFFF"),
     ghpagesNoJekyll := false,
     micrositeAuthor := "cats-tagless Contributors",
-    scalacOptions in Tut ~= (_.filterNot(Set("-Ywarn-unused-import", "-Ywarn-dead-code"))),
+    scalacOptions in Tut ~= (_.filterNot(Set("-Ywarn-unused-import", "-Ywarn-unused:imports", "-Ywarn-dead-code"))),
     git.remoteRepo := gh.repo,
     includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md")
 
+lazy val docsMappingsAPIDir = settingKey[String]("Name of subdirectory in site target directory for api docs")
 
 lazy val buildSettings = sharedBuildSettings(gh, libs)
 
 lazy val commonSettings = sharedCommonSettings ++ Seq(
   parallelExecution in Test := false,
   scalaVersion := libs.vers("scalac_2.12"),
-  crossScalaVersions := Seq(libs.vers("scalac_2.11"), scalaVersion.value),
-  //todo: re-enable disable scaladoc on 2.13 due to https://github.com/scala/bug/issues/11045
-  sources in (Compile, doc) := {
-    val docSource = (sources in (Compile, doc)).value
-    if (priorTo2_13(scalaVersion.value)) docSource else Nil
-  },
+  crossScalaVersions := Seq(libs.vers("scalac_2.11"), scalaVersion.value, libs.vers("scalac_2.13")),
+  resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
   developers := List(
     Developer("Georgi Krastev", "@joroKr21", "joro.kr.21@gmail.com", new java.net.URL("https://www.linkedin.com/in/georgykr")),
     Developer("Kailuo Wang", "@kailuowang", "kailuo.wang@gmail.com", new java.net.URL("http://kailuowang.com")),
@@ -163,20 +162,7 @@ lazy val publishSettings = sharedPublishSettings(gh) ++ credentialSettings ++ sh
 
 lazy val scoverageSettings = sharedScoverageSettings(60)
 
-lazy val disciplineDependencies = libs.dependencies("discipline", "scalacheck")
-
-lazy val metaMacroSettings: Seq[Def.Setting[_]] = Seq(
-  resolvers += Resolver.sonatypeRepo("releases"),
-  resolvers += Resolver.bintrayRepo("scalameta", "maven"),
-  libraryDependencies += "org.scalameta" %% "scalameta" % "1.8.0",
-  scalacOptions in (Compile, console) := Seq(), // macroparadise plugin doesn't work in repl yet.
-  addCompilerPlugin("org.scalameta" % "paradise" % "3.0.0-M11" cross CrossVersion.full),
-  scalacOptions += "-Xplugin-require:macroparadise",
-  sources in (Compile, doc) := Nil // macroparadise doesn't work with scaladoc yet.
-)
-
-lazy val scala213Setting =
-  crossScalaVersions += libs.vers("scalac_2.13")
+lazy val disciplineDependencies = libs.dependencies("discipline-core", "scalacheck")
 
 lazy val copyrightHeader = Seq(
   startYear := Some(2017),

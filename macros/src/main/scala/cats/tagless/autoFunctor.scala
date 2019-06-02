@@ -17,11 +17,10 @@
 package cats.tagless
 
 import scala.annotation.{StaticAnnotation, compileTimeOnly}
+import scala.collection.immutable.Seq
 import scala.reflect.macros.whitebox
 
-/**
-  * auto generates an instance of `cats.Functor`
-  */
+/** Auto generates an instance of `cats.Functor`. */
 @compileTimeOnly("Cannot expand @autoFunctor")
 class autoFunctor extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoFunctorMacros.functorInst
@@ -31,18 +30,16 @@ class autoFunctor extends StaticAnnotation {
 private[tagless] class autoFunctorMacros(override val c: whitebox.Context) extends MacroUtils {
   import c.universe._
 
-  private def generateFunctorFor(
-    algebraName: String
-  )(algebraType: Tree, tparams: Seq[TypeDef]) = {
-    val name = TermName("functor" + algebraName)
-    q"""
-      implicit def $name[..$tparams]: _root_.cats.Functor[$algebraType] =
-        _root_.cats.tagless.Derive.functor[$algebraType]
-    """
-  }
+  private def generateFunctorFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =
+    typeClassInstance(
+      TermName("functorFor" + algebraName),
+      typeParams,
+      tq"_root_.cats.Functor[$algebraType]",
+      q"_root_.cats.tagless.Derive.functor[$algebraType]"
+    )
 
   def functorInst(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList, higherKinded = false)(
-      ad => ad.forVaryingEffectType(generateFunctorFor(ad.name))
-    )
+    enrichAlgebra(annottees.toList, higherKinded = false) { algebra =>
+      algebra.forVaryingEffectType(generateFunctorFor(algebra.name))
+    }
 }

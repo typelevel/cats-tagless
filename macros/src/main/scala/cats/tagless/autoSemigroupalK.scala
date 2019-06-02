@@ -15,12 +15,12 @@
  */
 
 package cats.tagless
+
 import scala.annotation.{StaticAnnotation, compileTimeOnly}
+import scala.collection.immutable.Seq
 import scala.reflect.macros.whitebox
 
-/**
-  * auto generates an instance of [[SemigroupalK]]
-  */
+/** Auto generates an instance of [[SemigroupalK]]. */
 @compileTimeOnly("Cannot expand @autoSemigroupalK")
 class autoSemigroupalK extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoSemigroupalKMacros.semigroupalKInst
@@ -29,12 +29,16 @@ class autoSemigroupalK extends StaticAnnotation {
 private[tagless] class autoSemigroupalKMacros(override val c: whitebox.Context) extends MacroUtils  {
   import c.universe._
 
-  def semigroupalKInst(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList) { ad =>
-      val instanceDef = q"""
-      implicit def ${TermName("semigroupalKFor" + ad.name)}: _root_.cats.tagless.SemigroupalK[${ad.typeName}] =
-        _root_.cats.tagless.Derive.semigroupalK[${ad.typeName}]"""
+  private def generateSemigroupalKFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =
+    typeClassInstance(
+      TermName("semigroupalKFor" + algebraName),
+      typeParams,
+      tq"_root_.cats.tagless.SemigroupalK[$algebraType]",
+      q"_root_.cats.tagless.Derive.semigroupalK[$algebraType]"
+    )
 
-      ad.withStats(instanceDef)
+  def semigroupalKInst(annottees: c.Tree*): c.Tree =
+    enrichAlgebra(annottees.toList) { algebra =>
+      algebra.forVaryingHigherKindedEffectType(generateSemigroupalKFor(algebra.name))
     }
 }

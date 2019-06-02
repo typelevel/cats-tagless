@@ -15,12 +15,12 @@
  */
 
 package cats.tagless
+
 import scala.annotation.{StaticAnnotation, compileTimeOnly}
+import scala.collection.immutable.Seq
 import scala.reflect.macros.whitebox
 
-/**
-  * auto generates an instance of [[FunctorK]]
-  */
+/** Auto generates an instance of [[FunctorK]]. */
 @compileTimeOnly("Cannot expand @autoFunctorK")
 class autoFunctorK(autoDerivation: Boolean = true) extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoFunctorKMacros.newDef
@@ -29,20 +29,16 @@ class autoFunctorK(autoDerivation: Boolean = true) extends StaticAnnotation {
 private [tagless] class autoFunctorKMacros(override val c: whitebox.Context) extends MacroUtils with CovariantKMethodsGenerator {
   import c.universe._
 
-  private def generateFunctorKFor(
-    algebraName: String
-  )(algebraType: Tree, tparams: Seq[TypeDef]) = {
-    val name = TermName("functorKFor" + algebraName)
-    q"""
-        implicit def $name[..$tparams]: _root_.cats.tagless.FunctorK[$algebraType] =
-          _root_.cats.tagless.Derive.functorK[$algebraType]
-      """
-  }
-
-  def instanceDef(algDefn: AlgDefn): AlgDefn =
-    algDefn.forVaryingHigherKindedEffectType(
-      generateFunctorKFor(algDefn.name)
+  private def generateFunctorKFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =
+    typeClassInstance(
+      TermName("functorKFor" + algebraName),
+      typeParams,
+      tq"_root_.cats.tagless.FunctorK[$algebraType]",
+      q"_root_.cats.tagless.Derive.functorK[$algebraType]"
     )
+
+  def instanceDef(algebra: AlgDefn): AlgDefn =
+    algebra.forVaryingHigherKindedEffectType(generateFunctorKFor(algebra.name))
 
   def instanceDefFullyRefined(algDefn: AlgDefn): AlgDefn = {
     algDefn.forVaryingHigherKindedEffectTypeFullyRefined {

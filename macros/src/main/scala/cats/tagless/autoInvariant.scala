@@ -15,12 +15,12 @@
  */
 
 package cats.tagless
+
 import scala.annotation.{StaticAnnotation, compileTimeOnly}
+import scala.collection.immutable.Seq
 import scala.reflect.macros.whitebox
 
-/**
-  * auto generates an instance of `cats.Invariant`
-  */
+/** Auto generates an instance of `cats.Invariant`. */
 @compileTimeOnly("Cannot expand @autoInvariant")
 class autoInvariant extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoInvariantMacros.invariantInst
@@ -29,18 +29,16 @@ class autoInvariant extends StaticAnnotation {
 private[tagless] class autoInvariantMacros(override val c: whitebox.Context) extends MacroUtils  {
   import c.universe._
 
-  private def generateInvariantFor(
-    algebraName: String
-  )(algebraType: Tree, tparams: Seq[TypeDef]) = {
-    val name = TermName("invariantFor" + algebraName)
-    q"""
-      implicit def $name[..$tparams]: _root_.cats.Invariant[$algebraType] =
-        _root_.cats.tagless.Derive.invariant[$algebraType]
-    """
-  }
+  private def generateInvariantFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =
+    typeClassInstance(
+      TermName("invariantFor" + algebraName),
+      typeParams,
+      tq"_root_.cats.Invariant[$algebraType]",
+      q"_root_.cats.tagless.Derive.invariant[$algebraType]"
+    )
 
   def invariantInst(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList, higherKinded = false)(
-      ad => ad.forVaryingEffectType(generateInvariantFor(ad.name))
-    )
+    enrichAlgebra(annottees.toList, higherKinded = false) { algebra =>
+      algebra.forVaryingEffectType(generateInvariantFor(algebra.name))
+    }
 }

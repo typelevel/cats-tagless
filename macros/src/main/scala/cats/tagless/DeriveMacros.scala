@@ -28,12 +28,53 @@ class DeriveMacros(val c: blackbox.Context) {
 
   /** A reified method definition with some useful methods for transforming it. */
   case class Method(m: MethodSymbol, tps: List[TypeDef], pss: List[List[ValDef]], rt: Type, body: Tree) {
+
+    /** Does any parameter have `symbol` as the outermost type (possibly higher-kinded)? */
+    def paramsContainTopLevel(symbol: Symbol): Boolean =
+      pss.exists(_.exists(_.tpt.tpe match {
+        case RepeatedParam(tpe) => tpe.typeSymbol == symbol
+        case tpe => tpe.typeSymbol == symbol
+      }))
+
+    /** Return the list of type parameters as type arguments as seen from the method body. */
     def typeArgs: List[Type] = for (tp <- tps) yield typeRef(NoPrefix, tp.symbol, Nil)
-    def paramLists(f: Type => Type): List[List[ValDef]] = for (ps <- pss)
-      yield for (p <- ps) yield ValDef(p.mods, p.name, TypeTree(f(p.tpt.tpe)), p.rhs)
-    def argLists(f: (TermName, Type) => Tree): List[List[Tree]] = for (ps <- pss)
-      yield for (p <- ps) yield f(p.name, p.tpt.tpe)
+
+    /** Construct a new set of parameter lists after transforming the original types. */
+    def paramLists(f: Type => Type): List[List[ValDef]] = {
+      val g: Type => Type = {
+        case RepeatedParam(tpe) => RepeatedParam(f(tpe))
+        case tpe => f(tpe)
+      }
+
+      for (ps <- pss) yield for (p <- ps)
+        yield ValDef(p.mods, p.name, TypeTree(g(p.tpt.tpe)), p.rhs)
+    }
+
+    /** Construct a new set of argument lists based on their name and type. */
+    def argLists(f: (TermName, Type) => Tree): List[List[Tree]] = {
+      val g: (TermName, Type) => Tree = {
+        case (name, RepeatedParam(tpe)) =>
+          val param = ValDef(Modifiers(Flag.PARAM), name, TypeTree(), EmptyTree)
+          q"$name.map($param => ${f(name, tpe)}): _*"
+        case (name, tpe) =>
+          f(name, tpe)
+      }
+
+      for (ps <- pss) yield for (p <- ps) yield g(p.name, p.tpt.tpe)
+    }
+
+    /** The definition of this method as a Scala tree. */
     def definition: Tree = q"override def ${m.name}[..$tps](...$pss): $rt = $body"
+  }
+
+  /** Constructor / extractor for repeated parameter (aka. vararg) types. */
+  object RepeatedParam {
+
+    def apply(tpe: Type): Type =
+      appliedType(definitions.RepeatedParamClass, tpe)
+
+    def unapply(tpe: Type): Option[Type] =
+      if (tpe.typeSymbol == definitions.RepeatedParamClass) Some(tpe.typeArgs.head) else None
   }
 
   /** Extract a normalized type constructor from the type tag, suitable to work with in macros. */
@@ -98,7 +139,12 @@ class DeriveMacros(val c: blackbox.Context) {
       ValDef(modifiers, p.name.toTermName, TypeTree(p.typeSignatureIn(algebra)), EmptyTree)
     }
 
-    val argLists = for (ps <- signature.paramLists) yield for (p <- ps) yield p.name.toTermName
+    val argLists = for (ps <- signature.paramLists) yield
+      for (p <- ps) yield p.typeSignatureIn(algebra) match {
+        case RepeatedParam(_) => q"${p.name.toTermName}: _*"
+        case _ => Ident(p.name)
+      }
+
     val delegate = q"$instance.$method[..$typeArgs](...$argLists)"
     val reified = Method(method, typeParams, paramLists, signature.finalResultType, delegate)
     transform.applyOrElse(reified, identity[Method]).definition
@@ -171,7 +217,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val members = overridableMembersOf(Af)
       val types = delegateAbstractTypes(Af, members, Af)
       val methods = delegateMethods(Af, members, af.asTerm) {
-        case method @ Method(m, _, pss, _, _) if pss.iterator.flatten.exists(_.tpt.symbol == f) =>
+        case method @ Method(m, _, _, _, _) if method.paramsContainTopLevel(f) =>
           val paramLists = method.paramLists(tpe => if (tpe.typeSymbol == f) appliedType(g, tpe.typeArgs) else tpe)
           val argLists = method.argLists((pn, pt) => if (pt.typeSymbol == f) q"$fk($pn)" else Ident(pn))
           val delegate = q"$af.$m[..${method.typeArgs}](...$argLists)"
@@ -189,7 +235,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val members = overridableMembersOf(Af)
       val types = delegateAbstractTypes(Af, members, Af)
       val methods = delegateMethods(Af, members, af.asTerm) {
-        case method @ Method(m, _, pss, rt, _) if rt.typeSymbol == f || pss.iterator.flatten.exists(_.tpt.symbol == f) =>
+        case method @ Method(m, _, _, rt, _) if rt.typeSymbol == f || method.paramsContainTopLevel(f) =>
           val paramLists = method.paramLists(tpe => if (tpe.typeSymbol == f) appliedType(g, tpe.typeArgs) else tpe)
           val argLists = method.argLists((pn, pt) => if (pt.typeSymbol == f) q"$gk($pn)" else Ident(pn))
           val returnType = if (rt.typeSymbol == f) appliedType(g, rt.typeArgs) else rt
@@ -279,7 +325,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val members = overridableMembersOf(Fab)
       val types = delegateAbstractTypes(Fab, members, Fab)
       val methods = delegateMethods(Fab, members, fab.asTerm) {
-        case method @ Method(m, _, pss, rt, _) if rt.typeSymbol == b || pss.iterator.flatten.exists(_.tpt.symbol == a) =>
+        case method @ Method(m, _, _, rt, _) if rt.typeSymbol == b || method.paramsContainTopLevel(a) =>
           val paramLists = method.paramLists(tpe => if (tpe.typeSymbol == a) appliedType(c, tpe.typeArgs) else tpe)
           val argLists = method.argLists((pn, pt) => if (pt.typeSymbol == a) q"$f($pn)" else Ident(pn))
           val returnType = if (rt.typeSymbol == b) appliedType(d, rt.typeArgs) else rt

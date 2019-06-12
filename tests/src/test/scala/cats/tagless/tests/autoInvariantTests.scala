@@ -124,4 +124,12 @@ object autoInvariantTests {
         def foo(i: T): T = f(i)
       }
     }
+
+  @autoInvariant
+  trait AlgWithVarArgsParameter[T] {
+    def sum(xs: Int*): Int
+    def covariantSum(xs: Int*): T
+    def contravariantSum(xs: T*): Int
+    def invariantSum(xs: T*): T
+  }
 }

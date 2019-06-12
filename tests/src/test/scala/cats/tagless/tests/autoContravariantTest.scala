@@ -97,6 +97,12 @@ object autoContravariantTest {
     def foo(a: T)(b: Int): String
   }
 
+  @autoContravariant
+  trait AlgWithVarArgsParameter[T] {
+    def sum(xs: Int*): Int
+    def showAll(ts: T*): Int
+  }
+
   object AlgWithExtraTypeParamFloat extends AlgWithExtraTypeParam[String, Float] {
     def foo(a: String, b: Float): Int = (a.length.toFloat + b).toInt
   }

@@ -66,6 +66,12 @@ object autoFlatMapTests {
     def plusOne[A](i: A): T
   }
 
+  @autoFlatMap
+  trait AlgWithVarArgsParameter[T] {
+    def sum(xs: Int*): Int
+    def generic[A](as: A*): T
+  }
+
   implicit def eqForTestAlgebra[T](implicit eqT: Eq[T]): Eq[TestAlgebra[T]] =
     Eq.by { p =>
       (p.abstractEffect: String => T) ->

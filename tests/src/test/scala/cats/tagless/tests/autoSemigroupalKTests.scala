@@ -53,6 +53,10 @@ object autoSemigroupalKTests {
     def a(b: String)(d: Int): F[Unit]
   }
 
-
+  @autoSemigroupalK
+  trait AlgWithVarArgsParameter[F[_]] {
+    def sum(xs: Int*): Int
+    def effectfulSum(xs: Int*): F[Int]
+  }
 }
 

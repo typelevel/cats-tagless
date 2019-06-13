@@ -187,4 +187,12 @@ object autoInvariantKTests {
   trait AlgWithCurryMethod[F[_]] {
     def a(t: F[Int])(b: String): F[String]
   }
+
+  @autoInvariantK
+  trait AlgWithVarArgsParameter[F[_]] {
+    def sum(xs: Int*): Int
+    def covariantSum(xs: Int*): F[Int]
+    def contravariantSum(xs: F[Int]*): Int
+    def invariantSum(xs: F[Int]*): F[Int]
+  }
 }

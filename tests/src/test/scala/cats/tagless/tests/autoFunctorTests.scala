@@ -72,6 +72,12 @@ object autoFunctorTests {
     def plusOne[A](i: A): T
   }
 
+  @autoFunctor
+  trait AlgWithVarArgsParameter[T] {
+    def sum(xs: Int*): Int
+    def product(xs: Int*): T
+  }
+
   implicit def eqForTestAlgebra[T](implicit eqT: Eq[T]): Eq[TestAlgebra[T]] =
     Eq.by { p =>
       (p.abstractEffect: String => T) ->

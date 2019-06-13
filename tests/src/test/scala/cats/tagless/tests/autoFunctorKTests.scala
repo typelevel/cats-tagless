@@ -334,4 +334,9 @@ object autoFunctorKTests {
     def log(msg: => String): F[String]
   }
 
+  @autoFunctorK
+  trait AlgWithVarArgsParameter[F[_]] {
+    def sum(xs: Int*): Int
+    def fSum(xs: Int*): F[Int]
+  }
 }

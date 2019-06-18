@@ -18,13 +18,11 @@ package cats.tagless
 package tests
 
 
-import cats.laws.discipline.SerializableTests
-import cats.laws.discipline.ContravariantTests
+import cats.laws.discipline.{ContravariantTests, ExhaustiveCheck, SerializableTests}
 import autoContravariantTest._
 import cats.kernel.Eq
 import org.scalacheck.{Arbitrary, Cogen}
 import cats.laws.discipline.eq._
-
 import cats.Contravariant
 
 class autoContravariantTests extends CatsTaglessTestSuite {
@@ -55,6 +53,7 @@ class autoContravariantTests extends CatsTaglessTestSuite {
 }
 
 object autoContravariantTest {
+
   @autoContravariant
   trait SimpleAlg[T] {
     def foo(a: T): String
@@ -109,13 +108,12 @@ object autoContravariantTest {
 
 
   import cats.instances.string._
-  implicit def eqForSimpleAlg[T: Arbitrary](implicit eqT: Eq[T]): Eq[SimpleAlg[T]] =
+  implicit def eqForSimpleAlg[T: ExhaustiveCheck: Eq]: Eq[SimpleAlg[T]] =
     Eq.by[SimpleAlg[T], T => String] { p =>
       (s: T) => p.foo(s)
     }
 
-  implicit def arbitrarySimpleAlg[T](implicit cS: Cogen[T],
-                                     FI: Arbitrary[T]): Arbitrary[SimpleAlg[T]] =
+  implicit def arbitrarySimpleAlg[T: Cogen]: Arbitrary[SimpleAlg[T]] =
     Arbitrary {
       for {
         f <- Arbitrary.arbitrary[T => String]

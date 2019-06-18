@@ -39,6 +39,7 @@ class autoFunctorTests extends CatsTaglessTestSuite {
 }
 
 object autoFunctorTests {
+  import TestInstances._
 
   @autoFunctor
   trait TestAlgebra[T] {

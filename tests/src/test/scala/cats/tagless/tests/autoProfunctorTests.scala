@@ -21,7 +21,7 @@ import cats.arrow.Profunctor
 import cats.instances.all._
 import cats.kernel.Eq
 import cats.laws.discipline.eq._
-import cats.laws.discipline.{ProfunctorTests, SerializableTests}
+import cats.laws.discipline.{ExhaustiveCheck, ProfunctorTests, SerializableTests}
 import cats.tagless.tests.autoProfunctorTests._
 import org.scalacheck.{Arbitrary, Cogen}
 
@@ -31,6 +31,7 @@ class autoProfunctorTests extends CatsTaglessTestSuite {
 }
 
 object autoProfunctorTests {
+   import TestInstances._
 
   // TODO: Macro annotation.
   trait TestAlgebra[A, B] {
@@ -48,7 +49,7 @@ object autoProfunctorTests {
   object TestAlgebra {
     implicit val profunctor: Profunctor[TestAlgebra] = Derive.profunctor
 
-    implicit def eqv[A: Arbitrary, B: Eq]: Eq[TestAlgebra[A, B]] =
+    implicit def eqv[A: Arbitrary: ExhaustiveCheck, B: Eq]: Eq[TestAlgebra[A, B]] =
       Eq.by { algebra =>
         (
           algebra.abstractCovariant _,

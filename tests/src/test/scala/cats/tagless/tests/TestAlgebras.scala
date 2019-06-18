@@ -26,6 +26,7 @@ import cats.data.State
 import scala.util.Try
 import cats.laws.discipline.eq._
 import cats.implicits._
+import cats.laws.discipline.ExhaustiveCheck
 
 @finalAlg @autoFunctorK @autoSemigroupalK @autoProductNK
 trait SafeAlg[F[_]] {
@@ -33,7 +34,8 @@ trait SafeAlg[F[_]] {
   def divide(dividend: Float, divisor: Float): F[Float]
 }
 
-object SafeAlg {
+object SafeAlg  {
+  import TestInstances._
 
   implicit def eqForSafeAlg[F[_]](implicit eqFInt: Eq[F[Int]], eqFFloat: Eq[F[Float]]): Eq[SafeAlg[F]] =
     Eq.by[SafeAlg[F], (String => F[Int], (((Float, Float)) => F[Float]))] { p => (
@@ -64,7 +66,8 @@ trait SafeInvAlg[F[_]] {
 
 object SafeInvAlg {
 
-  implicit def eqForSafeInvAlg[F[_]](implicit eqFInt: Eq[F[Int]], eqFString: Eq[F[String]],  A: Arbitrary[F[String]]): Eq[SafeInvAlg[F]] =
+  implicit def eqForSafeInvAlg[F[_]](implicit eqFInt: Eq[F[Int]],
+                                     exchck: ExhaustiveCheck[F[String]]): Eq[SafeInvAlg[F]] =
     Eq.by[SafeInvAlg[F], F[String] => F[Int]] { p =>
       (s: F[String]) => p.parseInt(s)
     }

@@ -18,13 +18,13 @@ package cats.tagless
 package tests
 
 
-import cats.laws.discipline.SerializableTests
-import cats.laws.discipline.InvariantTests
+import cats.laws.discipline.{ExhaustiveCheck, InvariantTests, SerializableTests}
 import autoInvariantTests._
 import cats.Invariant
 import cats.kernel.Eq
 import org.scalacheck.{Arbitrary, Cogen}
 import cats.laws.discipline.eq._
+
 
 class autoInvariantTests extends CatsTaglessTestSuite {
 
@@ -55,6 +55,7 @@ class autoInvariantTests extends CatsTaglessTestSuite {
 }
 
 object autoInvariantTests {
+
   @autoInvariant
   trait SimpleAlg[T] {
     def foo(a: T): T
@@ -110,12 +111,12 @@ object autoInvariantTests {
   }
 
 
-  implicit def eqForSimpleAlg[T: Arbitrary](implicit eqT: Eq[T]): Eq[SimpleAlg[T]] =
+  implicit def eqForSimpleAlg[T: Arbitrary : ExhaustiveCheck](implicit eqT: Eq[T]): Eq[SimpleAlg[T]] =
     Eq.by[SimpleAlg[T], T => T] { p =>
       (s: T) => p.foo(s)
     }
 
-  implicit def arbitrarySimpleAlg[T](implicit cS: Cogen[T],
+  implicit def arbitrarySimpleAlg[T: ExhaustiveCheck](implicit cS: Cogen[T],
                                      FI: Arbitrary[T]): Arbitrary[SimpleAlg[T]] =
     Arbitrary {
       for {

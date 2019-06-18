@@ -47,6 +47,7 @@ object autoApplyKTests {
   }
 
   object AutoApplyKTestAlg {
+    import TestInstances._
 
     implicit def eqForAutoApplyKTestAlg[F[_]](implicit eqFInt: Eq[F[Int]], eqFFloat: Eq[F[Float]]): Eq[AutoApplyKTestAlg[F]] =
       Eq.by[AutoApplyKTestAlg[F], (String => F[Int], (((Float, Float)) => F[Float]))] { p => (

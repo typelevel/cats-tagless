@@ -25,7 +25,6 @@ import cats.laws.discipline.{FlatMapTests, SerializableTests}
 import cats.tagless.autoFlatMap
 import cats.tagless.tests.autoFlatMapTests._
 import org.scalacheck.{Arbitrary, Cogen}
-
 class autoFlatMapTests extends CatsTaglessTestSuite {
 
   checkAll("FlatMap[TestAlgebra]", FlatMapTests[TestAlgebra].flatMap[Float, String, Int])
@@ -38,6 +37,7 @@ class autoFlatMapTests extends CatsTaglessTestSuite {
 }
 
 object autoFlatMapTests {
+  import TestInstances._
 
   @autoFlatMap
   trait TestAlgebra[T] {

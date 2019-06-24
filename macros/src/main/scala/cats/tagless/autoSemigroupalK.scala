@@ -39,6 +39,6 @@ private[tagless] class autoSemigroupalKMacros(override val c: whitebox.Context) 
 
   def semigroupalKInst(annottees: c.Tree*): c.Tree =
     enrichAlgebra(annottees.toList) { algebra =>
-      algebra.forVaryingHigherKindedEffectType(generateSemigroupalKFor(algebra.name))
+      algebra.forVaryingEffectType(generateSemigroupalKFor(algebra.name)) :: Nil
     }
 }

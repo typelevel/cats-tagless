@@ -38,7 +38,7 @@ private[tagless] class autoContravariantMacros(override val c: whitebox.Context)
     )
 
   def contravariantInst(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList, higherKinded = false) { algebra =>
-      algebra.forVaryingEffectType(generateContravariantFor(algebra.name))
+    enrichAlgebra(annottees.toList, AlgebraResolver.LastRegularTypeParam) { algebra =>
+      algebra.forVaryingEffectType(generateContravariantFor(algebra.name)) :: Nil
     }
 }

@@ -39,7 +39,7 @@ private[tagless] class autoFlatMapMacros(override val c: whitebox.Context) exten
     )
 
   def flatMapInst(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList, higherKinded = false) { algebra =>
-      algebra.forVaryingEffectType(generateFlatMapFor(algebra.name))
+    enrichAlgebra(annottees.toList, AlgebraResolver.LastRegularTypeParam) { algebra =>
+      algebra.forVaryingEffectType(generateFlatMapFor(algebra.name)) :: Nil
     }
 }

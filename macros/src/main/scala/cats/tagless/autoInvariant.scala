@@ -38,7 +38,7 @@ private[tagless] class autoInvariantMacros(override val c: whitebox.Context) ext
     )
 
   def invariantInst(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList, higherKinded = false) { algebra =>
-      algebra.forVaryingEffectType(generateInvariantFor(algebra.name))
+    enrichAlgebra(annottees.toList, AlgebraResolver.LastRegularTypeParam) { algebra =>
+      algebra.forVaryingEffectType(generateInvariantFor(algebra.name)) :: Nil
     }
 }

@@ -37,9 +37,9 @@ private [tagless] class autoApplyKMacros(override val c: whitebox.Context) exten
       q"_root_.cats.tagless.Derive.applyK[$algebraType]"
     )
 
-  def instanceDef(algebra: AlgDefn): AlgDefn =
-    algebra.forVaryingHigherKindedEffectType(generateApplyKFor(algebra.name))
+  def instanceDef(algebra: AlgDefn.UnaryAlg): Tree =
+    algebra.forVaryingEffectType(generateApplyKFor(algebra.name))
 
   def newDef(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList)(instanceDef _ andThen companionMapKDef andThen autoDerivationDef)
+    enrichAlgebra(annottees.toList)(algebra => instanceDef(algebra) :: companionMapKDef(algebra) :: autoDerivationDef(algebra) :: Nil)
 }

@@ -33,7 +33,7 @@ class autoProfunctorTests extends CatsTaglessTestSuite {
 object autoProfunctorTests {
    import TestInstances._
 
-  // TODO: Macro annotation.
+  @autoProfunctor
   trait TestAlgebra[A, B] {
     def abstractCovariant(str: String): B
     def concreteCovariant(str: String): B = abstractCovariant(str + " concreteCovariant")
@@ -47,8 +47,6 @@ object autoProfunctorTests {
   }
 
   object TestAlgebra {
-    implicit val profunctor: Profunctor[TestAlgebra] = Derive.profunctor
-
     implicit def eqv[A: Arbitrary: ExhaustiveCheck, B: Eq]: Eq[TestAlgebra[A, B]] =
       Eq.by { algebra =>
         (
@@ -87,4 +85,5 @@ object autoProfunctorTests {
       override def concreteOther(str: String): String = conOther.getOrElse(super.concreteOther(_))(str)
       override def withoutParams: B = withoutParameters
     })
+
 }

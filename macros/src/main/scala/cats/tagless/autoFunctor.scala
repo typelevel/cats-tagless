@@ -39,7 +39,7 @@ private[tagless] class autoFunctorMacros(override val c: whitebox.Context) exten
     )
 
   def functorInst(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList, higherKinded = false) { algebra =>
-      algebra.forVaryingEffectType(generateFunctorFor(algebra.name))
+    enrichAlgebra(annottees.toList, AlgebraResolver.LastRegularTypeParam) { algebra =>
+      algebra.forVaryingEffectType(generateFunctorFor(algebra.name)) :: Nil
     }
 }

@@ -32,8 +32,8 @@ private[tagless] class finalAlgMacros(override val c: whitebox.Context) extends 
     q"def apply[..$tparams](implicit inst: $algebraType): $algebraType = inst"
 
   def inst(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList, higherKinded = false)(
-      _.forAlgebraType(generateApply)
+    enrichAlgebra(annottees.toList, AlgebraResolver.AnyLastTypeParam)(algebra =>
+      algebra.forAlgebraType(generateApply) :: Nil
     )
 
 }

@@ -28,6 +28,11 @@ import org.scalacheck.{Arbitrary, Cogen}
 class autoProfunctorTests extends CatsTaglessTestSuite {
   checkAll("Profunctor[TestAlgebra]", ProfunctorTests[TestAlgebra].profunctor[Long, String, Int, Long, String, Int])
   checkAll("Serializable Profunctor[TestAlgebra]", SerializableTests.serializable(Profunctor[TestAlgebra]))
+
+  test("extra type param correctly handled") {
+    val asStringAlg = AlgWithExtraTypeParamString.dimap((s: String) => s.length)(_ + 1)
+    asStringAlg.foo("base", "x2") should be(9d)
+  }
 }
 
 object autoProfunctorTests {
@@ -85,5 +90,14 @@ object autoProfunctorTests {
       override def concreteOther(str: String): String = conOther.getOrElse(super.concreteOther(_))(str)
       override def withoutParams: B = withoutParameters
     })
+
+  @autoProfunctor
+  trait AlgWithExtraTypeParam[T, A, B] {
+    def foo(t: T, a: A): B
+  }
+
+  object AlgWithExtraTypeParamString extends AlgWithExtraTypeParam[String, Int, Double] {
+    override def foo(t: String, a: Int) = t.length * a.toDouble
+  }
 
 }

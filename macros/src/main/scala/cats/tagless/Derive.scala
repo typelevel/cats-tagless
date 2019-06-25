@@ -17,7 +17,7 @@
 package cats.tagless
 
 import cats.arrow.Profunctor
-import cats.{Contravariant, FlatMap, Functor, Invariant}
+import cats.{Bifunctor, Contravariant, FlatMap, Functor, Invariant}
 
 object Derive {
 
@@ -25,6 +25,7 @@ object Derive {
   def contravariant[F[_]]: Contravariant[F] = macro DeriveMacros.contravariant[F]
   def invariant[F[_]]: Invariant[F] = macro DeriveMacros.invariant[F]
   def profunctor[F[_, _]]: Profunctor[F] = macro DeriveMacros.profunctor[F]
+  def bifunctor[F[_, _]]: Bifunctor[F] = macro DeriveMacros.bifunctor[F]
   def flatMap[F[_]]: FlatMap[F] = macro DeriveMacros.flatMap[F]
 
   /**

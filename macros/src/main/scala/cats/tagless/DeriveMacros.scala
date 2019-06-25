@@ -18,7 +18,7 @@ package cats.tagless
 
 import cats.arrow.Profunctor
 import cats.data.Tuple2K
-import cats.{Contravariant, FlatMap, Functor, Invariant}
+import cats.{Bifunctor, Contravariant, FlatMap, Functor, Invariant}
 
 import scala.reflect.macros.blackbox
 
@@ -62,6 +62,7 @@ class DeriveMacros(val c: blackbox.Context) {
 
       for (ps <- pss) yield for (p <- ps) yield g(p.name, p.tpt.tpe)
     }
+    def actualArgs = argLists((pn, _) => Ident(pn))
 
     /** The definition of this method as a Scala tree. */
     def definition: Tree = q"override def ${m.name}[..$tps](...$pss): $rt = $body"
@@ -258,10 +259,9 @@ class DeriveMacros(val c: blackbox.Context) {
       val types = delegateAbstractTypes(Af, members, Af)
       val methods = delegateMethods(Af, members, af.asTerm) {
         case method @ Method(m, _, _, rt, delegate) if rt.typeSymbol == f =>
-          val argLists = method.argLists((pn, _) => Ident(pn))
           val FGA = F :: G :: rt.typeArgs
           val returnType = appliedType(Tuple2K, FGA)
-          val body = q"new $Tuple2K[..$FGA]($delegate, $ag.$m[..${method.typeArgs}](...$argLists))"
+          val body = q"new $Tuple2K[..$FGA]($delegate, $ag.$m[..${method.typeArgs}](...${method.actualArgs}))"
           method.copy(rt = returnType, body = body)
       }
 
@@ -280,8 +280,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val types = delegateAbstractTypes(Af, members, Af)
       val methods = delegateMethods(Af, members, af.asTerm) {
         case method @ Method(m, _, _, rt, delegate) if rt.typeSymbol == f =>
-          val argLists = method.argLists((pn, _) => Ident(pn))
-          val body = q"$fk($delegate).$m[..${method.typeArgs}](...$argLists)"
+          val body = q"$fk($delegate).$m[..${method.typeArgs}](...${method.actualArgs})"
           method.copy(rt = appliedType(g, rt.typeArgs), body = body)
       }
 
@@ -294,7 +293,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val Fa = appliedType(algebra, a.asType.toType)
       val methods = delegateMethods(Fa, overridableMembersOf(Fa), NoSymbol) {
         case method @ Method(m, _, _, rt, _) =>
-          val argLists = method.argLists((pn, _) => Ident(pn))
+          val argLists = method.actualArgs
           if (rt.typeSymbol == a) {
             val step = TermName(c.freshName("step"))
             val current = TermName(c.freshName("current"))
@@ -339,6 +338,24 @@ class DeriveMacros(val c: blackbox.Context) {
       implement(appliedType(algebra, C, D), types ++ methods)
     }
 
+  // def bimap[A, B, C, D](fab: F[A, B])(f: A => C, g: B => D): F[C, D]
+  def bimap(algebra: Type): (String, Type => Tree) =
+    "bimap" -> { case PolyType(List(a, b, c, d), MethodType(List(fab), MethodType(List(f, g), _))) =>
+      val Fab = singleType(NoPrefix, fab)
+      val members = overridableMembersOf(Fab)
+      val types = delegateAbstractTypes(Fab, members, Fab)
+      val methods = delegateMethods(Fab, members, fab.asTerm) {
+        case method @ Method(m, _, _, rt, _) if rt.typeSymbol == a || rt.typeSymbol == b =>
+          val delegate = q"$fab.$m[..${method.typeArgs}](...${method.actualArgs})"
+          val (returnType, func) = if (rt.typeSymbol == a) (c, f) else (d, g)
+          method.copy(rt = appliedType(returnType, rt.typeArgs), body = q"$func($delegate)")
+      }
+
+      val C = c.asType.toTypeConstructor
+      val D = d.asType.toTypeConstructor
+      implement(appliedType(algebra, C, D), types ++ methods)
+    }
+
   def functor[F[_]](implicit tag: c.WeakTypeTag[F[Any]]): c.Tree = {
     val F = normalizedTypeConstructor(tag)
     instantiate(symbolOf[Functor[Any]], F)(mapK(F).copy(_1 = "map"))
@@ -357,6 +374,11 @@ class DeriveMacros(val c: blackbox.Context) {
   def profunctor[F[_, _]](implicit tag: c.WeakTypeTag[F[Any, Any]]): c.Tree = {
     val F = normalizedTypeConstructor(tag)
     instantiate(symbolOf[Profunctor[F]], F)(dimap(F))
+  }
+
+  def bifunctor[F[_, _]](implicit tag: c.WeakTypeTag[F[Any, Any]]): c.Tree = {
+    val F = normalizedTypeConstructor(tag)
+    instantiate(symbolOf[Bifunctor[F]], F)(bimap(F))
   }
 
   def flatMap[F[_]](implicit tag: c.WeakTypeTag[F[Any]]): c.Tree = {

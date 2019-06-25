@@ -198,10 +198,8 @@ private[tagless] abstract class MacroUtils {
           .find(_.tparams.lengthCompare(1) == 0)
           .fold[Either[String, Defn]](
             Left(s"${cls.name} does not have a higher-kinded type parameter of shape F[_]")
-          )(
-            effectType =>
-              Right(AlgDefn.UnaryAlg(cls, effectType, 1, cls.tparams.filterNot(Set(effectType)))
-            )
+          )(effectType =>
+              Right(AlgDefn.UnaryAlg(cls, effectType, 1, cls.tparams.filterNot(Set(effectType))))
           )
     }
 
@@ -210,8 +208,7 @@ private[tagless] abstract class MacroUtils {
       override def apply(cls: TypeDefinition) =
         cls.tparams.lastOption.filter(_.tparams.isEmpty).fold[Either[String, Defn]](
           Left(s"${cls.name} must have a type paramter of shape F as its last type parameter")
-        )(
-          effectType =>
+        )(effectType =>
             Right(AlgDefn.UnaryAlg(cls, effectType, 0, cls.tparams.dropRight(1)))
         )
     }
@@ -221,8 +218,7 @@ private[tagless] abstract class MacroUtils {
       override def apply(cls: TypeDefinition) =
         cls.tparams.lastOption.fold[Either[String, Defn]](
           Left(s"${cls.name} does not have any type parameter")
-        )(
-          effectType =>
+        )(effectType =>
             Right(AlgDefn.UnaryAlg(cls, effectType, effectType.tparams.length, cls.tparams.dropRight(1)))
         )
     }
@@ -232,7 +228,7 @@ private[tagless] abstract class MacroUtils {
       override def apply(cls: TypeDefinition) =
         cls.tparams.takeRight(2).filter(_.tparams.isEmpty) match {
         case t1 :: t2 :: Nil =>
-            Right(AlgDefn.BinaryAlg(cls, (t1, 0), (t2, 0), cls.tparams.filterNot(Set(t1, t2))))
+            Right(AlgDefn.BinaryAlg(cls, (t1, 0), (t2, 0), cls.tparams.dropRight(2)))
         case _ =>
             Left(
               s"${cls.name} must have two type parameters of shape F as its last type parameters"

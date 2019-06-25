@@ -19,28 +19,26 @@ import scala.annotation.{StaticAnnotation, compileTimeOnly}
 import scala.collection.immutable.Seq
 import scala.reflect.macros.whitebox
 
-/** Auto generates an instance of `cats.arrow.Profunctor`. */
-@compileTimeOnly("Cannot expand @autoProfunctor")
-class autoProfunctor extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro autoProfunctorMacros.profunctorInst
+/** Auto generates an instance of `cats.Bifunctor.` */
+@compileTimeOnly("Cannot expand @autoBifunctor")
+class autoBifunctor extends StaticAnnotation {
+  def macroTransform(annottees: Any*): Any = macro autoBifunctorMacros.bifunctorInst
 }
 
-private[tagless] class autoProfunctorMacros(override val c: whitebox.Context) extends MacroUtils {
+private[tagless] class autoBifunctorMacros(override val c: whitebox.Context) extends MacroUtils {
   import c.universe._
 
-  private def generateProfunctorFor(
-    algebraName: String
-  )(algebraType: Tree, typeParams: Seq[TypeDef]) =
+  private def generateBifunctorFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =
     typeClassInstance(
-      TermName("profunctorFor" + algebraName),
+      TermName("bifunctorFor" + algebraName),
       typeParams,
-      tq"_root_.cats.arrow.Profunctor[$algebraType]",
-      q"_root_.cats.tagless.Derive.profunctor[$algebraType]"
+      tq"_root_.cats.Bifunctor[$algebraType]",
+      q"_root_.cats.tagless.Derive.bifunctor[$algebraType]"
     )
 
-  def profunctorInst(annottees: c.Tree*): c.Tree =
+  def bifunctorInst(annottees: c.Tree*): c.Tree =
     enrichAlgebra(annottees.toList, AlgebraResolver.TwoLastRegularTypeParams) {
       algebra =>
-        algebra.forVaryingEffectType(generateProfunctorFor(algebra.name)) :: Nil
+        algebra.forVaryingEffectType(generateBifunctorFor(algebra.name)) :: Nil
     }
 }

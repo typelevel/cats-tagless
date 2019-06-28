@@ -18,5 +18,6 @@ package cats.tagless
 package syntax
 
 trait AllSyntax extends FunctorKSyntax
- with SemigroupalKSyntax
- with InvariantKSyntax
+  with InvariantKSyntax
+  with SemigroupalKSyntax
+  with ApplyKSyntax

@@ -18,16 +18,14 @@ package cats.tagless
 package tests
 
 
-import cats.Functor
-import cats.kernel.Eq
-import cats.kernel.instances.string._
-import cats.kernel.instances.tuple._
-import cats.laws.discipline.eq._
+import cats.{Eq, Functor}
+import cats.instances.all._
 import cats.laws.discipline.{FunctorTests, SerializableTests}
-import cats.tagless.tests.autoFunctorTests._
+import cats.laws.discipline.eq._
 import org.scalacheck.{Arbitrary, Cogen}
 
 class autoFunctorTests extends CatsTaglessTestSuite {
+  import autoFunctorTests._
 
   checkAll("Functor[TestAlgebra]", FunctorTests[TestAlgebra].functor[Long, String, Int])
   checkAll("Serializable Functor[TestAlgebra]", SerializableTests.serializable(Functor[TestAlgebra]))
@@ -44,14 +42,12 @@ object autoFunctorTests {
   @autoFunctor
   trait TestAlgebra[T] {
     def abstractEffect(a: String): T
-
     def concreteEffect(a: String): T = abstractEffect(a + " concreteEffect")
-
     def abstractOther(a: String): String
-
     def concreteOther(a: String): String = a + " concreteOther"
-
     def withoutParams: T
+    def toList(xs: List[Int]): List[T]
+    def fromFunction(f: T => String): T
   }
 
   @autoFunctor
@@ -79,16 +75,20 @@ object autoFunctorTests {
     def product(xs: Int*): T
   }
 
-  implicit def eqForTestAlgebra[T](implicit eqT: Eq[T]): Eq[TestAlgebra[T]] =
-    Eq.by { p =>
-      (p.abstractEffect: String => T) ->
-        (p.concreteEffect: String => T) ->
-        (p.abstractOther: String => String) ->
-        (p.concreteOther: String => String) ->
-        p.withoutParams
+  implicit def eqForTestAlgebra[T: Eq: Cogen]: Eq[TestAlgebra[T]] =
+    Eq.by { algebra =>
+      (
+        algebra.abstractEffect _,
+        algebra.concreteEffect _,
+        algebra.abstractOther _,
+        algebra.concreteOther _,
+        algebra.withoutParams,
+        algebra.toList _,
+        algebra.fromFunction _
+      )
     }
 
-  implicit def arbitraryTestAlgebra[T: Arbitrary](implicit cS: Cogen[String]): Arbitrary[TestAlgebra[T]] =
+  implicit def arbitraryTestAlgebra[T: Arbitrary: Cogen]: Arbitrary[TestAlgebra[T]] =
     Arbitrary {
       for {
         absEff <- Arbitrary.arbitrary[String => T]
@@ -96,16 +96,16 @@ object autoFunctorTests {
         absOther <- Arbitrary.arbitrary[String => String]
         conOther <- Arbitrary.arbitrary[Option[String => String]]
         withoutParameters <- Arbitrary.arbitrary[T]
+        list <- Arbitrary.arbitrary[List[Int] => List[T]]
+        fromFn <- Arbitrary.arbitrary[(T => String) => T]
       } yield new TestAlgebra[T] {
-        override def abstractEffect(i: String): T = absEff(i)
-
-        override def concreteEffect(a: String): T = conEff.getOrElse(super.concreteEffect(_))(a)
-
-        override def abstractOther(a: String): String = absOther(a)
-
-        override def concreteOther(a: String): String = conOther.getOrElse(super.concreteOther(_))(a)
-
-        override def withoutParams: T = withoutParameters
+        override def abstractEffect(i: String) = absEff(i)
+        override def concreteEffect(a: String) = conEff.getOrElse(super.concreteEffect(_))(a)
+        override def abstractOther(a: String) = absOther(a)
+        override def concreteOther(a: String) = conOther.getOrElse(super.concreteOther(_))(a)
+        override def withoutParams = withoutParameters
+        override def toList(xs: List[Int]) = list(xs)
+        override def fromFunction(f: T => String) = fromFn(f)
       }
     }
 }

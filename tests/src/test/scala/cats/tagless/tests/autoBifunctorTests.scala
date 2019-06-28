@@ -15,13 +15,13 @@
  */
 
 package cats.tagless.tests
-import cats.Bifunctor
+
+import cats.{Bifunctor, Eq}
 import cats.instances.AllInstances
-import cats.kernel.Eq
 import cats.laws.discipline.{BifunctorTests, SerializableTests}
-import cats.tagless.autoBifunctor
-import org.scalacheck.Arbitrary
 import cats.laws.discipline.eq._
+import cats.tagless.autoBifunctor
+import org.scalacheck.{Arbitrary, Cogen}
 
 class autoBifunctorTests extends CatsTaglessTestSuite {
   import autoBifunctorTests._
@@ -43,24 +43,26 @@ object autoBifunctorTests extends TestInstances with AllInstances {
   trait TestAlgebra[A, B] {
     def left: A
     def right: B
-    final def toTuple: (A, B) = (left, right)
-    final def mapLeft[C](f: A => C): C = f(left)
-    final def mapRight[C](f: B => C): C = f(right)
-
+    def toTuple: (A, B) = (left, right)
+    def mapLeft[C](f: A => C): C = f(left)
+    def mapRight[C](f: B => C): C = f(right)
     def concreteMethod: Int = 0
     def fromInt(i: Int): A
     def fromString(s: String): B
   }
 
   object TestAlgebra {
-    implicit def eqv[A: Eq, B: Eq]: Eq[TestAlgebra[A, B]] =
+    implicit def eqv[A: Eq: Cogen, B: Eq: Cogen]: Eq[TestAlgebra[A, B]] =
       Eq.by { algebra =>
         (
           algebra.left,
           algebra.right,
           algebra.fromInt _,
           algebra.fromString _,
-          algebra.concreteMethod
+          algebra.concreteMethod,
+          algebra.toTuple,
+          algebra.mapLeft[Int] _,
+          algebra.mapRight[Int] _
         )
       }
   }
@@ -71,12 +73,14 @@ object autoBifunctorTests extends TestInstances with AllInstances {
       a2 <- Arbitrary.arbitrary[A]
       b <- Arbitrary.arbitrary[B]
       int <- Arbitrary.arbitrary[Int]
+      tuple <- Arbitrary.arbitrary[Option[(A, B)]]
     } yield new TestAlgebra[A, B] {
-      override def left: A = a1
-      override def right: B = b
+      override def left = a1
+      override def right = b
       override def concreteMethod = int
       override def fromInt(i: Int) = if (i > 0) left else a2
       override def fromString(s: String) = b
+      override def toTuple = tuple.getOrElse(super.toTuple)
     })
 
   @autoBifunctor
@@ -89,5 +93,4 @@ object autoBifunctorTests extends TestInstances with AllInstances {
     override def foo(t: String) = t.length
     override def boo(t: String) = t.toCharArray
   }
-
 }

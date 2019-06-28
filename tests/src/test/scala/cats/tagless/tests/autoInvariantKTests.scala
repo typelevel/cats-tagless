@@ -17,15 +17,17 @@
 package cats.tagless
 package tests
 
-
-import scala.util.Try
 import cats.~>
 import cats.laws.discipline.SerializableTests
+import cats.laws.discipline.arbitrary._
 import cats.tagless.laws.discipline.InvariantKTests
-import autoInvariantKTests._
 import shapeless.test.illTyped
 
+import scala.util.Try
+
 class autoInvariantKTests extends CatsTaglessTestSuite {
+  import autoInvariantKTests._
+
   checkAll("SafeInvAlg[Option]", InvariantKTests[SafeInvAlg].invariantK[Try, Option, List])
   checkAll("InvariantK[SafeInvAlg]", SerializableTests.serializable(InvariantK[SafeInvAlg]))
 

@@ -14,14 +14,26 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.iso
 
-import cats.hkinds.instances.InvariantKInstances
-import cats.~>
-import simulacrum.typeclass
+object IsoAlgFunctor {
 
-@typeclass trait InvariantK[A[_[_]]] {
-  def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gK: G ~> F): A[G]
+  def reflexive[A[_[_]]]: A <≈> A = new (A <≈> A) {
+    def to:   ≈>[A, A] = ≈>.id[A]
+    def from: ≈>[A, A] = ≈>.id[A]
+  }
+
+  trait Template[A1[_[_]], A2[_[_]]] extends (A1 <≈> A2) {
+    def _to[F[_]](a1: A1[F]): A2[F]
+    def _from[F[_]](a2: A2[F]): A1[F]
+
+
+    override final val to: A1 ≈> A2 = new (A1 ≈> A2) {
+      def apply[F[_]](a: A1[F]): A2[F] = _to(a)
+    }
+    override final val from: A2 ≈> A1 = new (A2 ≈> A1) {
+      def apply[F[_]](a: A2[F]): A1[F] = _from(a)
+    }
+  }
+
 }
-
-object InvariantK extends InvariantKInstances

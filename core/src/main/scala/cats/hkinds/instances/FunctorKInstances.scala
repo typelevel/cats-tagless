@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.hkinds.instances
 
-import cats.hkinds.instances.InvariantKInstances
-import cats.~>
-import simulacrum.typeclass
+object FunctorKInstances extends FunctorKInstances
 
-@typeclass trait InvariantK[A[_[_]]] {
-  def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gK: G ~> F): A[G]
+trait FunctorKInstances {
+
+
 }
-
-object InvariantK extends InvariantKInstances

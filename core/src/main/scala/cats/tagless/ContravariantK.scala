@@ -16,12 +16,16 @@
 
 package cats.tagless
 
-import cats.hkinds.instances.InvariantKInstances
 import cats.~>
 import simulacrum.typeclass
 
-@typeclass trait InvariantK[A[_[_]]] {
-  def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gK: G ~> F): A[G]
+@typeclass
+trait ContravariantK[A[_[_]]] extends InvariantK[A] {
+  def contramapK[F[_], G[_]](af: A[F])(gf: G ~> F): A[G]
+
+  override def imapK[F[_], G[_]](af: A[F])(fg: F ~> G)(gf: G ~> F): A[G] = contramapK(af)(gf)
 }
 
-object InvariantK extends InvariantKInstances
+
+
+

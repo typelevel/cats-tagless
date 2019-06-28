@@ -14,14 +14,24 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.iso
 
-import cats.hkinds.instances.InvariantKInstances
-import cats.~>
-import simulacrum.typeclass
+import cats.iso.Iso3Instances._
+import cats.iso.utils.TypeInequalityHK.=:!!:=
 
-@typeclass trait InvariantK[A[_[_]]] {
-  def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gK: G ~> F): A[G]
+class Iso3Instances extends Iso3Instances1 {
+  implicit def hasIsoRefl[F[_,_]]: HasIso[F, F] = HasIso(Iso3.reflexive[F])
+  implicit def hasIso1[F[_,_], G[_,_]](implicit ev: F =:!!:= G, i: F <~~> G): HasIso[F, G] = HasIso(i)
+  implicit def hasIso2[F[_,_], G[_,_]](implicit ev: F =:!!:= G, i: F <~~> G): HasIso[G, F] = HasIso(i.flip)
 }
 
-object InvariantK extends InvariantKInstances
+class Iso3Instances1 extends Iso3Instances2 {
+}
+class Iso3Instances2 {
+}
+
+object Iso3Instances {
+
+  case class HasIso[F[_,_], G[_,_]](iso: F <~~> G)
+
+}

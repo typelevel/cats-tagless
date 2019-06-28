@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.iso
 
-import cats.hkinds.instances.InvariantKInstances
-import cats.~>
-import simulacrum.typeclass
-
-@typeclass trait InvariantK[A[_[_]]] {
-  def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gK: G ~> F): A[G]
+object IsoSet {
+  def apply[A, B](to: A => B, from: B => A): A <=> B = {
+    val _to   = to
+    val _from = from
+    new Iso[Function1, A, B] {
+      override val to   = _to
+      override val from = _from
+    }
+  }
 }
 
-object InvariantK extends InvariantKInstances
+case class IsoSetOps[A, B](self: A <=> B) {
+  def derive[F[_]](implicit der: IsoDerivable[F], ev: F[A]): F[B] =
+    der.derive(self)(ev)
+}

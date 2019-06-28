@@ -14,14 +14,23 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.iso.laws
 
-import cats.hkinds.instances.InvariantKInstances
-import cats.~>
-import simulacrum.typeclass
+//import cats.iso._
+//import cats.hkinds._
+//
+//trait Iso2Laws[F[_], G[_]] {
+//  def iso2: F <~> G
+//
+//  def iso2identityLeft[A](f: F[A]): IsEq[F[A]] =
+//    iso2.from(iso2.to(f)) <-> f
+//
+//  def iso2identityRight[A](g: G[A]): IsEq[G[A]] =
+//    iso2.to(iso2.from(g)) <-> g
+//}
 
-@typeclass trait InvariantK[A[_[_]]] {
-  def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gK: G ~> F): A[G]
+object Iso2Laws {
+//  def apply[F[_], G[_], A](instance: F <~> G): Iso2Laws[F, G] = new Iso2Laws[F, G] {
+//    override def iso2: F <~> G = instance
+//  }
 }
-
-object InvariantK extends InvariantKInstances

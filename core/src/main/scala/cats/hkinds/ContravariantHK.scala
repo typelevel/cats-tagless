@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.hkinds
 
-import cats.hkinds.instances.InvariantKInstances
-import cats.~>
-import simulacrum.typeclass
-
-@typeclass trait InvariantK[A[_[_]]] {
-  def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gK: G ~> F): A[G]
+trait ContravariantHK[TC[_[_[_]]]] {
+  def contramapHK[A1[_[_]], A2[_[_]]](tc: TC[A1])(f: A2 ≈> A1): TC[A2]
 }
 
-object InvariantK extends InvariantKInstances
+object ContravariantHK {
+  def apply[TC[_[_[_]]]](implicit source: ContravariantHK[TC]): ContravariantHK[TC] = source
+}

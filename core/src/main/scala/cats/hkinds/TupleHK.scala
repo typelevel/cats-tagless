@@ -14,14 +14,9 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.hkinds
 
-import cats.hkinds.instances.InvariantKInstances
-import cats.~>
-import simulacrum.typeclass
-
-@typeclass trait InvariantK[A[_[_]]] {
-  def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gK: G ~> F): A[G]
+case class TupleHK[A1[_[_]], A2[_[_]], T[_]](first: A1[T], second: A2[T]) {
+  def mapK[A3[_[_]]](f: A2 ≈> A3): TupleHK[A1, A3, T] = TupleHK[A1, A3, T](first, f(second))
+  def swap: TupleHK[A2, A1, T] = TupleHK(second, first)
 }
-
-object InvariantK extends InvariantKInstances

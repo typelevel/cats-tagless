@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.hkinds
 
-import cats.hkinds.instances.InvariantKInstances
-import cats.~>
-import simulacrum.typeclass
-
-@typeclass trait InvariantK[A[_[_]]] {
-  def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gK: G ~> F): A[G]
+trait InvariantSemigroupalHK[TC[_[_[_]]]] extends InvariantHK[TC] with SemigroupalHK[TC] {
+  def imap2HK[A1[_[_]], A2[_[_]], Alg[_[_]]]
+    (tcAlg1: TC[A1], tcAlg2: TC[A2])
+    (f: TupleHK[A1, A2, ?[_]] ≈> Alg)
+    (g: Alg ≈> TupleHK[A1, A2, ?[_]]): TC[Alg] = imapHK(productHK(tcAlg1, tcAlg2))(f)(g)
 }
-
-object InvariantK extends InvariantKInstances

@@ -17,8 +17,11 @@
 package cats.tagless
 
 import cats.data.Tuple2K
+import cats.hkinds.instances.SemigroupalKInstances
 import simulacrum.typeclass
 
 @typeclass trait SemigroupalK[A[_[_]]] {
   def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Tuple2K[F, G, ?]]
 }
+
+object SemigroupalK extends SemigroupalKInstances

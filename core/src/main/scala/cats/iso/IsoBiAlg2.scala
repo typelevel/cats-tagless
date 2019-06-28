@@ -14,14 +14,19 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.iso
 
-import cats.hkinds.instances.InvariantKInstances
-import cats.~>
-import simulacrum.typeclass
+trait IsoBiAlg2[|=>[_[_[_,_],_,_], _[_[_,_],_,_]], Alg1[_[_,_],_,_], Alg2[_[_,_],_,_]] { self =>
+  def to: Alg1 |=> Alg2
+  def from: Alg2 |=> Alg1
+  def flip: IsoBiAlg2[|=>, Alg2, Alg1] = new IsoBiAlg2[|=>, Alg2, Alg1] {
+    val to = self.from
+    val from = self.to
+    override def flip: IsoBiAlg2[|=>, Alg1, Alg2] = self
+  }
 
-@typeclass trait InvariantK[A[_[_]]] {
-  def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gK: G ~> F): A[G]
+
 }
 
-object InvariantK extends InvariantKInstances
+object IsoBiAlg2 {
+}

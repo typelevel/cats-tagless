@@ -14,14 +14,22 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.iso
 
-import cats.hkinds.instances.InvariantKInstances
-import cats.~>
-import simulacrum.typeclass
+trait AlgebraNatTrans[-Alg1[_[_]], +Alg2[_[_]]] { self =>
+  def apply[F[_]](alg1: Alg1[F]): Alg2[F]
 
-@typeclass trait InvariantK[A[_[_]]] {
-  def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gK: G ~> F): A[G]
+  def compose[Alg0[_[_]]](trans: AlgebraNatTrans[Alg0, Alg1]): AlgebraNatTrans[Alg0, Alg2] =
+    new AlgebraNatTrans[Alg0, Alg2] {
+      def apply[F[_]](alg: Alg0[F]): Alg2[F] = self(trans(alg))
+    }
 }
 
-object InvariantK extends InvariantKInstances
+object AlgebraNatTrans {
+  /**
+    * The identity transformation of `Alg` to `Alg`
+    */
+  final def id[Alg[_[_]]]: AlgebraNatTrans[Alg, Alg] = new AlgebraNatTrans[Alg, Alg] {
+    def apply[F[_]](alg: Alg[F]): Alg[F] = alg
+  }
+}

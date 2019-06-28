@@ -16,12 +16,11 @@
 
 package cats.tagless
 
-import cats.hkinds.instances.InvariantKInstances
+import cats.data.Tuple2K
 import cats.~>
 import simulacrum.typeclass
 
-@typeclass trait InvariantK[A[_[_]]] {
-  def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gK: G ~> F): A[G]
+@typeclass trait ContravariantSemigroupalK[A[_[_]]] extends SemigroupalK[A] with ContravariantK[A] {
+  def contramap2K[F[_], G[_], H[_]](af: A[F], ag: A[G])(f: H ~> Tuple2K[F, G, ?]): A[H] =
+    contramapK(productK(af, ag))(f)
 }
-
-object InvariantK extends InvariantKInstances

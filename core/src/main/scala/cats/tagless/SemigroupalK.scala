@@ -17,7 +17,7 @@
 package cats.tagless
 
 import cats.data.Tuple2K
-import cats.hkinds.instances.SemigroupalKInstances
+import cats.tagless.instances.SemigroupalKInstances
 import simulacrum.typeclass
 
 @typeclass trait SemigroupalK[A[_[_]]] {

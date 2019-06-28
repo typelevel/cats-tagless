@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cats.hkinds.instances
+package cats.tagless.instances
 
 import cats._
 import cats.implicits._

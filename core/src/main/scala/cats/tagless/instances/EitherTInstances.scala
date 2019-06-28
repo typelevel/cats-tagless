@@ -14,6 +14,20 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.tagless.instances
 
-package object implicits extends instances.AllInstances with syntax.AllSyntax
+import cats.data.{EitherT, Tuple2K}
+import cats.tagless.ApplyK
+import cats.~>
+
+trait EitherTInstances {
+
+  implicit def catsTaglessApplyKForEitherT[A, B]: ApplyK[EitherT[?[_], A, B]] =
+    eitherTInstance.asInstanceOf[ApplyK[EitherT[?[_], A, B]]]
+
+  private[this] val eitherTInstance: ApplyK[EitherT[?[_], Any, Any]] = new ApplyK[EitherT[?[_], Any, Any]] {
+    def mapK[F[_], G[_]](af: EitherT[F, Any, Any])(fk: F ~> G) = af.mapK(fk)
+    def productK[F[_], G[_]](af: EitherT[F, Any, Any], ag: EitherT[G, Any, Any]) =
+      EitherT(Tuple2K(af.value, ag.value))
+  }
+}

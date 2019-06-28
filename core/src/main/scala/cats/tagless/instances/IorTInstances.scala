@@ -14,6 +14,20 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.tagless.instances
 
-package object implicits extends instances.AllInstances with syntax.AllSyntax
+import cats.data.{IorT, Tuple2K}
+import cats.tagless.ApplyK
+import cats.~>
+
+trait IorTInstances {
+
+  implicit def catsTaglessApplyKForIorT[A, B]: ApplyK[IorT[?[_], A, B]] =
+    iOrTInstance.asInstanceOf[ApplyK[IorT[?[_], A, B]]]
+
+  private[this] val iOrTInstance: ApplyK[IorT[?[_], Any, Any]] = new ApplyK[IorT[?[_], Any, Any]] {
+    def mapK[F[_], G[_]](af: IorT[F, Any, Any])(fk: F ~> G) = af.mapK(fk)
+    def productK[F[_], G[_]](af: IorT[F, Any, Any], ag: IorT[G, Any, Any]) =
+      IorT(Tuple2K(af.value, ag.value))
+  }
+}

@@ -14,6 +14,18 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.tagless.instances
 
-package object implicits extends instances.AllInstances with syntax.AllSyntax
+import cats.data.Nested
+import cats.tagless.FunctorK
+import cats.~>
+
+trait NestedInstances {
+
+  implicit def catsTaglessFunctorKForNested[G[_], A]: FunctorK[Nested[?[_], G, A]] =
+    nestedInstance.asInstanceOf[FunctorK[Nested[?[_], G, A]]]
+
+  private[this] val nestedInstance: FunctorK[Nested[?[_], Any, Any]] = new FunctorK[Nested[?[_], Any, Any]] {
+    def mapK[F[_], G[_]](af: Nested[F, Any, Any])(fk: F ~> G) = af.mapK(fk)
+  }
+}

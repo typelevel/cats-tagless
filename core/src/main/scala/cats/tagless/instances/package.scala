@@ -16,4 +16,17 @@
 
 package cats.tagless
 
-package object implicits extends instances.AllInstances with syntax.AllSyntax
+package object instances {
+  object all extends AllInstances
+  object eitherK extends EitherKInstances
+  object eitherT extends EitherTInstances
+  object func extends FuncInstances
+  object idT extends IdTInstances
+  object iorT extends IorTInstances
+  object kleisli extends KleisliInstances
+  object nested extends NestedInstances
+  object oneAnd extends OneAndInstances
+  object optionT extends OptionTInstances
+  object tuple2K extends Tuple2KInstances
+  object writerT extends WriterTInstances
+}

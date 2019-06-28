@@ -14,6 +14,16 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.tagless.instances
 
-package object implicits extends instances.AllInstances with syntax.AllSyntax
+trait AllInstances extends EitherKInstances
+  with EitherTInstances
+  with FuncInstances
+  with IdTInstances
+  with IorTInstances
+  with KleisliInstances
+  with NestedInstances
+  with OneAndInstances
+  with OptionTInstances
+  with Tuple2KInstances
+  with WriterTInstances

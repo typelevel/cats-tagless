@@ -14,6 +14,20 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.tagless.instances
 
-package object implicits extends instances.AllInstances with syntax.AllSyntax
+import cats.data.{OptionT, Tuple2K}
+import cats.tagless.ApplyK
+import cats.~>
+
+trait OptionTInstances {
+
+  implicit def catsTaglessApplyKForOptionT[A]: ApplyK[OptionT[?[_], A]] =
+    optionTInstance.asInstanceOf[ApplyK[OptionT[?[_], A]]]
+
+  private[this] val optionTInstance: ApplyK[OptionT[?[_], Any]] = new ApplyK[OptionT[?[_], Any]] {
+    def mapK[F[_], G[_]](af: OptionT[F, Any])(fk: F ~> G) = af.mapK(fk)
+    def productK[F[_], G[_]](af: OptionT[F, Any], ag: OptionT[G, Any]) =
+      OptionT(Tuple2K(af.value, ag.value))
+  }
+}

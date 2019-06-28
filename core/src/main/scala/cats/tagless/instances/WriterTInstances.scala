@@ -14,6 +14,20 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.tagless.instances
 
-package object implicits extends instances.AllInstances with syntax.AllSyntax
+import cats.data.{Tuple2K, WriterT}
+import cats.tagless.ApplyK
+import cats.~>
+
+trait WriterTInstances {
+
+  implicit def catsTaglessApplyKForWriterT[A, B]: ApplyK[WriterT[?[_], A, B]] =
+    writerTInstance.asInstanceOf[ApplyK[WriterT[?[_], A, B]]]
+
+  private[this] val writerTInstance: ApplyK[WriterT[?[_], Any, Any]] = new ApplyK[WriterT[?[_], Any, Any]] {
+    def mapK[F[_], G[_]](af: WriterT[F, Any, Any])(fk: F ~> G) = af.mapK(fk)
+    def productK[F[_], G[_]](af: WriterT[F, Any, Any], ag: WriterT[G, Any, Any]) =
+      WriterT(Tuple2K(af.run, ag.run))
+  }
+}

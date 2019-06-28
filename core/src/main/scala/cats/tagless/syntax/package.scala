@@ -21,4 +21,5 @@ package object syntax {
   object functorK extends FunctorKSyntax
   object invariantK extends InvariantKSyntax
   object semigroupalK extends SemigroupalKSyntax
+  object applyK extends ApplyKSyntax
 }

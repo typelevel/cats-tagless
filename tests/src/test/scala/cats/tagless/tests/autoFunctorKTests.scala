@@ -209,6 +209,12 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
     val bar = AlgWithByNameParameter.mapK(foo)(fk)
     bar.log("level".reverse) should be(Some("level"))
   }
+
+  test("builder-style algebra") {
+    val listBuilder: BuilderAlgebra[List] = BuilderAlgebra.Named("foo")
+    val optionBuilder = listBuilder.mapK[Option](λ[List ~> Option](_.headOption))
+    optionBuilder.withFoo("bar").unit shouldBe Some(())
+  }
 }
 
 
@@ -335,5 +341,19 @@ object autoFunctorKTests {
   trait AlgWithVarArgsParameter[F[_]] {
     def sum(xs: Int*): Int
     def fSum(xs: Int*): F[Int]
+  }
+
+  trait BuilderAlgebra[F[_]] {
+    def unit: F[Unit]
+    def withFoo(foo: String): BuilderAlgebra[F]
+  }
+
+  object BuilderAlgebra {
+    implicit val functorK: FunctorK[BuilderAlgebra] = Derive.functorK
+
+    final case class Named(name: String) extends BuilderAlgebra[List] {
+      val unit: List[Unit] = List.fill(5)(())
+      def withFoo(foo: String): BuilderAlgebra[List] = copy(name = foo)
+    }
   }
 }

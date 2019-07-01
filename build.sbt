@@ -166,7 +166,6 @@ lazy val scoverageSettings = sharedScoverageSettings(60)
 lazy val disciplineDependencies = libs.dependencies("discipline-core", "scalacheck")
 
 lazy val copyrightHeader = Seq(
-  startYear := Some(2017),
-  organizationName := "Kailuo Wang"
-
+  startYear := Some(2019),
+  organizationName := "cats-tagless maintainers"
 )

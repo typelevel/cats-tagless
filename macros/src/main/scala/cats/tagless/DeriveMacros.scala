@@ -249,12 +249,15 @@ class DeriveMacros(val c: blackbox.Context) {
       val types = delegateAbstractTypes(Af, members, Af)
       val methods = delegateMethods(Af, members, af) {
         case method if method.occursInReturn(f) =>
-          method.transform(af, f -> g)(PartialFunction.empty) { case delegate =>
-            val F = summon[FunctorK[Any]](polyType(f :: Nil, method.returnType))
-            q"$F.mapK[$f, $g]($delegate)($fk)"
+          method.transform(af, f -> g) {
+            case (pn, pt) if occursIn(pt)(f) =>
+              val F = summon[ContravariantK[Any]](polyType(f :: Nil, pt))
+              q"$F.contramapK[$f, $g]($pn)($fk)"
+          } {
+            case delegate =>
+              val F = summon[FunctorK[Any]](polyType(f :: Nil, method.returnType))
+              q"$F.mapK[$f, $g]($delegate)($fk)"
           }
-        case method if method.occursInSignature(f) =>
-          abort(s"Type parameter $f appears in contravariant position in method ${method.name}")
       }
 
       implement(algebra)(g)(types ++ methods)
@@ -280,6 +283,28 @@ class DeriveMacros(val c: blackbox.Context) {
       }
 
       implement(algebra)(b)(types ++ methods)
+    }
+
+  // def contramapK[F, G](af: A[F])(fk: G => F): A[G]
+  def contramapK(algebra: Type): (String, Type => Tree) =
+    "contramapK" -> { case PolyType(List(f, g), MethodType(List(af), MethodType(List(fk), _))) =>
+      val Af = singleType(NoPrefix, af)
+      val members = overridableMembersOf(Af)
+      val types = delegateAbstractTypes(Af, members, Af)
+      val methods = delegateMethods(Af, members, af) {
+        case method if method.occursInSignature(f) =>
+          method.transform(af, f -> g) {
+            case (pn, pt) if occursIn(pt)(f) =>
+              val F = summon[FunctorK[Any]](polyType(f :: Nil, pt))
+              q"$F.mapK[$g, $f]($pn)($fk)"
+          } {
+            case delegate if method.occursInReturn(f) =>
+              val F = summon[ContravariantK[Any]](polyType(f :: Nil, method.returnType))
+              q"$F.contramapK[$f, $g]($delegate)($fk)"
+          }
+      }
+
+      implement(algebra)(g)(types ++ methods)
     }
 
   // def imap[A, B](fa: F[A])(f: A => B)(g: B => A): F[B]
@@ -485,6 +510,9 @@ class DeriveMacros(val c: blackbox.Context) {
 
   def functorK[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
     instantiate[FunctorK[Alg]](tag)(mapK)
+
+  def contravariantK[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
+    instantiate[ContravariantK[Alg]](tag)(contramapK)
 
   def invariantK[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
     instantiate[InvariantK[Alg]](tag)(imapK)

@@ -51,6 +51,7 @@ object Derive {
    */
   def functorK[Alg[_[_]]]: FunctorK[Alg] = macro DeriveMacros.functorK[Alg]
 
+  def contravariantK[Alg[_[_]]]: ContravariantK[Alg] = macro DeriveMacros.contravariantK[Alg]
   def invariantK[Alg[_[_]]]: InvariantK[Alg] = macro DeriveMacros.invariantK[Alg]
   def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = macro DeriveMacros.semigroupalK[Alg]
   def applyK[Alg[_[_]]]: ApplyK[Alg] = macro DeriveMacros.applyK[Alg]

@@ -14,11 +14,19 @@
  * limitations under the License.
  */
 
-package cats.tagless
-package syntax
+package cats.tagless.instances
 
-trait AllSyntax extends FunctorKSyntax
-  with ContravariantKSyntax
-  with InvariantKSyntax
-  with SemigroupalKSyntax
-  with ApplyKSyntax
+import cats.data.Cokleisli
+import cats.tagless.ContravariantK
+import cats.~>
+
+trait CokleisliInstances {
+
+  implicit def catsTaglessContravariantKForCokleisli[A, B]: ContravariantK[Cokleisli[?[_], A, B]] =
+    cokleisliInstance.asInstanceOf[ContravariantK[Cokleisli[?[_], A, B]]]
+
+  private[this] val cokleisliInstance: ContravariantK[Cokleisli[?[_], Any, Any]] =
+    new ContravariantK[Cokleisli[?[_], Any, Any]] {
+      def contramapK[F[_], G[_]](af: Cokleisli[F, Any, Any])(fk: G ~> F) = Cokleisli(ga => af.run(fk(ga)))
+    }
+}

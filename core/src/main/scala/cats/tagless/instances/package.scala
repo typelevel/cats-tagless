@@ -24,6 +24,7 @@ package object instances {
   object idT extends IdTInstances
   object iorT extends IorTInstances
   object kleisli extends KleisliInstances
+  object cokleisli extends CokleisliInstances
   object nested extends NestedInstances
   object oneAnd extends OneAndInstances
   object optionT extends OptionTInstances

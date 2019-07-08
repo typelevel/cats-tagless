@@ -64,6 +64,9 @@ trait TestInstances {
   implicit def catsTaglessLawsEqForKleisli[F[_], A, B](implicit ev: Eq[A => F[B]]): Eq[Kleisli[F, A, B]] =
     Eq.by(_.run)
 
+  implicit def catsTaglessLawsEqForCokleisli[F[_], A, B](implicit ev: Eq[F[A] => B]): Eq[Cokleisli[F, A, B]] =
+    Eq.by(_.run)
+
   //------------------------------------------------------------------
   // The instances below are needed due to type inference limitations:
   //------------------------------------------------------------------
@@ -107,6 +110,10 @@ trait TestInstances {
   implicit def catsTaglessLawsEqForKleisliTuple3K[F[_], G[_], H[_], A, B](
     implicit ev: Eq[A => (F[B], G[B], H[B])]
   ): Eq[Kleisli[Tuple3K[F, G, H]#λ, A, B]] = Eq.by(_.run)
+
+  implicit def catsTaglessLawsEqForCokleisliTuple3K[F[_], G[_], H[_], A, B](
+    implicit ev: Eq[((F[A], G[A], H[A])) => B]
+  ): Eq[Cokleisli[Tuple3K[F, G, H]#λ, A, B]] = Eq.by(_.run)
 
   implicit def catsTaglessLawsEqForOneAndTuple3K[F[_], G[_], H[_], A](
     implicit ev: Eq[(A, (F[A], G[A], H[A]))]

@@ -19,6 +19,7 @@ package cats.tagless
 package object syntax {
   object all extends AllSyntax
   object functorK extends FunctorKSyntax
+  object contravariantK extends ContravariantKSyntax
   object invariantK extends InvariantKSyntax
   object semigroupalK extends SemigroupalKSyntax
   object applyK extends ApplyKSyntax

@@ -15,10 +15,18 @@
  */
 
 package cats.tagless
-package syntax
 
-trait AllSyntax extends FunctorKSyntax
-  with ContravariantKSyntax
-  with InvariantKSyntax
-  with SemigroupalKSyntax
-  with ApplyKSyntax
+import cats.~>
+import simulacrum.typeclass
+
+/** A higher-kinded `Contravariant` functor.
+  * Must obey the laws in `cats.tagless.laws.ContravariantKLaws`.
+  */
+@typeclass trait ContravariantK[A[_[_]]] extends InvariantK[A] {
+  def contramapK[F[_], G[_]](af: A[F])(fk: G ~> F): A[G]
+  override def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gk: G ~> F): A[G] = contramapK(af)(gk)
+}
+
+
+
+

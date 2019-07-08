@@ -22,6 +22,7 @@ trait AllInstances extends EitherKInstances
   with IdTInstances
   with IorTInstances
   with KleisliInstances
+  with CokleisliInstances
   with NestedInstances
   with OneAndInstances
   with OptionTInstances

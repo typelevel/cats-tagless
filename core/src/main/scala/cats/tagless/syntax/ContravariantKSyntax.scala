@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-package cats.tagless
-package syntax
+package cats.tagless.syntax
 
-trait AllSyntax extends FunctorKSyntax
-  with ContravariantKSyntax
-  with InvariantKSyntax
-  with SemigroupalKSyntax
-  with ApplyKSyntax
+import cats.tagless.ContravariantK
+
+trait ContravariantKSyntax extends ContravariantK.ToContravariantKOps

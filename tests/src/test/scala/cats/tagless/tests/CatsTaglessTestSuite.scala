@@ -25,12 +25,12 @@ import cats.tagless.laws.discipline.SemigroupalKTests.IsomorphismsK
 import cats.tagless.syntax.AllSyntax
 import cats.tagless.{InvariantK, Tuple3K}
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest.Matchers
 import org.scalatest.funsuite.AnyFunSuiteLike
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 import scala.util.Try
 import org.typelevel.discipline.scalatest.Discipline
+import org.scalatest.matchers.should.Matchers
 
 class CatsTaglessTestSuite
   extends AnyFunSuiteLike

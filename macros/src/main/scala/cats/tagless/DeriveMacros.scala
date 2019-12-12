@@ -18,6 +18,7 @@ package cats.tagless
 
 import cats.arrow.Profunctor
 import cats.data.Tuple2K
+import cats.tagless.diagnosis.{Instrument, Instrumentation}
 import cats.{Bifunctor, Contravariant, FlatMap, Functor, Invariant, Semigroupal}
 
 import scala.reflect.macros.blackbox
@@ -540,6 +541,30 @@ class DeriveMacros(val c: blackbox.Context) {
       implement(algebra)(c, d)(types ++ methods)
     }
 
+  // def instrument[F[_]](af: Alg[F]): Alg[Instrumentation[F, *]]
+  def instrumentation(algebra: Type): (String, Type => Tree) =
+    "instrument" -> { case PolyType(List(f), MethodType(List(af), _)) =>
+      val Instrumentation = symbolOf[Instrumentation[Any, Any]]
+      val F = f.asType.toTypeConstructor
+      val Af = singleType(NoPrefix, af)
+      val members = overridableMembersOf(Af)
+      val types = delegateAbstractTypes(Af, members, Af)
+      val algebraName = algebra.typeSymbol.name.decodedName.toString
+
+      val methods = delegateMethods(Af, members, af) {
+        case method if method.returnType.typeSymbol == f =>
+          val body = q"_root_.cats.tagless.diagnosis.Instrumentation(${method.body}, $algebraName, ${method.name.decodedName.toString})"
+          val returnType = appliedType(Instrumentation, F :: method.returnType.typeArgs)
+          method.copy(body = body, returnType = returnType)
+        case method if method.occursInSignature(f) =>
+          abort(s"Type parameter $f can only appear as a top level return type in method ${method.name}")
+      }
+
+      val instrumentationType = appliedType(Instrumentation, F :: F.typeParams.map(_.asType.toType))
+      val DescribedAlg = appliedType(algebra, polyType(F.typeParams, instrumentationType))
+      implement(DescribedAlg)()(types ++ methods)
+    }
+
   def functor[F[_]](implicit tag: WeakTypeTag[F[Any]]): Tree =
     instantiate[Functor[F]](tag)(map)
 
@@ -578,4 +603,7 @@ class DeriveMacros(val c: blackbox.Context) {
 
   def applyK[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
     instantiate[ApplyK[Alg]](tag)(mapK, productK)
+
+  def instrument[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
+    instantiate[Instrument[Alg]](tag)(instrumentation)
 }

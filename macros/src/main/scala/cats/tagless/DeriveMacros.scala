@@ -36,8 +36,12 @@ class DeriveMacros(val c: blackbox.Context) {
     body: Tree
   ) {
 
+    def displayName: String = name.decodedName.toString
     def occursInSignature(symbol: Symbol): Boolean = occursIn(signature)(symbol)
     def occursInReturn(symbol: Symbol): Boolean = occursIn(returnType)(symbol)
+
+    def occursOnlyInReturn(symbol: Symbol): Boolean =
+      occursInReturn(symbol) && !signature.paramLists.iterator.flatten.exists(p => occursIn(p.info)(symbol))
 
     /** Construct a new set of parameter lists after substituting some type symbols. */
     def transformedParamLists(from: List[Symbol], to: List[Symbol]): List[List[ValDef]] =
@@ -360,13 +364,13 @@ class DeriveMacros(val c: blackbox.Context) {
       val members = overridableMembersOf(Fa)
       val types = delegateAbstractTypes(Fa, members, Fa)
       val methods = delegateMethods(Fa, members, fa) {
-        case method if method.occursInReturn(a) =>
+        case method if method.occursOnlyInReturn(a) =>
           val returnType = method.returnType.map(t => if (t.typeSymbol == a) B else t)
           val Ap = summon[cats.Apply[Any]](polyType(a :: Nil, method.returnType))
           val body = q"$Ap.ap[$A, $B](${method.delegate(Ident(ff))})(${method.body})"
           method.copy(returnType = returnType, body = body)
         case method if method.occursInSignature(a) =>
-          abort(s"Type parameter $A occurs in contravariant position in method ${method.name}")
+          abort(s"Type parameter $A occurs in contravariant position in method ${method.displayName}")
       }
 
       implement(algebra)(b)(types ++ methods)
@@ -383,13 +387,13 @@ class DeriveMacros(val c: blackbox.Context) {
       val members = overridableMembersOf(Af)
       val types = delegateAbstractTypes(Af, members, Af)
       val methods = delegateMethods(Af, members, af) {
-        case method if method.occursInReturn(f) =>
+        case method if method.occursOnlyInReturn(f) =>
           val returnType = method.returnType.map(t => if (t.typeSymbol == f) appliedType(t2k, t.typeArgs) else t)
           val Sk = summon[SemigroupalK[Any]](polyType(f :: Nil, method.returnType))
           val body = q"$Sk.productK[$F, $G](${method.body}, ${method.delegate(Ident(ag))})"
           method.copy(returnType = returnType, body = body)
         case method if method.occursInSignature(f) =>
-          abort(s"Type parameter $f appears in contravariant position in method ${method.name}")
+          abort(s"Type parameter $F occurs in contravariant position in method ${method.displayName}")
       }
 
       val typeParams = Tuple2K.typeParams.drop(2)
@@ -409,7 +413,8 @@ class DeriveMacros(val c: blackbox.Context) {
           val body = method.delegate(q"$f(${method.body})")
           method.copy(returnType = b.asType.toType, body = body)
         case method if method.occursInSignature(a) =>
-          abort(s"Type parameter $a can only appear as a top level return type in method ${method.name}")
+          val A = a.asType.toType
+          abort(s"Type parameter $A can only occur as a top level return type in method ${method.displayName}")
       }
 
       implement(algebra)(b)(types ++ methods)
@@ -435,7 +440,8 @@ class DeriveMacros(val c: blackbox.Context) {
 
           method.copy(returnType = b.asType.toType, body = body)
         case method if method.occursInSignature(a) =>
-          abort(s"Type parameter $a can only appear as a top level return type in method ${method.name}")
+          val A = a.asType.toType
+          abort(s"Type parameter $A can only occur as a top level return type in method ${method.displayName}")
         case method =>
           method.copy(body = method.delegate(q"$f($x)"))
       }
@@ -487,7 +493,9 @@ class DeriveMacros(val c: blackbox.Context) {
         case method if method.occursInSignature(a) || method.occursInSignature(b) =>
           method.transform(fab, a -> c, b -> d) {
             case (_, pt) if occursIn(pt)(a) && occursIn(pt)(b) =>
-              abort(s"Both type parameters $a and $b appear in contravariant position in method ${method.name}")
+              val A = a.asType.toType
+              val B = b.asType.toType
+              abort(s"Both type parameters $A and $B occur in contravariant position in method ${method.displayName}")
             case (pn, pt) if occursIn(pt)(a) =>
               val F = summon[Contravariant[Any]](polyType(a :: Nil, pt))
               q"$F.contramap[$c, $a]($pn)($f)"

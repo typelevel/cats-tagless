@@ -1,5 +1,9 @@
 /*
+<<<<<<< HEAD
  * Copyright 2017 Kailuo Wang
+=======
+ * Copyright 2019 cats-tagless maintainers
+>>>>>>> upstream/master
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +23,10 @@ package cats.tagless
 import cats.~>
 import simulacrum.typeclass
 
-@typeclass
-trait ContravariantK[A[_[_]]] extends InvariantK[A] {
-  def contramapK[F[_], G[_]](af: A[F])(gf: G ~> F): A[G]
-
-  override def imapK[F[_], G[_]](af: A[F])(fg: F ~> G)(gf: G ~> F): A[G] = contramapK(af)(gf)
+/** A higher-kinded `Contravariant` functor.
+  * Must obey the laws in `cats.tagless.laws.ContravariantKLaws`.
+  */
+@typeclass trait ContravariantK[A[_[_]]] extends InvariantK[A] {
+  def contramapK[F[_], G[_]](af: A[F])(fk: G ~> F): A[G]
+  override def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gk: G ~> F): A[G] = contramapK(af)(gk)
 }
-
-
-
-

@@ -6,6 +6,8 @@ addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVe
 addCommandAlias("validateJVM", ";testsJVM/test ; docs/makeMicrosite")
 
 lazy val libs = org.typelevel.libraries
+  .add("scalatestplus", version = "3.1.0.0-RC2", org = "org.scalatestplus", "scalatestplus-scalacheck")
+  .add("discipline-scalatest", version = "1.0.0-RC1", org = org.typelevel.typeLevelOrg)
 
 val apache2 = "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")
 val gh = GitHubSettings(org = "typelevel", proj = "cats-tagless", publishOrg = "org.typelevel", license = apache2)
@@ -85,7 +87,7 @@ lazy val testsJS  = testsM.js
 lazy val testsM   = module("tests", CrossType.Pure)
   .dependsOn(macrosM, lawsM)
   .settings(
-    libs.testDependencies("shapeless", "scalatest", "cats-free", "cats-effect", "cats-testkit"),
+    libs.testDependencies("shapeless", "scalatest", "cats-free", "cats-effect", "cats-testkit", "scalatestplus-scalacheck", "discipline-scalatest"),
     scalacOptions in Test := (scalacOptions in Test).value.filter(_ != "-Xfatal-warnings"),
     scalaMacroDependencies(libs),
     macroAnnotationsSettings,
@@ -166,7 +168,6 @@ lazy val scoverageSettings = sharedScoverageSettings(60)
 lazy val disciplineDependencies = libs.dependencies("discipline-core", "scalacheck")
 
 lazy val copyrightHeader = Seq(
-  startYear := Some(2017),
-  organizationName := "Kailuo Wang"
-
+  startYear := Some(2019),
+  organizationName := "cats-tagless maintainers"
 )

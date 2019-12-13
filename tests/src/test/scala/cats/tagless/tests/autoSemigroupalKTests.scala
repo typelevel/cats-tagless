@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Kailuo Wang
+ * Copyright 2019 cats-tagless maintainers
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,28 +17,25 @@
 package cats.tagless
 package tests
 
-
 import cats.laws.discipline.SerializableTests
 import cats.tagless.laws.discipline.SemigroupalKTests
 
-import util.{Success, Try}
+import scala.util.Try
 
 class autoSemigroupalKTests extends CatsTaglessTestSuite {
-  test("simple product") {
-
-    val prodInterpreter = Interpreters.tryInterpreter.productK(Interpreters.lazyInterpreter)
-
-    prodInterpreter.parseInt("3").first should be(Success(3))
-    prodInterpreter.parseInt("3").second.value should be(3)
-    prodInterpreter.parseInt("sd").first.isSuccess should be(false)
-    prodInterpreter.divide(3f, 3f).second.value should be(1f)
-
-  }
-
-  implicit def eqT32 = SafeAlg.eqForSafeAlg[Tuple3K[Try, Option, List]#λ] //have to help scalac here
+  // Type inference issue.
+  implicit val eqForSafeAlg = SafeAlg.eqForSafeAlg[Tuple3K[Try, Option, List]#λ]
 
   checkAll("ParseAlg[Option]", SemigroupalKTests[SafeAlg].semigroupalK[Try, Option, List])
   checkAll("SemigroupalK[ParseAlg]", SerializableTests.serializable(SemigroupalK[SafeAlg]))
+
+  test("simple product") {
+    val prodInterpreter = Interpreters.tryInterpreter.productK(Interpreters.lazyInterpreter)
+    prodInterpreter.parseInt("3").first shouldBe Try(3)
+    prodInterpreter.parseInt("3").second.value shouldBe 3
+    prodInterpreter.parseInt("sd").first.isSuccess shouldBe false
+    prodInterpreter.divide(3f, 3f).second.value shouldBe 1f
+  }
 }
 
 object autoSemigroupalKTests {

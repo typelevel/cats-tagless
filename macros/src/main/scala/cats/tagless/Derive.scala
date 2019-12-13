@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Kailuo Wang
+ * Copyright 2019 cats-tagless maintainers
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 package cats.tagless
 
 import cats.arrow.Profunctor
-import cats.{Contravariant, FlatMap, Functor, Invariant}
+import cats.{Bifunctor, Contravariant, FlatMap, Functor, Invariant}
 
 object Derive {
 
@@ -25,6 +25,7 @@ object Derive {
   def contravariant[F[_]]: Contravariant[F] = macro DeriveMacros.contravariant[F]
   def invariant[F[_]]: Invariant[F] = macro DeriveMacros.invariant[F]
   def profunctor[F[_, _]]: Profunctor[F] = macro DeriveMacros.profunctor[F]
+  def bifunctor[F[_, _]]: Bifunctor[F] = macro DeriveMacros.bifunctor[F]
   def flatMap[F[_]]: FlatMap[F] = macro DeriveMacros.flatMap[F]
 
   /**
@@ -50,6 +51,7 @@ object Derive {
    */
   def functorK[Alg[_[_]]]: FunctorK[Alg] = macro DeriveMacros.functorK[Alg]
 
+  def contravariantK[Alg[_[_]]]: ContravariantK[Alg] = macro DeriveMacros.contravariantK[Alg]
   def invariantK[Alg[_[_]]]: InvariantK[Alg] = macro DeriveMacros.invariantK[Alg]
   def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = macro DeriveMacros.semigroupalK[Alg]
   def applyK[Alg[_[_]]]: ApplyK[Alg] = macro DeriveMacros.applyK[Alg]

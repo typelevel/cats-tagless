@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Kailuo Wang
+ * Copyright 2019 cats-tagless maintainers
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,6 @@ private[tagless] class autoSemigroupalKMacros(override val c: whitebox.Context) 
 
   def semigroupalKInst(annottees: c.Tree*): c.Tree =
     enrichAlgebra(annottees.toList) { algebra =>
-      algebra.forVaryingHigherKindedEffectType(generateSemigroupalKFor(algebra.name))
+      algebra.forVaryingEffectType(generateSemigroupalKFor(algebra.name)) :: Nil
     }
 }

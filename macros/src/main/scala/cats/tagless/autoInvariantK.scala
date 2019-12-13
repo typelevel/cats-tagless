@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Kailuo Wang
+ * Copyright 2019 cats-tagless maintainers
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,11 +37,11 @@ private [tagless] class autoInvariantKMacros(override val c: whitebox.Context) e
       q"_root_.cats.tagless.Derive.invariantK[$algebraType]"
     )
 
-  def instanceDef(algebra: AlgDefn): AlgDefn =
-    algebra.forVaryingHigherKindedEffectType(generateInvariantKFor(algebra.name))
+  def instanceDef(algebra: AlgDefn.UnaryAlg): Tree =
+    algebra.forVaryingEffectType(generateInvariantKFor(algebra.name))
 
-  def instanceDefFullyRefined(algDefn: AlgDefn): AlgDefn = {
-    algDefn.forVaryingHigherKindedEffectTypeFullyRefined {
+  def instanceDefFullyRefined(algDefn: AlgDefn.UnaryAlg): Tree = {
+    algDefn.forVaryingEffectTypeFullyRefined {
       (algebraType, tparams) =>
         val impl = Seq(
           generateInvariantKFor("FullyRefined" + algDefn.name)(
@@ -57,14 +57,14 @@ private [tagless] class autoInvariantKMacros(override val c: whitebox.Context) e
     }
   }
 
-  def companionIMapKDef(algDefn: AlgDefn) = {
+  def companionIMapKDef(algDefn: AlgDefn.UnaryAlg) = {
     val from = TermName("af")
     val F = createFreshTypeParam("F", 1)
     val G = createFreshTypeParam("G", 1)
     val algebraF = algDefn.newTypeSig(F)
     val fullyRefinedAlgebraG = algDefn.dependentRefinedTypeSig(G, from)
 
-    algDefn.forVaryingHigherKindedEffectType((algebraType, tparams) => q"""
+    algDefn.forVaryingEffectType((algebraType, tparams) => q"""
       def imapK[$F, $G, ..$tparams]($from: $algebraF)(fk: _root_.cats.~>[..${tArgs(F, G)}])(gk: _root_.cats.~>[..${tArgs(G, F)}]): $fullyRefinedAlgebraG =
         _root_.cats.tagless.InvariantK[$algebraType].imapK($from)(fk)(gk).asInstanceOf[$fullyRefinedAlgebraG]
     """)
@@ -88,9 +88,9 @@ private [tagless] class autoInvariantKMacros(override val c: whitebox.Context) e
       }"""
   }
 
-  def autoDerivationDef(algDefn: AlgDefn) =
-    if(autoDerive) algDefn.forVaryingHigherKindedEffectType(generateAutoDerive(algDefn.newTypeSig)) else algDefn
+  def autoDerivationDef(algDefn: AlgDefn.UnaryAlg) =
+    if(autoDerive) algDefn.forVaryingEffectType(generateAutoDerive(algDefn.newTypeSig)) else EmptyTree
 
   def newDef(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList)(instanceDef _ andThen companionIMapKDef andThen instanceDefFullyRefined andThen autoDerivationDef)
+    enrichAlgebra(annottees.toList)(algebra => instanceDef(algebra) :: companionIMapKDef(algebra) :: instanceDefFullyRefined(algebra) :: autoDerivationDef(algebra) :: Nil)
 }

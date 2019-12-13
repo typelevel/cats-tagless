@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Kailuo Wang
+ * Copyright 2019 cats-tagless maintainers
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ private[tagless] class autoFunctorMacros(override val c: whitebox.Context) exten
     )
 
   def functorInst(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList, higherKinded = false) { algebra =>
-      algebra.forVaryingEffectType(generateFunctorFor(algebra.name))
+    enrichAlgebra(annottees.toList, AlgebraResolver.LastRegularTypeParam) { algebra =>
+      algebra.forVaryingEffectType(generateFunctorFor(algebra.name)) :: Nil
     }
 }

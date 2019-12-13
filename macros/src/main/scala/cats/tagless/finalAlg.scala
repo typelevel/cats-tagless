@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Kailuo Wang
+ * Copyright 2019 cats-tagless maintainers
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,8 +32,8 @@ private[tagless] class finalAlgMacros(override val c: whitebox.Context) extends 
     q"def apply[..$tparams](implicit inst: $algebraType): $algebraType = inst"
 
   def inst(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList, higherKinded = false)(
-      _.forAlgebraType(generateApply)
+    enrichAlgebra(annottees.toList, AlgebraResolver.AnyLastTypeParam)(algebra =>
+      algebra.forAlgebraType(generateApply) :: Nil
     )
 
 }

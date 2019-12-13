@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Kailuo Wang
+ * Copyright 2019 cats-tagless maintainers
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,27 +17,25 @@
 package cats.tagless
 package tests
 
-
+import cats.{Contravariant, Eq}
+import cats.instances.all._
 import cats.laws.discipline.{ContravariantTests, ExhaustiveCheck, SerializableTests}
-import autoContravariantTest._
-import cats.kernel.Eq
-import org.scalacheck.{Arbitrary, Cogen}
 import cats.laws.discipline.eq._
-import cats.Contravariant
+import cats.tagless.tests.autoContravariantTest._
+import org.scalacheck.{Arbitrary, Cogen}
 
 class autoContravariantTests extends CatsTaglessTestSuite {
-
-  checkAll("SimpleAlg[Option]", ContravariantTests[SimpleAlg].contravariant[Float, String, Int])
-  checkAll("Invariant[SimpleAlg]", SerializableTests.serializable(Contravariant[SimpleAlg]))
+  checkAll("Contravariant[SimpleAlg]", ContravariantTests[SimpleAlg].contravariant[Float, String, Int])
+  checkAll("Contravariant is Serializable", SerializableTests.serializable(Contravariant[SimpleAlg]))
 
   test("non effect method correctly delegated") {
-    val doubleAlg = AlgWithNonEffectMethodFloat.contramap[String](_.toFloat)
+    val doubleAlg: AlgWithNonEffectMethod[String] = AlgWithNonEffectMethodFloat.contramap[String](_.toFloat)
     doubleAlg.foo2("big") should be("gib")
     doubleAlg.foo3("3") should be("3")
   }
 
   test("extra type param correctly handled") {
-    val doubleAlg = AlgWithExtraTypeParamFloat.contramap[String](_.toFloat)
+    val doubleAlg: AlgWithExtraTypeParam[String, String] = AlgWithExtraTypeParamFloat.contramap[String](_.toFloat)
     doubleAlg.foo("big", "3") should be(6)
   }
 
@@ -49,14 +47,14 @@ class autoContravariantTests extends CatsTaglessTestSuite {
     intAlg.contramap[String](_.toInt).plusOne("3") should be(4)
     intAlg.contramap[String](_.toInt).minusOne(2) should be(1)
   }
-
 }
 
 object autoContravariantTest {
 
   @autoContravariant
   trait SimpleAlg[T] {
-    def foo(a: T): String
+    def foo(t: T): String
+    def bar(opt: Option[T]): String
   }
 
   @autoContravariant
@@ -106,19 +104,17 @@ object autoContravariantTest {
     def foo(a: String, b: Float): Int = (a.length.toFloat + b).toInt
   }
 
-
-  import cats.instances.string._
   implicit def eqForSimpleAlg[T: ExhaustiveCheck: Eq]: Eq[SimpleAlg[T]] =
-    Eq.by[SimpleAlg[T], T => String] { p =>
-      (s: T) => p.foo(s)
-    }
+    Eq.by(algebra => (algebra.foo _, algebra.bar _))
 
   implicit def arbitrarySimpleAlg[T: Cogen]: Arbitrary[SimpleAlg[T]] =
     Arbitrary {
       for {
         f <- Arbitrary.arbitrary[T => String]
+        g <- Arbitrary.arbitrary[Option[T] => String]
       } yield new SimpleAlg[T] {
-        def foo(i: T): String = f(i)
+        def foo(t: T) = f(t)
+        def bar(opt: Option[T]) = g(opt)
       }
     }
 }

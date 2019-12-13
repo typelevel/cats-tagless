@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Kailuo Wang
+ * Copyright 2019 cats-tagless maintainers
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,23 +17,29 @@
 package cats.tagless
 package tests
 
+import cats.Eq
 import cats.arrow.Profunctor
 import cats.instances.all._
-import cats.kernel.Eq
+import cats.laws.discipline.{ProfunctorTests, SerializableTests}
 import cats.laws.discipline.eq._
-import cats.laws.discipline.{ExhaustiveCheck, ProfunctorTests, SerializableTests}
-import cats.tagless.tests.autoProfunctorTests._
 import org.scalacheck.{Arbitrary, Cogen}
 
 class autoProfunctorTests extends CatsTaglessTestSuite {
+  import autoProfunctorTests._
+
   checkAll("Profunctor[TestAlgebra]", ProfunctorTests[TestAlgebra].profunctor[Long, String, Int, Long, String, Int])
   checkAll("Serializable Profunctor[TestAlgebra]", SerializableTests.serializable(Profunctor[TestAlgebra]))
+
+  test("extra type param correctly handled") {
+    val asStringAlg = AlgWithExtraTypeParamString.dimap((s: String) => s.length)(_ + 1)
+    asStringAlg.foo("base", "x2") should be(9d)
+  }
 }
 
 object autoProfunctorTests {
    import TestInstances._
 
-  // TODO: Macro annotation.
+  @autoProfunctor
   trait TestAlgebra[A, B] {
     def abstractCovariant(str: String): B
     def concreteCovariant(str: String): B = abstractCovariant(str + " concreteCovariant")
@@ -44,12 +50,11 @@ object autoProfunctorTests {
     def abstractOther(str: String): String
     def concreteOther(str: String): String = str + " concreteOther"
     def withoutParams: B
+    def fromList(as: List[A]): List[B]
   }
 
   object TestAlgebra {
-    implicit val profunctor: Profunctor[TestAlgebra] = Derive.profunctor
-
-    implicit def eqv[A: Arbitrary: ExhaustiveCheck, B: Eq]: Eq[TestAlgebra[A, B]] =
+    implicit def eqv[A: Arbitrary, B: Eq]: Eq[TestAlgebra[A, B]] =
       Eq.by { algebra =>
         (
           algebra.abstractCovariant _,
@@ -60,7 +65,8 @@ object autoProfunctorTests {
           algebra.concreteMixed _,
           algebra.abstractOther _,
           algebra.concreteOther _,
-          algebra.withoutParams
+          algebra.withoutParams,
+          algebra.fromList _
         )
       }
   }
@@ -75,16 +81,27 @@ object autoProfunctorTests {
       conMixed <- Arbitrary.arbitrary[Option[A => B]]
       absOther <- Arbitrary.arbitrary[String => String]
       conOther <- Arbitrary.arbitrary[Option[String => String]]
-      withoutParameters <- Arbitrary.arbitrary[B]
+      noParams <- Arbitrary.arbitrary[B]
+      list <- Arbitrary.arbitrary[List[A] => List[B]]
     } yield new TestAlgebra[A, B] {
-      override def abstractCovariant(str: String): B = absCovariant(str)
-      override def concreteCovariant(str: String): B = conCovariant.getOrElse(super.concreteCovariant(_))(str)
-      override def abstractContravariant(a: A): String = absContravariant(a)
-      override def concreteContravariant(a: A): String = conContravariant.getOrElse(super.concreteContravariant(_))(a)
-      override def abstractMixed(a: A): B = absMixed(a)
-      override def concreteMixed(a: A): B = conMixed.getOrElse(super.concreteMixed(_))(a)
-      override def abstractOther(str: String): String = absOther(str)
-      override def concreteOther(str: String): String = conOther.getOrElse(super.concreteOther(_))(str)
-      override def withoutParams: B = withoutParameters
+      override def abstractCovariant(str: String) = absCovariant(str)
+      override def concreteCovariant(str: String) = conCovariant.getOrElse(super.concreteCovariant(_))(str)
+      override def abstractContravariant(a: A) = absContravariant(a)
+      override def concreteContravariant(a: A) = conContravariant.getOrElse(super.concreteContravariant(_))(a)
+      override def abstractMixed(a: A) = absMixed(a)
+      override def concreteMixed(a: A) = conMixed.getOrElse(super.concreteMixed(_))(a)
+      override def abstractOther(str: String) = absOther(str)
+      override def concreteOther(str: String) = conOther.getOrElse(super.concreteOther(_))(str)
+      override def withoutParams = noParams
+      override def fromList(as: List[A]) = list(as)
     })
+
+  @autoProfunctor
+  trait AlgWithExtraTypeParam[T, A, B] {
+    def foo(t: T, a: A): B
+  }
+
+  object AlgWithExtraTypeParamString extends AlgWithExtraTypeParam[String, Int, Double] {
+    override def foo(t: String, a: Int) = t.length * a.toDouble
+  }
 }

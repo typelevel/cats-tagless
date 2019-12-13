@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Kailuo Wang
+ * Copyright 2019 cats-tagless maintainers
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,21 @@
 
 package cats.tagless.tests
 
-import cats.FlatMap
-import cats.kernel.Eq
-import cats.kernel.instances.string._
-import cats.kernel.instances.tuple._
-import cats.laws.discipline.eq._
+import cats.{Eq, FlatMap}
+import cats.instances.all._
 import cats.laws.discipline.{FlatMapTests, SerializableTests}
+import cats.laws.discipline.eq._
 import cats.tagless.autoFlatMap
-import cats.tagless.tests.autoFlatMapTests._
 import org.scalacheck.{Arbitrary, Cogen}
+
 class autoFlatMapTests extends CatsTaglessTestSuite {
+  import autoFlatMapTests._
 
   checkAll("FlatMap[TestAlgebra]", FlatMapTests[TestAlgebra].flatMap[Float, String, Int])
   checkAll("serializable FlatMap[TestAlgebra]", SerializableTests.serializable(FlatMap[TestAlgebra]))
 
   test("extra type param correctly handled") {
-    val doubleAlg = AlgWithExtraTypeParamFloat.map(_.toDouble)
+    val doubleAlg: AlgWithExtraTypeParam[String, Double] = AlgWithExtraTypeParamFloat.map(_.toDouble)
     doubleAlg.foo("big") should be(3d)
   }
 }
@@ -42,13 +41,9 @@ object autoFlatMapTests {
   @autoFlatMap
   trait TestAlgebra[T] {
     def abstractEffect(a: String): T
-
     def concreteEffect(a: String): T = abstractEffect(a + " concreteEffect")
-
     def abstractOther(a: String): String
-
     def concreteOther(a: String): String = a + " concreteOther"
-
     def withoutParams: T
   }
 
@@ -72,14 +67,15 @@ object autoFlatMapTests {
     def generic[A](as: A*): T
   }
 
-  implicit def eqForTestAlgebra[T](implicit eqT: Eq[T]): Eq[TestAlgebra[T]] =
-    Eq.by { p =>
-      (p.abstractEffect: String => T) ->
-        (p.concreteEffect: String => T) ->
-        (p.abstractOther: String => String) ->
-        (p.concreteOther: String => String) ->
-        p.withoutParams
-    }
+  implicit def eqForTestAlgebra[T: Eq]: Eq[TestAlgebra[T]] = Eq.by { algebra =>
+    (
+      algebra.abstractEffect _,
+      algebra.concreteEffect _,
+      algebra.abstractOther _,
+      algebra.concreteOther _,
+      algebra.withoutParams
+    )
+  }
 
   implicit def arbitraryTestAlgebra[T: Arbitrary](implicit cS: Cogen[String]): Arbitrary[TestAlgebra[T]] =
     Arbitrary {
@@ -88,17 +84,13 @@ object autoFlatMapTests {
         conEff <- Arbitrary.arbitrary[Option[String => T]]
         absOther <- Arbitrary.arbitrary[String => String]
         conOther <- Arbitrary.arbitrary[Option[String => String]]
-        withoutParameters <- Arbitrary.arbitrary[T]
+        noParams <- Arbitrary.arbitrary[T]
       } yield new TestAlgebra[T] {
         override def abstractEffect(i: String): T = absEff(i)
-
         override def concreteEffect(a: String): T = conEff.getOrElse(super.concreteEffect(_))(a)
-
         override def abstractOther(a: String): String = absOther(a)
-
         override def concreteOther(a: String): String = conOther.getOrElse(super.concreteOther(_))(a)
-
-        override def withoutParams: T = withoutParameters
+        override def withoutParams: T = noParams
       }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Kailuo Wang
+ * Copyright 2019 cats-tagless maintainers
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,31 +17,31 @@
 package cats.tagless
 package tests
 
-
-import scala.util.Try
 import cats.{Monad, Show, ~>}
-import cats.laws.discipline.SerializableTests
-import cats.tagless.laws.discipline.FunctorKTests
-import autoFunctorKTests._
 import cats.arrow.FunctionK
 import cats.free.Free
+import cats.laws.discipline.SerializableTests
+import cats.tagless.laws.discipline.FunctorKTests
 import shapeless.test.illTyped
 
+import scala.util.Try
+
 class autoFunctorKTests extends CatsTaglessTestSuite {
+  import autoFunctorKTests._
+
+  checkAll("FunctorK[SafeAlg]", FunctorKTests[SafeAlg].functorK[Try, Option, List, Int])
+  checkAll("FunctorK is Serializable", SerializableTests.serializable(FunctorK[SafeAlg]))
+
   test("simple mapK") {
-
     val optionParse: SafeAlg[Option] = Interpreters.tryInterpreter.mapK(fk)
-
     optionParse.parseInt("3") should be(Some(3))
     optionParse.parseInt("sd") should be(None)
     optionParse.divide(3f, 3f) should be(Some(1f))
-
   }
 
   test("simple instance summon with autoDeriveFromFunctorK on") {
     implicit val listParse: SafeAlg[List] = Interpreters.tryInterpreter.mapK(λ[Try ~> List](_.toList))
     SafeAlg[List].parseInt("3") should be(List(3))
-
     succeed
   }
 
@@ -51,9 +51,6 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
     SafeAlg[Option]
     succeed
   }
-
-  checkAll("ParseAlg[Option]", FunctorKTests[SafeAlg].functorK[Try, Option, List, Int])
-  checkAll("FunctorK[ParseAlg]", SerializableTests.serializable(FunctorK[SafeAlg]))
 
   test("Alg with non effect method") {
     val tryInt = new AlgWithNonEffectMethod[Try] {
@@ -76,10 +73,10 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
 
 
   test("Alg with extra type parameters") {
-
     implicit val foo: AlgWithExtraTP[Try, String] = new AlgWithExtraTP[Try, String] {
       def a(i: Int) = Try(i.toString)
     }
+
     import AlgWithExtraTP.autoDerive._
     AlgWithExtraTP[Option, String].a(5) should be(Some("5"))
   }
@@ -88,6 +85,7 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
     implicit val algWithExtraTP: AlgWithExtraTP2[String, Try] = new AlgWithExtraTP2[String, Try] {
       def a(i: Int) = Try(i.toString)
     }
+
     algWithExtraTP.mapK(fk).a(5) should be(Some("5"))
   }
 
@@ -138,7 +136,7 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
       def a(i: Int): Try[Int] = util.Success(i)
     }
 
-    illTyped { """ AlgWithoutAutoDerivation.autoDerive """}
+    illTyped("AlgWithoutAutoDerivation.autoDerive")
   }
 
   test("defs with no params") {
@@ -169,8 +167,8 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
     }
 
     import AlgWithAbstractTypeClass.fullyRefined._
-
-    implicit val fShow : FunctorK[AlgWithAbstractTypeClass.Aux[?[_], Show]] = functorKForFullyRefinedAlgWithAbstractTypeClass[Show]  //scalac needs help when abstract type is high order
+    // Scalac needs help when abstract type is high order.
+    implicit val fShow : FunctorK[AlgWithAbstractTypeClass.Aux[?[_], Show]] = functorKForFullyRefinedAlgWithAbstractTypeClass[Show]
     fShow.mapK(foo)(fk).a(true) should be(Some("true"))
   }
 
@@ -211,6 +209,12 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
     val bar = AlgWithByNameParameter.mapK(foo)(fk)
     bar.log("level".reverse) should be(Some("level"))
   }
+
+  test("builder-style algebra") {
+    val listBuilder: BuilderAlgebra[List] = BuilderAlgebra.Named("foo")
+    val optionBuilder = listBuilder.mapK[Option](λ[List ~> Option](_.headOption))
+    optionBuilder.withFoo("bar").unit shouldBe Some(())
+  }
 }
 
 
@@ -244,7 +248,6 @@ object autoFunctorKTests {
     sealed abstract class A
     case object B extends A
     case object C extends A
-
     type Aux[F[_], T0 <: A] = AlgWithTypeBound[F] { type T = T0 }
   }
 
@@ -338,5 +341,19 @@ object autoFunctorKTests {
   trait AlgWithVarArgsParameter[F[_]] {
     def sum(xs: Int*): Int
     def fSum(xs: Int*): F[Int]
+  }
+
+  trait BuilderAlgebra[F[_]] {
+    def unit: F[Unit]
+    def withFoo(foo: String): BuilderAlgebra[F]
+  }
+
+  object BuilderAlgebra {
+    implicit val functorK: FunctorK[BuilderAlgebra] = Derive.functorK
+
+    final case class Named(name: String) extends BuilderAlgebra[List] {
+      val unit: List[Unit] = List.fill(5)(())
+      def withFoo(foo: String): BuilderAlgebra[List] = copy(name = foo)
+    }
   }
 }

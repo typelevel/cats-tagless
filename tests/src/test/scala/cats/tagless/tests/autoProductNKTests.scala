@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Kailuo Wang
+ * Copyright 2019 cats-tagless maintainers
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,32 +17,26 @@
 package cats.tagless
 package tests
 
-
 import cats.~>
 
-import util.{Success, Try}
+import scala.util.Try
 
 class autoProductNKTests extends CatsTaglessTestSuite {
+
   test("simple product") {
     val optionInterpreter = Interpreters.tryInterpreter.mapK(λ[Try ~> Option](_.toOption))
     val listInterpreter = optionInterpreter.mapK(λ[Option ~> List](_.toList))
-
     val prodInterpreter: SafeAlg[Tuple3K[Try, List, Option]#λ] =
       SafeAlg.product3K(Interpreters.tryInterpreter, listInterpreter, optionInterpreter)
 
-    prodInterpreter.parseInt("3") should be((Success(3), List(3f), Some(3f)))
+    prodInterpreter.parseInt("3") shouldBe ((Try(3), List(3f), Some(3f)))
     val failure = prodInterpreter.parseInt("3.5")
-
-    failure._1.isFailure should be(true)
-    failure._2 should be(Nil)
-    failure._3 should be(None)
-
-    prodInterpreter.divide(3f, 3f) should be((Success(1f), List(1f), Some(1f)))
-
+    failure._1.isFailure shouldBe true
+    failure._2 shouldBe Nil
+    failure._3 shouldBe None
+    prodInterpreter.divide(3f, 3f) shouldBe ((Try(1f), List(1f), Some(1f)))
   }
-
 }
-
 
 object autoProductNKTests {
 

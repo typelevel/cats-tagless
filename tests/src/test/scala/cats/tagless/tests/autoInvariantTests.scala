@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Kailuo Wang
+ * Copyright 2019 cats-tagless maintainers
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,14 @@ package cats.tagless
 package tests
 
 
-import cats.laws.discipline.{ExhaustiveCheck, InvariantTests, SerializableTests}
-import autoInvariantTests._
-import cats.Invariant
-import cats.kernel.Eq
-import org.scalacheck.{Arbitrary, Cogen}
+import cats.{Eq, Invariant}
+import cats.instances.all._
+import cats.laws.discipline.{InvariantTests, SerializableTests}
 import cats.laws.discipline.eq._
-
+import org.scalacheck.{Arbitrary, Cogen}
 
 class autoInvariantTests extends CatsTaglessTestSuite {
+  import autoInvariantTests._
 
   checkAll("SimpleAlg[Option]", InvariantTests[SimpleAlg].invariant[Float, String, Int])
   checkAll("Invariant[SimpleAlg]", SerializableTests.serializable(Invariant[SimpleAlg]))
@@ -51,14 +50,16 @@ class autoInvariantTests extends CatsTaglessTestSuite {
     intAlg.imap(_.toString)(_.toInt).plusOne("3") should be("4")
     intAlg.imap(_.toString)(_.toInt).minusOne(2) should be(1)
   }
-
 }
 
 object autoInvariantTests {
+  import TestInstances._
 
   @autoInvariant
   trait SimpleAlg[T] {
     def foo(a: T): T
+    def headOption(ts: List[T]): Option[T]
+    def map[U](ts: List[T])(f: T => U): List[U] = ts.map(f)
   }
 
   @autoInvariant
@@ -110,19 +111,17 @@ object autoInvariantTests {
     def foo(a: String, b: Float): Float = a.length.toFloat + b
   }
 
+  implicit def eqForSimpleAlg[T: Arbitrary: Cogen: Eq]: Eq[SimpleAlg[T]] =
+    Eq.by(algebra => (algebra.foo _, algebra.headOption _, algebra.map[Int] _))
 
-  implicit def eqForSimpleAlg[T: Arbitrary : ExhaustiveCheck](implicit eqT: Eq[T]): Eq[SimpleAlg[T]] =
-    Eq.by[SimpleAlg[T], T => T] { p =>
-      (s: T) => p.foo(s)
-    }
-
-  implicit def arbitrarySimpleAlg[T: ExhaustiveCheck](implicit cS: Cogen[T],
-                                     FI: Arbitrary[T]): Arbitrary[SimpleAlg[T]] =
+  implicit def arbitrarySimpleAlg[T: Arbitrary: Cogen]: Arbitrary[SimpleAlg[T]] =
     Arbitrary {
       for {
         f <- Arbitrary.arbitrary[T => T]
+        hOpt <- Arbitrary.arbitrary[List[T] => Option[T]]
       } yield new SimpleAlg[T] {
         def foo(i: T): T = f(i)
+        def headOption(list: List[T]) = hOpt(list)
       }
     }
 

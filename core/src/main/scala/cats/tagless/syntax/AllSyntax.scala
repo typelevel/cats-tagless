@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Kailuo Wang
+ * Copyright 2019 cats-tagless maintainers
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,5 +18,7 @@ package cats.tagless
 package syntax
 
 trait AllSyntax extends FunctorKSyntax
- with SemigroupalKSyntax
- with InvariantKSyntax
+  with ContravariantKSyntax
+  with InvariantKSyntax
+  with SemigroupalKSyntax
+  with ApplyKSyntax

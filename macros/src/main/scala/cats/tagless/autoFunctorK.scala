@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Kailuo Wang
+ * Copyright 2019 cats-tagless maintainers
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,11 +37,11 @@ private [tagless] class autoFunctorKMacros(override val c: whitebox.Context) ext
       q"_root_.cats.tagless.Derive.functorK[$algebraType]"
     )
 
-  def instanceDef(algebra: AlgDefn): AlgDefn =
-    algebra.forVaryingHigherKindedEffectType(generateFunctorKFor(algebra.name))
+  def instanceDef(algebra: AlgDefn.UnaryAlg): Tree =
+    algebra.forVaryingEffectType(generateFunctorKFor(algebra.name))
 
-  def instanceDefFullyRefined(algDefn: AlgDefn): AlgDefn = {
-    algDefn.forVaryingHigherKindedEffectTypeFullyRefined {
+  def instanceDefFullyRefined(algDefn: AlgDefn.UnaryAlg): Tree = {
+    algDefn.forVaryingEffectTypeFullyRefined {
       (algebraType, tparams) =>
         val impl = Seq(
           generateFunctorKFor("FullyRefined" + algDefn.name)(
@@ -58,20 +58,21 @@ private [tagless] class autoFunctorKMacros(override val c: whitebox.Context) ext
   }
 
   def newDef(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList)(instanceDef _ andThen companionMapKDef andThen instanceDefFullyRefined andThen autoDerivationDef)
+    enrichAlgebra(annottees.toList)(
+      algebra => instanceDef(algebra) :: companionMapKDef(algebra) :: instanceDefFullyRefined(algebra) :: autoDerivationDef(algebra) :: Nil)
 }
 
 private [tagless] trait CovariantKMethodsGenerator { self: MacroUtils =>
   import c.universe._
 
-  def companionMapKDef(algDefn: AlgDefn) = {
+  def companionMapKDef(algDefn: AlgDefn.UnaryAlg) = {
     val from = TermName("af")
     val F = createFreshTypeParam("F", 1)
     val G = createFreshTypeParam("G", 1)
     val algebraF = algDefn.newTypeSig(F)
     val fullyRefinedAlgebraG = algDefn.dependentRefinedTypeSig(G, from)
 
-    algDefn.forVaryingHigherKindedEffectType((algebraType, tparams) => q"""
+    algDefn.forVaryingEffectType((algebraType, tparams) => q"""
       def mapK[$F, $G, ..$tparams]($from: $algebraF)(fk: _root_.cats.~>[..${tArgs(F, G)}]): $fullyRefinedAlgebraG =
         _root_.cats.tagless.FunctorK[$algebraType].mapK($from)(fk).asInstanceOf[$fullyRefinedAlgebraG]
     """)
@@ -94,7 +95,7 @@ private [tagless] trait CovariantKMethodsGenerator { self: MacroUtils =>
       }"""
   }
 
-  def autoDerivationDef(algDefn: AlgDefn) =
-    if(autoDerive) algDefn.forVaryingHigherKindedEffectType(generateAutoDerive(algDefn.newTypeSig)) else algDefn
+  def autoDerivationDef(algDefn: AlgDefn.UnaryAlg) =
+    if(autoDerive) algDefn.forVaryingEffectType(generateAutoDerive(algDefn.newTypeSig)) else EmptyTree
 
 }

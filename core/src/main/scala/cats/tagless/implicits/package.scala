@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Kailuo Wang
+ * Copyright 2019 cats-tagless maintainers
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,4 @@
 
 package cats.tagless
 
-package object implicits extends syntax.AllSyntax {
-
-}
+package object implicits extends instances.AllInstances with syntax.AllSyntax

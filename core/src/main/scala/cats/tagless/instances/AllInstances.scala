@@ -28,3 +28,7 @@ trait AllInstances extends EitherKInstances
   with OptionTInstances
   with Tuple2KInstances
   with WriterTInstances
+  with ContravariantKInstances
+  with InvariantKInstances
+  with FunctorKInstances
+  with SemigroupalKInstances

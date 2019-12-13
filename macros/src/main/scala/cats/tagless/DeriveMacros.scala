@@ -351,6 +351,27 @@ class DeriveMacros(val c: blackbox.Context) {
       implement(algebra)(g)(types ++ methods)
     }
 
+  // def ap[A, B](ff: F[A => B])(fa: F[A]): F[B]
+  def ap(algebra: Type): (String, Type => Tree) =
+    "ap" -> { case PolyType(List(a, b), MethodType(List(ff), MethodType(List(fa), _))) =>
+      val A = a.asType.toType
+      val B = b.asType.toType
+      val Fa = singleType(NoPrefix, fa)
+      val members = overridableMembersOf(Fa)
+      val types = delegateAbstractTypes(Fa, members, Fa)
+      val methods = delegateMethods(Fa, members, fa) {
+        case method if method.occursInReturn(a) =>
+          val returnType = method.returnType.map(t => if (t.typeSymbol == a) B else t)
+          val Ap = summon[cats.Apply[Any]](polyType(a :: Nil, method.returnType))
+          val body = q"$Ap.ap[$A, $B](${method.delegate(Ident(ff))})(${method.body})"
+          method.copy(returnType = returnType, body = body)
+        case method if method.occursInSignature(a) =>
+          abort(s"Type parameter $A occurs in contravariant position in method ${method.name}")
+      }
+
+      implement(algebra)(b)(types ++ methods)
+    }
+
   // def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Tuple2K[F, G, ?]]
   def productK(algebra: Type): (String, Type => Tree) = {
     val Tuple2K = symbolOf[Tuple2K[Any, Any, Any]]
@@ -504,6 +525,9 @@ class DeriveMacros(val c: blackbox.Context) {
 
   def bifunctor[F[_, _]](implicit tag: WeakTypeTag[F[Any, Any]]): Tree =
     instantiate[Bifunctor[F]](tag)(bimap)
+
+  def apply[F[_]](implicit tag: WeakTypeTag[F[Any]]): Tree =
+    instantiate[cats.Apply[F]](tag)(map, ap)
 
   def flatMap[F[_]](implicit tag: WeakTypeTag[F[Any]]): Tree =
     instantiate[FlatMap[F]](tag)(map, flatMap_, tailRecM)

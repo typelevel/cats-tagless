@@ -16,7 +16,6 @@
 
 package cats.tagless
 
-import cats.tagless.instances.InvariantKInstances
 import cats.~>
 import simulacrum.typeclass
 

@@ -23,5 +23,3 @@ import simulacrum.typeclass
 @typeclass trait SemigroupalK[A[_[_]]] {
   def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Tuple2K[F, G, ?]]
 }
-
-object SemigroupalK extends SemigroupalKInstances

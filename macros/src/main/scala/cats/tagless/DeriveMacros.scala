@@ -352,9 +352,9 @@ class DeriveMacros(val c: blackbox.Context) {
     }
 
   // def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Tuple2K[F, G, ?]]
-  def productK(algebra: Type): (String, Type => Tree) = {
-    val Tuple2K = symbolOf[Tuple2K[Any, Any, Any]]
+  def productK(algebra: Type): (String, Type => Tree) =
     "productK" -> { case PolyType(List(f, g), MethodType(List(af, ag), _)) =>
+      val Tuple2K = symbolOf[Tuple2K[Any, Any, Any]]
       val F = f.asType.toTypeConstructor
       val G = g.asType.toTypeConstructor
       val t2k = polyType(F.typeParams, appliedType(Tuple2K, F :: G :: F.typeParams.map(_.asType.toType)))
@@ -365,7 +365,7 @@ class DeriveMacros(val c: blackbox.Context) {
         case method if method.occursInReturn(f) =>
           val returnType = method.returnType.map(t => if (t.typeSymbol == f) appliedType(t2k, t.typeArgs) else t)
           val Sk = summon[SemigroupalK[Any]](polyType(f :: Nil, method.returnType))
-          val body = q"$Sk.productK[$F, $G](${method.delegate(q"$af")}, ${method.delegate(q"$ag")})"
+          val body = q"$Sk.productK[$F, $G](${method.body}, ${method.delegate(Ident(ag))})"
           method.copy(returnType = returnType, body = body)
         case method if method.occursInSignature(f) =>
           abort(s"Type parameter $f appears in contravariant position in method ${method.name}")
@@ -376,7 +376,6 @@ class DeriveMacros(val c: blackbox.Context) {
       val Tuple2kAlg = appliedType(algebra, polyType(typeParams, appliedType(Tuple2K, typeArgs)))
       implement(Tuple2kAlg)()(types ++ methods)
     }
-  }
 
   // def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B]
   def flatMap_(algebra: Type): (String, Type => Tree) =

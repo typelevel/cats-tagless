@@ -17,7 +17,7 @@
 package cats.tagless
 
 import cats.arrow.Profunctor
-import cats.{Apply, Bifunctor, Contravariant, FlatMap, Functor, Invariant}
+import cats.{Apply, Bifunctor, Contravariant, FlatMap, Functor, Invariant, Semigroupal}
 
 object Derive {
 
@@ -26,6 +26,7 @@ object Derive {
   def invariant[F[_]]: Invariant[F] = macro DeriveMacros.invariant[F]
   def profunctor[F[_, _]]: Profunctor[F] = macro DeriveMacros.profunctor[F]
   def bifunctor[F[_, _]]: Bifunctor[F] = macro DeriveMacros.bifunctor[F]
+  def semigroupal[F[_]]: Semigroupal[F] = macro DeriveMacros.semigroupal[F]
   def apply[F[_]]: Apply[F] = macro DeriveMacros.apply[F]
   def flatMap[F[_]]: FlatMap[F] = macro DeriveMacros.flatMap[F]
 

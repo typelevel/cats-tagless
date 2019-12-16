@@ -18,7 +18,7 @@ package cats.tagless
 
 import cats.arrow.Profunctor
 import cats.data.Tuple2K
-import cats.{Bifunctor, Contravariant, FlatMap, Functor, Invariant}
+import cats.{Bifunctor, Contravariant, FlatMap, Functor, Invariant, Semigroupal}
 
 import scala.reflect.macros.blackbox
 
@@ -376,6 +376,28 @@ class DeriveMacros(val c: blackbox.Context) {
       implement(algebra)(b)(types ++ methods)
     }
 
+  // def product[A, B](fa F[A], fb: F[B]): F[(A, B)]
+  def product(algebra: Type): (String, Type => Tree) =
+    "product" -> { case PolyType(List(a, b), MethodType(List(fa, fb), _)) =>
+      val A = a.asType.toType
+      val B = b.asType.toType
+      val P = appliedType(symbolOf[(Any, Any)], A, B)
+      val Fa = singleType(NoPrefix, fa)
+      val members = overridableMembersOf(Fa)
+      val types = delegateAbstractTypes(Fa, members, Fa)
+      val methods = delegateMethods(Fa, members, fa) {
+        case method if method.occursOnlyInReturn(a) =>
+          val returnType = method.returnType.map(t => if (t.typeSymbol == a) P else t)
+          val Sg = summon[Semigroupal[Any]](polyType(a :: Nil, method.returnType))
+          val body = q"$Sg.product[$A, $B](${method.body}, ${method.delegate(Ident(fb))})"
+          method.copy(returnType = returnType, body = body)
+        case method if method.occursInSignature(a) =>
+          abort(s"Type parameter $A occurs in contravariant position in method ${method.displayName}")
+      }
+
+      implement(appliedType(algebra, P))()(types ++ methods)
+    }
+
   // def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Tuple2K[F, G, ?]]
   def productK(algebra: Type): (String, Type => Tree) =
     "productK" -> { case PolyType(List(f, g), MethodType(List(af, ag), _)) =>
@@ -532,6 +554,9 @@ class DeriveMacros(val c: blackbox.Context) {
 
   def bifunctor[F[_, _]](implicit tag: WeakTypeTag[F[Any, Any]]): Tree =
     instantiate[Bifunctor[F]](tag)(bimap)
+
+  def semigroupal[F[_]](implicit tag: WeakTypeTag[F[Any]]): Tree =
+    instantiate[Semigroupal[F]](tag)(product)
 
   def apply[F[_]](implicit tag: WeakTypeTag[F[Any]]): Tree =
     instantiate[cats.Apply[F]](tag)(map, ap)

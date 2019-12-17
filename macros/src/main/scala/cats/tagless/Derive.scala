@@ -58,5 +58,12 @@ object Derive {
   def invariantK[Alg[_[_]]]: InvariantK[Alg] = macro DeriveMacros.invariantK[Alg]
   def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = macro DeriveMacros.semigroupalK[Alg]
   def applyK[Alg[_[_]]]: ApplyK[Alg] = macro DeriveMacros.applyK[Alg]
+
+  /**
+    * Type classes for instrumenting algebras.
+    * This feature is experimental, API is likely to change.
+    * @tparam Alg The algebra type you want to instrument.
+    * @return An instrumented algebra.
+    */
   def instrument[Alg[_[_]]]: Instrument[Alg] = macro DeriveMacros.instrument[Alg]
 }

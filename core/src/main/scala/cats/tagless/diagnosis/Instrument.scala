@@ -18,12 +18,18 @@ package cats.tagless.diagnosis
 
 import simulacrum.typeclass
 
+
 final case class Instrumentation[F[_], A](
   value: F[A],
   algebraName: String,
   methodName: String
 )
 
+/**
+  * Type classes for instrumenting algebras.
+  * This feature is experimental, API is likely to change.
+  * @tparam Alg The algebra type you want to instrument.
+  */
 @typeclass
 trait Instrument[Alg[_[_]]] {
   def instrument[F[_]](af: Alg[F]): Alg[Instrumentation[F, *]]

@@ -38,7 +38,7 @@ class OptimizerTests extends CatsTaglessTestSuite {
 
     def monadF = implicitly
 
-    def extract = new KVStore[Const[Set[String], ?]] {
+    def extract = new KVStore[Const[Set[String], *]] {
       def get(key: String) = Const(Set(key))
       def put(key: String, a: String): Const[Set[String], Unit] = Const(Set.empty)
     }
@@ -83,7 +83,7 @@ class OptimizerTests extends CatsTaglessTestSuite {
 
     def monadF = implicitly
 
-    def extract = new KVStore[Const[KVStoreInfo, ?]] {
+    def extract = new KVStore[Const[KVStoreInfo, *]] {
       def get(key: String): Const[KVStoreInfo, Option[String]] =
         Const(KVStoreInfo(Set(key), Map.empty))
 
@@ -140,7 +140,7 @@ class OptimizerTests extends CatsTaglessTestSuite {
       }
     }
 
-    def rebuild(interp: KVStore[F]): KVStore[Kleisli[F, M, ?]] = new KVStore[Kleisli[F, M, ?]] {
+    def rebuild(interp: KVStore[F]): KVStore[Kleisli[F, M, *]] = new KVStore[Kleisli[F, M, *]] {
       def get(key: String): Kleisli[F, M, Option[String]] = Kleisli(m => m.get(key) match {
         case o @ Some(_) => Applicative[F].pure(o)
         case None => interp.get(key)
@@ -149,7 +149,7 @@ class OptimizerTests extends CatsTaglessTestSuite {
       def put(key: String, a: String): Kleisli[F, M, Unit] = Kleisli(m => interp.put(key, a))
     }
 
-    def extract: KVStore[? => M] = new KVStore[? => M] {
+    def extract: KVStore[* => M] = new KVStore[* => M] {
       def get(key: String): Option[String] => M = {
         case Some(s) => Map(key -> s)
         case None => Map.empty

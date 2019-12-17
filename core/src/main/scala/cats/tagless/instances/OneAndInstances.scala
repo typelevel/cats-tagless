@@ -21,7 +21,7 @@ import cats.tagless.{ApplyK, FunctorK}
 import cats.{Semigroup, ~>}
 
 trait OneAndInstances extends OneAndInstances1 {
-  implicit def catsTaglessApplyKForOneAnd[A: Semigroup]: ApplyK[OneAnd[?[_], A]] = new ApplyK[OneAnd[?[_], A]] {
+  implicit def catsTaglessApplyKForOneAnd[A: Semigroup]: ApplyK[OneAnd[*[_], A]] = new ApplyK[OneAnd[*[_], A]] {
     def mapK[F[_], G[_]](af: OneAnd[F, A])(fk: F ~> G) = af.mapK(fk)
     def productK[F[_], G[_]](af: OneAnd[F, A], ag: OneAnd[G, A]) =
       OneAnd(Semigroup[A].combine(af.head, ag.head), Tuple2K(af.tail, ag.tail))
@@ -30,10 +30,10 @@ trait OneAndInstances extends OneAndInstances1 {
 
 private[instances] trait OneAndInstances1 {
 
-  implicit def catsTaglessFunctorKForOneAnd[A]: FunctorK[OneAnd[?[_], A]] =
-    oneAndFunctorK.asInstanceOf[FunctorK[OneAnd[?[_], A]]]
+  implicit def catsTaglessFunctorKForOneAnd[A]: FunctorK[OneAnd[*[_], A]] =
+    oneAndFunctorK.asInstanceOf[FunctorK[OneAnd[*[_], A]]]
 
-  private[this] val oneAndFunctorK: FunctorK[OneAnd[?[_], Any]] = new FunctorK[OneAnd[?[_], Any]] {
+  private[this] val oneAndFunctorK: FunctorK[OneAnd[*[_], Any]] = new FunctorK[OneAnd[*[_], Any]] {
     def mapK[F[_], G[_]](af: OneAnd[F, Any])(fk: F ~> G) = af.mapK(fk)
   }
 }

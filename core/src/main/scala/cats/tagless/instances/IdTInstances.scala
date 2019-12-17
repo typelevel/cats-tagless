@@ -22,10 +22,10 @@ import cats.~>
 
 trait IdTInstances {
 
-  implicit def catsTaglessApplyKForIdT[A]: ApplyK[IdT[?[_], A]] =
-    idTInstance.asInstanceOf[ApplyK[IdT[?[_], A]]]
+  implicit def catsTaglessApplyKForIdT[A]: ApplyK[IdT[*[_], A]] =
+    idTInstance.asInstanceOf[ApplyK[IdT[*[_], A]]]
 
-  private[this] val idTInstance: ApplyK[IdT[?[_], Any]] = new ApplyK[IdT[?[_], Any]] {
+  private[this] val idTInstance: ApplyK[IdT[*[_], Any]] = new ApplyK[IdT[*[_], Any]] {
     def mapK[F[_], G[_]](af: IdT[F, Any])(fk: F ~> G) = af.mapK(fk)
     def productK[F[_], G[_]](af: IdT[F, Any], ag: IdT[G, Any]) =
       IdT(Tuple2K(af.value, ag.value))

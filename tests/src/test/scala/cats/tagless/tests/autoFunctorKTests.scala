@@ -122,7 +122,7 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
       def plusOne(i: Int) = Try(i + 1)
     }
 
-    val incFree = incTry.mapK(λ[Try ~> Free[Try, ?]](t => Free.liftF(t)))
+    val incFree = incTry.mapK(λ[Try ~> Free[Try, *]](t => Free.liftF(t)))
 
     def a(i: Int): Free[Try, Int] = for {
       j <- incFree.plusOne(i)
@@ -168,7 +168,7 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
 
     import AlgWithAbstractTypeClass.fullyRefined._
     // Scalac needs help when abstract type is high order.
-    implicit val fShow : FunctorK[AlgWithAbstractTypeClass.Aux[?[_], Show]] = functorKForFullyRefinedAlgWithAbstractTypeClass[Show]
+    implicit val fShow : FunctorK[AlgWithAbstractTypeClass.Aux[*[_], Show]] = functorKForFullyRefinedAlgWithAbstractTypeClass[Show]
     fShow.mapK(foo)(fk).a(true) should be(Some("true"))
   }
 

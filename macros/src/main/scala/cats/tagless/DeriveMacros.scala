@@ -399,7 +399,7 @@ class DeriveMacros(val c: blackbox.Context) {
       implement(appliedType(algebra, P))()(types ++ methods)
     }
 
-  // def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Tuple2K[F, G, ?]]
+  // def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Tuple2K[F, G, *]]
   def productK(algebra: Type): (String, Type => Tree) =
     "productK" -> { case PolyType(List(f, g), MethodType(List(af, ag), _)) =>
       val Tuple2K = symbolOf[Tuple2K[Any, Any, Any]]

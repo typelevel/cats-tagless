@@ -22,10 +22,10 @@ import cats.~>
 
 trait OptionTInstances {
 
-  implicit def catsTaglessApplyKForOptionT[A]: ApplyK[OptionT[?[_], A]] =
-    optionTInstance.asInstanceOf[ApplyK[OptionT[?[_], A]]]
+  implicit def catsTaglessApplyKForOptionT[A]: ApplyK[OptionT[*[_], A]] =
+    optionTInstance.asInstanceOf[ApplyK[OptionT[*[_], A]]]
 
-  private[this] val optionTInstance: ApplyK[OptionT[?[_], Any]] = new ApplyK[OptionT[?[_], Any]] {
+  private[this] val optionTInstance: ApplyK[OptionT[*[_], Any]] = new ApplyK[OptionT[*[_], Any]] {
     def mapK[F[_], G[_]](af: OptionT[F, Any])(fk: F ~> G) = af.mapK(fk)
     def productK[F[_], G[_]](af: OptionT[F, Any], ag: OptionT[G, Any]) =
       OptionT(Tuple2K(af.value, ag.value))

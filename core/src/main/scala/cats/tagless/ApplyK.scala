@@ -21,6 +21,6 @@ import cats.data.Tuple2K
 import simulacrum.typeclass
 
 @typeclass trait ApplyK[A[_[_]]] extends SemigroupalK[A] with FunctorK[A] {
-  def map2K[F[_], G[_], H[_]](af: A[F], ag: A[G])(f: Tuple2K[F, G, ?] ~> H): A[H] =
+  def map2K[F[_], G[_], H[_]](af: A[F], ag: A[G])(f: Tuple2K[F, G, *] ~> H): A[H] =
     mapK(productK(af, ag))(f)
 }

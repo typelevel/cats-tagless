@@ -26,7 +26,7 @@ trait SemigroupalOptimizer[Alg[_[_]], F[_]] {
   def semigroupM: Semigroup[M]
   def flatMapF: FlatMap[F]
 
-  def extract: Alg[Const[M, ?]]
+  def extract: Alg[Const[M, *]]
   def rebuild(m: M, interpreter: Alg[F]): F[Alg[F]]
 
   def nonEmptyOptimize[A](p: Program[Alg, Apply, A]): Alg[F] => F[A] = { interpreter =>

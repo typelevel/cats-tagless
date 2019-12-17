@@ -39,7 +39,7 @@ trait ApplyKTests[F[_[_]]] extends FunctorKTests[F] with SemigroupalKTests[F] {
                                                ArbitraryFK4: Arbitrary[C ~> B],
                                                EqFA: Eq[F[A]],
                                                EqFC: Eq[F[C]],
-                                               EqFG: Eq[F[Tuple2K[A, Tuple2K[B, C, ?], ?]]],
+                                               EqFG: Eq[F[Tuple2K[A, Tuple2K[B, C, *], *]]],
                                                EqFGH: Eq[F[Tuple3K[A, B, C]#λ]]
                                               ): RuleSet =
     new RuleSet {

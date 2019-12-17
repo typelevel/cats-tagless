@@ -57,8 +57,8 @@ object SemigroupalKTests {
 
   object IsomorphismsK {
     
-    type ProdA_BC[A[_], B[_], C[_]]  = { type λ[T] = Tuple2K[A, Tuple2K[B, C, ?], T] }
-    type ProdAB_C[A[_], B[_], C[_]]  = { type λ[T] = Tuple2K[Tuple2K[A, B, ?], C, T] }
+    type ProdA_BC[A[_], B[_], C[_]]  = { type λ[T] = Tuple2K[A, Tuple2K[B, C, *], T] }
+    type ProdAB_C[A[_], B[_], C[_]]  = { type λ[T] = Tuple2K[Tuple2K[A, B, *], C, T] }
 
     implicit def invariantK[F[_[_]]](implicit F: InvariantK[F]): IsomorphismsK[F] =
       new IsomorphismsK[F] {

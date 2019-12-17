@@ -22,10 +22,10 @@ import cats.~>
 
 trait KleisliInstances {
 
-  implicit def catsTaglessApplyKForKleisli[A, B]: ApplyK[Kleisli[?[_], A, B]] =
-    kleisliInstance.asInstanceOf[ApplyK[Kleisli[?[_], A, B]]]
+  implicit def catsTaglessApplyKForKleisli[A, B]: ApplyK[Kleisli[*[_], A, B]] =
+    kleisliInstance.asInstanceOf[ApplyK[Kleisli[*[_], A, B]]]
 
-  private[this] val kleisliInstance: ApplyK[Kleisli[?[_], Any, Any]] = new ApplyK[Kleisli[?[_], Any, Any]] {
+  private[this] val kleisliInstance: ApplyK[Kleisli[*[_], Any, Any]] = new ApplyK[Kleisli[*[_], Any, Any]] {
     def mapK[F[_], G[_]](af: Kleisli[F, Any, Any])(fk: F ~> G) = af.mapK(fk)
     def productK[F[_], G[_]](af: Kleisli[F, Any, Any], ag: Kleisli[G, Any, Any]) =
       Kleisli(x => Tuple2K(af.run(x), ag.run(x)))

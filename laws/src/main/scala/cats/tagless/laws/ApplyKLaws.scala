@@ -25,10 +25,10 @@ trait ApplyKLaws[F[_[_]]] extends SemigroupalKLaws[F] with FunctorKLaws[F] {
   implicit def F: ApplyK[F]
 
 
-  def applyKAssociativity[A[_], B[_], C[_]](af: F[A], ag: F[B], ah: F[C]): IsEq[F[Tuple2K[A, Tuple2K[B, C, ?], ?]]] = {
+  def applyKAssociativity[A[_], B[_], C[_]](af: F[A], ag: F[B], ah: F[C]): IsEq[F[Tuple2K[A, Tuple2K[B, C, *], *]]] = {
     F.productK(af, F.productK(ag, ah)) <->
-      F.mapK(F.productK(F.productK(af, ag), ah))(new (Tuple2K[Tuple2K[A, B, ?], C, ?] ~> Tuple2K[A, Tuple2K[B, C, ?], ?]) {
-        def apply[X](fa: Tuple2K[Tuple2K[A, B, ?], C, X]): Tuple2K[A, Tuple2K[B, C, ?], X] =
+      F.mapK(F.productK(F.productK(af, ag), ah))(new (Tuple2K[Tuple2K[A, B, *], C, *] ~> Tuple2K[A, Tuple2K[B, C, *], *]) {
+        def apply[X](fa: Tuple2K[Tuple2K[A, B, *], C, X]): Tuple2K[A, Tuple2K[B, C, *], X] =
           Tuple2K(fa.first.first, Tuple2K(fa.first.second, fa.second))
       })
   }

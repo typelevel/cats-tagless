@@ -132,13 +132,13 @@ import cats.free.Free
 import cats.arrow.FunctionK
 import Increment.autoDerive._
 
-implicit def toFree[F[_]]: F ~> Free[F, ?] = λ[F ~> Free[F, ?]](t => Free.liftF(t))
+implicit def toFree[F[_]]: F ~> Free[F, *] = λ[F ~> Free[F, *]](t => Free.liftF(t))
 ```
 ```tut:book
-program[Free[Try, ?]](0).foldMap(FunctionK.id)
+program[Free[Try, *]](0).foldMap(FunctionK.id)
 ```
 
-Again the magic here is that Cats-tagless auto derive an `Increment[Free[Try, ?]]` when there is an implicit `Try ~> Free[Try, ?]` and a `Increment[Try]` in scope. This auto derivation can be turned off using an annotation argument: `@autoFunctorK(autoDerivation = false)`.
+Again the magic here is that Cats-tagless auto derive an `Increment[Free[Try, *]]` when there is an implicit `Try ~> Free[Try, *]` and a `Increment[Try]` in scope. This auto derivation can be turned off using an annotation argument: `@autoFunctorK(autoDerivation = false)`.
 
 
 

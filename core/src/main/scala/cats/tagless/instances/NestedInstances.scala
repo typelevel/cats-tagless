@@ -22,10 +22,10 @@ import cats.~>
 
 trait NestedInstances {
 
-  implicit def catsTaglessFunctorKForNested[G[_], A]: FunctorK[Nested[?[_], G, A]] =
-    nestedInstance.asInstanceOf[FunctorK[Nested[?[_], G, A]]]
+  implicit def catsTaglessFunctorKForNested[G[_], A]: FunctorK[Nested[*[_], G, A]] =
+    nestedInstance.asInstanceOf[FunctorK[Nested[*[_], G, A]]]
 
-  private[this] val nestedInstance: FunctorK[Nested[?[_], Any, Any]] = new FunctorK[Nested[?[_], Any, Any]] {
+  private[this] val nestedInstance: FunctorK[Nested[*[_], Any, Any]] = new FunctorK[Nested[*[_], Any, Any]] {
     def mapK[F[_], G[_]](af: Nested[F, Any, Any])(fk: F ~> G) = af.mapK(fk)
   }
 }

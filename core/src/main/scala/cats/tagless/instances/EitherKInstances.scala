@@ -22,16 +22,16 @@ import cats.~>
 
 trait EitherKInstances {
 
-  implicit def catsTaglessApplyKForEitherK[F[_], A]: ApplyK[EitherK[F, ?[_], A]] =
-    eitherKInstance.asInstanceOf[ApplyK[EitherK[F, ?[_], A]]]
+  implicit def catsTaglessApplyKForEitherK[F[_], A]: ApplyK[EitherK[F, *[_], A]] =
+    eitherKInstance.asInstanceOf[ApplyK[EitherK[F, *[_], A]]]
 
-  private[this] val eitherKInstance: ApplyK[EitherK[Any, ?[_], Any]] = new ApplyK[EitherK[Any, ?[_], Any]] {
+  private[this] val eitherKInstance: ApplyK[EitherK[Any, *[_], Any]] = new ApplyK[EitherK[Any, *[_], Any]] {
     def mapK[F[_], G[_]](af: EitherK[Any, F, Any])(fk: F ~> G) = af.mapK(fk)
     def productK[F[_], G[_]](af: EitherK[Any, F, Any], ag: EitherK[Any, G, Any]) =
       (af.run, ag.run) match {
-        case (Left(x), _) => EitherK.leftc[Any, Tuple2K[F, G, ?], Any](x)
-        case (_, Left(y)) => EitherK.leftc[Any, Tuple2K[F, G, ?], Any](y)
-        case (Right(fa), Right(ga)) => EitherK.rightc[Any, Tuple2K[F, G, ?], Any](Tuple2K(fa, ga))
+        case (Left(x), _) => EitherK.leftc[Any, Tuple2K[F, G, *], Any](x)
+        case (_, Left(y)) => EitherK.leftc[Any, Tuple2K[F, G, *], Any](y)
+        case (Right(fa), Right(ga)) => EitherK.rightc[Any, Tuple2K[F, G, *], Any](Tuple2K(fa, ga))
       }
   }
 }

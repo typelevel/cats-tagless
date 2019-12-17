@@ -102,8 +102,8 @@ object KVStore {
       def put(key: String, a: String): G[Unit] = f(af.put(key, a))
     }
 
-    def productK[F[_], G[_]](af: KVStore[F], ag: KVStore[G]): KVStore[Tuple2K[F, G, ?]] =
-      new KVStore[Tuple2K[F, G, ?]] {
+    def productK[F[_], G[_]](af: KVStore[F], ag: KVStore[G]): KVStore[Tuple2K[F, G, *]] =
+      new KVStore[Tuple2K[F, G, *]] {
         def get(key: String): Tuple2K[F, G, Option[String]] =
           Tuple2K(af.get(key), ag.get(key))
 
@@ -136,7 +136,7 @@ object Interpreters {
     def divide(dividend: Float, divisor: Float): Eval[Float] = Eval.later(dividend / divisor)
   }
 
-  object KVStoreInterpreter extends KVStore[State[StateInfo, ?]] {
+  object KVStoreInterpreter extends KVStore[State[StateInfo, *]] {
     def get(key: String): State[StateInfo, Option[String]] =
       State.modify[StateInfo](s => s.copy(searches = s.searches.updated(key, s.searches.getOrElse(key, 0) + 1)))
         .as(Option(key + "!"))

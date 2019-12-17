@@ -22,10 +22,10 @@ import cats.~>
 
 trait WriterTInstances {
 
-  implicit def catsTaglessApplyKForWriterT[A, B]: ApplyK[WriterT[?[_], A, B]] =
-    writerTInstance.asInstanceOf[ApplyK[WriterT[?[_], A, B]]]
+  implicit def catsTaglessApplyKForWriterT[A, B]: ApplyK[WriterT[*[_], A, B]] =
+    writerTInstance.asInstanceOf[ApplyK[WriterT[*[_], A, B]]]
 
-  private[this] val writerTInstance: ApplyK[WriterT[?[_], Any, Any]] = new ApplyK[WriterT[?[_], Any, Any]] {
+  private[this] val writerTInstance: ApplyK[WriterT[*[_], Any, Any]] = new ApplyK[WriterT[*[_], Any, Any]] {
     def mapK[F[_], G[_]](af: WriterT[F, Any, Any])(fk: F ~> G) = af.mapK(fk)
     def productK[F[_], G[_]](af: WriterT[F, Any, Any], ag: WriterT[G, Any, Any]) =
       WriterT(Tuple2K(af.run, ag.run))

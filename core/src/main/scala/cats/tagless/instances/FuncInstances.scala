@@ -22,10 +22,10 @@ import cats.~>
 
 trait FuncInstances {
 
-  implicit def catsTaglessApplyKForFunc[A, B]: ApplyK[Func[?[_], A, B]] =
-    funcInstance.asInstanceOf[ApplyK[Func[?[_], A, B]]]
+  implicit def catsTaglessApplyKForFunc[A, B]: ApplyK[Func[*[_], A, B]] =
+    funcInstance.asInstanceOf[ApplyK[Func[*[_], A, B]]]
 
-  private[this] val funcInstance: ApplyK[Func[?[_], Any, Any]] = new ApplyK[Func[?[_], Any, Any]] {
+  private[this] val funcInstance: ApplyK[Func[*[_], Any, Any]] = new ApplyK[Func[*[_], Any, Any]] {
     def mapK[F[_], G[_]](af: Func[F, Any, Any])(fk: F ~> G) = af.mapK(fk)
     def productK[F[_], G[_]](af: Func[F, Any, Any], ag: Func[G, Any, Any]) =
       Func.func(x => Tuple2K(af.run(x), ag.run(x)))

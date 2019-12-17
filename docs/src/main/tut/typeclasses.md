@@ -36,7 +36,7 @@ For tagless final algebras whose effect `F` appears in both the covariant positi
 
 ### <a id="semigroupalK" href="#semigroupalK"></a>`SemigroupalK`
 ```
- def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Tuple2K[F, G, ?]]
+ def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Tuple2K[F, G, *]]
 ```
 
 For tagless final algebras that
@@ -48,7 +48,7 @@ instance of `SemigroupalK` can be auto generated through `autoSemigroupalK` anno
 
 ### <a id="applyK" href="#applyK"></a>`ApplyK`
 ```
- def map2K[F[_], G[_], H[_]](af: A[F], ag: A[G])(f: Tuple2K[F, G, ?] ~> H): A[H]
+ def map2K[F[_], G[_], H[_]](af: A[F], ag: A[G])(f: Tuple2K[F, G, *] ~> H): A[H]
 ```
 
 `ApplyK` extends both `SemigroupalK` and `FunctorK` just like their lower kinded counterparts.

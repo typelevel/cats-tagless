@@ -18,7 +18,6 @@ package cats.tagless.diagnosis
 
 import simulacrum.typeclass
 
-
 final case class Instrumentation[F[_], A](
   value: F[A],
   algebraName: String,

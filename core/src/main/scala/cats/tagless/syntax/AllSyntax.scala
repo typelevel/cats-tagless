@@ -22,3 +22,4 @@ trait AllSyntax extends FunctorKSyntax
   with InvariantKSyntax
   with SemigroupalKSyntax
   with ApplyKSyntax
+  with InstrumentSyntax

@@ -553,16 +553,16 @@ class DeriveMacros(val c: blackbox.Context) {
 
       val methods = delegateMethods(Af, members, af) {
         case method if method.returnType.typeSymbol == f =>
-          val body = q"_root_.cats.tagless.diagnosis.Instrumentation(${method.body}, $algebraName, ${method.name.decodedName.toString})"
+          val body = q"_root_.cats.tagless.diagnosis.Instrumentation(${method.body}, $algebraName, ${method.displayName})"
           val returnType = appliedType(Instrumentation, F :: method.returnType.typeArgs)
           method.copy(body = body, returnType = returnType)
         case method if method.occursInSignature(f) =>
-          abort(s"Type parameter $f can only appear as a top level return type in method ${method.name}")
+          abort(s"Type parameter $F can only occur as a top level return type in method ${method.displayName}")
       }
 
       val instrumentationType = appliedType(Instrumentation, F :: F.typeParams.map(_.asType.toType))
-      val DescribedAlg = appliedType(algebra, polyType(F.typeParams, instrumentationType))
-      implement(DescribedAlg)()(types ++ methods)
+      val InstrumentedAlg = appliedType(algebra, polyType(F.typeParams, instrumentationType))
+      implement(InstrumentedAlg)()(types ++ methods)
     }
 
   def functor[F[_]](implicit tag: WeakTypeTag[F[Any]]): Tree =

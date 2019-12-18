@@ -20,7 +20,7 @@ import scala.annotation.{StaticAnnotation, compileTimeOnly}
 import scala.collection.immutable.Seq
 import scala.reflect.macros.whitebox
 
-/** Auto generates an instance of `cats.Invariant`. */
+/** Auto generates an instance of [[cats.tagless.diagnosis.Instrument]]. */
 @compileTimeOnly("Cannot expand @autoInstrument")
 class autoInstrument extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoInstrumentMacros.instrumentInst

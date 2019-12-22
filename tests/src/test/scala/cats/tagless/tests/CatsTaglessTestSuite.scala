@@ -20,7 +20,6 @@ import cats.Eq
 import cats.arrow.FunctionK
 import cats.data._
 import cats.laws.discipline.ExhaustiveCheck
-import cats.tagless.instances.AllInstances
 import cats.tagless.laws.discipline.SemigroupalKTests.IsomorphismsK
 import cats.tagless.syntax.AllSyntax
 import cats.tagless.{InvariantK, Tuple3K}
@@ -41,7 +40,6 @@ class CatsTaglessTestSuite
   with cats.instances.AllInstances
   with StrictCatsEquality
   with TestInstances
-  with AllInstances
   with AllSyntax
 
 object TestInstances extends TestInstances

@@ -16,8 +16,8 @@
 
 package cats.tagless
 
-import cats.~>
 import simulacrum.typeclass
+import cats.~>
 
 /** A higher-kinded `Contravariant` functor.
   * Must obey the laws in `cats.tagless.laws.ContravariantKLaws`.

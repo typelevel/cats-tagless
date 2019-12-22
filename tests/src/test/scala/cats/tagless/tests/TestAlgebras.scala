@@ -23,7 +23,6 @@ import cats.implicits._
 import cats.laws.discipline.ExhaustiveCheck
 import cats.laws.discipline.arbitrary._
 import cats.laws.discipline.eq._
-import cats.tagless.instances.all._
 import org.scalacheck.{Arbitrary, Cogen}
 
 import scala.util.Try

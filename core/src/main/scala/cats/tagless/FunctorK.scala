@@ -16,8 +16,8 @@
 
 package cats.tagless
 
-import cats.~>
 import simulacrum.typeclass
+import cats.~>
 
 /**
  * Sort of a higher kinded Functor, but, well, it's complcated. 

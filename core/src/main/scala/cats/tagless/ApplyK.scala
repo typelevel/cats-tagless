@@ -16,9 +16,9 @@
 
 package cats.tagless
 
-import cats.~>
-import cats.data.Tuple2K
 import simulacrum.typeclass
+import cats.data.Tuple2K
+import cats.~>
 
 @typeclass trait ApplyK[A[_[_]]] extends SemigroupalK[A] with FunctorK[A] {
   def map2K[F[_], G[_], H[_]](af: A[F], ag: A[G])(f: Tuple2K[F, G, ?] ~> H): A[H] =

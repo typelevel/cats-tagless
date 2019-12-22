@@ -23,7 +23,6 @@ import cats.laws.discipline.SerializableTests
 import cats.laws.discipline.arbitrary._
 import cats.laws.discipline.eq._
 import cats.tagless.{ContravariantK, autoContravariantK}
-import cats.tagless.instances.all._
 import cats.tagless.laws.discipline.ContravariantKTests
 import org.scalacheck.{Arbitrary, Cogen}
 

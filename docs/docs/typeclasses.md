@@ -13,21 +13,21 @@ Currently there are four type classes defined in Cats-tagless: [FunctorK](#funct
 
 
 
-### <a id="functorK" href="#functorK"></a>`FunctorK` 
+### <a id="functorK" href="#functorK"></a>`FunctorK`
 ```
   def mapK[F[_], G[_]](af: A[F])(fk: F ~> G): A[G]
 ```
 
 For tagless final algebras whose effect `F` appears only in the covariant position, instance of `FunctorK` can be auto generated through the `autoFunctorK` annotation.
 
-### <a id="functorK" href="#functorK"></a>`FunctorK` 
+### <a id="functorK" href="#functorK"></a>`FunctorK`
 ```
   def contramapK[F[_], G[_]](af: A[F])(fk: G ~> F): A[G]
 ```
 
 For tagless final algebras whose effect `F` appears only in the contravariant position, instance of `ContravariantK` can be auto generated through the `autoContravariantK` annotation.
 
-### <a id="invariantK" href="#invariantK"></a>`InvariantK` 
+### <a id="invariantK" href="#invariantK"></a>`InvariantK`
 ```
   def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gK: G ~> F): A[G]
 ```
@@ -62,5 +62,3 @@ instance of `ApplyK` can be auto generated through `autoApplyK` annotation.
 
 
 Their laws are defined in `cats.tagless.laws`. To test your instance (if you decide to roll your own) against these laws please follow the examples in `cats.tagless.tests`, especially the ones that test against `SafeAlg`.
-
-

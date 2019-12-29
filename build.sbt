@@ -161,7 +161,7 @@ lazy val docs = project
     micrositeGithubOwner := "typelevel",
     micrositeGithubRepo := "cats-tagless",
     micrositeHighlightTheme := "atom-one-light",
-    fork in tut := true,
+    micrositeTheme := "pattern",
     micrositePalette := Map(
       "brand-primary" -> "#51839A",
       "brand-secondary" -> "#EDAF79",
@@ -174,7 +174,7 @@ lazy val docs = project
     ),
     ghpagesNoJekyll := false,
     micrositeAuthor := "cats-tagless Contributors",
-    scalacOptions in Tut ~= (_.filterNot(Set("-Ywarn-unused-import", "-Ywarn-unused:imports", "-Ywarn-dead-code"))),
+    scalacOptions --= Seq("-Ywarn-unused-import", "-Ywarn-unused:imports", "-Ywarn-dead-code"),
     git.remoteRepo := gh.repo,
     includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md"
   )

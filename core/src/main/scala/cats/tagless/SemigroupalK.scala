@@ -23,7 +23,7 @@ import cats.kernel.CommutativeMonoid
 import cats.{Alternative, Applicative, Apply, CommutativeApplicative, Contravariant, ContravariantMonoidal, ContravariantSemigroupal, Distributive, Eval, FlatMap, Foldable, Functor, Invariant, InvariantMonoidal, InvariantSemigroupal, Monad, MonoidK, Semigroup, SemigroupK, Semigroupal, Traverse, UnorderedFoldable, UnorderedTraverse}
 
 @typeclass trait SemigroupalK[A[_[_]]] {
-  def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Tuple2K[F, G, ?]]
+  def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Tuple2K[F, G, *]]
 }
 
 import cats.tagless.SemigroupalKTraits._

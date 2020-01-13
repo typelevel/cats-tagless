@@ -83,16 +83,16 @@ trait TestInstances {
   //------------------------------------------------------------------
 
   implicit def catsTaglessLawsIsomorphismsK110[Alg[_[_], _[_], _], F[_], A](
-    implicit ev: InvariantK[Alg[F, ?[_], A]]
-  ): IsomorphismsK[Alg[F, ?[_], A]] = IsomorphismsK.invariantK[Alg[F, ?[_], A]]
+    implicit ev: InvariantK[Alg[F, *[_], A]]
+  ): IsomorphismsK[Alg[F, *[_], A]] = IsomorphismsK.invariantK[Alg[F, *[_], A]]
 
   implicit def catsTaglessLawsIsomorphismsK100[Alg[_[_], _, _], A, B](
-    implicit ev: InvariantK[Alg[?[_], A, B]]
-  ): IsomorphismsK[Alg[?[_], A, B]] = IsomorphismsK.invariantK[Alg[?[_], A, B]]
+    implicit ev: InvariantK[Alg[*[_], A, B]]
+  ): IsomorphismsK[Alg[*[_], A, B]] = IsomorphismsK.invariantK[Alg[*[_], A, B]]
 
   implicit def catsTaglessLawsIsomorphismsK10[Alg[_[_], _], A](
-    implicit ev: InvariantK[Alg[?[_], A]]
-  ): IsomorphismsK[Alg[?[_], A]] = IsomorphismsK.invariantK[Alg[?[_], A]]
+    implicit ev: InvariantK[Alg[*[_], A]]
+  ): IsomorphismsK[Alg[*[_], A]] = IsomorphismsK.invariantK[Alg[*[_], A]]
 
   implicit def catsTaglessLawsEqForTuple2K[F[_], G[_], A](
     implicit ev: Eq[(F[A], G[A])]

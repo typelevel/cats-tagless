@@ -30,22 +30,22 @@ trait MonadOptimizer[Alg[_[_]], F[_]] {
 
   def applyK: ApplyK[Alg]
 
-  def rebuild(interp: Alg[F]): Alg[Kleisli[F, M, ?]]
+  def rebuild(interp: Alg[F]): Alg[Kleisli[F, M, *]]
 
-  def extract: Alg[? => M]
+  def extract: Alg[* => M]
 
 
   def optimizeM[A](p: Program[Alg, Monad, A]): Alg[F] => F[A] = { interpreter =>
     implicit val M: Monoid[M] = monoidM
     implicit val F: Monad[F] = monadF
 
-    type Prod[X] = Tuple2K[Kleisli[F, M, ?], ? => M, X]
+    type Prod[X] = Tuple2K[Kleisli[F, M, *], * => M, X]
 
     val productAlg =
-      applyK.productK[Kleisli[F, M, ?], ? => M](rebuild(interpreter), extract)
+      applyK.productK[Kleisli[F, M, *], * => M](rebuild(interpreter), extract)
 
-    val withState: Alg[StateT[F, M, ?]] =
-      applyK.mapK(productAlg)(new (Prod ~> StateT[F, M, ?]) {
+    val withState: Alg[StateT[F, M, *]] =
+      applyK.mapK(productAlg)(new (Prod ~> StateT[F, M, *]) {
         def apply[X](fx: Prod[X]): StateT[F, M, X] =
           StateT(m => F.map(fx.first.run(m))(x => M.combine(fx.second(x), m) -> x))
       })

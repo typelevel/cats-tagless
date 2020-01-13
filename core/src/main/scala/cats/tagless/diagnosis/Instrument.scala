@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-package cats.tagless
-package laws
+package cats.tagless.diagnosis
 
-import cats.data.Tuple2K
+import simulacrum.typeclass
 
-trait SemigroupalKLaws[F[_[_]]] {
-  implicit def F: SemigroupalK[F]
+final case class Instrumentation[F[_], A](
+  value: F[A],
+  algebraName: String,
+  methodName: String
+)
 
-  def semigroupalAssociativity[A[_], B[_], C[_]](af: F[A], ag: F[B], ah: F[C]):
-  (F[Tuple2K[A, Tuple2K[B, C, *], *]], F[Tuple2K[Tuple2K[A, B, *], C, *]]) =
-    (F.productK(af, F.productK(ag, ah)), F.productK(F.productK(af, ag), ah))
-
-}
-
-object SemigroupalKLaws {
-  def apply[F[_[_]]](implicit ev: SemigroupalK[F]): SemigroupalKLaws[F] =
-    new SemigroupalKLaws[F] { val F = ev }
+/**
+  * Type classes for instrumenting algebras.
+  * This feature is experimental, API is likely to change.
+  * @tparam Alg The algebra type you want to instrument.
+  */
+@typeclass
+trait Instrument[Alg[_[_]]] {
+  def instrument[F[_]](af: Alg[F]): Alg[Instrumentation[F, *]]
 }

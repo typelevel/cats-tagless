@@ -114,6 +114,7 @@ lazy val docs = project
     docsMappingsAPIDir := "api",
     addMappingsToSiteDir(mappings in packageDoc in Compile in coreJVM, docsMappingsAPIDir),
     organization  := gh.organisation,
+    micrositeCompilingDocsTool := WithTut,
     autoAPIMappings := true,
     micrositeName := "Cats-tagless",
     micrositeDescription := "A library of utilities for tagless final algebras",

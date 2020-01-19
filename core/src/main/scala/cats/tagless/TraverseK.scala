@@ -1,3 +1,5 @@
+package cats.tagless
+
 /*
  * Copyright 2019 cats-tagless maintainers
  *
@@ -14,15 +16,20 @@
  * limitations under the License.
  */
 
-package cats.tagless
+import simulacrum.typeclass
+import cats.~>
+import cats.Apply
+import cats.arrow.FunctionK
 
-package object syntax {
-  object all extends AllSyntax
-  object functorK extends FunctorKSyntax
-  object contravariantK extends ContravariantKSyntax
-  object invariantK extends InvariantKSyntax
-  object semigroupalK extends SemigroupalKSyntax
-  object applyK extends ApplyKSyntax
-  object instrument extends InstrumentSyntax
-  object traverseK extends TraverseKSyntax
+@typeclass
+trait TraverseK[Alg[_[_]]] extends FunctorK[Alg] {
+
+  def traverseK[F[_], G[_]: Apply, H[_]](alg: Alg[F])(fk: F ~> λ[a => G[H[a]]]): G[Alg[H]]
+
+  def sequenceK[F[_]: Apply, G[_]](alg: Alg[λ[a => F[G[a]]]]): F[Alg[G]] =
+    traverseK[λ[a => F[G[a]]], F, G](alg)(FunctionK.id[λ[a => F[G[a]]]])
+
+  override def mapK[F[_], G[_]](af: Alg[F])(fk: F ~> G): Alg[G] = traverseK[F, cats.Id, G](af)(fk)
+
+  def sequenceKId[F[_]: Apply](alg: Alg[F]): F[Alg[cats.Id]] = sequenceK[F, cats.Id](alg)
 }

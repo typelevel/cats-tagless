@@ -18,16 +18,19 @@ package cats.tagless.instances
 
 import cats.data.{IdT, Tuple2K}
 import cats.tagless.ApplyK
+import cats.tagless.TraverseK
 import cats.~>
+import cats.Apply
 
 trait IdTInstances {
 
-  implicit def catsTaglessApplyKForIdT[A]: ApplyK[IdT[*[_], A]] =
-    idTInstance.asInstanceOf[ApplyK[IdT[*[_], A]]]
+  implicit def catsTaglessApplyKForIdT[A]: ApplyK[IdT[*[_], A]] with TraverseK[IdT[*[_], A]] =
+    idTInstance.asInstanceOf[ApplyK[IdT[*[_], A]] with TraverseK[IdT[*[_], A]]]
 
-  private[this] val idTInstance: ApplyK[IdT[*[_], Any]] = new ApplyK[IdT[*[_], Any]] {
-    def mapK[F[_], G[_]](af: IdT[F, Any])(fk: F ~> G) = af.mapK(fk)
+  private[this] val idTInstance: ApplyK[IdT[*[_], Any]] with TraverseK[IdT[*[_], Any]] = new ApplyK[IdT[*[_], Any]] with TraverseK[IdT[*[_], Any]]{
     def productK[F[_], G[_]](af: IdT[F, Any], ag: IdT[G, Any]) =
       IdT(Tuple2K(af.value, ag.value))
+
+    def traverseK[F[_], G[_]: Apply, H[_]](alg: IdT[F,Any])(fk: F ~> λ[a => G[H[a]]]): G[IdT[H,Any]] = Apply[G].map(fk(alg.value))(ha => IdT(ha))
   }
 }

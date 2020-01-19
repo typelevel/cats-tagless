@@ -16,13 +16,7 @@
 
 package cats.tagless
 
-package object syntax {
-  object all extends AllSyntax
-  object functorK extends FunctorKSyntax
-  object contravariantK extends ContravariantKSyntax
-  object invariantK extends InvariantKSyntax
-  object semigroupalK extends SemigroupalKSyntax
-  object applyK extends ApplyKSyntax
-  object instrument extends InstrumentSyntax
-  object traverseK extends TraverseKSyntax
-}
+package syntax
+
+trait TraverseKSyntax extends TraverseK.ToTraverseKOps
+

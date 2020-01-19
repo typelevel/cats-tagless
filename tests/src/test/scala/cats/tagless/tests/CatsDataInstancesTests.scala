@@ -25,6 +25,7 @@ import cats.tagless.laws.discipline.SemigroupalKTests.IsomorphismsK
 import cats.tagless.laws.discipline.{ApplyKTests, ContravariantKTests, FunctorKTests}
 
 import scala.util.Try
+import cats.tagless.laws.discipline.TraverseKTests
 
 class CatsDataInstancesTests extends CatsTaglessTestSuite {
   implicit def idKisomorphismK[A]: IsomorphismsK[IdK[A]#λ] = IsomorphismsK.invariantK[IdK[A]#λ]
@@ -38,6 +39,7 @@ class CatsDataInstancesTests extends CatsTaglessTestSuite {
   checkAll("ApplyK[EitherT[*[_], String, Int]]", ApplyKTests[EitherT[*[_], String, Int]].applyK[Try, Option, List, Int])
   checkAll("ApplyK[Func[*[_], String, Int]]", ApplyKTests[Func[*[_], String, Int]].applyK[Try, Option, List, Int])
   checkAll("ApplyK[IdT[*[_], Int]]", ApplyKTests[IdT[*[_], Int]].applyK[Try, Option, List, Int])
+  checkAll("TraverseK[IdT[*[_], Int]]", TraverseKTests[IdT[*[_], Int]].traverseK[Try, Option, List, Int])
   checkAll("ApplyK[IorT[*[_], String, Int]]", ApplyKTests[IorT[*[_], String, Int]].applyK[Try, Option, List, Int])
   checkAll("ApplyK[Kleisli[*[_], String, Int]]", ApplyKTests[Kleisli[*[_], String, Int]].applyK[Try, Option, List, Int])
   checkAll("ApplyK[OneAnd[*[_], Int]]", ApplyKTests[OneAnd[*[_], Int]].applyK[Try, Option, List, Int])

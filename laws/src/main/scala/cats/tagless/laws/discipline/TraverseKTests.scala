@@ -37,8 +37,6 @@ trait TraverseKTests[F[_[_]]] extends FunctorKTests[F] {
                                                EqFB: Eq[F[B]],
                                                EqFC: Eq[F[C]]
                                               ): RuleSet = {
-    implicit val instance = laws.F
-
     new DefaultRuleSet(
       name = "TraverseKK",
       parent = Some(functorK[A, B, C, T]),

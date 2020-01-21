@@ -6,8 +6,8 @@ addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVe
 addCommandAlias("validateJVM", ";testsJVM/test ; docs/makeMicrosite")
 
 lazy val libs = org.typelevel.libraries
-  .add("scalatestplus", version = "3.1.0.0-RC2", org = "org.scalatestplus", "scalatestplus-scalacheck")
-  .add("discipline-scalatest", version = "1.0.0-RC2", org = org.typelevel.typeLevelOrg)
+  .add("scalatestplus", version = "3.1.0.1", org = "org.scalatestplus", "scalacheck-1-14")
+  .add("discipline-scalatest", version = "1.0.0-RC4", org = org.typelevel.typeLevelOrg)
   .add("cats", version = "2.0.0")
 
 val apache2 = "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")
@@ -88,7 +88,7 @@ lazy val testsJS  = testsM.js
 lazy val testsM   = module("tests", CrossType.Pure)
   .dependsOn(macrosM, lawsM)
   .settings(
-    libs.testDependencies("shapeless", "scalatest", "cats-free", "cats-effect", "cats-testkit", "scalatestplus-scalacheck", "discipline-scalatest"),
+    libs.testDependencies("shapeless", "scalatest", "cats-free", "cats-effect", "cats-testkit", "scalacheck-1-14", "discipline-scalatest"),
     scalacOptions in Test := (scalacOptions in Test).value.filter(_ != "-Xfatal-warnings"),
     scalaMacroDependencies(libs),
     macroAnnotationsSettings,

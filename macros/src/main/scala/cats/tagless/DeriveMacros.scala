@@ -257,7 +257,7 @@ class DeriveMacros(val c: blackbox.Context) {
           method.transform(af, f -> g) {
             case (pn, pt) if occursIn(pt)(f) =>
               val F = summon[ContravariantK[Any]](polyType(f :: Nil, pt))
-              q"$F.contramapK[$f, $g]($pn)($fk)"
+              q"$F.contramapK[$g, $f]($pn)($fk)"
           } {
             case delegate =>
               val F = summon[FunctorK[Any]](polyType(f :: Nil, method.returnType))

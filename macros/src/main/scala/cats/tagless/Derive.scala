@@ -54,6 +54,9 @@ object Derive {
    */
   def functorK[Alg[_[_]]]: FunctorK[Alg] = macro DeriveMacros.functorK[Alg]
 
+  /** Generates a NihilistK instance */
+  def nihilistK[Alg[_[_]]]: NihilistK[Alg] = macro DeriveMacros.nihilistK[Alg]
+
   def contravariantK[Alg[_[_]]]: ContravariantK[Alg] = macro DeriveMacros.contravariantK[Alg]
   def invariantK[Alg[_[_]]]: InvariantK[Alg] = macro DeriveMacros.invariantK[Alg]
   def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = macro DeriveMacros.semigroupalK[Alg]

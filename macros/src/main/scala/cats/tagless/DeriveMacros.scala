@@ -246,6 +246,20 @@ class DeriveMacros(val c: blackbox.Context) {
       implement(algebra)(b)(types ++ methods)
     }
 
+  // def exNihiloK[F[_]](ek: EmptyK[F]): A[F]
+  def exNihiloK(algebra: Type): (String, Type => Tree) =
+    "exNihiloK" -> { case PolyType(List(f), MethodType(List(ek), _) ) => 
+      val Af = singleType(NoPrefix, af)
+      val members = overridableMembersOf(Af)
+      val types = delegateAbstractTypes(Af, members, Af)
+      val methods = ???
+      // So... we are not going to delegate methods, because we are building from zero.
+      // WE need to create, for each method `def fili($..paramss): F[A]`, a body of the form:
+      // def fili($..paramss): F[A] = ek.empty[A]`
+      // so, ta
+      implement(algebra)(b)(types ++ methods)
+    }
+
   // def mapK[F[_], G[_]](af: A[F])(fk: F ~> G): A[G]
   def mapK(algebra: Type): (String, Type => Tree) =
     "mapK" -> { case PolyType(List(f, g), MethodType(List(af), MethodType(List(fk), _))) =>
@@ -591,6 +605,9 @@ class DeriveMacros(val c: blackbox.Context) {
 
   def functorK[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
     instantiate[FunctorK[Alg]](tag)(mapK)
+
+  def functorK[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
+    instantiate[NihilistK[Alg]](tag)(exNihilK)
 
   def contravariantK[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
     instantiate[ContravariantK[Alg]](tag)(contramapK)

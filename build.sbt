@@ -7,7 +7,7 @@ addCommandAlias("validateJVM", ";testsJVM/test ; docs/makeMicrosite")
 
 lazy val libs = org.typelevel.libraries
   .add("scalatestplus", version = "3.1.1.1", org = "org.scalatestplus", "scalacheck-1-14")
-  .add("discipline-scalatest", version = "1.0.0", org = org.typelevel.typeLevelOrg)
+  .add("discipline-scalatest", version = "1.0.1", org = org.typelevel.typeLevelOrg)
   .add("cats", version = "2.0.0")
 
 val apache2 = "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")

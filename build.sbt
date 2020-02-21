@@ -6,7 +6,7 @@ addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVe
 addCommandAlias("validateJVM", ";testsJVM/test ; docs/makeMicrosite")
 
 lazy val libs = org.typelevel.libraries
-  .add("scalatestplus", version = "3.1.1.0", org = "org.scalatestplus", "scalacheck-1-14")
+  .add("scalatestplus", version = "3.1.1.1", org = "org.scalatestplus", "scalacheck-1-14")
   .add("discipline-scalatest", version = "1.0.0", org = org.typelevel.typeLevelOrg)
   .add("cats", version = "2.0.0")
 

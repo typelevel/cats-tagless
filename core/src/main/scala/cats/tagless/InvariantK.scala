@@ -65,21 +65,33 @@ object InvariantK extends InvariantKInstances01 {
       OneAnd(Semigroup[A].combine(af.head, ag.head), Tuple2K(af.tail, ag.tail))
   }
 
-  implicit def catsTaglessApplyKForTuple2K[H[_]: SemigroupK, A]: ApplyK[Tuple2K[H, *[_], A]] =
+  implicit def catsTaglessApplyKForTuple2K1[H[_]: SemigroupK, A]: ApplyK[Tuple2K[*[_], H, A]] =
+    new ApplyK[Tuple2K[*[_], H, A]] {
+      def mapK[F[_], G[_]](af: Tuple2K[F, H, A])(fk: F ~> G) = Tuple2K(fk(af.first), af.second)
+      def productK[F[_], G[_]](af: Tuple2K[F, H, A], ag: Tuple2K[G, H, A]): Tuple2K[Tuple2K[F, G, *], H, A] =
+        Tuple2K(Tuple2K(af.first, ag.first), SemigroupK[H].combineK(af.second, ag.second))
+    }
+
+  implicit def catsTaglessApplyKForTuple2K2[H[_]: SemigroupK, A]: ApplyK[Tuple2K[H, *[_], A]] =
     new ApplyK[Tuple2K[H, *[_], A]] {
       def mapK[F[_], G[_]](af: Tuple2K[H, F, A])(fk: F ~> G) = af.mapK(fk)
       def productK[F[_], G[_]](af: Tuple2K[H, F, A], ag: Tuple2K[H, G, A]) =
         Tuple2K(SemigroupK[H].combineK(af.first, ag.first), Tuple2K(af.second, ag.second))
     }
 
+  implicit def contravariantKFunctionK[H[_]]: ContravariantK[FunctionK[*[_], H]] =
+    new ContravariantK[FunctionK[*[_], H]] {
+      def contramapK[F[_], G[_]](af: F ~> H)(fk: G ~> F) = af.compose(fk)
+    }
+
   implicit def functorKFunctionK[J[_]]: FunctorK[FunctionK[J, *[_]]] = {
     type FunK[F[_]] = FunctionK[J, F]
     new FunctorK[FunK] {
-      override def mapK[F[_], G[_]](af: FunK[F])(fn: ~>[F, G]): FunK[G] = fn.compose(af)
+      def mapK[F[_], G[_]](af: FunK[F])(fn: F ~> G): FunK[G] = fn.compose(af)
     }
   }
 
-  implicit def conKUnorderedFoldable: ContravariantK[UnorderedFoldable] = unorderedFoldableInstance
+  implicit def conKFoldable: ContravariantK[Foldable] = foldableInstance
 
 }
 
@@ -90,8 +102,8 @@ trait InvariantKInstances01 extends InvariantKInstances02 {
   implicit def catsTaglessFunctorKForTuple2K[F[_], A]: FunctorK[Tuple2K[F, *[_], A]] =
     tuple2KFunctorK.asInstanceOf[FunctorK[Tuple2K[F, *[_], A]]]
 
-  implicit def conKFoldable: ContravariantK[Foldable] = foldableInstance
-  
+  implicit def conKUnorderedFoldable: ContravariantK[UnorderedFoldable] = unorderedFoldableInstance
+
 }
 
 trait InvariantKInstances02
@@ -100,12 +112,12 @@ object InvariantKTraits extends InvariantKTraits
 
 trait InvariantKTraits extends InvariantKPrivate {
   private[tagless] val  unorderedFoldableInstance = new ContravariantK[UnorderedFoldable] {
-    override def contramapK[F[_], G[_]](af: UnorderedFoldable[F])(gf: ~>[G, F]): UnorderedFoldable[G] =
+    override def contramapK[F[_], G[_]](af: UnorderedFoldable[F])(gf: G ~> F): UnorderedFoldable[G] =
       new Nat2UnorderedFoldable[F, G] { val F = af; val from = gf }
   }
 
   private[tagless] val foldableInstance = new ContravariantK[Foldable] {
-    override def contramapK[F[_], G[_]](af: Foldable[F])(gf: ~>[G, F]): Foldable[G] =
+    override def contramapK[F[_], G[_]](af: Foldable[F])(gf: G ~> F): Foldable[G] =
       new Nat2Foldable[F, G] { val F = af; val from = gf }
   }
 

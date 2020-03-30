@@ -13,8 +13,8 @@ jdk:
   - oraclejdk8
 
 scala_version_211: &scala_version_211 2.11.12
-scala_version_212: &scala_version_212 2.12.8
-scala_version_213: &scala_version_213 2.13.0
+scala_version_212: &scala_version_212 2.12.11
+scala_version_213: &scala_version_213 2.13.1
 
 before_install:
  - export PATH=${PATH}:./vendor/bundle
@@ -71,5 +71,4 @@ cache:
     - $HOME/.ivy2/cache
     - $HOME/.sbt
     - $HOME/.coursier
-    # Pants cache
     - $HOME/.cache

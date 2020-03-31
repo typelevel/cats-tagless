@@ -9,6 +9,7 @@ lazy val libs = org.typelevel.libraries
   .add("scalatestplus", version = "3.1.1.1", org = "org.scalatestplus", "scalacheck-1-14")
   .add("discipline-scalatest", version = "1.0.1", org = org.typelevel.typeLevelOrg)
   .add("cats", version = "2.0.0")
+  .add("paradise", version = "2.1.1")
 
 val apache2 = "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")
 val gh = GitHubSettings(org = "typelevel", proj = "cats-tagless", publishOrg = "org.typelevel", license = apache2)
@@ -147,12 +148,12 @@ lazy val commonSettings = sharedCommonSettings ++ Seq(
   scalaVersion := libs.vers("scalac_2.12"),
   crossScalaVersions := Seq(libs.vers("scalac_2.11"), scalaVersion.value, libs.vers("scalac_2.13")),
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
+  addCompilerPlugin("org.typelevel" % "kind-projector" % "0.11.0" cross CrossVersion.full),
   developers := List(
     Developer("Georgi Krastev", "@joroKr21", "joro.kr.21@gmail.com", new java.net.URL("https://www.linkedin.com/in/georgykr")),
     Developer("Kailuo Wang", "@kailuowang", "kailuo.wang@gmail.com", new java.net.URL("http://kailuowang.com")),
     Developer("Luka Jacobowitz", "@LukaJCB", "luka.jacobowitz@fh-duesseldorf.de", new java.net.URL("http://stackoverflow.com/users/3795501/luka-jacobowitz")))
-  ) ++ scalacAllSettings ++ unidocCommonSettings ++
-  addCompilerPlugins(libs, "kind-projector") ++ copyrightHeader
+  ) ++ scalacAllSettings ++ unidocCommonSettings ++ copyrightHeader
 
 lazy val commonJsSettings = Seq(
   scalaJSStage in Global := FastOptStage,

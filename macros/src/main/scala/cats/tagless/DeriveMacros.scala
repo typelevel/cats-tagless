@@ -58,6 +58,8 @@ class DeriveMacros(val c: blackbox.Context) {
       val f_* : (TermName, Type) => Tree = {
         case (pn, RepeatedParam(pt)) =>
           q"${f.andThen(arg => q"for ($pn <- $pn) yield $arg").applyOrElse(pn -> pt, id)}: _*"
+        case (pn, ByNameParam(pt)) =>
+          f.applyOrElse(pn -> pt, id)
         case (pn, pt) =>
           f.applyOrElse(pn -> pt, id)
       }
@@ -94,15 +96,16 @@ class DeriveMacros(val c: blackbox.Context) {
     }
   }
 
-  /** Constructor / extractor for repeated parameter (aka. vararg) types. */
-  object RepeatedParam {
-
-    def apply(tpe: Type): Type =
-      appliedType(definitions.RepeatedParamClass, tpe)
-
-    def unapply(tpe: Type): Option[Type] =
-      if (tpe.typeSymbol == definitions.RepeatedParamClass) Some(tpe.typeArgs.head) else None
+  final class ParamExtractor(symbol: Symbol) {
+    def apply(tpe: Type): Type = appliedType(symbol, tpe)
+    def unapply(tpe: Type): Option[Type] = if (tpe.typeSymbol == symbol) Some(tpe.typeArgs.head) else None
   }
+
+  /** Constructor / extractor for repeated parameter (aka. vararg) types. */
+  val RepeatedParam = new ParamExtractor(definitions.RepeatedParamClass)
+
+  /** Constructor / extractor for byname parameter types. */
+  val ByNameParam = new ParamExtractor(definitions.ByNameParamClass)
 
   /** Return the set of overridable members of `tpe`, excluding some undesired cases. */
   // TODO: Figure out what to do about different visibility modifiers.

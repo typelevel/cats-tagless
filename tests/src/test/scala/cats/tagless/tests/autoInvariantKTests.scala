@@ -197,4 +197,9 @@ object autoInvariantKTests {
     def contravariantSum(xs: F[Int]*): Int
     def invariantSum(xs: F[Int]*): F[Int]
   }
+
+  @autoInvariantK
+  trait AlgWithByNameParameter[F[_]] {
+    def whenM(cond: F[Boolean])(action: => F[Unit]): F[Unit]
+  }
 }

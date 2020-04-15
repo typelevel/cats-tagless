@@ -86,6 +86,12 @@ class DeriveMacros(val c: blackbox.Context) {
 
     /** The definition of this method as a Scala tree. */
     def definition: Tree = q"override def $name[..$typeParams](...$paramLists): $returnType = $body"
+
+    /** Summon an implicit instance of `A`'s type constructor applied to `typeArgs` if one exists in scope. */
+    def summon[A: TypeTag](typeArgs: Type*): Tree = {
+      val tpe = appliedType(typeOf[A].typeConstructor, typeArgs: _*)
+      c.inferImplicitValue(tpe).orElse(abort(s"could not find implicit value of type $tpe in method $displayName"))
+    }
   }
 
   /** Constructor / extractor for repeated parameter (aka. vararg) types. */
@@ -133,12 +139,6 @@ class DeriveMacros(val c: blackbox.Context) {
 
   /** `tpe.contains` is broken before Scala 2.13. See scala/scala#6122. */
   def occursIn(tpe: Type)(symbol: Symbol): Boolean = tpe.exists(_.typeSymbol == symbol)
-
-  /** Summon an implicit instance of `A`'s type constructor applied to `typeArgs` if one exists in scope. */
-  def summon[A: TypeTag](typeArgs: Type*): Tree = {
-    val tpe = appliedType(typeOf[A].typeConstructor, typeArgs: _*)
-    c.inferImplicitValue(tpe).orElse(abort(s"could not find implicit value of type $tpe"))
-  }
 
   /** Delegate the definition of type members and aliases in `algebra`. */
   def delegateTypes(algebra: Type, members: Iterable[Symbol])(rhs: (TypeSymbol, List[Type]) => Type): Iterable[Tree] =
@@ -234,11 +234,11 @@ class DeriveMacros(val c: blackbox.Context) {
         case method if method.occursInSignature(a) =>
           method.transform(fa, a -> b) {
             case (pn, pt) if occursIn(pt)(a) =>
-              val F = summon[Contravariant[Any]](polyType(a :: Nil, pt))
+              val F = method.summon[Contravariant[Any]](polyType(a :: Nil, pt))
               q"$F.contramap[$b, $a]($pn)($f)"
           } {
             case delegate if method.occursInReturn(a) =>
-              val F = summon[Functor[Any]](polyType(a :: Nil, method.returnType))
+              val F = method.summon[Functor[Any]](polyType(a :: Nil, method.returnType))
               q"$F.map[$a, $b]($delegate)($f)"
           }
       }
@@ -256,11 +256,11 @@ class DeriveMacros(val c: blackbox.Context) {
         case method if method.occursInReturn(f) =>
           method.transform(af, f -> g) {
             case (pn, pt) if occursIn(pt)(f) =>
-              val F = summon[ContravariantK[Any]](polyType(f :: Nil, pt))
+              val F = method.summon[ContravariantK[Any]](polyType(f :: Nil, pt))
               q"$F.contramapK[$g, $f]($pn)($fk)"
           } {
             case delegate =>
-              val F = summon[FunctorK[Any]](polyType(f :: Nil, method.returnType))
+              val F = method.summon[FunctorK[Any]](polyType(f :: Nil, method.returnType))
               q"$F.mapK[$f, $g]($delegate)($fk)"
           }
       }
@@ -278,11 +278,11 @@ class DeriveMacros(val c: blackbox.Context) {
         case method if method.occursInSignature(a) =>
           method.transform(fa, a -> b) {
             case (pn, pt) if occursIn(pt)(a) =>
-              val F = summon[Functor[Any]](polyType(a :: Nil, pt))
+              val F = method.summon[Functor[Any]](polyType(a :: Nil, pt))
               q"$F.map[$b, $a]($pn)($f)"
           } {
             case delegate if method.occursInReturn(a) =>
-              val F = summon[Contravariant[Any]](polyType(a :: Nil, method.returnType))
+              val F = method.summon[Contravariant[Any]](polyType(a :: Nil, method.returnType))
               q"$F.contramap[$a, $b]($delegate)($f)"
           }
       }
@@ -300,11 +300,11 @@ class DeriveMacros(val c: blackbox.Context) {
         case method if method.occursInSignature(f) =>
           method.transform(af, f -> g) {
             case (pn, pt) if occursIn(pt)(f) =>
-              val F = summon[FunctorK[Any]](polyType(f :: Nil, pt))
+              val F = method.summon[FunctorK[Any]](polyType(f :: Nil, pt))
               q"$F.mapK[$g, $f]($pn)($fk)"
           } {
             case delegate if method.occursInReturn(f) =>
-              val F = summon[ContravariantK[Any]](polyType(f :: Nil, method.returnType))
+              val F = method.summon[ContravariantK[Any]](polyType(f :: Nil, method.returnType))
               q"$F.contramapK[$f, $g]($delegate)($fk)"
           }
       }
@@ -322,11 +322,11 @@ class DeriveMacros(val c: blackbox.Context) {
         case method if method.occursInSignature(a) =>
           method.transform(fa, a -> b) {
             case (pn, pt) if occursIn(pt)(a) =>
-              val F = summon[Invariant[Any]](polyType(a :: Nil, pt))
+              val F = method.summon[Invariant[Any]](polyType(a :: Nil, pt))
               q"$F.imap[$b, $a]($pn)($g)($f)"
           } {
             case delegate if method.occursInReturn(a) =>
-              val F = summon[Invariant[Any]](polyType(a :: Nil, method.returnType))
+              val F = method.summon[Invariant[Any]](polyType(a :: Nil, method.returnType))
               q"$F.imap[$a, $b]($delegate)($f)($g)"
           }
       }
@@ -344,11 +344,11 @@ class DeriveMacros(val c: blackbox.Context) {
         case method if method.occursInSignature(f) =>
           method.transform(af, f -> g) {
             case (pn, pt) if occursIn(pt)(f) =>
-              val F = summon[InvariantK[Any]](polyType(f :: Nil, pt))
+              val F = method.summon[InvariantK[Any]](polyType(f :: Nil, pt))
               q"$F.imapK[$g, $f]($pn)($gk)($fk)"
           } {
             case delegate if method.occursInReturn(f) =>
-              val F = summon[InvariantK[Any]](polyType(f :: Nil, method.returnType))
+              val F = method.summon[InvariantK[Any]](polyType(f :: Nil, method.returnType))
               q"$F.imapK[$f, $g]($delegate)($fk)($gk)"
           }
       }
@@ -367,7 +367,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val methods = delegateMethods(Fa, members, fa) {
         case method if method.occursOnlyInReturn(a) =>
           val returnType = method.returnType.map(t => if (t.typeSymbol == a) B else t)
-          val Ap = summon[cats.Apply[Any]](polyType(a :: Nil, method.returnType))
+          val Ap = method.summon[cats.Apply[Any]](polyType(a :: Nil, method.returnType))
           val body = q"$Ap.ap[$A, $B](${method.delegate(Ident(ff))})(${method.body})"
           method.copy(returnType = returnType, body = body)
         case method if method.occursInSignature(a) =>
@@ -389,7 +389,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val methods = delegateMethods(Fa, members, fa) {
         case method if method.occursOnlyInReturn(a) =>
           val returnType = method.returnType.map(t => if (t.typeSymbol == a) P else t)
-          val Sg = summon[Semigroupal[Any]](polyType(a :: Nil, method.returnType))
+          val Sg = method.summon[Semigroupal[Any]](polyType(a :: Nil, method.returnType))
           val body = q"$Sg.product[$A, $B](${method.body}, ${method.delegate(Ident(fb))})"
           method.copy(returnType = returnType, body = body)
         case method if method.occursInSignature(a) =>
@@ -412,7 +412,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val methods = delegateMethods(Af, members, af) {
         case method if method.occursOnlyInReturn(f) =>
           val returnType = method.returnType.map(t => if (t.typeSymbol == f) appliedType(t2k, t.typeArgs) else t)
-          val Sk = summon[SemigroupalK[Any]](polyType(f :: Nil, method.returnType))
+          val Sk = method.summon[SemigroupalK[Any]](polyType(f :: Nil, method.returnType))
           val body = q"$Sk.productK[$F, $G](${method.body}, ${method.delegate(Ident(ag))})"
           method.copy(returnType = returnType, body = body)
         case method if method.occursInSignature(f) =>
@@ -482,23 +482,23 @@ class DeriveMacros(val c: blackbox.Context) {
         case method if method.occursInSignature(a) || method.occursInSignature(b) =>
           method.transform(fab, a -> c, b -> d) {
             case (pn, pt) if occursIn(pt)(a) && occursIn(pt)(b) =>
-              val F = summon[Profunctor[Any]](polyType(b :: a :: Nil, pt))
+              val F = method.summon[Profunctor[Any]](polyType(b :: a :: Nil, pt))
               q"$F.dimap[$d, $c, $b, $a]($pn)($g)($f)"
             case (pn, pt) if occursIn(pt)(a) =>
-              val F = summon[Functor[Any]](polyType(a :: Nil, pt))
+              val F = method.summon[Functor[Any]](polyType(a :: Nil, pt))
               q"$F.map[$c, $a]($pn)($f)"
             case (pn, pt) if occursIn(pt)(b) =>
-              val F = summon[Contravariant[Any]](polyType(b :: Nil, pt))
+              val F = method.summon[Contravariant[Any]](polyType(b :: Nil, pt))
               q"$F.contramap[$d, $b]($pn)($g)"
           } {
             case delegate if method.occursInReturn(a) && method.occursInReturn(b) =>
-              val F = summon[Profunctor[Any]](polyType(a :: b :: Nil, method.returnType))
+              val F = method.summon[Profunctor[Any]](polyType(a :: b :: Nil, method.returnType))
               q"$F.dimap[$a, $b, $c, $d]($delegate)($f)($g)"
             case delegate if method.occursInReturn(a) =>
-              val F = summon[Contravariant[Any]](polyType(a :: Nil, method.returnType))
+              val F = method.summon[Contravariant[Any]](polyType(a :: Nil, method.returnType))
               q"$F.contramap[$a, $c]($delegate)($f)"
             case delegate if method.occursInReturn(b) =>
-              val F = summon[Functor[Any]](polyType(b :: Nil, method.returnType))
+              val F = method.summon[Functor[Any]](polyType(b :: Nil, method.returnType))
               q"$F.map[$b, $d]($delegate)($g)"
           }
       }
@@ -520,20 +520,20 @@ class DeriveMacros(val c: blackbox.Context) {
               val B = b.asType.toType
               abort(s"Both type parameters $A and $B occur in contravariant position in method ${method.displayName}")
             case (pn, pt) if occursIn(pt)(a) =>
-              val F = summon[Contravariant[Any]](polyType(a :: Nil, pt))
+              val F = method.summon[Contravariant[Any]](polyType(a :: Nil, pt))
               q"$F.contramap[$c, $a]($pn)($f)"
             case (pn, pt) if occursIn(pt)(b) =>
-              val F = summon[Contravariant[Any]](polyType(b :: Nil, pt))
+              val F = method.summon[Contravariant[Any]](polyType(b :: Nil, pt))
               q"$F.contramap[$d, $b]($pn)($g)"
           } {
             case delegate if method.occursInReturn(a) && method.occursInReturn(b) =>
-              val F = summon[Bifunctor[Any]](polyType(a :: b :: Nil, method.returnType))
+              val F = method.summon[Bifunctor[Any]](polyType(a :: b :: Nil, method.returnType))
               q"$F.bimap[$a, $b, $c, $d]($delegate)($f, $g)"
             case delegate if method.occursInReturn(a) =>
-              val F = summon[Functor[Any]](polyType(a :: Nil, method.returnType))
+              val F = method.summon[Functor[Any]](polyType(a :: Nil, method.returnType))
               q"$F.map[$a, $c]($delegate)($f)"
             case delegate if method.occursInReturn(b) =>
-              val F = summon[Functor[Any]](polyType(b :: Nil, method.returnType))
+              val F = method.summon[Functor[Any]](polyType(b :: Nil, method.returnType))
               q"$F.map[$b, $d]($delegate)($g)"
           }
       }

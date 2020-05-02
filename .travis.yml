@@ -12,7 +12,6 @@ git:
 jdk:
   - oraclejdk8
 
-scala_version_211: &scala_version_211 2.11.12
 scala_version_212: &scala_version_212 2.12.11
 scala_version_213: &scala_version_213 2.13.1
 
@@ -29,13 +28,11 @@ jobs:
     # it can speed up the overall build to have the longer-running jobs at the top of this list.
     - env: TEST="coverage"
       install: pip install --user codecov
-      script: sbt coverage rootJVM/test coverageReport && codecov
+      script: sbt coverage rootJVM/test rootJVM/coverageReport && codecov
 
     - &js_tests
       env: TEST="JS tests"
       script: sbt ";project rootJS;++$TRAVIS_SCALA_VERSION test"
-      scala: *scala_version_211
-    - <<: *js_tests
       scala: *scala_version_212
     - <<: *js_tests
       scala: *scala_version_213
@@ -43,8 +40,6 @@ jobs:
     - &jvm_tests
       env: TEST="JVM tests"
       script: sbt ";project rootJVM; ++$TRAVIS_SCALA_VERSION test"
-      scala: *scala_version_211
-    - <<: *jvm_tests
       scala: *scala_version_212
     - <<: *jvm_tests
       scala: *scala_version_213

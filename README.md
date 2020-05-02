@@ -11,7 +11,7 @@ Cats-tagless is a small library built to facilitate transforming and composing t
 
 ## Installation
 
-Cats-tagless is currently available for Scala 2.11, 2.12 and 2.13. 
+Cats-tagless is currently available for Scala 2.12 and 2.13 and Scala.js.
 
 Add the following settings in `build.sbt`
 

@@ -17,7 +17,7 @@ Cats-tagless is a small library built to facilitate composing tagless final enco
 
 ## Installation
 
-Cats-tagless is available on scala 2.11, 2.12, 2.13 and scalajs. 
+Cats-tagless is available on scala 2.12, 2.13 and Scala.js. 
 Add the following dependency in `build.sbt`
 
 ```scala

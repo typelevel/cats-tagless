@@ -16,7 +16,7 @@
 
 package cats.tagless.diagnosis
 
-import simulacrum.typeclass
+import cats.tagless.Trivial
 
 final case class Instrumentation[F[_], A](
   value: F[A],
@@ -25,17 +25,22 @@ final case class Instrumentation[F[_], A](
 )
 
 object Instrumentation {
-  final case class With[F[_], G[_], A](
+  type WithBoth[F[_], G[_], A] = With[F, G, G, A]
+  type WithArgs[F[_], G[_], A] = With[F, G, Trivial, A]
+  type WithRet[F[_], G[_], A] = With[F, Trivial, G, A]
+
+  final case class With[F[_], Arg[_], Ret[_], A](
     instrumentation: Instrumentation[F, A],
-    arguments: List[List[Argument[G]]],
-    instance: G[A]
+    arguments: List[List[Argument[Arg]]],
+    instance: Ret[A]
   )
 
   object With {
-    def instance[F[_], G[_], A](
+    def instance[F[_], Arg[_], Ret[_], A](
       instrumentation: Instrumentation[F, A],
-      arguments: List[List[Argument[G]]]
-    )(implicit G: G[A]): With[F, G, A] = With(instrumentation, arguments, G)
+      arguments: List[List[Argument[Arg]]]
+    )(implicit instance: Ret[A]): With[F, Arg, Ret, A] =
+      With(instrumentation, arguments, instance)
   }
 
   sealed trait Argument[F[_]] extends Serializable {
@@ -70,13 +75,16 @@ object Instrumentation {
   * This feature is experimental, API is likely to change.
   * @tparam Alg The algebra type you want to instrument.
   */
-@typeclass
 trait Instrument[Alg[_[_]]] extends Serializable {
   def instrument[F[_]](af: Alg[F]): Alg[Instrumentation[F, *]]
 }
 
 object Instrument {
-  trait With[Alg[_[_]], G[_]] extends Serializable {
-    def instrumentWith[F[_]](af: Alg[F]): Alg[Instrumentation.With[F, G, *]]
+  type WithBoth[Alg[_[_]], G[_]] = With[Alg, G, G]
+  type WithArgs[Alg[_[_]], G[_]] = With[Alg, G, Trivial]
+  type WithRet[Alg[_[_]], G[_]] = With[Alg, Trivial, G]
+
+  trait With[Alg[_[_]], Arg[_], Ret[_]] extends Serializable {
+    def instrumentWith[F[_]](af: Alg[F]): Alg[Instrumentation.With[F, Arg, Ret, *]]
   }
 }

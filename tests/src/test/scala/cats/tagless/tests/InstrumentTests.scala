@@ -43,8 +43,8 @@ class InstrumentTests extends CatsTaglessTestSuite {
       def put(key: String, a: String): Id[Unit] = ()
     }
 
-    implicit val instrumentWithShow: Instrument.With[KVStore, Show] = Derive.instrumentWith
-    val instrumented = dummy.instrumentWith[Show]
+    implicit val instrumentWithShow: Instrument.WithBoth[KVStore, Show] = Derive.instrumentWith
+    val instrumented = dummy.instrumentWithBoth[Show]
     val res = instrumented.get("key1")
 
     res.instrumentation.algebraName shouldBe "KVStore"
@@ -85,7 +85,7 @@ object InstrumentTests {
 
   object ShowFAlgebra {
     import cats.instances.all._
-    implicit val instrumentWithShow: Instrument.With[ShowFAlgebra, Show] = Derive.instrumentWith
-    implicit val trivialInstrument: Instrument.With[ShowFAlgebra, Trivial] = Derive.instrumentWith
+    implicit val instrumentWithShow: Instrument.WithBoth[ShowFAlgebra, Show] = Derive.instrumentWith
+    implicit val trivialInstrument: Instrument.WithBoth[ShowFAlgebra, Trivial] = Derive.instrumentWith
   }
 }

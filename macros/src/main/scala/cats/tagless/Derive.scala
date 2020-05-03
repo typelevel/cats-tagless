@@ -66,5 +66,6 @@ object Derive {
     * @return An instrumented algebra.
     */
   def instrument[Alg[_[_]]]: Instrument[Alg] = macro DeriveMacros.instrument[Alg]
-  def instrumentWith[Alg[_[_]], G[_]]: Instrument.With[Alg, G] = macro DeriveMacros.instrumentWith[Alg, G]
+  def instrumentWith[Alg[_[_]], Arg[_], Ret[_]]: Instrument.With[Alg, Arg, Ret] =
+    macro DeriveMacros.instrumentWith[Alg, Arg, Ret]
 }

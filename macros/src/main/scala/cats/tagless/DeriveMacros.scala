@@ -573,10 +573,10 @@ class DeriveMacros(val c: blackbox.Context) {
       implement(InstrumentedAlg)()(types ++ methods)
     }
 
-  // def instrumentWith[F[_]](af: Alg[F]): Alg[Instrumentation.With[F, G, *]]
-  def instrumentationWith(G: Type)(algebra: Type): (String, Type => Tree) =
+  // def instrumentWith[F[_]](af: Alg[F]): Alg[Instrumentation.With[F, Arg, Ret, *]]
+  def instrumentationWith(Arg: Type, Ret: Type)(algebra: Type): (String, Type => Tree) =
     "instrumentWith" -> { case PolyType(List(f), MethodType(List(af), _)) =>
-      val InstrumentationWith = symbolOf[Instrumentation.With[Any, Any, Any]]
+      val InstrumentationWith = symbolOf[Instrumentation.With[Any, Any, Any, Any]]
       val F = f.asType.toTypeConstructor
       val Af = singleType(NoPrefix, af)
       val members = overridableMembersOf(Af)
@@ -586,22 +586,22 @@ class DeriveMacros(val c: blackbox.Context) {
       val methods = delegateMethods(Af, members, af) {
         case method if method.returnType.typeSymbol == f =>
           val typeArgs = method.returnType.typeArgs
-          val instrumentation = q"${reify(Instrumentation)}(${method.body}, $algebraName, ${method.displayName})"
+          val inst = q"${reify(Instrumentation)}(${method.body}, $algebraName, ${method.displayName})"
           val arguments = method.transformedArgLists { case param @ Parameter(pn, pt, pm) =>
             val constructor = TermName(if (pm.hasFlag(Flag.BYNAMEPARAM)) "byName" else "apply")
-            q"${reify(Instrumentation.Argument)}.$constructor[$G, $pt](${param.displayName}, $pn)"
+            q"${reify(Instrumentation.Argument)}.$constructor[$Arg, $pt](${param.displayName}, $pn)"
           }
 
           val hasImplicits = method.signature.paramLists.lastOption.flatMap(_.headOption).exists(_.isImplicit)
           val dropImplicits = if (hasImplicits) arguments.dropRight(1) else arguments
-          val body = q"${reify(Instrumentation.With)}.instance[$F, $G, ..$typeArgs]($instrumentation, $dropImplicits)"
-          val returnType = appliedType(InstrumentationWith, F :: G :: typeArgs)
+          val body = q"${reify(Instrumentation.With)}.instance[$F, $Arg, $Ret, ..$typeArgs]($inst, $dropImplicits)"
+          val returnType = appliedType(InstrumentationWith, F :: Arg :: Ret :: typeArgs)
           method.copy(body = body, returnType = returnType)
         case method if method.occursInSignature(f) =>
           abort(s"Type parameter $F can only occur as a top level return type in method ${method.displayName}")
       }
 
-      val InstrumentationType = appliedType(InstrumentationWith, F :: G :: F.typeParams.map(_.asType.toType))
+      val InstrumentationType = appliedType(InstrumentationWith, F :: Arg :: Ret :: F.typeParams.map(_.asType.toType))
       val InstrumentedAlg = appliedType(algebra, polyType(F.typeParams, InstrumentationType))
       implement(InstrumentedAlg)()(types ++ methods)
     }
@@ -648,8 +648,11 @@ class DeriveMacros(val c: blackbox.Context) {
   def instrument[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
     instantiate[Instrument[Alg]](tag)(instrumentation)
 
-  def instrumentWith[Alg[_[_]], G[_]](implicit tag: WeakTypeTag[Alg[Any]], g: WeakTypeTag[G[Any]]): Tree = {
-    val G = g.tpe.typeConstructor
-    instantiate[Instrument.With[Alg, G]](tag, G)(instrumentationWith(G))
+  def instrumentWith[Alg[_[_]], Arg[_], Ret[_]](
+    implicit tag: WeakTypeTag[Alg[Any]], arg: WeakTypeTag[Arg[Any]], ret: WeakTypeTag[Ret[Any]]
+  ): Tree = {
+    val Arg = arg.tpe.typeConstructor
+    val Ret = ret.tpe.typeConstructor
+    instantiate[Instrument.With[Alg, Arg, Ret]](tag, Arg, Ret)(instrumentationWith(Arg, Ret))
   }
 }

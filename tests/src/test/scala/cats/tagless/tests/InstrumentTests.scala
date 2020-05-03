@@ -16,8 +16,9 @@
 
 package cats.tagless.tests
 
-import cats.Id
-import cats.tagless.{Derive, autoInstrument, finalAlg}
+import cats.{Id, Show}
+import cats.tagless.{Derive, Trivial, autoInstrument, finalAlg}
+import cats.tagless.diagnosis.Instrument
 import InstrumentTests._
 
 class InstrumentTests extends CatsTaglessTestSuite {
@@ -34,6 +35,24 @@ class InstrumentTests extends CatsTaglessTestSuite {
     res.algebraName shouldBe "KVStore"
     res.methodName shouldBe "get"
     res.value shouldBe Some("Test key1")
+  }
+
+  test("Instrument.With should put method and algebra name in result") {
+    val dummy = new KVStore[Id] {
+      def get(key: String): Id[Option[String]] = Some(s"Test $key")
+      def put(key: String, a: String): Id[Unit] = ()
+    }
+
+    implicit val instrumentWithShow: Instrument.With[KVStore, Show] = Derive.instrumentWith
+    val instrumented = dummy.instrumentWith[Show]
+    val res = instrumented.get("key1")
+
+    res.instrumentation.algebraName shouldBe "KVStore"
+    res.instrumentation.methodName shouldBe "get"
+    res.instrumentation.value shouldBe Some("Test key1")
+    res.arguments.map(_.map(_.value)) shouldBe List(List("key1"))
+    res.arguments.map(_.map(_.name)) shouldBe List(List("key"))
+    res.instance.show(res.instrumentation.value) shouldBe "Some(Test key1)"
   }
 
   test("autoInstrument annotation") {
@@ -55,5 +74,16 @@ object InstrumentTests {
   @finalAlg
   trait Lookup[F[_]] {
     def ->(id: String): F[Option[Long]]
+  }
+
+  trait ShowFAlgebra[F[_]] {
+    def showF[A: Show](a: A): F[String]
+    def showProduct[A: Show](a: A): F[(A, String)]
+  }
+
+  object ShowFAlgebra {
+    import cats.instances.all._
+    implicit val instrumentWithShow: Instrument.With[ShowFAlgebra, Show] = Derive.instrumentWith
+    implicit val trivialInstrument: Instrument.With[ShowFAlgebra, Trivial] = Derive.instrumentWith
   }
 }

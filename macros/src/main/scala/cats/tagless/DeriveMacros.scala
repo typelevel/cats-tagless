@@ -211,9 +211,11 @@ class DeriveMacros(val c: blackbox.Context) {
   /** Create a new instance of `typeClass` for `algebra`.
     * `rhs` should define a mapping for each method (by name) to an implementation function based on type signature.
     */
-  def instantiate[T: WeakTypeTag](tag: WeakTypeTag[_])(rhs: (Type => (String, Type => Tree))*): Tree = {
+  def instantiate[T: WeakTypeTag](tag: WeakTypeTag[_], typeArgs: Type*)(
+    rhs: (Type => (String, Type => Tree))*
+  ): Tree = {
     val algebra = tag.tpe.typeConstructor.dealias.etaExpand
-    val Ta = appliedType(symbolOf[T], algebra)
+    val Ta = appliedType(symbolOf[T], algebra :: typeArgs.toList)
     val impl = rhs.map(_.apply(algebra)).toMap
     val declaration @ ClassDef(_, _, _, Template(parents, self, members)) = declare(Ta)
     val implementations = for (member <- members) yield member match {
@@ -556,15 +558,47 @@ class DeriveMacros(val c: blackbox.Context) {
 
       val methods = delegateMethods(Af, members, af) {
         case method if method.returnType.typeSymbol == f =>
-          val body = q"_root_.cats.tagless.diagnosis.Instrumentation(${method.body}, $algebraName, ${method.displayName})"
+          val body = q"${reify(diagnosis.Instrumentation)}(${method.body}, $algebraName, ${method.displayName})"
           val returnType = appliedType(Instrumentation, F :: method.returnType.typeArgs)
           method.copy(body = body, returnType = returnType)
         case method if method.occursInSignature(f) =>
           abort(s"Type parameter $F can only occur as a top level return type in method ${method.displayName}")
       }
 
-      val instrumentationType = appliedType(Instrumentation, F :: F.typeParams.map(_.asType.toType))
-      val InstrumentedAlg = appliedType(algebra, polyType(F.typeParams, instrumentationType))
+      val InstrumentationType = appliedType(Instrumentation, F :: F.typeParams.map(_.asType.toType))
+      val InstrumentedAlg = appliedType(algebra, polyType(F.typeParams, InstrumentationType))
+      implement(InstrumentedAlg)()(types ++ methods)
+    }
+
+  // def instrumentWith[F[_]](af: Alg[F]): Alg[Instrumentation.With[F, G, *]]
+  def instrumentationWith(G: Type)(algebra: Type): (String, Type => Tree) =
+    "instrumentWith" -> { case PolyType(List(f), MethodType(List(af), _)) =>
+      val InstrumentationWith = symbolOf[Instrumentation.With[Any, Any, Any]]
+      val F = f.asType.toTypeConstructor
+      val Af = singleType(NoPrefix, af)
+      val members = overridableMembersOf(Af)
+      val types = delegateAbstractTypes(Af, members, Af)
+      val algebraName = algebra.typeSymbol.name.decodedName.toString
+
+      val methods = delegateMethods(Af, members, af) {
+        case method if method.returnType.typeSymbol == f =>
+          val typeArgs = method.returnType.typeArgs
+          val instrumentation = q"${reify(Instrumentation)}(${method.body}, $algebraName, ${method.displayName})"
+          val arguments = for (params <- method.signature.paramLists if !params.exists(_.isImplicit))
+            yield for (param <- params) yield {
+              val name = param.name.toTermName
+              q"${reify(Instrumentation.Argument)}[$G, ${param.typeSignature}](${name.decodedName.toString}, $name)"
+            }
+
+          val body = q"${reify(Instrumentation.With)}.instance[$F, $G, ..$typeArgs]($instrumentation, $arguments)"
+          val returnType = appliedType(InstrumentationWith, F :: G :: typeArgs)
+          method.copy(body = body, returnType = returnType)
+        case method if method.occursInSignature(f) =>
+          abort(s"Type parameter $F can only occur as a top level return type in method ${method.displayName}")
+      }
+
+      val InstrumentationType = appliedType(InstrumentationWith, F :: G :: F.typeParams.map(_.asType.toType))
+      val InstrumentedAlg = appliedType(algebra, polyType(F.typeParams, InstrumentationType))
       implement(InstrumentedAlg)()(types ++ methods)
     }
 
@@ -609,4 +643,9 @@ class DeriveMacros(val c: blackbox.Context) {
 
   def instrument[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
     instantiate[Instrument[Alg]](tag)(instrumentation)
+
+  def instrumentWith[Alg[_[_]], G[_]](implicit tag: WeakTypeTag[Alg[Any]], g: WeakTypeTag[G[Any]]): Tree = {
+    val G = g.tpe.typeConstructor
+    instantiate[Instrument.With[Alg, G]](tag, G)(instrumentationWith(G))
+  }
 }

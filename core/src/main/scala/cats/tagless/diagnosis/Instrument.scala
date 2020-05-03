@@ -55,6 +55,13 @@ object Instrumentation {
       val value = argValue
       val instance = F
     }
+
+    def byName[F[_], T](argName: String, argValue: => T)(implicit F: F[T]): Aux[F, T] = new Argument[F] {
+      type A = T
+      val name = argName
+      def value = argValue
+      val instance = F
+    }
   }
 }
 

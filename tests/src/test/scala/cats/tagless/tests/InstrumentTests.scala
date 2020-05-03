@@ -78,7 +78,9 @@ object InstrumentTests {
 
   trait ShowFAlgebra[F[_]] {
     def showF[A: Show](a: A): F[String]
+    def showAll[A: Show](as: A*): F[String]
     def showProduct[A: Show](a: A): F[(A, String)]
+    def logF[A: Show](message: => A): F[Unit]
   }
 
   object ShowFAlgebra {

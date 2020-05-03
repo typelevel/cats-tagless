@@ -19,14 +19,14 @@ package cats.tagless.syntax
 import cats.tagless.diagnosis.{Instrument, Instrumentation}
 
 trait InstrumentSyntax extends Instrument.ToInstrumentOps {
-  import InstrumentSyntax.InstrumentConstrainedOps
+  import InstrumentSyntax.InstrumentWithOps
 
-  implicit def toInstrumentConstrainedOps[Alg[_[_]], F[_]](af: Alg[F]): InstrumentConstrainedOps[Alg, F] =
-    new InstrumentConstrainedOps(af)
+  implicit def toInstrumentWithOps[Alg[_[_]], F[_]](af: Alg[F]): InstrumentWithOps[Alg, F] =
+    new InstrumentWithOps(af)
 }
 
 object InstrumentSyntax {
-  class InstrumentConstrainedOps[Alg[_[_]], F[_]](private val af: Alg[F]) extends AnyVal {
+  class InstrumentWithOps[Alg[_[_]], F[_]](private val af: Alg[F]) extends AnyVal {
     def instrumentWith[G[_]](
       implicit instrument: Instrument.With[Alg, G]
     ): Alg[Instrumentation.With[F, G, *]] = instrument.instrumentWith(af)

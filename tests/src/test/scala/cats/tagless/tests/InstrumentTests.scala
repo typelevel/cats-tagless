@@ -16,56 +16,38 @@
 
 package cats.tagless.tests
 
-import cats.{Id, Show}
-import cats.tagless.{Derive, Trivial, autoInstrument, finalAlg}
-import cats.tagless.diagnosis.Instrument
-import InstrumentTests._
+import cats.Id
+import cats.tagless.tests.InstrumentTests._
+import cats.tagless.{Derive, autoInstrument, finalAlg}
 
 class InstrumentTests extends CatsTaglessTestSuite {
 
-  test("Instrument should put method and algebra name in result") {
-    val dummy = new KVStore[Id] {
+  test("Instrument.algebraName and Instrument.instrument") {
+    val store = new KVStore[Id] {
       def get(key: String): Id[Option[String]] = Some(s"Test $key")
       def put(key: String, a: String): Id[Unit] = ()
     }
 
-    val instrumented = Derive.instrument[KVStore].instrument(dummy)
-    val res = instrumented.get("key1")
+    val instrument = Derive.instrument[KVStore]
+    val instrumented = instrument.instrument(store)
+    val result = instrumented.get("key1")
 
-    res.algebraName shouldBe "KVStore"
-    res.methodName shouldBe "get"
-    res.value shouldBe Some("Test key1")
-  }
-
-  test("Instrument.With should put method and algebra name in result") {
-    val dummy = new KVStore[Id] {
-      def get(key: String): Id[Option[String]] = Some(s"Test $key")
-      def put(key: String, a: String): Id[Unit] = ()
-    }
-
-    implicit val instrumentWithShow: Instrument.WithBoth[KVStore, Show] = Derive.instrumentWith
-    val instrumented = dummy.instrumentWithBoth[Show]
-    val res = instrumented.get("key1")
-
-    res.instrumentation.algebraName shouldBe "KVStore"
-    res.instrumentation.methodName shouldBe "get"
-    res.instrumentation.value shouldBe Some("Test key1")
-    res.arguments.map(_.map(_.value)) shouldBe List(List("key1"))
-    res.arguments.map(_.map(_.name)) shouldBe List(List("key"))
-    res.instance.show(res.instrumentation.value) shouldBe "Some(Test key1)"
+    instrument.algebraName shouldBe "KVStore"
+    result.methodName shouldBe "get"
+    result.value shouldBe Some("Test key1")
   }
 
   test("autoInstrument annotation") {
-    val dummy = new Lookup[Id] {
+    val lookup = new Lookup[Id] {
       def ->(id: String): Id[Option[Long]] = Some(1)
     }
 
-    val instrumented = dummy.instrument
-    val res = instrumented.->("key1")
+    val instrumented = lookup.instrument
+    val result = instrumented -> "key1"
 
-    res.algebraName shouldBe "Lookup"
-    res.methodName shouldBe "->"
-    res.value shouldBe Some(1)
+    Lookup.instrumentForLookup.algebraName shouldBe "Lookup"
+    result.methodName shouldBe "->"
+    result.value shouldBe Some(1)
   }
 }
 
@@ -74,18 +56,5 @@ object InstrumentTests {
   @finalAlg
   trait Lookup[F[_]] {
     def ->(id: String): F[Option[Long]]
-  }
-
-  trait ShowFAlgebra[F[_]] {
-    def showF[A: Show](a: A): F[String]
-    def showAll[A: Show](as: A*): F[String]
-    def showProduct[A: Show](a: A): F[(A, String)]
-    def logF[A: Show](message: => A): F[Unit]
-  }
-
-  object ShowFAlgebra {
-    import cats.instances.all._
-    implicit val instrumentWithShow: Instrument.WithBoth[ShowFAlgebra, Show] = Derive.instrumentWith
-    implicit val trivialInstrument: Instrument.WithBoth[ShowFAlgebra, Trivial] = Derive.instrumentWith
   }
 }

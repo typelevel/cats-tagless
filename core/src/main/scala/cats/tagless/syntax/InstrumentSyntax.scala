@@ -16,35 +16,6 @@
 
 package cats.tagless.syntax
 
-import cats.tagless.diagnosis.{Instrument, Instrumentation}
+import cats.tagless.aop.Instrument
 
-trait InstrumentSyntax {
-  import InstrumentSyntax.InstrumentOps
-
-  implicit def toInstrumentOps[Alg[_[_]], F[_]](af: Alg[F]): InstrumentOps[Alg, F] =
-    new InstrumentOps(af)
-}
-
-object InstrumentSyntax {
-  class InstrumentOps[Alg[_[_]], F[_]](private val af: Alg[F]) extends AnyVal {
-
-    def instrument(implicit instrument: Instrument[Alg]): Alg[Instrumentation[F, *]] =
-      instrument.instrument(af)
-
-    def instrumentWith[Arg[_], Ret[_]](
-      implicit instrument: Instrument.With[Alg, Arg, Ret]
-    ): Alg[Instrumentation.With[F, Arg, Ret, *]] = instrument.instrumentWith(af)
-
-    def instrumentWithBoth[G[_]](
-      implicit instrument: Instrument.WithBoth[Alg, G]
-    ): Alg[Instrumentation.WithBoth[F, G, *]] = instrument.instrumentWith(af)
-
-    def instrumentWithArgs[G[_]](
-      implicit instrument: Instrument.WithArgs[Alg, G]
-    ): Alg[Instrumentation.WithArgs[F, G, *]] = instrument.instrumentWith(af)
-
-    def instrumentWithRet[G[_]](
-      implicit instrument: Instrument.WithRet[Alg, G]
-    ): Alg[Instrumentation.WithRet[F, G, *]] = instrument.instrumentWith(af)
-  }
-}
+trait InstrumentSyntax extends Instrument.ToInstrumentOps

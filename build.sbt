@@ -10,6 +10,7 @@ lazy val libs = org.typelevel.libraries
   .add("discipline-scalatest", version = "2.0.0", org = org.typelevel.typeLevelOrg)
   .add("cats", version = "2.1.1")
   .add("paradise", version = "2.1.1")
+  .add("circe-core", version = "0.13.0", org = "io.circe")
 
 val apache2 = "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")
 val gh = GitHubSettings(org = "typelevel", proj = "cats-tagless", publishOrg = "org.typelevel", license = apache2)
@@ -79,7 +80,16 @@ lazy val testsJS  = testsM.js
 lazy val testsM   = module("tests", CrossType.Pure)
   .dependsOn(macrosM, lawsM)
   .settings(
-    libs.testDependencies("shapeless", "scalatest", "cats-free", "cats-effect", "cats-testkit", "scalacheck-1-14", "discipline-scalatest"),
+    libs.testDependencies(
+      "shapeless",
+      "scalatest",
+      "cats-free",
+      "cats-effect",
+      "cats-testkit",
+      "scalacheck-1-14",
+      "discipline-scalatest",
+      "circe-core"
+    ),
     scalacOptions in Test := (scalacOptions in Test).value.filter(_ != "-Xfatal-warnings"),
     scalaMacroDependencies(libs),
     macroAnnotationsSettings,

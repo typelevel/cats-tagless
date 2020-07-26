@@ -16,7 +16,9 @@
 
 package cats.tagless
 
+/** The trivial type class which has an instance for any type but does nothing. */
 final class Trivial[A] private extends Serializable
+
 object Trivial {
   private[this] val any = new Trivial[Any]
   implicit def instance[A]: Trivial[A] = any.asInstanceOf[Trivial[A]]

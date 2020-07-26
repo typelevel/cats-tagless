@@ -17,7 +17,7 @@
 package cats.tagless
 
 import cats.arrow.Profunctor
-import cats.tagless.diagnosis.Instrument
+import cats.tagless.aop.{Aspect, Instrument}
 import cats.{Apply, Bifunctor, Contravariant, FlatMap, Functor, Invariant, Semigroupal}
 
 object Derive {
@@ -59,13 +59,13 @@ object Derive {
   def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = macro DeriveMacros.semigroupalK[Alg]
   def applyK[Alg[_[_]]]: ApplyK[Alg] = macro DeriveMacros.applyK[Alg]
 
-  /**
-    * Type classes for instrumenting algebras.
-    * This feature is experimental, API is likely to change.
-    * @tparam Alg The algebra type you want to instrument.
-    * @return An instrumented algebra.
+  /** Type class for instrumenting an algebra.
+    * Note: This feature is experimental, API is likely to change.
     */
   def instrument[Alg[_[_]]]: Instrument[Alg] = macro DeriveMacros.instrument[Alg]
-  def instrumentWith[Alg[_[_]], Arg[_], Ret[_]]: Instrument.With[Alg, Arg, Ret] =
-    macro DeriveMacros.instrumentWith[Alg, Arg, Ret]
+
+  /** Type class supporting Aspect-Oriented Programming (AOP) for a tagless final algebra.
+    * Note: This feature is experimental, API is likely to change.
+    */
+  def aspect[Alg[_[_]], Dom[_], Cod[_]]: Aspect[Alg, Dom, Cod] = macro DeriveMacros.aspect[Alg, Dom, Cod]
 }

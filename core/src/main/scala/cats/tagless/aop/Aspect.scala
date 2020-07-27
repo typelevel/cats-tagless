@@ -45,10 +45,10 @@ object Aspect {
     * It can be applied to all method arguments, result, or both. Its behaviour is driven by type classes.
     *
     * @see `Weave.Domain`, `Weave.Codomain` and `Weave.Function` for convenient type aliases.
-    * @param domain `Aspect.Advice` for all arguments of the method. Target in `Eval` to capture by-name arguments.
+    * @param domain `Aspect.Advice` for all arguments except implicits. Target in `Eval` to capture by-name arguments.
     * @param codomain `Aspect.Advice` for the result of the method. Target in `F` - the underlying algebra carrier.
     * @tparam F The underlying algebra carrier type which is the result of forwarding the method call.
-    * @tparam Dom Type class / constraint that should exist for all parameter types of the method (domain).
+    * @tparam Dom Type class / constraint that should exist for all parameter types except implicits (domain).
     * @tparam Cod Type class / constraint that should exist for the return type of the method (codomain).
     * @tparam A Return type of the method.
     */

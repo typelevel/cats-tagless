@@ -17,36 +17,37 @@
 package cats.tagless.tests
 
 import cats.Id
+import cats.tagless.tests.InstrumentTests._
 import cats.tagless.{Derive, autoInstrument, finalAlg}
-import InstrumentTests._
 
 class InstrumentTests extends CatsTaglessTestSuite {
 
-  test("Instrument should put method and algebra name in result") {
-    val dummy = new KVStore[Id] {
+  test("Instrument.algebraName and Instrument.instrument") {
+    val store = new KVStore[Id] {
       def get(key: String): Id[Option[String]] = Some(s"Test $key")
       def put(key: String, a: String): Id[Unit] = ()
     }
 
-    val instrumented = Derive.instrument[KVStore].instrument(dummy)
-    val res = instrumented.get("key1")
+    val instrument = Derive.instrument[KVStore]
+    val instrumented = instrument.instrument(store)
+    val result = instrumented.get("key1")
 
-    res.algebraName shouldBe "KVStore"
-    res.methodName shouldBe "get"
-    res.value shouldBe Some("Test key1")
+    instrument.algebraName shouldBe "KVStore"
+    result.methodName shouldBe "get"
+    result.value shouldBe Some("Test key1")
   }
 
   test("autoInstrument annotation") {
-    val dummy = new Lookup[Id] {
+    val lookup = new Lookup[Id] {
       def ->(id: String): Id[Option[Long]] = Some(1)
     }
 
-    val instrumented = dummy.instrument
-    val res = instrumented.->("key1")
+    val instrumented = lookup.instrument
+    val result = instrumented -> "key1"
 
-    res.algebraName shouldBe "Lookup"
-    res.methodName shouldBe "->"
-    res.value shouldBe Some(1)
+    Lookup.instrumentForLookup.algebraName shouldBe "Lookup"
+    result.methodName shouldBe "->"
+    result.value shouldBe Some(1)
   }
 }
 

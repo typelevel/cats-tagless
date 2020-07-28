@@ -16,6 +16,6 @@
 
 package cats.tagless.syntax
 
-import cats.tagless.diagnosis.Instrument
+import cats.tagless.aop.Instrument
 
 trait InstrumentSyntax extends Instrument.ToInstrumentOps

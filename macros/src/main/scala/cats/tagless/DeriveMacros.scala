@@ -110,6 +110,10 @@ class DeriveMacros(val c: blackbox.Context) {
   /** Constructor / extractor for byname parameter types. */
   val ByNameParam = new ParamExtractor(definitions.ByNameParamClass)
 
+  /** Return the dealiased and eta-expanded type constructor of this tag's type. */
+  def typeConstructorOf(tag: WeakTypeTag[_]): Type =
+    tag.tpe.typeConstructor.dealias.etaExpand
+
   /** Return the set of overridable members of `tpe`, excluding some undesired cases. */
   // TODO: Figure out what to do about different visibility modifiers.
   def overridableMembersOf(tpe: Type): Iterable[Symbol] = {
@@ -224,7 +228,7 @@ class DeriveMacros(val c: blackbox.Context) {
   def instantiate[T: WeakTypeTag](tag: WeakTypeTag[_], typeArgs: Type*)(
     rhs: (Type => (String, Type => Tree))*
   ): Tree = {
-    val algebra = tag.tpe.typeConstructor.dealias.etaExpand
+    val algebra = typeConstructorOf(tag)
     val Ta = appliedType(symbolOf[T], algebra :: typeArgs.toList)
     val impl = rhs.map(_.apply(algebra)).toMap
     val declaration @ ClassDef(_, _, _, Template(parents, self, members)) = declare(Ta)
@@ -615,6 +619,29 @@ class DeriveMacros(val c: blackbox.Context) {
       val WeavedAlg = appliedType(algebra, polyType(F.typeParams, WeaveType))
       implement(WeavedAlg)()(types ++ methods)
     }
+
+  def const[Alg[_[_]], A](value: Tree)(implicit tag: WeakTypeTag[Alg[Any]], a: WeakTypeTag[A]): Tree = {
+    val algebra = typeConstructorOf(tag)
+    val f = algebra.typeParams.head
+    val F = f.asType.toTypeConstructor
+    val Af = appliedType(algebra, F)
+    val tmp = c.freshName(TermName("value"))
+    val abstractMembers = overridableMembersOf(Af).filter(_.isAbstract)
+    val methods = delegateMethods(Af, abstractMembers, NoSymbol) {
+      case method if method.returnType.typeSymbol == f =>
+        method.copy(returnType = a.tpe, body = q"$tmp")
+      case method if method.occursInSignature(f) =>
+        abort(s"Type parameter $F can only occur as a top level return type in method ${method.displayName}")
+      case method =>
+        abort(s"Abstract method ${method.displayName} cannot be derived because it does not return in $F")
+    }
+
+    val Const = weakTypeOf[Const[A]].member(TypeName("λ")).typeSignature
+    q"val $tmp = $value; ${implement(appliedType(algebra, Const))()(methods)}"
+  }
+
+  def void[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
+    const[Alg, Unit](q"()")
 
   def functor[F[_]](implicit tag: WeakTypeTag[F[Any]]): Tree =
     instantiate[Functor[F]](tag)(map)

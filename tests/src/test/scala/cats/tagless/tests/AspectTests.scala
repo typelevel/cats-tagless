@@ -19,7 +19,7 @@ package cats.tagless.tests
 import cats.{Show, ~>}
 import cats.implicits._
 import cats.tagless.aop.Aspect
-import cats.tagless.{Derive, Trivial}
+import cats.tagless.{Derive, Trivial, Void}
 import io.circe._
 import io.circe.syntax._
 import org.scalatest.Assertion
@@ -62,13 +62,7 @@ class AspectTests extends CatsTaglessTestSuite {
   }
 
   test("Json aspect") {
-    type Void[A] = Unit
-    val void = new GeoAlgebra[Void] {
-      def currentLocation: Unit = ()
-      def area(center: (Double, Double), radius: Double): Unit = ()
-      def nearestCity(to: (Double, Double)): Unit = ()
-    }
-
+    val void = Derive.void[GeoAlgebra]
     val toRequest = λ[Aspect.Weave[Void, Encoder, Decoder, *] ~> HttpRequest] { weave =>
       import weave.codomain.instance
       val hasArgs = weave.domain.nonEmpty

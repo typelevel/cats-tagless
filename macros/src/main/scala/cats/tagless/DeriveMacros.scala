@@ -17,7 +17,7 @@
 package cats.tagless
 
 import cats.arrow.Profunctor
-import cats.data.Tuple2K
+import cats.data.{ReaderT, Tuple2K}
 import cats.tagless.aop.{Aspect, Instrument, Instrumentation}
 import cats.{Bifunctor, Contravariant, FlatMap, Functor, Invariant, Semigroupal}
 
@@ -50,9 +50,12 @@ class DeriveMacros(val c: blackbox.Context) {
       occursInReturn(symbol) && !signature.paramLists.iterator.flatten.exists(p => occursIn(p.info)(symbol))
 
     /** Construct a new set of parameter lists after substituting some type symbols. */
-    def transformedParamLists(from: List[Symbol], to: List[Symbol]): List[List[ValDef]] =
-      for (ps <- paramLists) yield for (p <- ps)
-        yield ValDef(p.mods, p.name, TypeTree(p.tpt.tpe.substituteSymbols(from, to)), p.rhs)
+    def transformedParamLists(types: PartialFunction[Type, Type]): List[List[ValDef]] =
+      for (ps <- paramLists) yield for (p <- ps) yield {
+        val oldType = p.tpt.tpe
+        val newType = types.applyOrElse(oldType, identity[Type])
+        if (newType == oldType) p else ValDef(p.mods, p.name, TypeTree(newType), p.rhs)
+      }
 
     /** Construct a new set of argument lists based on their name and type. */
     def transformedArgLists(f: PartialFunction[Parameter, Tree]): List[List[Tree]] = {
@@ -72,15 +75,20 @@ class DeriveMacros(val c: blackbox.Context) {
     }
 
     /** Transform this method into another by applying transformations to types, arguments and body. */
-    def transform(instance: Symbol, types: (Symbol, Symbol)*)(
+    def transform(instance: Tree)(types: PartialFunction[Type, Type])(
+      argLists: PartialFunction[Parameter, Tree]
+    )(body: PartialFunction[Tree, Tree]): Method = copy(
+      paramLists = transformedParamLists(types),
+      returnType = types.applyOrElse(returnType, identity[Type]),
+      body = body.applyOrElse(delegate(instance, transformedArgLists(argLists)), identity[Tree])
+    )
+
+    /** Transform this method into another by applying substitution to types and transformations to arguments / body. */
+    def transformSubst(instance: Symbol, types: (Symbol, Symbol)*)(
       argLists: PartialFunction[Parameter, Tree]
     )(body: PartialFunction[Tree, Tree]): Method = {
       val (from, to) = types.toList.unzip
-      copy(
-        paramLists = transformedParamLists(from, to),
-        returnType = returnType.substituteSymbols(from, to),
-        body = body.applyOrElse(delegate(Ident(instance), transformedArgLists(argLists)), identity[Tree])
-      )
+      transform(Ident(instance))({ case tpe => tpe.substituteSymbols(from, to) })(argLists)(body)
     }
 
     /** Delegate this method to an existing instance, optionally providing different argument lists. */
@@ -107,7 +115,7 @@ class DeriveMacros(val c: blackbox.Context) {
   /** Constructor / extractor for repeated parameter (aka. vararg) types. */
   val RepeatedParam = new ParamExtractor(definitions.RepeatedParamClass)
 
-  /** Constructor / extractor for byname parameter types. */
+  /** Constructor / extractor for by-name parameter types. */
   val ByNameParam = new ParamExtractor(definitions.ByNameParamClass)
 
   /** Return the dealiased and eta-expanded type constructor of this tag's type. */
@@ -251,7 +259,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val types = delegateAbstractTypes(Fa, members, Fa)
       val methods = delegateMethods(Fa, members, fa) {
         case method if method.occursInSignature(a) =>
-          method.transform(fa, a -> b) {
+          method.transformSubst(fa, a -> b) {
             case Parameter(pn, pt, _) if occursIn(pt)(a) =>
               val F = method.summon[Contravariant[Any]](polyType(a :: Nil, pt))
               q"$F.contramap[$b, $a]($pn)($f)"
@@ -273,7 +281,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val types = delegateAbstractTypes(Af, members, Af)
       val methods = delegateMethods(Af, members, af) {
         case method if method.occursInReturn(f) =>
-          method.transform(af, f -> g) {
+          method.transformSubst(af, f -> g) {
             case Parameter(pn, pt, _) if occursIn(pt)(f) =>
               val F = method.summon[ContravariantK[Any]](polyType(f :: Nil, pt))
               q"$F.contramapK[$g, $f]($pn)($fk)"
@@ -295,7 +303,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val types = delegateAbstractTypes(Fa, members, Fa)
       val methods = delegateMethods(Fa, members, fa) {
         case method if method.occursInSignature(a) =>
-          method.transform(fa, a -> b) {
+          method.transformSubst(fa, a -> b) {
             case Parameter(pn, pt, _) if occursIn(pt)(a) =>
               val F = method.summon[Functor[Any]](polyType(a :: Nil, pt))
               q"$F.map[$b, $a]($pn)($f)"
@@ -317,7 +325,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val types = delegateAbstractTypes(Af, members, Af)
       val methods = delegateMethods(Af, members, af) {
         case method if method.occursInSignature(f) =>
-          method.transform(af, f -> g) {
+          method.transformSubst(af, f -> g) {
             case Parameter(pn, pt, _) if occursIn(pt)(f) =>
               val F = method.summon[FunctorK[Any]](polyType(f :: Nil, pt))
               q"$F.mapK[$g, $f]($pn)($fk)"
@@ -339,7 +347,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val types = delegateAbstractTypes(Fa, members, Fa)
       val methods = delegateMethods(Fa, members, fa) {
         case method if method.occursInSignature(a) =>
-          method.transform(fa, a -> b) {
+          method.transformSubst(fa, a -> b) {
             case Parameter(pn, pt, _) if occursIn(pt)(a) =>
               val F = method.summon[Invariant[Any]](polyType(a :: Nil, pt))
               q"$F.imap[$b, $a]($pn)($g)($f)"
@@ -361,7 +369,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val types = delegateAbstractTypes(Af, members, Af)
       val methods = delegateMethods(Af, members, af) {
         case method if method.occursInSignature(f) =>
-          method.transform(af, f -> g) {
+          method.transformSubst(af, f -> g) {
             case Parameter(pn, pt, _) if occursIn(pt)(f) =>
               val F = method.summon[InvariantK[Any]](polyType(f :: Nil, pt))
               q"$F.imapK[$g, $f]($pn)($gk)($fk)"
@@ -499,7 +507,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val types = delegateAbstractTypes(Fab, members, Fab)
       val methods = delegateMethods(Fab, members, fab) {
         case method if method.occursInSignature(a) || method.occursInSignature(b) =>
-          method.transform(fab, a -> c, b -> d) {
+          method.transformSubst(fab, a -> c, b -> d) {
             case Parameter(pn, pt, _) if occursIn(pt)(a) && occursIn(pt)(b) =>
               val F = method.summon[Profunctor[Any]](polyType(b :: a :: Nil, pt))
               q"$F.dimap[$d, $c, $b, $a]($pn)($g)($f)"
@@ -533,7 +541,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val types = delegateAbstractTypes(Fab, members, Fab)
       val methods = delegateMethods(Fab, members, fab) {
         case method if method.occursInSignature(a) || method.occursInSignature(b) =>
-          method.transform(fab, a -> c, b -> d) {
+          method.transformSubst(fab, a -> c, b -> d) {
             case Parameter(_, pt, _) if occursIn(pt)(a) && occursIn(pt)(b) =>
               val A = a.asType.toType
               val B = b.asType.toType
@@ -641,6 +649,36 @@ class DeriveMacros(val c: blackbox.Context) {
   def void[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
     const[Alg, Unit](q"()")
 
+  def readerT[Alg[_[_]], F[_]](implicit tag: WeakTypeTag[Alg[Any]], fTag: WeakTypeTag[F[Any]]): Tree = {
+    val algebra = typeConstructorOf(tag)
+    val F = typeConstructorOf(fTag)
+    val f = F.typeSymbol
+    val Af = appliedType(algebra, F)
+    val af = c.freshName(TermName("af"))
+    val ReaderT = typeOf[ReaderT[Any, Any, Any]].typeConstructor
+    val abstractMembers = overridableMembersOf(Af).filter(_.isAbstract)
+    val methods = delegateMethods(Af, abstractMembers, NoSymbol) {
+      case method if method.returnType.typeSymbol == f =>
+        method.transform(q"$af") {
+          case tpe if tpe.typeSymbol == f =>
+            appliedType(ReaderT, F :: Af :: tpe.typeArgs)
+        } {
+          case Parameter(pn, pt, _) if pt.typeSymbol == f =>
+            q"$pn.run($af)"
+        } {
+          case delegate =>
+            val typeArgs = F :: Af :: method.returnType.typeArgs
+            q"${reify(cats.data.ReaderT)}[..$typeArgs](($af: $Af) => $delegate)"
+        }
+      case method =>
+        abort(s"Abstract method ${method.displayName} cannot be derived because it does not return in $F")
+    }
+
+    val b = ReaderT.typeParams.last.asType
+    val typeArg = polyType(b :: Nil, appliedType(ReaderT, F, Af, b.toType))
+    implement(appliedType(algebra, typeArg))()(methods)
+  }
+
   def functor[F[_]](implicit tag: WeakTypeTag[F[Any]]): Tree =
     instantiate[Functor[F]](tag)(map)
 
@@ -686,8 +724,8 @@ class DeriveMacros(val c: blackbox.Context) {
   def aspect[Alg[_[_]], Dom[_], Cod[_]](
     implicit tag: WeakTypeTag[Alg[Any]], dom: WeakTypeTag[Dom[Any]], cod: WeakTypeTag[Cod[Any]]
   ): Tree = {
-    val Dom = dom.tpe.typeConstructor
-    val Cod = cod.tpe.typeConstructor
+    val Dom = typeConstructorOf(dom)
+    val Cod = typeConstructorOf(cod)
     instantiate[Aspect[Alg, Dom, Cod]](tag, Dom, Cod)(weave(Dom, Cod), mapK)
   }
 }

@@ -22,6 +22,12 @@ import cats.{Apply, Bifunctor, Contravariant, FlatMap, Functor, Invariant, Semig
 
 object Derive {
 
+  /** Derives an implementation of `Alg` where all abstract methods return a constant value. */
+  def const[Alg[_[_]], A](value: A): Alg[Const[A]#λ] = macro DeriveMacros.const[Alg, A]
+
+  /** Derives an implementation of `Alg` where all abstract methods return `Unit`. */
+  def void[Alg[_[_]]]: Alg[Void] = macro DeriveMacros.void[Alg]
+
   def functor[F[_]]: Functor[F] = macro DeriveMacros.functor[F]
   def contravariant[F[_]]: Contravariant[F] = macro DeriveMacros.contravariant[F]
   def invariant[F[_]]: Invariant[F] = macro DeriveMacros.invariant[F]

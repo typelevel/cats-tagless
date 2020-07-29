@@ -17,6 +17,7 @@
 package cats.tagless
 
 import cats.arrow.Profunctor
+import cats.data.ReaderT
 import cats.tagless.aop.{Aspect, Instrument}
 import cats.{Apply, Bifunctor, Contravariant, FlatMap, Functor, Invariant, Semigroupal}
 
@@ -27,6 +28,11 @@ object Derive {
 
   /** Derives an implementation of `Alg` where all abstract methods return `Unit`. */
   def void[Alg[_[_]]]: Alg[Void] = macro DeriveMacros.void[Alg]
+
+  /** Derives an implementation of `Alg` that forwards all calls to another one supplied via `ReaderT`.
+    * This enables a form of dependency injection.
+    */
+  def readerT[Alg[_[_]], F[_]]: Alg[ReaderT[F, Alg[F], *]] = macro DeriveMacros.readerT[Alg, F]
 
   def functor[F[_]]: Functor[F] = macro DeriveMacros.functor[F]
   def contravariant[F[_]]: Contravariant[F] = macro DeriveMacros.contravariant[F]

@@ -53,13 +53,14 @@ object Aspect {
     * @tparam A Return type of the method.
     */
   final case class Weave[F[_], Dom[_], Cod[_], A](
+    algebraName: String,
     domain: List[List[Advice[Eval, Dom]]],
     codomain: Advice.Aux[F, Cod, A]
   ) {
 
     /** Convert this [[Weave]] to an [[Instrumentation]], throwing away information about the `domain`. */
     def instrumentation: Instrumentation[F, A] =
-      Instrumentation(codomain.target, codomain.algebraName, codomain.methodName)
+      Instrumentation(codomain.target, algebraName, codomain.name)
   }
 
   object Weave {
@@ -77,29 +78,27 @@ object Aspect {
     */
   trait Advice[F[_], G[_]] extends Serializable {
     type A
-    def methodName: String
-    def algebraName: String
+    def name: String
     def target: F[A]
     implicit def instance: G[A]
-    override def toString: String = s"$methodName: $target"
+    override def toString: String = s"$name: $target"
   }
 
   object Advice {
     type Aux[F[_], G[_], T] = Advice[F, G] { type A = T }
 
-    def apply[F[_], G[_], T](algebra: String, method: String, adviceTarget: F[T])(implicit G: G[T]): Aux[F, G, T] =
+    def apply[F[_], G[_], T](method: String, adviceTarget: F[T])(implicit G: G[T]): Aux[F, G, T] =
       new Advice[F, G] {
         type A = T
-        val methodName = method
-        val algebraName = algebra
+        val name = method
         val target = adviceTarget
         val instance = G
       }
 
-    def byValue[G[_], T: G](algebra: String, method: String, value: T): Aux[Eval, G, T] =
-      Advice(algebra, method, Eval.now(value))
+    def byValue[G[_], T: G](name: String, value: T): Aux[Eval, G, T] =
+      Advice(name, Eval.now(value))
 
-    def byName[G[_], T: G](algebra: String, method: String, thunk: => T): Aux[Eval, G, T] =
-      Advice(algebra, method, Eval.always(thunk))
+    def byName[G[_], T: G](name: String, thunk: => T): Aux[Eval, G, T] =
+      Advice(name, Eval.always(thunk))
   }
 }

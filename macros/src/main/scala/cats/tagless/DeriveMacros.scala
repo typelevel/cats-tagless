@@ -599,14 +599,14 @@ class DeriveMacros(val c: blackbox.Context) {
           val AspectAdvice = reify(Aspect.Advice)
           val arguments = method.transformedArgLists { case param @ Parameter(pn, pt, pm) =>
             val constructor = TermName(if (pm.hasFlag(Flag.BYNAMEPARAM)) "byName" else "byValue")
-            q"$AspectAdvice.$constructor[$Dom, $pt]($algebraName, ${param.displayName}, $pn)"
+            q"$AspectAdvice.$constructor[$Dom, $pt](${param.displayName}, $pn)"
           }
 
           val hasImplicits = method.signature.paramLists.lastOption.flatMap(_.headOption).exists(_.isImplicit)
           val domain = if (hasImplicits) arguments.dropRight(1) else arguments
           val typeArgs = method.returnType.typeArgs
-          val codomain = q"$AspectAdvice[$F, $Cod, ..$typeArgs]($algebraName, ${method.displayName}, ${method.body})"
-          val body = q"${reify(Aspect.Weave)}[$F, $Dom, $Cod, ..$typeArgs]($domain, $codomain)"
+          val codomain = q"$AspectAdvice[$F, $Cod, ..$typeArgs](${method.displayName}, ${method.body})"
+          val body = q"${reify(Aspect.Weave)}[$F, $Dom, $Cod, ..$typeArgs]($algebraName, $domain, $codomain)"
           val returnType = appliedType(AspectWeave, F :: Dom :: Cod :: typeArgs)
           method.copy(body = body, returnType = returnType)
         case method if method.occursInSignature(f) =>

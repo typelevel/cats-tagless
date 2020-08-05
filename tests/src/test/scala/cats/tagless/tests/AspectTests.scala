@@ -41,9 +41,9 @@ class AspectTests extends CatsTaglessTestSuite {
       codomainName: String,
       codomainTarget: List[String]
     ): Assertion = {
-      weave.domain.map(_.map(a => a.methodName -> a.instance.show(a.target.value)).toMap) shouldBe domain
-      weave.codomain.algebraName shouldBe algebraName
-      weave.codomain.methodName shouldBe codomainName
+      weave.domain.map(_.map(a => a.name -> a.instance.show(a.target.value)).toMap) shouldBe domain
+      weave.algebraName shouldBe algebraName
+      weave.codomain.name shouldBe codomainName
       weave.codomain.target.map(weave.codomain.instance.show) shouldBe codomainTarget
     }
 
@@ -70,11 +70,11 @@ class AspectTests extends CatsTaglessTestSuite {
       import weave.codomain.instance
       val hasArgs = weave.domain.nonEmpty
       val method = if (hasArgs) "POST" else "GET"
-      val url = s"https://foo.bar/${weave.codomain.methodName}"
+      val url = s"https://foo.bar/${weave.codomain.name}"
       val body = hasArgs.guard[Option].map { _ =>
         weave.domain.foldLeft(JsonObject.empty) { (body, args) =>
           args.foldLeft(body) { (body, advice) =>
-            body.add(advice.methodName, advice.instance(advice.target.value))
+            body.add(advice.name, advice.instance(advice.target.value))
           }
         }
       }

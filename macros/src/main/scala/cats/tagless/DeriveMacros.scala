@@ -560,10 +560,6 @@ class DeriveMacros(val c: blackbox.Context) {
       implement(algebra)(c, d)(types ++ methods)
     }
 
-  // def algebraName: String
-  def algebraName(algebra: Type): (String, Type => Tree) =
-    "algebraName" -> (_ => q"${algebra.typeSymbol.name.decodedName.toString}")
-
   // def instrument[F[_]](af: Alg[F]): Alg[Instrumentation[F, *]]
   def instrumentation(algebra: Type): (String, Type => Tree) =
     "instrument" -> { case PolyType(List(f), MethodType(List(af), _)) =>
@@ -572,10 +568,11 @@ class DeriveMacros(val c: blackbox.Context) {
       val Af = singleType(NoPrefix, af)
       val members = overridableMembersOf(Af)
       val types = delegateAbstractTypes(Af, members, Af)
+      val algebraName = algebra.typeSymbol.name.decodedName.toString
 
       val methods = delegateMethods(Af, members, af) {
         case method if method.returnType.typeSymbol == f =>
-          val body = q"${reify(aop.Instrumentation)}(${method.body}, ${method.displayName})"
+          val body = q"${reify(aop.Instrumentation)}(${method.body}, $algebraName, ${method.displayName})"
           val returnType = appliedType(Instrumentation, F :: method.returnType.typeArgs)
           method.copy(body = body, returnType = returnType)
         case method if method.occursInSignature(f) =>
@@ -595,19 +592,20 @@ class DeriveMacros(val c: blackbox.Context) {
       val Af = singleType(NoPrefix, af)
       val members = overridableMembersOf(Af)
       val types = delegateAbstractTypes(Af, members, Af)
+      val algebraName = algebra.typeSymbol.name.decodedName.toString
 
       val methods = delegateMethods(Af, members, af) {
         case method if method.returnType.typeSymbol == f =>
           val AspectAdvice = reify(Aspect.Advice)
           val arguments = method.transformedArgLists { case param @ Parameter(pn, pt, pm) =>
             val constructor = TermName(if (pm.hasFlag(Flag.BYNAMEPARAM)) "byName" else "byValue")
-            q"$AspectAdvice.$constructor[$Dom, $pt](${param.displayName}, $pn)"
+            q"$AspectAdvice.$constructor[$Dom, $pt]($algebraName, ${param.displayName}, $pn)"
           }
 
           val hasImplicits = method.signature.paramLists.lastOption.flatMap(_.headOption).exists(_.isImplicit)
           val domain = if (hasImplicits) arguments.dropRight(1) else arguments
           val typeArgs = method.returnType.typeArgs
-          val codomain = q"$AspectAdvice[$F, $Cod, ..$typeArgs](${method.displayName}, ${method.body})"
+          val codomain = q"$AspectAdvice[$F, $Cod, ..$typeArgs]($algebraName, ${method.displayName}, ${method.body})"
           val body = q"${reify(Aspect.Weave)}[$F, $Dom, $Cod, ..$typeArgs]($domain, $codomain)"
           val returnType = appliedType(AspectWeave, F :: Dom :: Cod :: typeArgs)
           method.copy(body = body, returnType = returnType)
@@ -683,13 +681,13 @@ class DeriveMacros(val c: blackbox.Context) {
     instantiate[ApplyK[Alg]](tag)(mapK, productK)
 
   def instrument[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
-    instantiate[Instrument[Alg]](tag)(algebraName, instrumentation, mapK)
+    instantiate[Instrument[Alg]](tag)(instrumentation, mapK)
 
   def aspect[Alg[_[_]], Dom[_], Cod[_]](
     implicit tag: WeakTypeTag[Alg[Any]], dom: WeakTypeTag[Dom[Any]], cod: WeakTypeTag[Cod[Any]]
   ): Tree = {
     val Dom = dom.tpe.typeConstructor
     val Cod = cod.tpe.typeConstructor
-    instantiate[Aspect[Alg, Dom, Cod]](tag, Dom, Cod)(algebraName, weave(Dom, Cod), mapK)
+    instantiate[Aspect[Alg, Dom, Cod]](tag, Dom, Cod)(weave(Dom, Cod), mapK)
   }
 }

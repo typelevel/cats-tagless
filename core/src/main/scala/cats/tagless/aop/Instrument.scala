@@ -20,7 +20,7 @@ import cats.tagless.FunctorK
 import simulacrum.typeclass
 
 /** The result of an algebra method `F[A]` instrumented with the method name. */
-final case class Instrumentation[F[_], A](value: F[A], methodName: String)
+final case class Instrumentation[F[_], A](value: F[A], algebraName: String, methodName: String)
 
 /** Type class for instrumenting an algebra.
   * Note: This feature is experimental, API is likely to change.
@@ -29,6 +29,5 @@ final case class Instrumentation[F[_], A](value: F[A], methodName: String)
   */
 @typeclass
 trait Instrument[Alg[_[_]]] extends FunctorK[Alg] {
-  def algebraName: String
   def instrument[F[_]](af: Alg[F]): Alg[Instrumentation[F, *]]
 }

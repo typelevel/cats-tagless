@@ -32,7 +32,7 @@ class InstrumentTests extends CatsTaglessTestSuite {
     val instrumented = instrument.instrument(store)
     val result = instrumented.get("key1")
 
-    instrument.algebraName shouldBe "KVStore"
+    result.algebraName shouldBe "KVStore"
     result.methodName shouldBe "get"
     result.value shouldBe Some("Test key1")
   }
@@ -45,7 +45,7 @@ class InstrumentTests extends CatsTaglessTestSuite {
     val instrumented = lookup.instrument
     val result = instrumented -> "key1"
 
-    Lookup.instrumentForLookup.algebraName shouldBe "Lookup"
+    result.algebraName shouldBe "Lookup"
     result.methodName shouldBe "->"
     result.value shouldBe Some(1)
   }

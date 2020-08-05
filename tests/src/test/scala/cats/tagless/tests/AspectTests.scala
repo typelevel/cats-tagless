@@ -36,29 +36,32 @@ class AspectTests extends CatsTaglessTestSuite {
     }
 
     def testWeave[A](weave: Aspect.Weave.Function[List, Show, A])(
+      algebraName: String,
       domain: List[Map[String, String]],
       codomainName: String,
       codomainTarget: List[String]
     ): Assertion = {
-      weave.domain.map(_.map(a => a.name -> a.instance.show(a.target.value)).toMap) shouldBe domain
-      weave.codomain.name shouldBe codomainName
+      weave.domain.map(_.map(a => a.methodName -> a.instance.show(a.target.value)).toMap) shouldBe domain
+      weave.codomain.algebraName shouldBe algebraName
+      weave.codomain.methodName shouldBe codomainName
       weave.codomain.target.map(weave.codomain.instance.show) shouldBe codomainTarget
     }
 
     val weaved = algebra.weaveFunction[Show]
-    testWeave(weaved.showF(42))(List(Map("a" -> "42")), "showF", List("42"))
+    testWeave(weaved.showF(42))("ShowFAlgebra", List(Map("a" -> "42")), "showF", List("42"))
     testWeave(weaved.showAll("foo", "bar", "baz"))(
+      "ShowFAlgebra",
       List(Map("as" -> "foo", "as" -> "bar", "as" -> "baz")),
       "showAll",
       List("foo", "bar", "baz")
     )
 
-    testWeave(weaved.showProduct(3.14))(List(Map("a" -> "3.14")), "showProduct", List("(3.14,3.14)"))
+    testWeave(weaved.showProduct(3.14))("ShowFAlgebra", List(Map("a" -> "3.14")), "showProduct", List("(3.14,3.14)"))
     val it = (1 to 3).iterator
     val logF = weaved.logF(it.next().toString)
-    testWeave(logF)(List(Map("message" -> "1")), "logF", Nil)
-    testWeave(logF)(List(Map("message" -> "2")), "logF", Nil)
-    testWeave(logF)(List(Map("message" -> "3")), "logF", Nil)
+    testWeave(logF)("ShowFAlgebra", List(Map("message" -> "1")), "logF", Nil)
+    testWeave(logF)("ShowFAlgebra", List(Map("message" -> "2")), "logF", Nil)
+    testWeave(logF)("ShowFAlgebra", List(Map("message" -> "3")), "logF", Nil)
   }
 
   test("Json aspect") {
@@ -67,11 +70,11 @@ class AspectTests extends CatsTaglessTestSuite {
       import weave.codomain.instance
       val hasArgs = weave.domain.nonEmpty
       val method = if (hasArgs) "POST" else "GET"
-      val url = s"https://foo.bar/${weave.codomain.name}"
+      val url = s"https://foo.bar/${weave.codomain.methodName}"
       val body = hasArgs.guard[Option].map { _ =>
         weave.domain.foldLeft(JsonObject.empty) { (body, args) =>
           args.foldLeft(body) { (body, advice) =>
-            body.add(advice.name, advice.instance(advice.target.value))
+            body.add(advice.methodName, advice.instance(advice.target.value))
           }
         }
       }

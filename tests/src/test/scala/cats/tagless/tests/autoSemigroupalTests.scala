@@ -16,7 +16,6 @@
 
 package cats.tagless.tests
 
-import cats.instances.all._
 import cats.laws.discipline.eq._
 import cats.laws.discipline.{SemigroupalTests, SerializableTests}
 import cats.tagless.{autoInvariant, autoSemigroupal}

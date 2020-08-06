@@ -17,7 +17,6 @@
 package cats.tagless.tests
 
 import cats.{Bifunctor, Eq}
-import cats.instances.AllInstances
 import cats.laws.discipline.{BifunctorTests, SerializableTests}
 import cats.laws.discipline.eq._
 import cats.tagless.autoBifunctor
@@ -37,7 +36,7 @@ class autoBifunctorTests extends CatsTaglessTestSuite {
   }
 }
 
-object autoBifunctorTests extends TestInstances with AllInstances {
+object autoBifunctorTests extends TestInstances {
 
   @autoBifunctor
   trait TestAlgebra[A, B] {

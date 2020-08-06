@@ -19,7 +19,6 @@ package tests
 
 import cats.Eq
 import cats.arrow.Profunctor
-import cats.instances.all._
 import cats.laws.discipline.{ProfunctorTests, SerializableTests}
 import cats.laws.discipline.eq._
 import org.scalacheck.{Arbitrary, Cogen}

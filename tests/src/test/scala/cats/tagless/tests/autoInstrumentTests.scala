@@ -17,10 +17,17 @@
 package cats.tagless.tests
 
 import cats.Id
-import cats.tagless.tests.InstrumentTests._
+import cats.kernel.laws.discipline.SerializableTests
+import cats.tagless.aop.Instrument
+import cats.tagless.laws.discipline.InstrumentTests
+import cats.tagless.tests.autoInstrumentTests._
 import cats.tagless.{Derive, autoInstrument, finalAlg}
 
-class InstrumentTests extends CatsTaglessTestSuite {
+import scala.util.Try
+
+class autoInstrumentTests extends CatsTaglessTestSuite {
+  checkAll("Instrument[SafeAlg]", InstrumentTests[SafeAlg].instrument[Try, Option, List, Int])
+  checkAll("Instrument is Serializable", SerializableTests.serializable(Instrument[SafeAlg]))
 
   test("Instrument.algebraName and Instrument.instrument") {
     val store = new KVStore[Id] {
@@ -51,7 +58,7 @@ class InstrumentTests extends CatsTaglessTestSuite {
   }
 }
 
-object InstrumentTests {
+object autoInstrumentTests {
   @autoInstrument
   @finalAlg
   trait Lookup[F[_]] {

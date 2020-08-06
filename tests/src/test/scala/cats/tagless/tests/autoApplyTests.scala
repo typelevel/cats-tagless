@@ -16,7 +16,6 @@
 
 package cats.tagless.tests
 
-import cats.instances.all._
 import cats.laws.discipline.eq._
 import cats.laws.discipline.{ApplyTests, SerializableTests}
 import cats.tagless.autoApply

@@ -20,6 +20,7 @@ import cats.Eq
 import cats.arrow.FunctionK
 import cats.data._
 import cats.laws.discipline.ExhaustiveCheck
+import cats.tagless.aop.Instrumentation
 import cats.tagless.instances.AllInstances
 import cats.tagless.laws.discipline.SemigroupalKTests.IsomorphismsK
 import cats.tagless.syntax.AllSyntax
@@ -38,7 +39,6 @@ class CatsTaglessTestSuite
   with ScalaCheckDrivenPropertyChecks
   with FunSuiteDiscipline
   with cats.syntax.AllSyntax
-  with cats.instances.AllInstances
   with StrictCatsEquality
   with TestInstances
   with AllInstances
@@ -46,7 +46,7 @@ class CatsTaglessTestSuite
 
 object TestInstances extends TestInstances
 
-trait TestInstances {
+trait TestInstances extends cats.instances.AllInstances {
 
   implicit val catsDataArbitraryOptionList: Arbitrary[FunctionK[Option, List]] =
     Arbitrary(Gen.const(λ[FunctionK[Option, List]](_.toList)))
@@ -79,6 +79,9 @@ trait TestInstances {
 
   implicit def catsTaglessLawsEqForCokleisli[F[_], A, B](implicit ev: Eq[F[A] => B]): Eq[Cokleisli[F, A, B]] =
     Eq.by(_.run)
+
+  implicit def catsTaglessLawsEqForInstrumentation[F[_], A](implicit ev: Eq[F[A]]): Eq[Instrumentation[F, A]] =
+    Eq.by(i => (i.algebraName, i.methodName, i.value))
 
   //------------------------------------------------------------------
   // The instances below are needed due to type inference limitations:

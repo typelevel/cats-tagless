@@ -17,15 +17,21 @@
 package cats.tagless.tests
 
 import cats.{Show, ~>}
-import cats.implicits._
+import cats.kernel.laws.discipline.SerializableTests
 import cats.tagless.aop.Aspect
+import cats.tagless.laws.discipline
 import cats.tagless.{Derive, Trivial, Void}
 import io.circe._
 import io.circe.syntax._
 import org.scalatest.Assertion
 
+import scala.util.Try
+
 class AspectTests extends CatsTaglessTestSuite {
   import AspectTests._
+
+  checkAll("Aspect[SafeAlg]", discipline.AspectTests[SafeAlg, Show, Show].aspect[Try, Option, List, Int])
+  checkAll("Aspect is Serializable", SerializableTests.serializable(Aspect.function[SafeAlg, Show]))
 
   test("Show aspect") {
     val algebra: ShowFAlgebra[List] = new ShowFAlgebra[List] {
@@ -100,7 +106,9 @@ class AspectTests extends CatsTaglessTestSuite {
   }
 }
 
-object AspectTests {
+object AspectTests extends TestInstances {
+  implicit val showSafeAlg: Aspect.Function[SafeAlg, Show] = Derive.aspect
+
   trait ShowFAlgebra[F[_]] {
     def showF[A: Show](a: A): F[String]
     def showAll[A: Show](as: A*): F[String]

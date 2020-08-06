@@ -18,7 +18,6 @@ package cats.tagless.tests
 
 import cats.Eq
 import cats.data.Cokleisli
-import cats.instances.all._
 import cats.laws.discipline.SerializableTests
 import cats.laws.discipline.arbitrary._
 import cats.laws.discipline.eq._

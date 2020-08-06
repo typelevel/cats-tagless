@@ -33,13 +33,18 @@ import cats.{Eval, ~>}
 trait Aspect[Alg[_[_]], Dom[_], Cod[_]] extends Instrument[Alg] {
   def weave[F[_]](af: Alg[F]): Alg[Aspect.Weave[F, Dom, Cod, *]]
   def instrument[F[_]](af: Alg[F]): Alg[Instrumentation[F, *]] =
-    mapK(weave(af))(λ[Aspect.Weave[F, Dom, Cod, *] ~> Instrumentation[F, *]](_.instrumentation))
+    mapK(weave(af))(Aspect.Weave.instrumentationK)
 }
 
 object Aspect {
   type Domain[Alg[_[_]], F[_]] = Aspect[Alg, F, Trivial]
   type Codomain[Alg[_[_]], F[_]] = Aspect[Alg, Trivial, F]
   type Function[Alg[_[_]], F[_]] = Aspect[Alg, F, F]
+
+  def apply[Alg[_[_]], Dom[_], Cod[_]](implicit aspect: Aspect[Alg, Dom, Cod]): Aspect[Alg, Dom, Cod] = aspect
+  def domain[Alg[_[_]], F[_]](implicit aspect: Domain[Alg, F]): Domain[Alg, F] = aspect
+  def codomain[Alg[_[_]], F[_]](implicit aspect: Codomain[Alg, F]): Codomain[Alg, F] = aspect
+  def function[Alg[_[_]], F[_]](implicit aspect: Function[Alg, F]): Function[Alg, F] = aspect
 
   /** An [[Aspect.Weave]] represents a reified cross-cutting concern for a single method of an algebra.
     * It can be applied to all method arguments, result, or both. Its behaviour is driven by type classes.
@@ -67,6 +72,9 @@ object Aspect {
     type Domain[F[_], G[_], A] = Weave[F, G, Trivial, A]
     type Codomain[F[_], G[_], A] = Weave[F, Trivial, G, A]
     type Function[F[_], G[_], A] = Weave[F, G, G, A]
+
+    def instrumentationK[F[_], Dom[_], Cod[_]]: Weave[F, Dom, Cod, *] ~> Instrumentation[F, *] =
+      λ[Aspect.Weave[F, Dom, Cod, *] ~> Instrumentation[F, *]](_.instrumentation)
   }
 
   /** An [[Aspect.Advice]] represents the effect of a particular [[Aspect]] on a single value (the `target`).

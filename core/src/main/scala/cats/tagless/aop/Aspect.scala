@@ -87,10 +87,10 @@ object Aspect {
   object Advice {
     type Aux[F[_], G[_], T] = Advice[F, G] { type A = T }
 
-    def apply[F[_], G[_], T](method: String, adviceTarget: F[T])(implicit G: G[T]): Aux[F, G, T] =
+    def apply[F[_], G[_], T](adviceName: String, adviceTarget: F[T])(implicit G: G[T]): Aux[F, G, T] =
       new Advice[F, G] {
         type A = T
-        val name = method
+        val name = adviceName
         val target = adviceTarget
         val instance = G
       }

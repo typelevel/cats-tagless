@@ -97,6 +97,10 @@ trait TestInstances extends cats.instances.AllInstances {
     implicit ev: InvariantK[Alg[*[_], A]]
   ): IsomorphismsK[Alg[*[_], A]] = IsomorphismsK.invariantK[Alg[*[_], A]]
 
+  implicit def catsTaglessLawsIsomorphismsKForTuple2K1[G[_], A](
+    implicit ev: InvariantK[Tuple2K[*[_], G, A]]
+  ): IsomorphismsK[Tuple2K[*[_], G, A]] = IsomorphismsK.invariantK[Tuple2K[*[_], G, A]]
+
   implicit def catsTaglessLawsEqForTuple2K[F[_], G[_], A](
     implicit ev: Eq[(F[A], G[A])]
   ): Eq[Tuple2K[F, G, A]] = Eq.by(t2k => (t2k.first, t2k.second))
@@ -137,7 +141,11 @@ trait TestInstances extends cats.instances.AllInstances {
     implicit ev: Eq[(F[Option[A]], G[Option[A]], H[Option[A]])]
   ): Eq[OptionT[Tuple3K[F, G, H]#λ, A]] = Eq.by(_.value)
 
-  implicit def catsTaglessLawsEqForTuple2KTuple3K[F[_], G[_], H[_], I[_], A](
+  implicit def catsTaglessLawsEqForTuple2KTuple3K1[F[_], G[_], H[_], I[_], A](
+    implicit ev: Eq[((F[A], G[A], H[A]), I[A])]
+  ): Eq[Tuple2K[λ[a => (F[a], G[a], H[a])], I, A]] = Eq.by(t2k => (t2k.first, t2k.second))
+
+  implicit def catsTaglessLawsEqForTuple2KTuple3K2[F[_], G[_], H[_], I[_], A](
     implicit ev: Eq[(F[A], (G[A], H[A], I[A]))]
   ): Eq[Tuple2K[F, Tuple3K[G, H, I]#λ, A]] = Eq.by(t2k => (t2k.first, t2k.second))
 

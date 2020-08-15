@@ -17,8 +17,8 @@
 package cats.tagless
 
 import cats.arrow.Profunctor
-import cats.data.Tuple2K
-import cats.tagless.diagnosis.{Instrument, Instrumentation}
+import cats.data.{ReaderT, Tuple2K}
+import cats.tagless.aop.{Aspect, Instrument, Instrumentation}
 import cats.{Bifunctor, Contravariant, FlatMap, Functor, Invariant, Semigroupal}
 
 import scala.reflect.macros.blackbox
@@ -26,6 +26,11 @@ import scala.reflect.macros.blackbox
 class DeriveMacros(val c: blackbox.Context) {
   import c.internal._
   import c.universe._
+
+  /** A reified parameter definition with some useful methods for transforming it. */
+  case class Parameter(name: TermName, signature: Type, modifiers: Modifiers) {
+    def displayName: String = name.decodedName.toString
+  }
 
   /** A reified method definition with some useful methods for transforming it. */
   case class Method(
@@ -45,37 +50,45 @@ class DeriveMacros(val c: blackbox.Context) {
       occursInReturn(symbol) && !signature.paramLists.iterator.flatten.exists(p => occursIn(p.info)(symbol))
 
     /** Construct a new set of parameter lists after substituting some type symbols. */
-    def transformedParamLists(from: List[Symbol], to: List[Symbol]): List[List[ValDef]] =
-      for (ps <- paramLists) yield for (p <- ps)
-        yield ValDef(p.mods, p.name, TypeTree(p.tpt.tpe.substituteSymbols(from, to)), p.rhs)
+    def transformedParamLists(types: PartialFunction[Type, Type]): List[List[ValDef]] =
+      for (ps <- paramLists) yield for (p <- ps) yield {
+        val oldType = p.tpt.tpe
+        val newType = types.applyOrElse(oldType, identity[Type])
+        if (newType == oldType) p else ValDef(p.mods, p.name, TypeTree(newType), p.rhs)
+      }
 
     /** Construct a new set of argument lists based on their name and type. */
-    def transformedArgLists(f: PartialFunction[(TermName, Type), Tree]): List[List[Tree]] = {
-      val id: ((TermName, Type)) => Tree = {
-        case (pn, _) => Ident(pn)
-      }
+    def transformedArgLists(f: PartialFunction[Parameter, Tree]): List[List[Tree]] = {
+      def id(param: Parameter): Tree = Ident(param.name)
 
-      val f_* : (TermName, Type) => Tree = {
-        case (pn, RepeatedParam(pt)) =>
-          q"${f.andThen(arg => q"for ($pn <- $pn) yield $arg").applyOrElse(pn -> pt, id)}: _*"
-        case (pn, pt) =>
-          f.applyOrElse(pn -> pt, id)
+      val f_* : Parameter => Tree = {
+        case Parameter(pn, RepeatedParam(pt), pm) =>
+          q"${f.andThen(arg => q"for ($pn <- $pn) yield $arg").applyOrElse(Parameter(pn, pt, pm), id)}: _*"
+        case Parameter(pn, ByNameParam(pt), pm) =>
+          f.applyOrElse(Parameter(pn, pt, pm), id)
+        case param =>
+          f.applyOrElse(param, id)
       }
 
       for (ps <- paramLists) yield for (p <- ps)
-        yield f_*(p.name, p.tpt.tpe)
+        yield f_*(Parameter(p.name, p.tpt.tpe, p.mods))
     }
 
     /** Transform this method into another by applying transformations to types, arguments and body. */
-    def transform(instance: Symbol, types: (Symbol, Symbol)*)(
-      argLists: PartialFunction[(TermName, Type), Tree]
+    def transform(instance: Tree)(types: PartialFunction[Type, Type])(
+      argLists: PartialFunction[Parameter, Tree]
+    )(body: PartialFunction[Tree, Tree]): Method = copy(
+      paramLists = transformedParamLists(types),
+      returnType = types.applyOrElse(returnType, identity[Type]),
+      body = body.applyOrElse(delegate(instance, transformedArgLists(argLists)), identity[Tree])
+    )
+
+    /** Transform this method into another by applying substitution to types and transformations to arguments / body. */
+    def transformSubst(instance: Symbol, types: (Symbol, Symbol)*)(
+      argLists: PartialFunction[Parameter, Tree]
     )(body: PartialFunction[Tree, Tree]): Method = {
       val (from, to) = types.toList.unzip
-      copy(
-        paramLists = transformedParamLists(from, to),
-        returnType = returnType.substituteSymbols(from, to),
-        body = body.applyOrElse(delegate(Ident(instance), transformedArgLists(argLists)), identity[Tree])
-      )
+      transform(Ident(instance))({ case tpe => tpe.substituteSymbols(from, to) })(argLists)(body)
     }
 
     /** Delegate this method to an existing instance, optionally providing different argument lists. */
@@ -86,17 +99,28 @@ class DeriveMacros(val c: blackbox.Context) {
 
     /** The definition of this method as a Scala tree. */
     def definition: Tree = q"override def $name[..$typeParams](...$paramLists): $returnType = $body"
+
+    /** Summon an implicit instance of `A`'s type constructor applied to `typeArgs` if one exists in scope. */
+    def summon[A: TypeTag](typeArgs: Type*): Tree = {
+      val tpe = appliedType(typeOf[A].typeConstructor, typeArgs: _*)
+      c.inferImplicitValue(tpe).orElse(abort(s"could not find implicit value of type $tpe in method $displayName"))
+    }
+  }
+
+  final class ParamExtractor(symbol: Symbol) {
+    def apply(tpe: Type): Type = appliedType(symbol, tpe)
+    def unapply(tpe: Type): Option[Type] = if (tpe.typeSymbol == symbol) Some(tpe.typeArgs.head) else None
   }
 
   /** Constructor / extractor for repeated parameter (aka. vararg) types. */
-  object RepeatedParam {
+  val RepeatedParam = new ParamExtractor(definitions.RepeatedParamClass)
 
-    def apply(tpe: Type): Type =
-      appliedType(definitions.RepeatedParamClass, tpe)
+  /** Constructor / extractor for by-name parameter types. */
+  val ByNameParam = new ParamExtractor(definitions.ByNameParamClass)
 
-    def unapply(tpe: Type): Option[Type] =
-      if (tpe.typeSymbol == definitions.RepeatedParamClass) Some(tpe.typeArgs.head) else None
-  }
+  /** Return the dealiased and eta-expanded type constructor of this tag's type. */
+  def typeConstructorOf(tag: WeakTypeTag[_]): Type =
+    tag.tpe.typeConstructor.dealias.etaExpand
 
   /** Return the set of overridable members of `tpe`, excluding some undesired cases. */
   // TODO: Figure out what to do about different visibility modifiers.
@@ -119,7 +143,7 @@ class DeriveMacros(val c: blackbox.Context) {
 
     val originalNames = for (tp <- typeParams) yield {
       val original = tp.name.toTypeName
-      setName(tp, TypeName(c.freshName(original.toString)))
+      setName(tp, c.freshName(TypeName(original.toString)))
       original
     }
 
@@ -134,10 +158,10 @@ class DeriveMacros(val c: blackbox.Context) {
   /** `tpe.contains` is broken before Scala 2.13. See scala/scala#6122. */
   def occursIn(tpe: Type)(symbol: Symbol): Boolean = tpe.exists(_.typeSymbol == symbol)
 
-  /** Summon an implicit instance of `A`'s type constructor applied to `typeArgs` if one exists in scope. */
-  def summon[A: TypeTag](typeArgs: Type*): Tree = {
-    val tpe = appliedType(typeOf[A].typeConstructor, typeArgs: _*)
-    c.inferImplicitValue(tpe).orElse(abort(s"could not find implicit value of type $tpe"))
+  /** Does the given `symbol` have a specified `flag` as modifier? */
+  def hasFlag(symbol: Symbol)(flag: FlagSet): Boolean = {
+    val flagSet = flags(symbol)
+    (flagSet | flag) == flagSet
   }
 
   /** Delegate the definition of type members and aliases in `algebra`. */
@@ -163,8 +187,9 @@ class DeriveMacros(val c: blackbox.Context) {
     val typeParams = for (tp <- signature.typeParams) yield typeDef(tp)
     val typeArgs = for (tp <- signature.typeParams) yield typeRef(NoPrefix, tp, Nil)
     val paramLists = for (ps <- signature.paramLists) yield for (p <- ps) yield {
-      // Only preserve the implicit modifier (e.g. drop the default parameter flag).
-      val modifiers = if (p.isImplicit) Modifiers(Flag.IMPLICIT) else Modifiers()
+      // Only preserve the by-name and implicit modifiers (e.g. drop the default parameter flag).
+      val flags = List(Flag.BYNAMEPARAM, Flag.IMPLICIT).filter(hasFlag(p))
+      val modifiers = Modifiers(flags.foldLeft(Flag.PARAM)(_ | _))
       ValDef(modifiers, p.name.toTermName, TypeTree(p.typeSignatureIn(algebra)), EmptyTree)
     }
 
@@ -208,9 +233,11 @@ class DeriveMacros(val c: blackbox.Context) {
   /** Create a new instance of `typeClass` for `algebra`.
     * `rhs` should define a mapping for each method (by name) to an implementation function based on type signature.
     */
-  def instantiate[T: WeakTypeTag](tag: WeakTypeTag[_])(rhs: (Type => (String, Type => Tree))*): Tree = {
-    val algebra = tag.tpe.typeConstructor.dealias.etaExpand
-    val Ta = appliedType(symbolOf[T], algebra)
+  def instantiate[T: WeakTypeTag](tag: WeakTypeTag[_], typeArgs: Type*)(
+    rhs: (Type => (String, Type => Tree))*
+  ): Tree = {
+    val algebra = typeConstructorOf(tag)
+    val Ta = appliedType(symbolOf[T], algebra :: typeArgs.toList)
     val impl = rhs.map(_.apply(algebra)).toMap
     val declaration @ ClassDef(_, _, _, Template(parents, self, members)) = declare(Ta)
     val implementations = for (member <- members) yield member match {
@@ -232,13 +259,13 @@ class DeriveMacros(val c: blackbox.Context) {
       val types = delegateAbstractTypes(Fa, members, Fa)
       val methods = delegateMethods(Fa, members, fa) {
         case method if method.occursInSignature(a) =>
-          method.transform(fa, a -> b) {
-            case (pn, pt) if occursIn(pt)(a) =>
-              val F = summon[Contravariant[Any]](polyType(a :: Nil, pt))
+          method.transformSubst(fa, a -> b) {
+            case Parameter(pn, pt, _) if occursIn(pt)(a) =>
+              val F = method.summon[Contravariant[Any]](polyType(a :: Nil, pt))
               q"$F.contramap[$b, $a]($pn)($f)"
           } {
             case delegate if method.occursInReturn(a) =>
-              val F = summon[Functor[Any]](polyType(a :: Nil, method.returnType))
+              val F = method.summon[Functor[Any]](polyType(a :: Nil, method.returnType))
               q"$F.map[$a, $b]($delegate)($f)"
           }
       }
@@ -254,13 +281,13 @@ class DeriveMacros(val c: blackbox.Context) {
       val types = delegateAbstractTypes(Af, members, Af)
       val methods = delegateMethods(Af, members, af) {
         case method if method.occursInReturn(f) =>
-          method.transform(af, f -> g) {
-            case (pn, pt) if occursIn(pt)(f) =>
-              val F = summon[ContravariantK[Any]](polyType(f :: Nil, pt))
-              q"$F.contramapK[$f, $g]($pn)($fk)"
+          method.transformSubst(af, f -> g) {
+            case Parameter(pn, pt, _) if occursIn(pt)(f) =>
+              val F = method.summon[ContravariantK[Any]](polyType(f :: Nil, pt))
+              q"$F.contramapK[$g, $f]($pn)($fk)"
           } {
             case delegate =>
-              val F = summon[FunctorK[Any]](polyType(f :: Nil, method.returnType))
+              val F = method.summon[FunctorK[Any]](polyType(f :: Nil, method.returnType))
               q"$F.mapK[$f, $g]($delegate)($fk)"
           }
       }
@@ -276,13 +303,13 @@ class DeriveMacros(val c: blackbox.Context) {
       val types = delegateAbstractTypes(Fa, members, Fa)
       val methods = delegateMethods(Fa, members, fa) {
         case method if method.occursInSignature(a) =>
-          method.transform(fa, a -> b) {
-            case (pn, pt) if occursIn(pt)(a) =>
-              val F = summon[Functor[Any]](polyType(a :: Nil, pt))
+          method.transformSubst(fa, a -> b) {
+            case Parameter(pn, pt, _) if occursIn(pt)(a) =>
+              val F = method.summon[Functor[Any]](polyType(a :: Nil, pt))
               q"$F.map[$b, $a]($pn)($f)"
           } {
             case delegate if method.occursInReturn(a) =>
-              val F = summon[Contravariant[Any]](polyType(a :: Nil, method.returnType))
+              val F = method.summon[Contravariant[Any]](polyType(a :: Nil, method.returnType))
               q"$F.contramap[$a, $b]($delegate)($f)"
           }
       }
@@ -298,13 +325,13 @@ class DeriveMacros(val c: blackbox.Context) {
       val types = delegateAbstractTypes(Af, members, Af)
       val methods = delegateMethods(Af, members, af) {
         case method if method.occursInSignature(f) =>
-          method.transform(af, f -> g) {
-            case (pn, pt) if occursIn(pt)(f) =>
-              val F = summon[FunctorK[Any]](polyType(f :: Nil, pt))
+          method.transformSubst(af, f -> g) {
+            case Parameter(pn, pt, _) if occursIn(pt)(f) =>
+              val F = method.summon[FunctorK[Any]](polyType(f :: Nil, pt))
               q"$F.mapK[$g, $f]($pn)($fk)"
           } {
             case delegate if method.occursInReturn(f) =>
-              val F = summon[ContravariantK[Any]](polyType(f :: Nil, method.returnType))
+              val F = method.summon[ContravariantK[Any]](polyType(f :: Nil, method.returnType))
               q"$F.contramapK[$f, $g]($delegate)($fk)"
           }
       }
@@ -320,13 +347,13 @@ class DeriveMacros(val c: blackbox.Context) {
       val types = delegateAbstractTypes(Fa, members, Fa)
       val methods = delegateMethods(Fa, members, fa) {
         case method if method.occursInSignature(a) =>
-          method.transform(fa, a -> b) {
-            case (pn, pt) if occursIn(pt)(a) =>
-              val F = summon[Invariant[Any]](polyType(a :: Nil, pt))
+          method.transformSubst(fa, a -> b) {
+            case Parameter(pn, pt, _) if occursIn(pt)(a) =>
+              val F = method.summon[Invariant[Any]](polyType(a :: Nil, pt))
               q"$F.imap[$b, $a]($pn)($g)($f)"
           } {
             case delegate if method.occursInReturn(a) =>
-              val F = summon[Invariant[Any]](polyType(a :: Nil, method.returnType))
+              val F = method.summon[Invariant[Any]](polyType(a :: Nil, method.returnType))
               q"$F.imap[$a, $b]($delegate)($f)($g)"
           }
       }
@@ -342,13 +369,13 @@ class DeriveMacros(val c: blackbox.Context) {
       val types = delegateAbstractTypes(Af, members, Af)
       val methods = delegateMethods(Af, members, af) {
         case method if method.occursInSignature(f) =>
-          method.transform(af, f -> g) {
-            case (pn, pt) if occursIn(pt)(f) =>
-              val F = summon[InvariantK[Any]](polyType(f :: Nil, pt))
+          method.transformSubst(af, f -> g) {
+            case Parameter(pn, pt, _) if occursIn(pt)(f) =>
+              val F = method.summon[InvariantK[Any]](polyType(f :: Nil, pt))
               q"$F.imapK[$g, $f]($pn)($gk)($fk)"
           } {
             case delegate if method.occursInReturn(f) =>
-              val F = summon[InvariantK[Any]](polyType(f :: Nil, method.returnType))
+              val F = method.summon[InvariantK[Any]](polyType(f :: Nil, method.returnType))
               q"$F.imapK[$f, $g]($delegate)($fk)($gk)"
           }
       }
@@ -367,7 +394,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val methods = delegateMethods(Fa, members, fa) {
         case method if method.occursOnlyInReturn(a) =>
           val returnType = method.returnType.map(t => if (t.typeSymbol == a) B else t)
-          val Ap = summon[cats.Apply[Any]](polyType(a :: Nil, method.returnType))
+          val Ap = method.summon[cats.Apply[Any]](polyType(a :: Nil, method.returnType))
           val body = q"$Ap.ap[$A, $B](${method.delegate(Ident(ff))})(${method.body})"
           method.copy(returnType = returnType, body = body)
         case method if method.occursInSignature(a) =>
@@ -389,7 +416,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val methods = delegateMethods(Fa, members, fa) {
         case method if method.occursOnlyInReturn(a) =>
           val returnType = method.returnType.map(t => if (t.typeSymbol == a) P else t)
-          val Sg = summon[Semigroupal[Any]](polyType(a :: Nil, method.returnType))
+          val Sg = method.summon[Semigroupal[Any]](polyType(a :: Nil, method.returnType))
           val body = q"$Sg.product[$A, $B](${method.body}, ${method.delegate(Ident(fb))})"
           method.copy(returnType = returnType, body = body)
         case method if method.occursInSignature(a) =>
@@ -412,7 +439,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val methods = delegateMethods(Af, members, af) {
         case method if method.occursOnlyInReturn(f) =>
           val returnType = method.returnType.map(t => if (t.typeSymbol == f) appliedType(t2k, t.typeArgs) else t)
-          val Sk = summon[SemigroupalK[Any]](polyType(f :: Nil, method.returnType))
+          val Sk = method.summon[SemigroupalK[Any]](polyType(f :: Nil, method.returnType))
           val body = q"$Sk.productK[$F, $G](${method.body}, ${method.delegate(Ident(ag))})"
           method.copy(returnType = returnType, body = body)
         case method if method.occursInSignature(f) =>
@@ -449,8 +476,8 @@ class DeriveMacros(val c: blackbox.Context) {
       val Fa = appliedType(algebra, a.asType.toType)
       val methods = delegateMethods(Fa, overridableMembersOf(Fa), NoSymbol) {
         case method if method.returnType.typeSymbol == a =>
-          val step = TermName(c.freshName("step"))
-          val current = TermName(c.freshName("current"))
+          val step = c.freshName(TermName("step"))
+          val current = c.freshName(TermName("current"))
           val body = q"""{
             @_root_.scala.annotation.tailrec def $step($current: $a): $b =
               ${method.delegate(q"$f($current)")} match {
@@ -480,25 +507,25 @@ class DeriveMacros(val c: blackbox.Context) {
       val types = delegateAbstractTypes(Fab, members, Fab)
       val methods = delegateMethods(Fab, members, fab) {
         case method if method.occursInSignature(a) || method.occursInSignature(b) =>
-          method.transform(fab, a -> c, b -> d) {
-            case (pn, pt) if occursIn(pt)(a) && occursIn(pt)(b) =>
-              val F = summon[Profunctor[Any]](polyType(b :: a :: Nil, pt))
+          method.transformSubst(fab, a -> c, b -> d) {
+            case Parameter(pn, pt, _) if occursIn(pt)(a) && occursIn(pt)(b) =>
+              val F = method.summon[Profunctor[Any]](polyType(b :: a :: Nil, pt))
               q"$F.dimap[$d, $c, $b, $a]($pn)($g)($f)"
-            case (pn, pt) if occursIn(pt)(a) =>
-              val F = summon[Functor[Any]](polyType(a :: Nil, pt))
+            case Parameter(pn, pt, _) if occursIn(pt)(a) =>
+              val F = method.summon[Functor[Any]](polyType(a :: Nil, pt))
               q"$F.map[$c, $a]($pn)($f)"
-            case (pn, pt) if occursIn(pt)(b) =>
-              val F = summon[Contravariant[Any]](polyType(b :: Nil, pt))
+            case Parameter(pn, pt, _) if occursIn(pt)(b) =>
+              val F = method.summon[Contravariant[Any]](polyType(b :: Nil, pt))
               q"$F.contramap[$d, $b]($pn)($g)"
           } {
             case delegate if method.occursInReturn(a) && method.occursInReturn(b) =>
-              val F = summon[Profunctor[Any]](polyType(a :: b :: Nil, method.returnType))
+              val F = method.summon[Profunctor[Any]](polyType(a :: b :: Nil, method.returnType))
               q"$F.dimap[$a, $b, $c, $d]($delegate)($f)($g)"
             case delegate if method.occursInReturn(a) =>
-              val F = summon[Contravariant[Any]](polyType(a :: Nil, method.returnType))
+              val F = method.summon[Contravariant[Any]](polyType(a :: Nil, method.returnType))
               q"$F.contramap[$a, $c]($delegate)($f)"
             case delegate if method.occursInReturn(b) =>
-              val F = summon[Functor[Any]](polyType(b :: Nil, method.returnType))
+              val F = method.summon[Functor[Any]](polyType(b :: Nil, method.returnType))
               q"$F.map[$b, $d]($delegate)($g)"
           }
       }
@@ -514,26 +541,26 @@ class DeriveMacros(val c: blackbox.Context) {
       val types = delegateAbstractTypes(Fab, members, Fab)
       val methods = delegateMethods(Fab, members, fab) {
         case method if method.occursInSignature(a) || method.occursInSignature(b) =>
-          method.transform(fab, a -> c, b -> d) {
-            case (_, pt) if occursIn(pt)(a) && occursIn(pt)(b) =>
+          method.transformSubst(fab, a -> c, b -> d) {
+            case Parameter(_, pt, _) if occursIn(pt)(a) && occursIn(pt)(b) =>
               val A = a.asType.toType
               val B = b.asType.toType
               abort(s"Both type parameters $A and $B occur in contravariant position in method ${method.displayName}")
-            case (pn, pt) if occursIn(pt)(a) =>
-              val F = summon[Contravariant[Any]](polyType(a :: Nil, pt))
+            case Parameter(pn, pt, _) if occursIn(pt)(a) =>
+              val F = method.summon[Contravariant[Any]](polyType(a :: Nil, pt))
               q"$F.contramap[$c, $a]($pn)($f)"
-            case (pn, pt) if occursIn(pt)(b) =>
-              val F = summon[Contravariant[Any]](polyType(b :: Nil, pt))
+            case Parameter(pn, pt, _) if occursIn(pt)(b) =>
+              val F = method.summon[Contravariant[Any]](polyType(b :: Nil, pt))
               q"$F.contramap[$d, $b]($pn)($g)"
           } {
             case delegate if method.occursInReturn(a) && method.occursInReturn(b) =>
-              val F = summon[Bifunctor[Any]](polyType(a :: b :: Nil, method.returnType))
+              val F = method.summon[Bifunctor[Any]](polyType(a :: b :: Nil, method.returnType))
               q"$F.bimap[$a, $b, $c, $d]($delegate)($f, $g)"
             case delegate if method.occursInReturn(a) =>
-              val F = summon[Functor[Any]](polyType(a :: Nil, method.returnType))
+              val F = method.summon[Functor[Any]](polyType(a :: Nil, method.returnType))
               q"$F.map[$a, $c]($delegate)($f)"
             case delegate if method.occursInReturn(b) =>
-              val F = summon[Functor[Any]](polyType(b :: Nil, method.returnType))
+              val F = method.summon[Functor[Any]](polyType(b :: Nil, method.returnType))
               q"$F.map[$b, $d]($delegate)($g)"
           }
       }
@@ -553,17 +580,104 @@ class DeriveMacros(val c: blackbox.Context) {
 
       val methods = delegateMethods(Af, members, af) {
         case method if method.returnType.typeSymbol == f =>
-          val body = q"_root_.cats.tagless.diagnosis.Instrumentation(${method.body}, $algebraName, ${method.name.decodedName.toString})"
+          val body = q"${reify(aop.Instrumentation)}(${method.body}, $algebraName, ${method.displayName})"
           val returnType = appliedType(Instrumentation, F :: method.returnType.typeArgs)
           method.copy(body = body, returnType = returnType)
         case method if method.occursInSignature(f) =>
-          abort(s"Type parameter $f can only appear as a top level return type in method ${method.name}")
+          abort(s"Type parameter $F can only occur as a top level return type in method ${method.displayName}")
       }
 
-      val instrumentationType = appliedType(Instrumentation, F :: F.typeParams.map(_.asType.toType))
-      val DescribedAlg = appliedType(algebra, polyType(F.typeParams, instrumentationType))
-      implement(DescribedAlg)()(types ++ methods)
+      val InstrumentationType = appliedType(Instrumentation, F :: F.typeParams.map(_.asType.toType))
+      val InstrumentedAlg = appliedType(algebra, polyType(F.typeParams, InstrumentationType))
+      implement(InstrumentedAlg)()(types ++ methods)
     }
+
+  // def weave[F[_]](af: Alg[F]): Alg[Aspect.Weave[F, Dom, Cod, *]]
+  def weave(Dom: Type, Cod: Type)(algebra: Type): (String, Type => Tree) =
+    "weave" -> { case PolyType(List(f), MethodType(List(af), _)) =>
+      val AspectWeave = symbolOf[Aspect.Weave[Any, Any, Any, Any]]
+      val F = f.asType.toTypeConstructor
+      val Af = singleType(NoPrefix, af)
+      val members = overridableMembersOf(Af)
+      val types = delegateAbstractTypes(Af, members, Af)
+      val algebraName = algebra.typeSymbol.name.decodedName.toString
+
+      val methods = delegateMethods(Af, members, af) {
+        case method if method.returnType.typeSymbol == f =>
+          val AspectAdvice = reify(Aspect.Advice)
+          val arguments = method.transformedArgLists { case param @ Parameter(pn, pt, pm) =>
+            val constructor = TermName(if (pm.hasFlag(Flag.BYNAMEPARAM)) "byName" else "byValue")
+            q"$AspectAdvice.$constructor[$Dom, $pt](${param.displayName}, $pn)"
+          }
+
+          val hasImplicits = method.signature.paramLists.lastOption.flatMap(_.headOption).exists(_.isImplicit)
+          val domain = if (hasImplicits) arguments.dropRight(1) else arguments
+          val typeArgs = method.returnType.typeArgs
+          val codomain = q"$AspectAdvice[$F, $Cod, ..$typeArgs](${method.displayName}, ${method.body})"
+          val body = q"${reify(Aspect.Weave)}[$F, $Dom, $Cod, ..$typeArgs]($algebraName, $domain, $codomain)"
+          val returnType = appliedType(AspectWeave, F :: Dom :: Cod :: typeArgs)
+          method.copy(body = body, returnType = returnType)
+        case method if method.occursInSignature(f) =>
+          abort(s"Type parameter $F can only occur as a top level return type in method ${method.displayName}")
+      }
+
+      val WeaveType = appliedType(AspectWeave, F :: Dom :: Cod :: F.typeParams.map(_.asType.toType))
+      val WeavedAlg = appliedType(algebra, polyType(F.typeParams, WeaveType))
+      implement(WeavedAlg)()(types ++ methods)
+    }
+
+  def const[Alg[_[_]], A](value: Tree)(implicit tag: WeakTypeTag[Alg[Any]], a: WeakTypeTag[A]): Tree = {
+    val algebra = typeConstructorOf(tag)
+    val f = algebra.typeParams.head
+    val F = f.asType.toTypeConstructor
+    val Af = appliedType(algebra, F)
+    val tmp = c.freshName(TermName("value"))
+    val abstractMembers = overridableMembersOf(Af).filter(_.isAbstract)
+    val methods = delegateMethods(Af, abstractMembers, NoSymbol) {
+      case method if method.returnType.typeSymbol == f =>
+        method.copy(returnType = a.tpe, body = q"$tmp")
+      case method if method.occursInSignature(f) =>
+        abort(s"Type parameter $F can only occur as a top level return type in method ${method.displayName}")
+      case method =>
+        abort(s"Abstract method ${method.displayName} cannot be derived because it does not return in $F")
+    }
+
+    val Const = weakTypeOf[Const[A]].member(TypeName("λ")).typeSignature
+    q"val $tmp = $value; ${implement(appliedType(algebra, Const))()(methods)}"
+  }
+
+  def void[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
+    const[Alg, Unit](q"()")
+
+  def readerT[Alg[_[_]], F[_]](implicit tag: WeakTypeTag[Alg[Any]], fTag: WeakTypeTag[F[Any]]): Tree = {
+    val algebra = typeConstructorOf(tag)
+    val F = typeConstructorOf(fTag)
+    val f = F.typeSymbol
+    val Af = appliedType(algebra, F)
+    val af = c.freshName(TermName("af"))
+    val ReaderT = typeOf[ReaderT[Any, Any, Any]].typeConstructor
+    val abstractMembers = overridableMembersOf(Af).filter(_.isAbstract)
+    val methods = delegateMethods(Af, abstractMembers, NoSymbol) {
+      case method if method.returnType.typeSymbol == f =>
+        method.transform(q"$af") {
+          case tpe if tpe.typeSymbol == f =>
+            appliedType(ReaderT, F :: Af :: tpe.typeArgs)
+        } {
+          case Parameter(pn, pt, _) if pt.typeSymbol == f =>
+            q"$pn.run($af)"
+        } {
+          case delegate =>
+            val typeArgs = F :: Af :: method.returnType.typeArgs
+            q"${reify(cats.data.ReaderT)}[..$typeArgs](($af: $Af) => $delegate)"
+        }
+      case method =>
+        abort(s"Abstract method ${method.displayName} cannot be derived because it does not return in $F")
+    }
+
+    val b = ReaderT.typeParams.last.asType
+    val typeArg = polyType(b :: Nil, appliedType(ReaderT, F, Af, b.toType))
+    implement(appliedType(algebra, typeArg))()(methods)
+  }
 
   def functor[F[_]](implicit tag: WeakTypeTag[F[Any]]): Tree =
     instantiate[Functor[F]](tag)(map)
@@ -605,5 +719,13 @@ class DeriveMacros(val c: blackbox.Context) {
     instantiate[ApplyK[Alg]](tag)(mapK, productK)
 
   def instrument[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
-    instantiate[Instrument[Alg]](tag)(instrumentation)
+    instantiate[Instrument[Alg]](tag)(instrumentation, mapK)
+
+  def aspect[Alg[_[_]], Dom[_], Cod[_]](
+    implicit tag: WeakTypeTag[Alg[Any]], dom: WeakTypeTag[Dom[Any]], cod: WeakTypeTag[Cod[Any]]
+  ): Tree = {
+    val Dom = typeConstructorOf(dom)
+    val Cod = typeConstructorOf(cod)
+    instantiate[Aspect[Alg, Dom, Cod]](tag, Dom, Cod)(weave(Dom, Cod), mapK)
+  }
 }

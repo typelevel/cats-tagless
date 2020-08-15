@@ -20,31 +20,31 @@ import cats.Eq
 import cats.arrow.FunctionK
 import cats.data._
 import cats.laws.discipline.ExhaustiveCheck
+import cats.tagless.aop.Instrumentation
 import cats.tagless.laws.discipline.SemigroupalKTests.IsomorphismsK
 import cats.tagless.syntax.AllSyntax
 import cats.tagless.{InvariantK, Tuple3K}
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalatest.funsuite.AnyFunSuiteLike
+import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
+import org.typelevel.discipline.scalatest.FunSuiteDiscipline
 
 import scala.util.Try
-import org.typelevel.discipline.scalatest.Discipline
-import org.scalatest.matchers.should.Matchers
 
 class CatsTaglessTestSuite
   extends AnyFunSuiteLike
   with Matchers
   with ScalaCheckDrivenPropertyChecks
-  with Discipline
+  with FunSuiteDiscipline
   with cats.syntax.AllSyntax
-  with cats.instances.AllInstances
   with StrictCatsEquality
   with TestInstances
   with AllSyntax
 
 object TestInstances extends TestInstances
 
-trait TestInstances {
+trait TestInstances extends cats.instances.AllInstances {
 
   implicit val catsDataArbitraryOptionList: Arbitrary[FunctionK[Option, List]] =
     Arbitrary(Gen.const(λ[FunctionK[Option, List]](_.toList)))
@@ -77,6 +77,9 @@ trait TestInstances {
 
   implicit def catsTaglessLawsEqForCokleisli[F[_], A, B](implicit ev: Eq[F[A] => B]): Eq[Cokleisli[F, A, B]] =
     Eq.by(_.run)
+
+  implicit def catsTaglessLawsEqForInstrumentation[F[_], A](implicit ev: Eq[F[A]]): Eq[Instrumentation[F, A]] =
+    Eq.by(i => (i.algebraName, i.methodName, i.value))
 
   //------------------------------------------------------------------
   // The instances below are needed due to type inference limitations:
@@ -145,9 +148,8 @@ trait TestInstances {
 
 
 
+import org.scalactic.TripleEqualsSupport.{AToBEquivalenceConstraint, BToAEquivalenceConstraint}
 import org.scalactic._
-import TripleEqualsSupport.AToBEquivalenceConstraint
-import TripleEqualsSupport.BToAEquivalenceConstraint
 
 // The code in this file was taken and only slightly modified from
 // https://github.com/bvenners/equality-integration-demo

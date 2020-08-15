@@ -19,6 +19,7 @@ package tests
 
 import cats.{Monad, Show, ~>}
 import cats.arrow.FunctionK
+import cats.data.Cokleisli
 import cats.free.Free
 import cats.laws.discipline.SerializableTests
 import cats.tagless.laws.discipline.FunctorKTests
@@ -355,5 +356,10 @@ object autoFunctorKTests {
       val unit: List[Unit] = List.fill(5)(())
       def withFoo(foo: String): BuilderAlgebra[List] = copy(name = foo)
     }
+  }
+
+  @autoFunctorK
+  trait AlgWithContravariantK[F[_]] {
+    def app(f: Cokleisli[F, String, Int])(x: String): F[Int]
   }
 }

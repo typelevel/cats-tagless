@@ -19,7 +19,6 @@ package tests
 
 
 import cats.{Eq, Functor}
-import cats.instances.all._
 import cats.laws.discipline.{FunctorTests, SerializableTests}
 import cats.laws.discipline.eq._
 import org.scalacheck.{Arbitrary, Cogen}

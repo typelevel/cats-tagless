@@ -27,7 +27,7 @@ import org.scalacheck.{Arbitrary, Cogen}
 
 import scala.util.Try
 
-@finalAlg @autoFunctorK @autoSemigroupalK @autoProductNK
+@finalAlg @autoFunctorK @autoSemigroupalK @autoProductNK @autoInstrument
 trait SafeAlg[F[_]] {
   def parseInt(str: String): F[Int]
   def divide(dividend: Float, divisor: Float): F[Float]

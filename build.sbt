@@ -6,14 +6,17 @@ addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVe
 addCommandAlias("validateJVM", ";testsJVM/test ; docs/makeMicrosite")
 
 lazy val libs = org.typelevel.libraries
-  .add("scalatestplus", version = "3.1.0.0-RC2", org = "org.scalatestplus", "scalatestplus-scalacheck")
-  .add("discipline-scalatest", version = "1.0.0-RC2", org = org.typelevel.typeLevelOrg)
+  .add("scalatestplus", version = "3.2.1.0", org = "org.scalatestplus", "scalacheck-1-14")
+  .add("discipline-scalatest", version = "2.0.0", org = org.typelevel.typeLevelOrg)
+  .add("cats", version = "2.1.1")
+  .add("paradise", version = "2.1.1")
+  .add("circe-core", version = "0.13.0", org = "io.circe")
 
 val apache2 = "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")
 val gh = GitHubSettings(org = "typelevel", proj = "cats-tagless", publishOrg = "org.typelevel", license = apache2)
 
 
-lazy val rootSettings = buildSettings ++ commonSettings ++ publishSettings ++ scoverageSettings
+lazy val rootSettings = buildSettings ++ commonSettings ++ publishSettings
 lazy val module = mkModuleFactory(gh.proj, mkConfig(rootSettings, commonJvmSettings, commonJsSettings))
 lazy val prj = mkPrjFactory(rootSettings)
 
@@ -21,29 +24,19 @@ lazy val rootPrj = project
   .configure(mkRootConfig(rootSettings,rootJVM))
   .aggregate(rootJVM, rootJS, docs)
   .dependsOn(rootJVM, rootJS)
-  .settings(
-    noPublishSettings,
-    crossScalaVersions := Nil
-  )
-
+  .settings(noPublishSettings, crossScalaVersions := Nil)
 
 lazy val rootJVM = project
   .configure(mkRootJvmConfig(gh.proj, rootSettings, commonJvmSettings))
   .aggregate(coreJVM, lawsJVM, testsJVM, macrosJVM)
   .dependsOn(coreJVM, lawsJVM, testsJVM, macrosJVM)
-  .settings(noPublishSettings,
-    crossScalaVersions := Nil)
-
+  .settings(noPublishSettings, crossScalaVersions := Nil)
 
 lazy val rootJS = project
   .configure(mkRootJsConfig(gh.proj, rootSettings, commonJsSettings))
   .aggregate(coreJS, lawsJS, testsJS, macrosJS)
   .dependsOn(coreJS, lawsJS, testsJS, macrosJS)
-  .settings(
-    noPublishSettings,
-    crossScalaVersions := Nil
-  )
-
+  .settings(noPublishSettings, crossScalaVersions := Nil)
 
 lazy val core    = prj(coreM)
 lazy val coreJVM = coreM.jvm
@@ -87,7 +80,16 @@ lazy val testsJS  = testsM.js
 lazy val testsM   = module("tests", CrossType.Pure)
   .dependsOn(macrosM, lawsM)
   .settings(
-    libs.testDependencies("shapeless", "scalatest", "cats-free", "cats-effect", "cats-testkit", "scalatestplus-scalacheck", "discipline-scalatest"),
+    libs.testDependencies(
+      "shapeless",
+      "scalatest",
+      "cats-free",
+      "cats-effect",
+      "cats-testkit",
+      "scalacheck-1-14",
+      "discipline-scalatest",
+      "circe-core"
+    ),
     scalacOptions in Test := (scalacOptions in Test).value.filter(_ != "-Xfatal-warnings"),
     scalaMacroDependencies(libs),
     macroAnnotationsSettings,
@@ -109,10 +111,11 @@ lazy val docs = project
   .enablePlugins(MicrositesPlugin)
   .enablePlugins(SiteScaladocPlugin)
   .settings(
-    crossScalaVersions := crossScalaVersions.value.filterNot(_ == libs.vers("scalac_2.13")),
+    crossScalaVersions -= libs.vers("scalac_2.13"),
     docsMappingsAPIDir := "api",
     addMappingsToSiteDir(mappings in packageDoc in Compile in coreJVM, docsMappingsAPIDir),
     organization  := gh.organisation,
+    micrositeCompilingDocsTool := WithTut,
     autoAPIMappings := true,
     micrositeName := "Cats-tagless",
     micrositeDescription := "A library of utilities for tagless final algebras",
@@ -143,14 +146,14 @@ lazy val buildSettings = sharedBuildSettings(gh, libs)
 lazy val commonSettings = sharedCommonSettings ++ Seq(
   parallelExecution in Test := false,
   scalaVersion := libs.vers("scalac_2.12"),
-  crossScalaVersions := Seq(libs.vers("scalac_2.11"), scalaVersion.value, libs.vers("scalac_2.13")),
+  crossScalaVersions := Seq(scalaVersion.value, libs.vers("scalac_2.13")),
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
+  addCompilerPlugin("org.typelevel" % "kind-projector" % "0.11.0" cross CrossVersion.full),
   developers := List(
     Developer("Georgi Krastev", "@joroKr21", "joro.kr.21@gmail.com", new java.net.URL("https://www.linkedin.com/in/georgykr")),
     Developer("Kailuo Wang", "@kailuowang", "kailuo.wang@gmail.com", new java.net.URL("http://kailuowang.com")),
     Developer("Luka Jacobowitz", "@LukaJCB", "luka.jacobowitz@fh-duesseldorf.de", new java.net.URL("http://stackoverflow.com/users/3795501/luka-jacobowitz")))
-  ) ++ scalacAllSettings ++ unidocCommonSettings ++
-  addCompilerPlugins(libs, "kind-projector") ++ copyrightHeader
+  ) ++ scalacAllSettings ++ unidocCommonSettings ++ copyrightHeader
 
 lazy val commonJsSettings = Seq(
   scalaJSStage in Global := FastOptStage,
@@ -159,7 +162,7 @@ lazy val commonJsSettings = Seq(
   doctestGenTests := Seq.empty
 )
 
-lazy val commonJvmSettings = Seq()
+lazy val commonJvmSettings = scoverageSettings
 
 lazy val publishSettings = sharedPublishSettings(gh) ++ credentialSettings ++ sharedReleaseProcess
 

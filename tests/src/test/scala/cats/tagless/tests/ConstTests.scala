@@ -14,15 +14,30 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.tagless.tests
 
-package object syntax {
-  object all extends AllSyntax
-  object functorK extends FunctorKSyntax
-  object contravariantK extends ContravariantKSyntax
-  object invariantK extends InvariantKSyntax
-  object semigroupalK extends SemigroupalKSyntax
-  object applyK extends ApplyKSyntax
-  object instrument extends InstrumentSyntax
-  object aspect extends AspectSyntax
+import cats.tagless.Derive
+
+class ConstTests extends CatsTaglessTestSuite {
+
+  test("const(42)") {
+    val safe = Derive.const[SafeAlg, Int](42)
+    safe.divide(1, 2) shouldBe 42
+    safe.parseInt("NaN") shouldBe 42
+  }
+
+  test("void") {
+    val store = Derive.void[KVStore]
+    store.get("tea") should be(())
+    store.put("tea", "mint") should be(())
+  }
+
+  test("side effects") {
+    val it = (1 to 5).iterator
+    val safe = Derive.const[SafeAlg, Int](it.next())
+    safe.divide(1, 2) shouldBe 1
+    safe.parseInt("NaN") shouldBe 1
+  }
 }
+
+

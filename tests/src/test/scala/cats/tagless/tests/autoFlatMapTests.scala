@@ -17,7 +17,6 @@
 package cats.tagless.tests
 
 import cats.{Eq, FlatMap}
-import cats.instances.all._
 import cats.laws.discipline.{FlatMapTests, SerializableTests}
 import cats.laws.discipline.eq._
 import cats.tagless.autoFlatMap

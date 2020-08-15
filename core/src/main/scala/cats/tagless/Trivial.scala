@@ -14,22 +14,12 @@
  * limitations under the License.
  */
 
-package cats.tagless.diagnosis
+package cats.tagless
 
-import simulacrum.typeclass
+/** The trivial type class which has an instance for any type but does nothing. */
+final class Trivial[A] private extends Serializable
 
-final case class Instrumentation[F[_], A](
-  value: F[A],
-  algebraName: String,
-  methodName: String
-)
-
-/**
-  * Type classes for instrumenting algebras.
-  * This feature is experimental, API is likely to change.
-  * @tparam Alg The algebra type you want to instrument.
-  */
-@typeclass
-trait Instrument[Alg[_[_]]] {
-  def instrument[F[_]](af: Alg[F]): Alg[Instrumentation[F, *]]
+object Trivial {
+  private[this] val any = new Trivial[Any]
+  implicit def instance[A]: Trivial[A] = any.asInstanceOf[Trivial[A]]
 }

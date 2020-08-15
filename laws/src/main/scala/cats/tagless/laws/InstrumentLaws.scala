@@ -14,15 +14,20 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.tagless.laws
 
-package object syntax {
-  object all extends AllSyntax
-  object functorK extends FunctorKSyntax
-  object contravariantK extends ContravariantKSyntax
-  object invariantK extends InvariantKSyntax
-  object semigroupalK extends SemigroupalKSyntax
-  object applyK extends ApplyKSyntax
-  object instrument extends InstrumentSyntax
-  object aspect extends AspectSyntax
+import cats.laws._
+import cats.tagless.aop.{Instrument, Instrumentation}
+import cats.~>
+
+trait InstrumentLaws[F[_[_]]] extends FunctorKLaws[F] {
+  implicit def F: Instrument[F]
+
+  def instrumentPreservingSemantics[A[_]](fa: F[A]): IsEq[F[A]] =
+    F.mapK(F.instrument(fa))(λ[Instrumentation[A, *] ~> A](_.value)) <-> fa
+}
+
+object InstrumentLaws {
+  def apply[F[_[_]]](implicit ev: Instrument[F]): InstrumentLaws[F] =
+    new InstrumentLaws[F] { val F = ev }
 }

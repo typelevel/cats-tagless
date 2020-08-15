@@ -17,10 +17,22 @@
 package cats.tagless
 
 import cats.arrow.Profunctor
-import cats.tagless.diagnosis.Instrument
+import cats.data.ReaderT
+import cats.tagless.aop.{Aspect, Instrument}
 import cats.{Apply, Bifunctor, Contravariant, FlatMap, Functor, Invariant, Semigroupal}
 
 object Derive {
+
+  /** Derives an implementation of `Alg` where all abstract methods return a constant value. */
+  def const[Alg[_[_]], A](value: A): Alg[Const[A]#λ] = macro DeriveMacros.const[Alg, A]
+
+  /** Derives an implementation of `Alg` where all abstract methods return `Unit`. */
+  def void[Alg[_[_]]]: Alg[Void] = macro DeriveMacros.void[Alg]
+
+  /** Derives an implementation of `Alg` that forwards all calls to another one supplied via `ReaderT`.
+    * This enables a form of dependency injection.
+    */
+  def readerT[Alg[_[_]], F[_]]: Alg[ReaderT[F, Alg[F], *]] = macro DeriveMacros.readerT[Alg, F]
 
   def functor[F[_]]: Functor[F] = macro DeriveMacros.functor[F]
   def contravariant[F[_]]: Contravariant[F] = macro DeriveMacros.contravariant[F]
@@ -59,11 +71,13 @@ object Derive {
   def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = macro DeriveMacros.semigroupalK[Alg]
   def applyK[Alg[_[_]]]: ApplyK[Alg] = macro DeriveMacros.applyK[Alg]
 
-  /**
-    * Type classes for instrumenting algebras.
-    * This feature is experimental, API is likely to change.
-    * @tparam Alg The algebra type you want to instrument.
-    * @return An instrumented algebra.
+  /** Type class for instrumenting an algebra.
+    * Note: This feature is experimental, API is likely to change.
     */
   def instrument[Alg[_[_]]]: Instrument[Alg] = macro DeriveMacros.instrument[Alg]
+
+  /** Type class supporting Aspect-Oriented Programming (AOP) for a tagless final algebra.
+    * Note: This feature is experimental, API is likely to change.
+    */
+  def aspect[Alg[_[_]], Dom[_], Cod[_]]: Aspect[Alg, Dom, Cod] = macro DeriveMacros.aspect[Alg, Dom, Cod]
 }

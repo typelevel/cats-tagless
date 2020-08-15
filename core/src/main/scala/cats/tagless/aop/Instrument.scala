@@ -14,15 +14,20 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.tagless.aop
 
-package object syntax {
-  object all extends AllSyntax
-  object functorK extends FunctorKSyntax
-  object contravariantK extends ContravariantKSyntax
-  object invariantK extends InvariantKSyntax
-  object semigroupalK extends SemigroupalKSyntax
-  object applyK extends ApplyKSyntax
-  object instrument extends InstrumentSyntax
-  object aspect extends AspectSyntax
+import cats.tagless.FunctorK
+import simulacrum.typeclass
+
+/** The result of an algebra method `F[A]` instrumented with the method name. */
+final case class Instrumentation[F[_], A](value: F[A], algebraName: String, methodName: String)
+
+/** Type class for instrumenting an algebra.
+  * Note: This feature is experimental, API is likely to change.
+  *
+  * @tparam Alg The algebra to be instrumented.
+  */
+@typeclass
+trait Instrument[Alg[_[_]]] extends FunctorK[Alg] {
+  def instrument[F[_]](af: Alg[F]): Alg[Instrumentation[F, *]]
 }

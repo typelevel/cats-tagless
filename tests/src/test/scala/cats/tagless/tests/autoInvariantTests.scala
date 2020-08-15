@@ -19,7 +19,6 @@ package tests
 
 
 import cats.{Eq, Invariant}
-import cats.instances.all._
 import cats.laws.discipline.{InvariantTests, SerializableTests}
 import cats.laws.discipline.eq._
 import org.scalacheck.{Arbitrary, Cogen}

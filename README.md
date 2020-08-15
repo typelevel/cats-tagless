@@ -11,18 +11,27 @@ Cats-tagless is a small library built to facilitate transforming and composing t
 
 ## Installation
 
-Cats-tagless is currently available for Scala 2.11, 2.12 and 2.13. 
+Cats-tagless is currently available for Scala 2.12 and 2.13 and Scala.js.
 
- 
-Add the following dependency in `build.sbt`
+Add the following settings in `build.sbt`
 
 ```scala
 libraryDependencies += 
   "org.typelevel" %% "cats-tagless-macros" % latestVersion  //latest version indicated in the badge above
- 
- // For Scala 2.10-2.12 only. scalamacros paradise is included in scala 2.13
- addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
- 
+
+Compile / scalacOptions ++= {
+  CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((2, n)) if n >= 13 => "-Ymacro-annotations" :: Nil
+    case _ => Nil
+  }
+}
+
+libraryDependencies ++= {
+  CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((2, n)) if n >= 13 => Nil
+    case _ => compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full) :: Nil
+  }
+}
 ```
 
 ## <a id="auto-transform" href="#auto-transform"></a>Auto-transforming tagless final interpreters

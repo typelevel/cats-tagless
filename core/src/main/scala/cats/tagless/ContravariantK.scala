@@ -16,8 +16,8 @@
 
 package cats.tagless
 
-import cats.~>
 import simulacrum.typeclass
+import cats.~>
 
 /** A higher-kinded `Contravariant` functor.
   * Must obey the laws in `cats.tagless.laws.ContravariantKLaws`.
@@ -26,7 +26,3 @@ import simulacrum.typeclass
   def contramapK[F[_], G[_]](af: A[F])(fk: G ~> F): A[G]
   override def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gk: G ~> F): A[G] = contramapK(af)(gk)
 }
-
-
-
-

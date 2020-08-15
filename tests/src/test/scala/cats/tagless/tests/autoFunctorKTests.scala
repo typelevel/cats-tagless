@@ -22,7 +22,6 @@ import cats.arrow.FunctionK
 import cats.data.Cokleisli
 import cats.free.Free
 import cats.laws.discipline.SerializableTests
-import cats.tagless.instances.all._
 import cats.tagless.laws.discipline.FunctorKTests
 import shapeless.test.illTyped
 

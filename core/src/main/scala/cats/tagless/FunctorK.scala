@@ -16,8 +16,8 @@
 
 package cats.tagless
 
-import cats.~>
 import simulacrum.typeclass
+import cats.~>
 
 /**
  * Sort of a higher kinded Functor, but, well, it's complcated. 
@@ -31,7 +31,3 @@ trait FunctorK[A[_[_]]] extends InvariantK[A] {
 
   override def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gK: G ~> F): A[G] = mapK(af)(fk)
 }
-
-
-
-

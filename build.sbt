@@ -7,7 +7,7 @@ addCommandAlias("validateJVM", ";testsJVM/test ; docs/makeMicrosite")
 
 lazy val libs = org.typelevel.libraries
   .add("scalatestplus", version = "3.2.2.0", org = "org.scalatestplus", "scalacheck-1-14")
-  .add("discipline-scalatest", version = "2.0.0", org = org.typelevel.typeLevelOrg)
+  .add("discipline-scalatest", version = "2.0.1", org = org.typelevel.typeLevelOrg)
   .add("cats", version = "2.1.1")
   .add("paradise", version = "2.1.1")
   .add("circe-core", version = "0.13.0", org = "io.circe")

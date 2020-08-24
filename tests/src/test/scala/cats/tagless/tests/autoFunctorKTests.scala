@@ -20,12 +20,14 @@ package tests
 import cats.{Monad, Show, ~>}
 import cats.arrow.FunctionK
 import cats.data.Cokleisli
+import cats.effect.SyncIO
+import cats.effect.concurrent.Ref
 import cats.free.Free
 import cats.laws.discipline.SerializableTests
 import cats.tagless.laws.discipline.FunctorKTests
 import shapeless.test.illTyped
 
-import scala.util.Try
+import scala.util.{Failure, Try}
 
 class autoFunctorKTests extends CatsTaglessTestSuite {
   import autoFunctorKTests._
@@ -215,6 +217,28 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
     val listBuilder: BuilderAlgebra[List] = BuilderAlgebra.Named("foo")
     val optionBuilder = listBuilder.mapK[Option](λ[List ~> Option](_.headOption))
     optionBuilder.withFoo("bar").unit shouldBe Some(())
+  }
+
+  test("error transforming algebra") {
+    case object ConstantError extends RuntimeException
+    val ce: Throwable = ConstantError
+    val expected: Try[Int] = new Failure(ce)
+    val constantTry = Interpreters.tryInterpreter.transformError[Throwable]{
+      case _ => Try(ce)
+    }
+    constantTry.parseInt("") shouldBe expected
+  }
+
+  test("error side-effecint algebra") {
+    Ref.of[SyncIO, Boolean](false).flatMap{ref =>
+      val setRef = Interpreters.syncIOInterpreter.flatTapOnError[Throwable]{
+        case _ => ref.set(true)
+      }
+      setRef.parseInt("").attempt.void *>
+      ref.get.flatMap(value =>
+        SyncIO(value shouldBe true)
+      )
+    }.unsafeRunSync
   }
 }
 

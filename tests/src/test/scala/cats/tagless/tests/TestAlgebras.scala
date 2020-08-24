@@ -17,8 +17,9 @@
 package cats.tagless
 package tests
 
-import cats.{Eq, Eval, Monoid, ~>}
+import cats.{ApplicativeError, Eq, Eval, Monoid, ~>}
 import cats.data.{EitherT, Kleisli, State, Tuple2K}
+import cats.effect._
 import cats.implicits._
 import cats.laws.discipline.ExhaustiveCheck
 import cats.laws.discipline.arbitrary._
@@ -133,6 +134,11 @@ object Interpreters {
   implicit object lazyInterpreter extends SafeAlg[Eval] {
     def parseInt(str: String): Eval[Int] = Eval.later(str.toInt)
     def divide(dividend: Float, divisor: Float): Eval[Float] = Eval.later(dividend / divisor)
+  }
+
+  implicit object syncIOInterpreter extends SafeAlg[SyncIO] {
+    override def parseInt(str: String): SyncIO[Int] = ApplicativeError[SyncIO, Throwable].catchNonFatal(str.toInt)
+    override def divide(dividend: Float, divisor: Float): SyncIO[Float] = ApplicativeError[SyncIO, Throwable].catchNonFatal(dividend / divisor)
   }
 
   object KVStoreInterpreter extends KVStore[State[StateInfo, *]] {

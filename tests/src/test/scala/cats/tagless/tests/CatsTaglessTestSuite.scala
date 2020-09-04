@@ -44,7 +44,7 @@ class CatsTaglessTestSuite
 
 object TestInstances extends TestInstances
 
-trait TestInstances extends cats.instances.AllInstances {
+trait TestInstances {
 
   implicit val catsDataArbitraryOptionList: Arbitrary[FunctionK[Option, List]] =
     Arbitrary(Gen.const(λ[FunctionK[Option, List]](_.toList)))

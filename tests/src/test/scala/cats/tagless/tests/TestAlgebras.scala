@@ -19,7 +19,7 @@ package tests
 
 import cats.{Eq, Eval, Monoid, ~>}
 import cats.data.{EitherT, Kleisli, State, Tuple2K}
-import cats.implicits._
+import cats.syntax.all._
 import cats.laws.discipline.ExhaustiveCheck
 import cats.laws.discipline.arbitrary._
 import cats.laws.discipline.eq._

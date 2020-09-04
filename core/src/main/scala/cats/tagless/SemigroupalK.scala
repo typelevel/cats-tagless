@@ -18,7 +18,7 @@ package cats.tagless
 
 import cats._
 import cats.data._
-import cats.implicits._
+import cats.syntax.all._
 import cats.kernel.CommutativeMonoid
 import simulacrum.typeclass
 

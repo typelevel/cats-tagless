@@ -18,7 +18,6 @@ package cats.tagless
 package tests
 
 import cats.{Contravariant, Eq}
-import cats.instances.all._
 import cats.laws.discipline.{ContravariantTests, ExhaustiveCheck, SerializableTests}
 import cats.laws.discipline.eq._
 import cats.tagless.tests.autoContravariantTest._

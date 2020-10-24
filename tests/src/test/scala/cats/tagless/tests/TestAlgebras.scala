@@ -33,14 +33,15 @@ trait SafeAlg[F[_]] {
   def divide(dividend: Float, divisor: Float): F[Float]
 }
 
-object SafeAlg  {
+object SafeAlg {
   import TestInstances._
 
   implicit def eqForSafeAlg[F[_]](implicit eqFi: Eq[F[Int]], eqFf: Eq[F[Float]]): Eq[SafeAlg[F]] =
     Eq.by(algebra => (algebra.parseInt _, algebra.divide _))
 
-  implicit def arbitrarySafeAlg[F[_]](
-    implicit arbFi: Arbitrary[F[Int]], arbFs: Arbitrary[F[Float]]
+  implicit def arbitrarySafeAlg[F[_]](implicit
+      arbFi: Arbitrary[F[Int]],
+      arbFs: Arbitrary[F[Float]]
   ): Arbitrary[SafeAlg[F]] = Arbitrary {
     for {
       pInt <- Arbitrary.arbitrary[String => F[Int]]
@@ -62,20 +63,20 @@ trait SafeInvAlg[F[_]] {
 object SafeInvAlg {
   import TestInstances._
 
-  implicit def eqForSafeInvAlg[F[_]](
-    implicit eqFi: Eq[F[Int]],
-    eqFd: Eq[F[Double]],
-    exFs: ExhaustiveCheck[F[String]],
-    exEfs: ExhaustiveCheck[EitherT[F, String, String]]
-  ): Eq[SafeInvAlg[F]] = Eq.by {
-    algebra => (algebra.parseInt _, algebra.doubleParser _, algebra.parseIntOrError _)
+  implicit def eqForSafeInvAlg[F[_]](implicit
+      eqFi: Eq[F[Int]],
+      eqFd: Eq[F[Double]],
+      exFs: ExhaustiveCheck[F[String]],
+      exEfs: ExhaustiveCheck[EitherT[F, String, String]]
+  ): Eq[SafeInvAlg[F]] = Eq.by { algebra =>
+    (algebra.parseInt _, algebra.doubleParser _, algebra.parseIntOrError _)
   }
 
-  implicit def arbitrarySafeInvAlg[F[_]](
-    implicit coF: Cogen[F[String]],
-    coEfs: Cogen[EitherT[F, String, String]],
-    arbFi: Arbitrary[F[Int]],
-    arbFd: Arbitrary[F[Double]]
+  implicit def arbitrarySafeInvAlg[F[_]](implicit
+      coF: Cogen[F[String]],
+      coEfs: Cogen[EitherT[F, String, String]],
+      arbFi: Arbitrary[F[Int]],
+      arbFd: Arbitrary[F[Double]]
   ): Arbitrary[SafeInvAlg[F]] = Arbitrary {
     for {
       pInt <- Arbitrary.arbitrary[F[String] => F[Int]]
@@ -137,7 +138,8 @@ object Interpreters {
 
   object KVStoreInterpreter extends KVStore[State[StateInfo, *]] {
     def get(key: String): State[StateInfo, Option[String]] =
-      State.modify[StateInfo](s => s.copy(searches = s.searches.updated(key, s.searches.getOrElse(key, 0) + 1)))
+      State
+        .modify[StateInfo](s => s.copy(searches = s.searches.updated(key, s.searches.getOrElse(key, 0) + 1)))
         .as(Option(key + "!"))
 
     def put(key: String, a: String): State[StateInfo, Unit] =

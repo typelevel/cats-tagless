@@ -17,7 +17,6 @@
 package cats.tagless
 package tests
 
-
 import cats.{Eq, Functor}
 import cats.laws.discipline.{FunctorTests, SerializableTests}
 import cats.laws.discipline.eq._

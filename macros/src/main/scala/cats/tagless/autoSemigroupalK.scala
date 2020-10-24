@@ -26,7 +26,7 @@ class autoSemigroupalK extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoSemigroupalKMacros.semigroupalKInst
 }
 
-private[tagless] class autoSemigroupalKMacros(override val c: whitebox.Context) extends MacroUtils  {
+private[tagless] class autoSemigroupalKMacros(override val c: whitebox.Context) extends MacroUtils {
   import c.universe._
 
   private def generateSemigroupalKFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =

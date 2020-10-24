@@ -26,7 +26,9 @@ class autoApplyK(autoDerivation: Boolean = true) extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoApplyKMacros.newDef
 }
 
-private [tagless] class autoApplyKMacros(override val c: whitebox.Context) extends MacroUtils with CovariantKMethodsGenerator {
+private[tagless] class autoApplyKMacros(override val c: whitebox.Context)
+    extends MacroUtils
+    with CovariantKMethodsGenerator {
   import c.universe._
 
   private def generateApplyKFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =
@@ -41,5 +43,7 @@ private [tagless] class autoApplyKMacros(override val c: whitebox.Context) exten
     algebra.forVaryingEffectType(generateApplyKFor(algebra.name))
 
   def newDef(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList)(algebra => instanceDef(algebra) :: companionMapKDef(algebra) :: autoDerivationDef(algebra) :: Nil)
+    enrichAlgebra(annottees.toList)(algebra =>
+      instanceDef(algebra) :: companionMapKDef(algebra) :: autoDerivationDef(algebra) :: Nil
+    )
 }

@@ -72,7 +72,6 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
     tryInt.mapK(fk).minusOne(2) should be(1)
   }
 
-
   test("Alg with extra type parameters") {
     implicit val foo: AlgWithExtraTP[Try, String] = new AlgWithExtraTP[Try, String] {
       def a(i: Int) = Try(i.toString)
@@ -89,7 +88,6 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
 
     algWithExtraTP.mapK(fk).a(5) should be(Some("5"))
   }
-
 
   test("Alg with type member") {
     implicit val tryInt: AlgWithTypeMember.Aux[Try, String] = new AlgWithTypeMember[Try] {
@@ -149,7 +147,7 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
   }
 
   test("method with type params") {
-   implicit object foo extends AlgWithTParamInMethod[Try] {
+    implicit object foo extends AlgWithTParamInMethod[Try] {
       def a[T](t: T): Try[String] = Try(t.toString)
     }
 
@@ -169,7 +167,8 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
 
     import AlgWithAbstractTypeClass.fullyRefined._
     // Scalac needs help when abstract type is high order.
-    implicit val fShow : FunctorK[AlgWithAbstractTypeClass.Aux[*[_], Show]] = functorKForFullyRefinedAlgWithAbstractTypeClass[Show]
+    implicit val fShow: FunctorK[AlgWithAbstractTypeClass.Aux[*[_], Show]] =
+      functorKForFullyRefinedAlgWithAbstractTypeClass[Show]
     fShow.mapK(foo)(fk).a(true) should be(Some("true"))
   }
 
@@ -218,9 +217,8 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
   }
 }
 
-
 object autoFunctorKTests {
-  implicit val fk : Try ~> Option = λ[Try ~> Option](_.toOption)
+  implicit val fk: Try ~> Option = λ[Try ~> Option](_.toOption)
 
   @autoFunctorK
   trait AlgWithNonEffectMethod[F[_]] {
@@ -278,7 +276,6 @@ object autoFunctorKTests {
     def minusOne(i: Int): Int = i - 1
   }
 
-
   @autoFunctorK @finalAlg
   trait AlgWithDef[F[_]] {
     def a: F[Int]
@@ -316,7 +313,7 @@ object autoFunctorKTests {
   }
 
   object AlgWithOwnDerivation {
-    implicit def fromMonad[F[_] : Monad]: AlgWithOwnDerivation[F] = new AlgWithOwnDerivation[F] {
+    implicit def fromMonad[F[_]: Monad]: AlgWithOwnDerivation[F] = new AlgWithOwnDerivation[F] {
       def a(b: Int): F[String] = Monad[F].pure(b.toString)
     }
   }

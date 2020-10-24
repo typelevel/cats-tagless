@@ -37,8 +37,7 @@ private[tagless] class autoBifunctorMacros(override val c: whitebox.Context) ext
     )
 
   def bifunctorInst(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList, AlgebraResolver.TwoLastRegularTypeParams) {
-      algebra =>
-        algebra.forVaryingEffectType(generateBifunctorFor(algebra.name)) :: Nil
+    enrichAlgebra(annottees.toList, AlgebraResolver.TwoLastRegularTypeParams) { algebra =>
+      algebra.forVaryingEffectType(generateBifunctorFor(algebra.name)) :: Nil
     }
 }

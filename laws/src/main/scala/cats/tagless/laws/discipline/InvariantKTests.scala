@@ -28,20 +28,20 @@ trait InvariantKTests[F[_[_]]] extends Laws {
   def laws: InvariantKLaws[F]
 
   def invariantK[A[_], B[_], C[_]](implicit
-                                                          ArbFA: Arbitrary[F[A]],
-                                                          ArbAB: Arbitrary[A ~> B],
-                                                          ArbBA: Arbitrary[B ~> A],
-                                                          ArbBC: Arbitrary[B ~> C],
-                                                          ArbCB: Arbitrary[C ~> B],
-                                                          EqFA: Eq[F[A]],
-                                                          EqFC: Eq[F[C]]
-                                                         ): RuleSet = {
+      ArbFA: Arbitrary[F[A]],
+      ArbAB: Arbitrary[A ~> B],
+      ArbBA: Arbitrary[B ~> A],
+      ArbBC: Arbitrary[B ~> C],
+      ArbCB: Arbitrary[C ~> B],
+      EqFA: Eq[F[A]],
+      EqFC: Eq[F[C]]
+  ): RuleSet =
     new DefaultRuleSet(
       name = "invariantK",
       parent = None,
       "invariant identity" -> forAll(laws.invariantIdentity[A] _),
-      "invariant composition" -> forAll(laws.invariantComposition[A, B, C] _))
-  }
+      "invariant composition" -> forAll(laws.invariantComposition[A, B, C] _)
+    )
 }
 
 object InvariantKTests {

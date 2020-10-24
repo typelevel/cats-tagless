@@ -27,20 +27,20 @@ trait FunctorKTests[F[_[_]]] extends InvariantKTests[F] {
   def laws: FunctorKLaws[F]
 
   def functorK[A[_], B[_], C[_], T: Arbitrary](implicit
-                                               ArbFA: Arbitrary[F[A]],
-                                               ArbitraryFK: Arbitrary[A ~> B],
-                                               ArbitraryFK2: Arbitrary[B ~> C],
-                                               ArbitraryFK3: Arbitrary[B ~> A],
-                                               ArbitraryFK4: Arbitrary[C ~> B],
-                                               EqFA: Eq[F[A]],
-                                               EqFC: Eq[F[C]]
-                                              ): RuleSet = {
+      ArbFA: Arbitrary[F[A]],
+      ArbitraryFK: Arbitrary[A ~> B],
+      ArbitraryFK2: Arbitrary[B ~> C],
+      ArbitraryFK3: Arbitrary[B ~> A],
+      ArbitraryFK4: Arbitrary[C ~> B],
+      EqFA: Eq[F[A]],
+      EqFC: Eq[F[C]]
+  ): RuleSet =
     new DefaultRuleSet(
       name = "functorK",
       parent = Some(invariantK[A, B, C]),
       "covariant identity" -> forAll(laws.covariantIdentity[A] _),
-      "covariant composition" -> forAll(laws.covariantComposition[A, B, C] _))
-  }
+      "covariant composition" -> forAll(laws.covariantComposition[A, B, C] _)
+    )
 }
 
 object FunctorKTests {

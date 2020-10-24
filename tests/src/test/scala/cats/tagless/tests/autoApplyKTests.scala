@@ -47,14 +47,18 @@ object autoApplyKTests {
   object AutoApplyKTestAlg {
     import TestInstances._
 
-    implicit def eqForAutoApplyKTestAlg[F[_]](
-      implicit eqFi: Eq[F[Int]], eqFf: Eq[F[Float]], eqEfd: Eq[EitherT[F, String, Double]]
-    ): Eq[AutoApplyKTestAlg[F]] = Eq.by {
-      algebra => (algebra.parseInt _, algebra.parseDouble _, algebra.divide _)
+    implicit def eqForAutoApplyKTestAlg[F[_]](implicit
+        eqFi: Eq[F[Int]],
+        eqFf: Eq[F[Float]],
+        eqEfd: Eq[EitherT[F, String, Double]]
+    ): Eq[AutoApplyKTestAlg[F]] = Eq.by { algebra =>
+      (algebra.parseInt _, algebra.parseDouble _, algebra.divide _)
     }
 
-    implicit def arbitraryAutoApplyKTestAlg[F[_]](
-      implicit arbFi: Arbitrary[F[Int]], arbFf: Arbitrary[F[Float]], arbEfd: Arbitrary[EitherT[F, String, Double]]
+    implicit def arbitraryAutoApplyKTestAlg[F[_]](implicit
+        arbFi: Arbitrary[F[Int]],
+        arbFf: Arbitrary[F[Float]],
+        arbEfd: Arbitrary[EitherT[F, String, Double]]
     ): Arbitrary[AutoApplyKTestAlg[F]] = Arbitrary {
       for {
         pInt <- Arbitrary.arbitrary[String => F[Int]]

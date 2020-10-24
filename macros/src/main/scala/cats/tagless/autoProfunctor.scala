@@ -29,7 +29,7 @@ private[tagless] class autoProfunctorMacros(override val c: whitebox.Context) ex
   import c.universe._
 
   private def generateProfunctorFor(
-    algebraName: String
+      algebraName: String
   )(algebraType: Tree, typeParams: Seq[TypeDef]) =
     typeClassInstance(
       TermName("profunctorFor" + algebraName),
@@ -39,8 +39,7 @@ private[tagless] class autoProfunctorMacros(override val c: whitebox.Context) ex
     )
 
   def profunctorInst(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList, AlgebraResolver.TwoLastRegularTypeParams) {
-      algebra =>
-        algebra.forVaryingEffectType(generateProfunctorFor(algebra.name)) :: Nil
+    enrichAlgebra(annottees.toList, AlgebraResolver.TwoLastRegularTypeParams) { algebra =>
+      algebra.forVaryingEffectType(generateProfunctorFor(algebra.name)) :: Nil
     }
 }

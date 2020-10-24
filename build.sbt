@@ -15,13 +15,12 @@ lazy val libs = org.typelevel.libraries
 val apache2 = "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")
 val gh = GitHubSettings(org = "typelevel", proj = "cats-tagless", publishOrg = "org.typelevel", license = apache2)
 
-
 lazy val rootSettings = buildSettings ++ commonSettings ++ publishSettings
 lazy val module = mkModuleFactory(gh.proj, mkConfig(rootSettings, commonJvmSettings, commonJsSettings))
 lazy val prj = mkPrjFactory(rootSettings)
 
-lazy val rootPrj = project
-  .configure(mkRootConfig(rootSettings,rootJVM))
+lazy val `cats-tagless` = project
+  .configure(mkRootConfig(rootSettings, rootJVM))
   .aggregate(rootJVM, rootJS, docs)
   .dependsOn(rootJVM, rootJS)
   .settings(noPublishSettings, crossScalaVersions := Nil)
@@ -38,30 +37,27 @@ lazy val rootJS = project
   .dependsOn(coreJS, lawsJS, testsJS, macrosJS)
   .settings(noPublishSettings, crossScalaVersions := Nil)
 
-lazy val core    = prj(coreM)
+lazy val core = prj(coreM)
 lazy val coreJVM = coreM.jvm
-lazy val coreJS  = coreM.js
-lazy val coreM   = module("core", CrossType.Pure)
+lazy val coreJS = coreM.js
+lazy val coreM = module("core", CrossType.Pure)
   .settings(libs.dependency("cats-core"))
   .settings(simulacrumSettings(libs))
   .enablePlugins(AutomateHeaderPlugin)
 
-
-
-lazy val laws    = prj(lawsM)
+lazy val laws = prj(lawsM)
 lazy val lawsJVM = lawsM.jvm
-lazy val lawsJS  = lawsM.js
-lazy val lawsM   = module("laws", CrossType.Pure)
+lazy val lawsJS = lawsM.js
+lazy val lawsM = module("laws", CrossType.Pure)
   .dependsOn(coreM)
   .settings(libs.dependency("cats-laws"))
   .settings(disciplineDependencies)
   .enablePlugins(AutomateHeaderPlugin)
 
-
-lazy val macros    = prj(macrosM)
+lazy val macros = prj(macrosM)
 lazy val macrosJVM = macrosM.jvm
-lazy val macrosJS  = macrosM.js
-lazy val macrosM   = module("macros", CrossType.Pure)
+lazy val macrosJS = macrosM.js
+lazy val macrosM = module("macros", CrossType.Pure)
   .dependsOn(coreM)
   .aggregate(coreM)
   .settings(scalaMacroDependencies(libs))
@@ -73,11 +69,10 @@ lazy val macrosM   = module("macros", CrossType.Pure)
   )
   .enablePlugins(AutomateHeaderPlugin)
 
-
-lazy val tests    = prj(testsM)
+lazy val tests = prj(testsM)
 lazy val testsJVM = testsM.jvm
-lazy val testsJS  = testsM.js
-lazy val testsM   = module("tests", CrossType.Pure)
+lazy val testsJS = testsM.js
+lazy val testsM = module("tests", CrossType.Pure)
   .dependsOn(macrosM, lawsM)
   .settings(
     libs.testDependencies(
@@ -97,8 +92,7 @@ lazy val testsM   = module("tests", CrossType.Pure)
   )
   .enablePlugins(AutomateHeaderPlugin)
 
-
-/** Docs - Generates and publishes the scaladoc API documents and the project web site.*/
+/** Docs - Generates and publishes the scaladoc API documents and the project web site. */
 lazy val docs = project
   .settings(rootSettings)
   .settings(moduleName := gh.proj + "-docs")
@@ -107,14 +101,14 @@ lazy val docs = project
   .settings(commonJvmSettings)
   .settings(scalaMacroDependencies(libs))
   .settings(libs.dependency("cats-free"))
-  .dependsOn(List(macrosJVM).map( ClasspathDependency(_, Some("compile;test->test"))):_*)
+  .dependsOn(List(macrosJVM).map(ClasspathDependency(_, Some("compile;test->test"))): _*)
   .enablePlugins(MicrositesPlugin)
   .enablePlugins(SiteScaladocPlugin)
   .settings(
     crossScalaVersions -= libs.vers("scalac_2.13"),
     docsMappingsAPIDir := "api",
     addMappingsToSiteDir(mappings in packageDoc in Compile in coreJVM, docsMappingsAPIDir),
-    organization  := gh.organisation,
+    organization := gh.organisation,
     micrositeCompilingDocsTool := WithTut,
     autoAPIMappings := true,
     micrositeName := "Cats-tagless",
@@ -125,19 +119,21 @@ lazy val docs = project
     micrositeHighlightTheme := "atom-one-light",
     fork in tut := true,
     micrositePalette := Map(
-      "brand-primary"     -> "#51839A",
-      "brand-secondary"   -> "#EDAF79",
-      "brand-tertiary"    -> "#96A694",
-      "gray-dark"         -> "#192946",
-      "gray"              -> "#424F67",
-      "gray-light"        -> "#E3E2E3",
-      "gray-lighter"      -> "#F4F3F4",
-      "white-color"       -> "#FFFFFF"),
+      "brand-primary" -> "#51839A",
+      "brand-secondary" -> "#EDAF79",
+      "brand-tertiary" -> "#96A694",
+      "gray-dark" -> "#192946",
+      "gray" -> "#424F67",
+      "gray-light" -> "#E3E2E3",
+      "gray-lighter" -> "#F4F3F4",
+      "white-color" -> "#FFFFFF"
+    ),
     ghpagesNoJekyll := false,
     micrositeAuthor := "cats-tagless Contributors",
     scalacOptions in Tut ~= (_.filterNot(Set("-Ywarn-unused-import", "-Ywarn-unused:imports", "-Ywarn-dead-code"))),
     git.remoteRepo := gh.repo,
-    includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md")
+    includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md"
+  )
 
 lazy val docsMappingsAPIDir = settingKey[String]("Name of subdirectory in site target directory for api docs")
 
@@ -148,12 +144,23 @@ lazy val commonSettings = sharedCommonSettings ++ Seq(
   scalaVersion := libs.vers("scalac_2.12"),
   crossScalaVersions := Seq(scalaVersion.value, libs.vers("scalac_2.13")),
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
-  addCompilerPlugin("org.typelevel" % "kind-projector" % "0.11.0" cross CrossVersion.full),
+  addCompilerPlugin(("org.typelevel" % "kind-projector" % "0.11.0").cross(CrossVersion.full)),
   developers := List(
-    Developer("Georgi Krastev", "@joroKr21", "joro.kr.21@gmail.com", new java.net.URL("https://www.linkedin.com/in/georgykr")),
+    Developer(
+      "Georgi Krastev",
+      "@joroKr21",
+      "joro.kr.21@gmail.com",
+      new java.net.URL("https://www.linkedin.com/in/georgykr")
+    ),
     Developer("Kailuo Wang", "@kailuowang", "kailuo.wang@gmail.com", new java.net.URL("http://kailuowang.com")),
-    Developer("Luka Jacobowitz", "@LukaJCB", "luka.jacobowitz@fh-duesseldorf.de", new java.net.URL("http://stackoverflow.com/users/3795501/luka-jacobowitz")))
-  ) ++ scalacAllSettings ++ unidocCommonSettings ++ copyrightHeader
+    Developer(
+      "Luka Jacobowitz",
+      "@LukaJCB",
+      "luka.jacobowitz@fh-duesseldorf.de",
+      new java.net.URL("http://stackoverflow.com/users/3795501/luka-jacobowitz")
+    )
+  )
+) ++ scalacAllSettings ++ unidocCommonSettings ++ copyrightHeader
 
 lazy val commonJsSettings = Seq(
   scalaJSStage in Global := FastOptStage,

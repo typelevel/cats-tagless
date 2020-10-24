@@ -23,14 +23,12 @@ import cats.tagless.optimize.Program
 object Programs {
 
   private def putGetProgramF[F[_]: Applicative](F: KVStore[F]): F[List[String]] =
-    List("Cat" -> "Cat!", "Dog" ->"Dog!").traverse(t => F.put(t._1, t._2)) *>
+    List("Cat" -> "Cat!", "Dog" -> "Dog!").traverse(t => F.put(t._1, t._2)) *>
       List("Dog", "Bird", "Mouse", "Bird").traverse(F.get).map(_.flatten)
-
 
   val putGetProgram = new Program[KVStore, Applicative, List[String]] {
     def apply[F[_]: Applicative](alg: KVStore[F]): F[List[String]] = putGetProgramF(alg)
   }
-
 
   private def applicativeProgramF[F[_]: Apply](F: KVStore[F]): F[List[String]] =
     (F.get("Cats"), F.get("Dogs"), F.put("Mice", "mouse"), F.get("Cats"))

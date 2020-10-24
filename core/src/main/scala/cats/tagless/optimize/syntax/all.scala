@@ -16,7 +16,6 @@
 
 package cats.tagless.optimize.syntax
 
-trait AllSyntax extends OptimizerSyntax
-  with MonadSyntax
+trait AllSyntax extends OptimizerSyntax with MonadSyntax
 
 object all extends AllSyntax

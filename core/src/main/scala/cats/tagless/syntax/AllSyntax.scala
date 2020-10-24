@@ -17,10 +17,11 @@
 package cats.tagless
 package syntax
 
-trait AllSyntax extends FunctorKSyntax
-  with ContravariantKSyntax
-  with InvariantKSyntax
-  with SemigroupalKSyntax
-  with ApplyKSyntax
-  with InstrumentSyntax
-  with AspectSyntax
+trait AllSyntax
+    extends FunctorKSyntax
+    with ContravariantKSyntax
+    with InvariantKSyntax
+    with SemigroupalKSyntax
+    with ApplyKSyntax
+    with InstrumentSyntax
+    with AspectSyntax

@@ -26,15 +26,14 @@ import cats.tagless.laws.InstrumentLaws
 trait InstrumentTests[F[_[_]]] extends FunctorKTests[F] {
   def laws: InstrumentLaws[F]
 
-  def instrument[A[_], B[_], C[_], T: Arbitrary](
-    implicit
-    ArbFA: Arbitrary[F[A]],
-    ArbitraryFK: Arbitrary[A ~> B],
-    ArbitraryFK2: Arbitrary[B ~> C],
-    ArbitraryFK3: Arbitrary[B ~> A],
-    ArbitraryFK4: Arbitrary[C ~> B],
-    EqFA: Eq[F[A]],
-    EqFC: Eq[F[C]]
+  def instrument[A[_], B[_], C[_], T: Arbitrary](implicit
+      ArbFA: Arbitrary[F[A]],
+      ArbitraryFK: Arbitrary[A ~> B],
+      ArbitraryFK2: Arbitrary[B ~> C],
+      ArbitraryFK3: Arbitrary[B ~> A],
+      ArbitraryFK4: Arbitrary[C ~> B],
+      EqFA: Eq[F[A]],
+      EqFC: Eq[F[C]]
   ): RuleSet = new RuleSet {
     val name = "instrument"
     val parents = List(functorK[A, B, C, T])

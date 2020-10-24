@@ -86,7 +86,6 @@ class autoInvariantKTests extends CatsTaglessTestSuite {
     AlgWithTypeMember.imapK(tryInt)(toFk)(otFk).a(Some("4")) should be(Some("4a"))
   }
 
-
   test("Alg with type member fully refined") {
     implicit val tryInt = new AlgWithTypeMember[Try] {
       type T = String
@@ -105,7 +104,7 @@ class autoInvariantKTests extends CatsTaglessTestSuite {
       def a(i: Try[Int]): Try[Int] = i
     }
 
-    illTyped { """ AlgWithoutAutoDerivation.autoDerive """}
+    illTyped(""" AlgWithoutAutoDerivation.autoDerive """)
   }
 
   test("with default impl") {
@@ -121,10 +120,9 @@ class autoInvariantKTests extends CatsTaglessTestSuite {
   }
 }
 
-
 object autoInvariantKTests {
-  implicit val toFk : Try ~> Option = λ[Try ~> Option](_.toOption)
-  implicit val otFk : Option ~> Try = λ[Option ~> Try](o => Try(o.get))
+  implicit val toFk: Try ~> Option = λ[Try ~> Option](_.toOption)
+  implicit val otFk: Option ~> Try = λ[Option ~> Try](o => Try(o.get))
 
   @autoInvariantK
   trait NoEffectMethod[F[_]] {
@@ -151,7 +149,6 @@ object autoInvariantKTests {
   object AlgWithTypeMember {
     type Aux[F[_], T0] = AlgWithTypeMember[F] { type T = T0 }
   }
-
 
   @autoInvariantK @finalAlg
   trait WithExtraTpeParam[F[_], T] {

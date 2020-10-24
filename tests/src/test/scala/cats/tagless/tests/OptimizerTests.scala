@@ -61,7 +61,8 @@ class OptimizerTests extends CatsTaglessTestSuite {
   }
 
   def rebuildPutGet(info: KVStoreInfo, interp: KVStore[IO]): IO[KVStore[IO]] =
-    info.queries.toList.filterNot(info.cache.contains)
+    info.queries.toList
+      .filterNot(info.cache.contains)
       .parTraverse(key => interp.get(key).map(_.map(s => (key, s))))
       .map { list =>
         val table: Map[String, String] = list.flatten.toMap
@@ -92,7 +93,8 @@ class OptimizerTests extends CatsTaglessTestSuite {
     }
 
     def rebuild(info: KVStoreInfo, interp: KVStore[F]): F[KVStore[F]] =
-      info.queries.toList.filterNot(info.cache.contains)
+      info.queries.toList
+        .filterNot(info.cache.contains)
         .traverse(key => interp.get(key).map(_.map(s => (key, s))))
         .map { list =>
           val table: Map[String, String] = list.flatten.toMap
@@ -107,7 +109,6 @@ class OptimizerTests extends CatsTaglessTestSuite {
           }
         }
   }
-
 
   def kVStorePutGetMonadEliminizer[F[_]: Monad]: MonadOptimizer[KVStore, F] = new MonadOptimizer[KVStore, F] {
     type M = Map[String, String]
@@ -129,8 +130,10 @@ class OptimizerTests extends CatsTaglessTestSuite {
         cache <- StateT.get[F, Cache]
         result <- cache.get(key) match {
           case s @ Some(_) => s.pure[CachedAction]
-          case None => StateT.liftF[F, Cache, Option[String]](interp.get(key))
-                         .flatTap(updateCache(key))
+          case None =>
+            StateT
+              .liftF[F, Cache, Option[String]](interp.get(key))
+              .flatTap(updateCache(key))
         }
       } yield result
 
@@ -141,10 +144,12 @@ class OptimizerTests extends CatsTaglessTestSuite {
     }
 
     def rebuild(interp: KVStore[F]): KVStore[Kleisli[F, M, *]] = new KVStore[Kleisli[F, M, *]] {
-      def get(key: String): Kleisli[F, M, Option[String]] = Kleisli(m => m.get(key) match {
-        case o @ Some(_) => Applicative[F].pure(o)
-        case None => interp.get(key)
-      })
+      def get(key: String): Kleisli[F, M, Option[String]] = Kleisli(m =>
+        m.get(key) match {
+          case o @ Some(_) => Applicative[F].pure(o)
+          case None => interp.get(key)
+        }
+      )
 
       def put(key: String, a: String): Kleisli[F, M, Unit] = Kleisli(m => interp.put(key, a))
     }
@@ -168,7 +173,6 @@ class OptimizerTests extends CatsTaglessTestSuite {
 
     val (info, result) =
       optimize.optimizeM(Programs.monadProgram).apply(interp).run(StateInfo.empty).value
-
 
     info.searches.size shouldBe 2
     info.inserts.size shouldBe 3
@@ -197,7 +201,6 @@ class OptimizerTests extends CatsTaglessTestSuite {
 
     result shouldBe control
 
-
   }
 
   test("SemigroupalOptimizer duplicates should be removed") {
@@ -217,16 +220,13 @@ class OptimizerTests extends CatsTaglessTestSuite {
     result shouldBe control
   }
 
-
   test("Optimizer duplicates should be removed") {
 
     implicit val optimizer: Optimizer[KVStore, StateO] = kVStoreOptimizer
 
     def program[F[_]: Applicative](F: KVStore[F]): F[List[String]] =
-      List(F.get("Cats"), F.get("Dogs"), F.get("Cats"), F.get("Birds"))
-        .sequence
+      List(F.get("Cats"), F.get("Dogs"), F.get("Cats"), F.get("Birds")).sequence
         .map(_.collect { case Some(s) => s })
-
 
     val p = new Program[KVStore, Applicative, List[String]] {
       def apply[F[_]: Applicative](alg: KVStore[F]): F[List[String]] = program(alg)

@@ -22,8 +22,11 @@ import cats.data.Tuple2K
 trait SemigroupalKLaws[F[_[_]]] {
   implicit def F: SemigroupalK[F]
 
-  def semigroupalAssociativity[A[_], B[_], C[_]](af: F[A], ag: F[B], ah: F[C]):
-  (F[Tuple2K[A, Tuple2K[B, C, *], *]], F[Tuple2K[Tuple2K[A, B, *], C, *]]) =
+  def semigroupalAssociativity[A[_], B[_], C[_]](
+      af: F[A],
+      ag: F[B],
+      ah: F[C]
+  ): (F[Tuple2K[A, Tuple2K[B, C, *], *]], F[Tuple2K[Tuple2K[A, B, *], C, *]]) =
     (F.productK(af, F.productK(ag, ah)), F.productK(F.productK(af, ag), ah))
 
 }

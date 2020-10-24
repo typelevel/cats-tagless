@@ -46,11 +46,13 @@ object autoContravariantKTests {
 
   object TestAlgebra {
     implicit def eqv[F[_]](implicit arbFi: Arbitrary[F[Int]], arbFs: Arbitrary[F[String]]): Eq[TestAlgebra[F]] =
-      Eq.by { algebra => (algebra.sum _, algebra.sumAll _, algebra.foldSpecialized _) }
+      Eq.by(algebra => (algebra.sum _, algebra.sumAll _, algebra.foldSpecialized _))
   }
 
-  implicit def arbitrary[F[_]](
-    implicit arbFs: Arbitrary[F[String]], coFi: Cogen[F[Int]], coFs: Cogen[F[String]]
+  implicit def arbitrary[F[_]](implicit
+      arbFs: Arbitrary[F[String]],
+      coFi: Cogen[F[Int]],
+      coFs: Cogen[F[String]]
   ): Arbitrary[TestAlgebra[F]] = Arbitrary(for {
     s <- Arbitrary.arbitrary[F[Int] => Int]
     sa <- Arbitrary.arbitrary[Seq[F[Int]] => Int]

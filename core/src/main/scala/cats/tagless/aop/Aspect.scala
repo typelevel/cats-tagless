@@ -58,9 +58,9 @@ object Aspect {
     * @tparam A Return type of the method.
     */
   final case class Weave[F[_], Dom[_], Cod[_], A](
-    algebraName: String,
-    domain: List[List[Advice[Eval, Dom]]],
-    codomain: Advice.Aux[F, Cod, A]
+      algebraName: String,
+      domain: List[List[Advice[Eval, Dom]]],
+      codomain: Advice.Aux[F, Cod, A]
   ) {
 
     /** Convert this [[Weave]] to an [[Instrumentation]], throwing away information about the `domain`. */

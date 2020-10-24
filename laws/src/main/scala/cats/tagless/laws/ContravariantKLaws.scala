@@ -22,14 +22,14 @@ import cats.tagless.ContravariantK
 import cats.tagless.syntax.contravariantK._
 import cats.~>
 
-trait ContravariantKLaws[F[_[_]]] extends InvariantKLaws[F]{
+trait ContravariantKLaws[F[_[_]]] extends InvariantKLaws[F] {
   implicit def F: ContravariantK[F]
 
   def contravariantIdentity[A[_]](fg: F[A]): IsEq[F[A]] =
     fg.contramapK(FunctionK.id[A]) <-> fg
 
   def contravariantComposition[A[_], B[_], C[_]](fa: F[A], f: B ~> A, g: C ~> B): IsEq[F[C]] =
-    fa.contramapK(f).contramapK(g) <-> fa.contramapK(f compose g)
+    fa.contramapK(f).contramapK(g) <-> fa.contramapK(f.compose(g))
 }
 
 object ContravariantKLaws {

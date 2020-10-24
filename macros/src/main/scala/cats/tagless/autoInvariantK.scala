@@ -26,7 +26,7 @@ class autoInvariantK(autoDerivation: Boolean = true) extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoInvariantKMacros.newDef
 }
 
-private [tagless] class autoInvariantKMacros(override val c: whitebox.Context) extends MacroUtils {
+private[tagless] class autoInvariantKMacros(override val c: whitebox.Context) extends MacroUtils {
   import c.universe._
 
   private def generateInvariantKFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =
@@ -40,22 +40,20 @@ private [tagless] class autoInvariantKMacros(override val c: whitebox.Context) e
   def instanceDef(algebra: AlgDefn.UnaryAlg): Tree =
     algebra.forVaryingEffectType(generateInvariantKFor(algebra.name))
 
-  def instanceDefFullyRefined(algDefn: AlgDefn.UnaryAlg): Tree = {
-    algDefn.forVaryingEffectTypeFullyRefined {
-      (algebraType, tparams) =>
-        val impl = Seq(
-          generateInvariantKFor("FullyRefined" + algDefn.name)(
-            algebraType,
-            tparams
-          ),
-          generateAutoDerive(algDefn.fullyRefinedTypeSig)(
-            algebraType,
-            tparams
-          )
+  def instanceDefFullyRefined(algDefn: AlgDefn.UnaryAlg): Tree =
+    algDefn.forVaryingEffectTypeFullyRefined { (algebraType, tparams) =>
+      val impl = Seq(
+        generateInvariantKFor("FullyRefined" + algDefn.name)(
+          algebraType,
+          tparams
+        ),
+        generateAutoDerive(algDefn.fullyRefinedTypeSig)(
+          algebraType,
+          tparams
         )
-        q"object fullyRefined { ..$impl }"
+      )
+      q"object fullyRefined { ..$impl }"
     }
-  }
 
   def companionIMapKDef(algDefn: AlgDefn.UnaryAlg) = {
     val from = TermName("af")
@@ -64,10 +62,15 @@ private [tagless] class autoInvariantKMacros(override val c: whitebox.Context) e
     val algebraF = algDefn.newTypeSig(F)
     val fullyRefinedAlgebraG = algDefn.dependentRefinedTypeSig(G, from)
 
-    algDefn.forVaryingEffectType((algebraType, tparams) => q"""
-      def imapK[$F, $G, ..$tparams]($from: $algebraF)(fk: _root_.cats.~>[..${tArgs(F, G)}])(gk: _root_.cats.~>[..${tArgs(G, F)}]): $fullyRefinedAlgebraG =
+    algDefn.forVaryingEffectType((algebraType, tparams) =>
+      q"""
+      def imapK[$F, $G, ..$tparams]($from: $algebraF)(fk: _root_.cats.~>[..${tArgs(
+        F,
+        G
+      )}])(gk: _root_.cats.~>[..${tArgs(G, F)}]): $fullyRefinedAlgebraG =
         _root_.cats.tagless.InvariantK[$algebraType].imapK($from)(fk)(gk).asInstanceOf[$fullyRefinedAlgebraG]
-    """)
+    """
+    )
   }
 
   def generateAutoDerive(newTypeSig: TypeDef => TypTree)(algebraType: Tree, tparams: Seq[TypeDef]) = {
@@ -89,8 +92,12 @@ private [tagless] class autoInvariantKMacros(override val c: whitebox.Context) e
   }
 
   def autoDerivationDef(algDefn: AlgDefn.UnaryAlg) =
-    if(autoDerive) algDefn.forVaryingEffectType(generateAutoDerive(algDefn.newTypeSig)) else EmptyTree
+    if (autoDerive) algDefn.forVaryingEffectType(generateAutoDerive(algDefn.newTypeSig)) else EmptyTree
 
   def newDef(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList)(algebra => instanceDef(algebra) :: companionIMapKDef(algebra) :: instanceDefFullyRefined(algebra) :: autoDerivationDef(algebra) :: Nil)
+    enrichAlgebra(annottees.toList)(algebra =>
+      instanceDef(algebra) :: companionIMapKDef(algebra) :: instanceDefFullyRefined(algebra) :: autoDerivationDef(
+        algebra
+      ) :: Nil
+    )
 }

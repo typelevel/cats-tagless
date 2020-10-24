@@ -20,7 +20,6 @@ import cats.{Monad, Monoid, ~>}
 import cats.data._
 import cats.tagless.ApplyK
 
-
 trait MonadOptimizer[Alg[_[_]], F[_]] {
 
   type M
@@ -33,7 +32,6 @@ trait MonadOptimizer[Alg[_[_]], F[_]] {
   def rebuild(interp: Alg[F]): Alg[Kleisli[F, M, *]]
 
   def extract: Alg[* => M]
-
 
   def optimizeM[A](p: Program[Alg, Monad, A]): Alg[F] => F[A] = { interpreter =>
     implicit val M: Monoid[M] = monoidM

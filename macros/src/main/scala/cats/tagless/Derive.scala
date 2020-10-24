@@ -43,27 +43,26 @@ object Derive {
   def apply[F[_]]: Apply[F] = macro DeriveMacros.apply[F]
   def flatMap[F[_]]: FlatMap[F] = macro DeriveMacros.flatMap[F]
 
-  /**
-   * Generates a FunctorK instance
-   * {{{
-   * scala> import util.Try
-   * scala> import cats.~>
-   * scala> trait StringAlg[F[_]] {
-   *      |   def head(s: String): F[String]
-   *      | }
-   * scala> val tryInterpreter = new StringAlg[Try] {
-   *      |    //for simplicity we use a Try here, but we are not encouraging it.
-   *      |    def head(s: String): Try[String] = Try(s.head).map(_.toString)
-   *      | }
-   * scala> val derived = cats.tagless.Derive.functorK[StringAlg]
-   * scala> val optionInterpreter = derived.mapK(tryInterpreter)(λ[Try ~> Option]{ _.toOption })
-   * scala> optionInterpreter.head("blah")
-   * res1: Option[String] = Some(b)
-   * scala> optionInterpreter.head("")
-   * res2: Option[String] = None
-   *
-   * }}}
-   */
+  /** Generates a FunctorK instance
+    * {{{
+    * scala> import util.Try
+    * scala> import cats.~>
+    * scala> trait StringAlg[F[_]] {
+    *      |   def head(s: String): F[String]
+    *      | }
+    * scala> val tryInterpreter = new StringAlg[Try] {
+    *      |    //for simplicity we use a Try here, but we are not encouraging it.
+    *      |    def head(s: String): Try[String] = Try(s.head).map(_.toString)
+    *      | }
+    * scala> val derived = cats.tagless.Derive.functorK[StringAlg]
+    * scala> val optionInterpreter = derived.mapK(tryInterpreter)(λ[Try ~> Option]{ _.toOption })
+    * scala> optionInterpreter.head("blah")
+    * res1: Option[String] = Some(b)
+    * scala> optionInterpreter.head("")
+    * res2: Option[String] = None
+    *
+    * }}}
+    */
   def functorK[Alg[_[_]]]: FunctorK[Alg] = macro DeriveMacros.functorK[Alg]
 
   def contravariantK[Alg[_[_]]]: ContravariantK[Alg] = macro DeriveMacros.contravariantK[Alg]

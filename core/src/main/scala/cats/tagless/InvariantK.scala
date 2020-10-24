@@ -57,11 +57,12 @@ object InvariantK extends InvariantKInstances01 {
   implicit def catsTaglessFunctorKForNested[G[_], A]: FunctorK[Nested[*[_], G, A]] =
     nestedInstance.asInstanceOf[FunctorK[Nested[*[_], G, A]]]
 
-  implicit def catsTaglessApplyKForOneAnd[A](implicit A: Semigroup[A]): ApplyK[OneAnd[*[_], A]] = new ApplyK[OneAnd[*[_], A]] {
-    def mapK[F[_], G[_]](af: OneAnd[F, A])(fk: F ~> G) = af.mapK(fk)
-    def productK[F[_], G[_]](af: OneAnd[F, A], ag: OneAnd[G, A]) =
-      OneAnd(A.combine(af.head, ag.head), Tuple2K(af.tail, ag.tail))
-  }
+  implicit def catsTaglessApplyKForOneAnd[A](implicit A: Semigroup[A]): ApplyK[OneAnd[*[_], A]] =
+    new ApplyK[OneAnd[*[_], A]] {
+      def mapK[F[_], G[_]](af: OneAnd[F, A])(fk: F ~> G) = af.mapK(fk)
+      def productK[F[_], G[_]](af: OneAnd[F, A], ag: OneAnd[G, A]) =
+        OneAnd(A.combine(af.head, ag.head), Tuple2K(af.tail, ag.tail))
+    }
 
   implicit def catsTaglessApplyKForTuple2K1[H[_], A](implicit H: SemigroupK[H]): ApplyK[Tuple2K[*[_], H, A]] =
     new ApplyK[Tuple2K[*[_], H, A]] {
@@ -161,14 +162,13 @@ object InvariantK extends InvariantKInstances01 {
       def contramapK[F[_], G[_]](af: F ~> Any)(fk: G ~> F) = af.compose(fk)
     }
 
-  private val functionKFunctorK: FunctorK[FunctionK[Any, *[_]]] = {
+  private val functionKFunctorK: FunctorK[FunctionK[Any, *[_]]] =
     new FunctorK[FunctionK[Any, *[_]]] {
       def mapK[F[_], G[_]](af: Any ~> F)(fn: F ~> G) = af.andThen(fn)
     }
-  }
 }
 
-private[tagless] sealed trait InvariantKInstances01 {
+sealed private[tagless] trait InvariantKInstances01 {
   implicit def catsTaglessFunctorKForOneAnd[A]: FunctorK[OneAnd[*[_], A]] =
     oneAndFunctorK.asInstanceOf[FunctorK[OneAnd[*[_], A]]]
 

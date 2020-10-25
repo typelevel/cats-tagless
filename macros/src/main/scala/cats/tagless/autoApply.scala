@@ -26,7 +26,6 @@ class autoApply extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoApplyMacros.applyInst
 }
 
-
 private[tagless] class autoApplyMacros(override val c: whitebox.Context) extends MacroUtils {
   import c.universe._
 

@@ -26,7 +26,9 @@ class autoFunctorK(autoDerivation: Boolean = true) extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoFunctorKMacros.newDef
 }
 
-private [tagless] class autoFunctorKMacros(override val c: whitebox.Context) extends MacroUtils with CovariantKMethodsGenerator {
+private[tagless] class autoFunctorKMacros(override val c: whitebox.Context)
+    extends MacroUtils
+    with CovariantKMethodsGenerator {
   import c.universe._
 
   private def generateFunctorKFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =
@@ -40,29 +42,30 @@ private [tagless] class autoFunctorKMacros(override val c: whitebox.Context) ext
   def instanceDef(algebra: AlgDefn.UnaryAlg): Tree =
     algebra.forVaryingEffectType(generateFunctorKFor(algebra.name))
 
-  def instanceDefFullyRefined(algDefn: AlgDefn.UnaryAlg): Tree = {
-    algDefn.forVaryingEffectTypeFullyRefined {
-      (algebraType, tparams) =>
-        val impl = Seq(
-          generateFunctorKFor("FullyRefined" + algDefn.name)(
-            algebraType,
-            tparams
-          ),
-          generateAutoDerive(algDefn.fullyRefinedTypeSig)(
-            algebraType,
-            tparams
-          )
+  def instanceDefFullyRefined(algDefn: AlgDefn.UnaryAlg): Tree =
+    algDefn.forVaryingEffectTypeFullyRefined { (algebraType, tparams) =>
+      val impl = Seq(
+        generateFunctorKFor("FullyRefined" + algDefn.name)(
+          algebraType,
+          tparams
+        ),
+        generateAutoDerive(algDefn.fullyRefinedTypeSig)(
+          algebraType,
+          tparams
         )
-        q"object fullyRefined { ..$impl }"
+      )
+      q"object fullyRefined { ..$impl }"
     }
-  }
 
   def newDef(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList)(
-      algebra => instanceDef(algebra) :: companionMapKDef(algebra) :: instanceDefFullyRefined(algebra) :: autoDerivationDef(algebra) :: Nil)
+    enrichAlgebra(annottees.toList)(algebra =>
+      instanceDef(algebra) :: companionMapKDef(algebra) :: instanceDefFullyRefined(algebra) :: autoDerivationDef(
+        algebra
+      ) :: Nil
+    )
 }
 
-private [tagless] trait CovariantKMethodsGenerator { self: MacroUtils =>
+private[tagless] trait CovariantKMethodsGenerator { self: MacroUtils =>
   import c.universe._
 
   def companionMapKDef(algDefn: AlgDefn.UnaryAlg) = {
@@ -96,6 +99,6 @@ private [tagless] trait CovariantKMethodsGenerator { self: MacroUtils =>
   }
 
   def autoDerivationDef(algDefn: AlgDefn.UnaryAlg) =
-    if(autoDerive) algDefn.forVaryingEffectType(generateAutoDerive(algDefn.newTypeSig)) else EmptyTree
+    if (autoDerive) algDefn.forVaryingEffectType(generateAutoDerive(algDefn.newTypeSig)) else EmptyTree
 
 }

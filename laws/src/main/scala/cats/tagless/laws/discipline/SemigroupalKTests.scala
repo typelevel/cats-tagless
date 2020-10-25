@@ -18,7 +18,6 @@ package cats.tagless
 package laws
 package discipline
 
-
 import cats.{Eq, ~>}
 import cats.data.Tuple2K
 import cats.tagless.laws.discipline.SemigroupalKTests.IsomorphismsK
@@ -30,19 +29,20 @@ trait SemigroupalKTests[F[_[_]]] extends Laws {
   def laws: SemigroupalKLaws[F]
 
   def semigroupalK[A[_], B[_], C[_]](implicit
-                                               ArbCF: Arbitrary[F[A]],
-                                               ArbCG: Arbitrary[F[B]],
-                                               ArbCH: Arbitrary[F[C]],
-                                               iso: IsomorphismsK[F],
-                                               EqFGH: Eq[F[Tuple3K[A, B, C]#λ]]
-                                              ): RuleSet = {
+      ArbCF: Arbitrary[F[A]],
+      ArbCG: Arbitrary[F[B]],
+      ArbCH: Arbitrary[F[C]],
+      iso: IsomorphismsK[F],
+      EqFGH: Eq[F[Tuple3K[A, B, C]#λ]]
+  ): RuleSet =
     new DefaultRuleSet(
       name = "SemigroupalK",
       parent = None,
-      "semigroupal associativity" -> forAll((af: F[A], ag: F[B], ah: F[C]) => iso.associativity(laws.semigroupalAssociativity[A, B, C](af, ag, ah))))
-  }
+      "semigroupal associativity" -> forAll((af: F[A], ag: F[B], ah: F[C]) =>
+        iso.associativity(laws.semigroupalAssociativity[A, B, C](af, ag, ah))
+      )
+    )
 }
-
 
 object SemigroupalKTests {
   def apply[F[_[_]]: SemigroupalK]: SemigroupalKTests[F] =
@@ -51,24 +51,26 @@ object SemigroupalKTests {
   import IsomorphismsK._
 
   trait IsomorphismsK[F[_[_]]] {
-    def associativity[A[_], B[_], C[_]](fs: (F[ProdA_BC[A, B, C]#λ], F[ProdAB_C[A, B, C]#λ]))
-                                       (implicit EqFGH: Eq[F[Tuple3K[A, B, C]#λ]]): Prop
+    def associativity[A[_], B[_], C[_]](fs: (F[ProdA_BC[A, B, C]#λ], F[ProdAB_C[A, B, C]#λ]))(implicit
+        EqFGH: Eq[F[Tuple3K[A, B, C]#λ]]
+    ): Prop
   }
 
   object IsomorphismsK {
-    
-    type ProdA_BC[A[_], B[_], C[_]]  = { type λ[T] = Tuple2K[A, Tuple2K[B, C, *], T] }
-    type ProdAB_C[A[_], B[_], C[_]]  = { type λ[T] = Tuple2K[Tuple2K[A, B, *], C, T] }
+
+    type ProdA_BC[A[_], B[_], C[_]] = { type λ[T] = Tuple2K[A, Tuple2K[B, C, *], T] }
+    type ProdAB_C[A[_], B[_], C[_]] = { type λ[T] = Tuple2K[Tuple2K[A, B, *], C, T] }
 
     implicit def invariantK[F[_[_]]](implicit F: InvariantK[F]): IsomorphismsK[F] =
       new IsomorphismsK[F] {
-        def associativity[A[_], B[_], C[_]](fs: (F[ProdA_BC[A, B, C]#λ], F[ProdAB_C[A, B, C]#λ]))
-                                           (implicit EqFGH: Eq[F[Tuple3K[A, B, C]#λ]]): Prop = {
+        def associativity[A[_], B[_], C[_]](
+            fs: (F[ProdA_BC[A, B, C]#λ], F[ProdAB_C[A, B, C]#λ])
+        )(implicit EqFGH: Eq[F[Tuple3K[A, B, C]#λ]]): Prop = {
 
-          val fkA_BC_T3 = λ[ProdA_BC[A, B, C]#λ ~> Tuple3K[A, B, C]#λ ]{ case Tuple2K(a, Tuple2K(b, c)) => (a, b, c) }
-          val fkAB_C_T3 = λ[ProdAB_C[A, B, C]#λ ~> Tuple3K[A, B, C]#λ ]{ case Tuple2K(Tuple2K(a, b), c) => (a, b, c) }
-          val fkT3_AB_C = λ[Tuple3K[A, B, C]#λ ~> ProdAB_C[A, B, C]#λ]{ case (a, b, c) => Tuple2K(Tuple2K(a, b), c) }
-          val fkT3_A_BC = λ[Tuple3K[A, B, C]#λ ~> ProdA_BC[A, B, C]#λ]{ case (a, b, c) => Tuple2K(a, Tuple2K(b, c)) }
+          val fkA_BC_T3 = λ[ProdA_BC[A, B, C]#λ ~> Tuple3K[A, B, C]#λ] { case Tuple2K(a, Tuple2K(b, c)) => (a, b, c) }
+          val fkAB_C_T3 = λ[ProdAB_C[A, B, C]#λ ~> Tuple3K[A, B, C]#λ] { case Tuple2K(Tuple2K(a, b), c) => (a, b, c) }
+          val fkT3_AB_C = λ[Tuple3K[A, B, C]#λ ~> ProdAB_C[A, B, C]#λ] { case (a, b, c) => Tuple2K(Tuple2K(a, b), c) }
+          val fkT3_A_BC = λ[Tuple3K[A, B, C]#λ ~> ProdA_BC[A, B, C]#λ] { case (a, b, c) => Tuple2K(a, Tuple2K(b, c)) }
 
           EqFGH.eqv(
             F.imapK[ProdA_BC[A, B, C]#λ, Tuple3K[A, B, C]#λ](fs._1)(fkA_BC_T3)(fkT3_A_BC),

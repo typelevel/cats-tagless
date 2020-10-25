@@ -24,7 +24,6 @@ class finalAlg extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro finalAlgMacros.inst
 }
 
-
 private[tagless] class finalAlgMacros(override val c: whitebox.Context) extends MacroUtils {
   import c.universe._
 

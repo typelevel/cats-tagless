@@ -25,7 +25,10 @@ import org.scalacheck.{Arbitrary, Cogen}
 class autoBifunctorTests extends CatsTaglessTestSuite {
   import autoBifunctorTests._
 
-  checkAll("Bifunctor[TestAlgebra]", BifunctorTests[TestAlgebra].bifunctor[String, Boolean, Option[String], Int, String, List[Int]])
+  checkAll(
+    "Bifunctor[TestAlgebra]",
+    BifunctorTests[TestAlgebra].bifunctor[String, Boolean, Option[String], Int, String, List[Int]]
+  )
   checkAll("Serializable Bifunctor[TestAlgebra]", SerializableTests.serializable(Bifunctor[TestAlgebra]))
 
   test("extra type param correctly handled") {

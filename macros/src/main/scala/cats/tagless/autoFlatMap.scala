@@ -26,7 +26,6 @@ class autoFlatMap extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoFlatMapMacros.flatMapInst
 }
 
-
 private[tagless] class autoFlatMapMacros(override val c: whitebox.Context) extends MacroUtils {
   import c.universe._
 

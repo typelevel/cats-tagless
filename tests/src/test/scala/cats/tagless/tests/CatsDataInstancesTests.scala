@@ -31,8 +31,14 @@ class CatsDataInstancesTests extends CatsTaglessTestSuite {
 
   checkAll("FunctorK[Nested[*[_], Eval, Int]]", FunctorKTests[Nested[*[_], Eval, Int]].functorK[Try, Option, List, Int])
   checkAll("FunctorK[OneAnd[*[_], Boolean]]", FunctorKTests[OneAnd[*[_], Boolean]].functorK[Try, Option, List, Int])
-  checkAll("FunctorK[Tuple2K[Eval, *[_], Int]]", FunctorKTests[Tuple2K[Eval, *[_], Int]].functorK[Try, Option, List, Int])
-  checkAll("ContravariantK[Cokleisli[*[_], String, Int]]", ContravariantKTests[Cokleisli[*[_], String, Int]].contravariantK[Try, Option, List, Int])
+  checkAll(
+    "FunctorK[Tuple2K[Eval, *[_], Int]]",
+    FunctorKTests[Tuple2K[Eval, *[_], Int]].functorK[Try, Option, List, Int]
+  )
+  checkAll(
+    "ContravariantK[Cokleisli[*[_], String, Int]]",
+    ContravariantKTests[Cokleisli[*[_], String, Int]].contravariantK[Try, Option, List, Int]
+  )
   checkAll("ApplyK[IdK[Int]#λ]", ApplyKTests[IdK[Int]#λ].applyK[Try, Option, List, Int])
   checkAll("ApplyK[EitherK[Eval, *[_], Int]]", ApplyKTests[EitherK[Eval, *[_], Int]].applyK[Try, Option, List, Int])
   checkAll("ApplyK[EitherT[*[_], String, Int]]", ApplyKTests[EitherT[*[_], String, Int]].applyK[Try, Option, List, Int])

@@ -26,7 +26,10 @@ import scala.util.Try
 
 class InstanceTests extends CatsTaglessTestSuite {
   checkAll("FunctorK[Nested[*[_], Try, Int]]", FunctorKTests[Nested[*[_], Try, Int]].functorK[Try, Option, List, Int])
-  checkAll("ContravariantK[Cokleisli[*[_], MiniInt, Boolean]]", ContravariantKTests[Cokleisli[*[_], MiniInt, Boolean]].contravariantK[Try, Option, List, Int])
+  checkAll(
+    "ContravariantK[Cokleisli[*[_], MiniInt, Boolean]]",
+    ContravariantKTests[Cokleisli[*[_], MiniInt, Boolean]].contravariantK[Try, Option, List, Int]
+  )
 
   checkAll("ApplyK[OneAnd[*[_], Int]]", ApplyKTests[OneAnd[*[_], Int]].applyK[Try, Option, List, Int])
   checkAll("ApplyK[IdT[*[_], Int]]", ApplyKTests[IdT[*[_], Int]].applyK[Try, Option, List, Int])
@@ -36,8 +39,14 @@ class InstanceTests extends CatsTaglessTestSuite {
   checkAll("ApplyK[IorT[*[_], String, Int]]", ApplyKTests[IorT[*[_], String, Int]].applyK[Try, Option, List, Int])
   checkAll("ApplyK[WriterT[*[_], String, Int]]", ApplyKTests[WriterT[*[_], String, Int]].applyK[Try, Option, List, Int])
 
-  checkAll("ApplyK[Func[*[_], MiniInt, Boolean]]", ApplyKTests[Func[*[_], MiniInt, Boolean]].applyK[Try, Option, List, Int])
-  checkAll("ApplyK[Kleisli[*[_], MiniInt, Boolean]]", ApplyKTests[Kleisli[*[_], MiniInt, Boolean]].applyK[Try, Option, List, Int])
+  checkAll(
+    "ApplyK[Func[*[_], MiniInt, Boolean]]",
+    ApplyKTests[Func[*[_], MiniInt, Boolean]].applyK[Try, Option, List, Int]
+  )
+  checkAll(
+    "ApplyK[Kleisli[*[_], MiniInt, Boolean]]",
+    ApplyKTests[Kleisli[*[_], MiniInt, Boolean]].applyK[Try, Option, List, Int]
+  )
 
   checkAll("ApplyK[EitherK[Try, *[_], Int]]", ApplyKTests[EitherK[Try, *[_], Int]].applyK[Try, Option, List, Int])
   checkAll("ApplyK[Tuple2K[*[_], Option, Int]]", ApplyKTests[Tuple2K[*[_], Option, Int]].applyK[Try, Option, List, Int])

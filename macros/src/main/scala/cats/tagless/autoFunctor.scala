@@ -26,7 +26,6 @@ class autoFunctor extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoFunctorMacros.functorInst
 }
 
-
 private[tagless] class autoFunctorMacros(override val c: whitebox.Context) extends MacroUtils {
   import c.universe._
 

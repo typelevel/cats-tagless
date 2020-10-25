@@ -56,4 +56,3 @@ object autoSemigroupalKTests {
     def effectfulSum(xs: Int*): F[Int]
   }
 }
-

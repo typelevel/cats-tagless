@@ -26,16 +26,15 @@ import cats.tagless.laws.AspectLaws
 trait AspectTests[F[_[_]], Dom[_], Cod[_]] extends InstrumentTests[F] {
   def laws: AspectLaws[F, Dom, Cod]
 
-  def aspect[A[_], B[_], C[_], T: Arbitrary](
-    implicit
-    ArbFA: Arbitrary[F[A]],
-    ArbitraryFK: Arbitrary[A ~> B],
-    ArbitraryFK2: Arbitrary[B ~> C],
-    ArbitraryFK3: Arbitrary[B ~> A],
-    ArbitraryFK4: Arbitrary[C ~> B],
-    EqFA: Eq[F[A]],
-    EqFC: Eq[F[C]],
-    EqFInstrumentation: Eq[F[Instrumentation[A, *]]]
+  def aspect[A[_], B[_], C[_], T: Arbitrary](implicit
+      ArbFA: Arbitrary[F[A]],
+      ArbitraryFK: Arbitrary[A ~> B],
+      ArbitraryFK2: Arbitrary[B ~> C],
+      ArbitraryFK3: Arbitrary[B ~> A],
+      ArbitraryFK4: Arbitrary[C ~> B],
+      EqFA: Eq[F[A]],
+      EqFC: Eq[F[C]],
+      EqFInstrumentation: Eq[F[Instrumentation[A, *]]]
   ): RuleSet = new RuleSet {
     val name = "aspect"
     val parents = List(instrument[A, B, C, T])

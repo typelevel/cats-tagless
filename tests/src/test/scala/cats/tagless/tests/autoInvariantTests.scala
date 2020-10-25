@@ -17,7 +17,6 @@
 package cats.tagless
 package tests
 
-
 import cats.{Eq, Invariant}
 import cats.laws.discipline.{InvariantTests, SerializableTests}
 import cats.laws.discipline.eq._
@@ -100,7 +99,7 @@ object autoInvariantTests {
   trait AlgWithCurry[T] {
     def foo(a: T)(b: Int): T
   }
-  
+
   @autoInvariant
   trait AlgWithCurry2[T] {
     def foo(a: T)(b: Int): String

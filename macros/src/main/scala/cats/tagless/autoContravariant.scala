@@ -26,7 +26,7 @@ class autoContravariant extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoContravariantMacros.contravariantInst
 }
 
-private[tagless] class autoContravariantMacros(override val c: whitebox.Context) extends MacroUtils  {
+private[tagless] class autoContravariantMacros(override val c: whitebox.Context) extends MacroUtils {
   import c.universe._
 
   private def generateContravariantFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =

@@ -42,10 +42,10 @@ class AspectTests extends CatsTaglessTestSuite {
     }
 
     def testWeave[A](weave: Aspect.Weave.Function[List, Show, A])(
-      algebraName: String,
-      domain: List[Map[String, String]],
-      codomainName: String,
-      codomainTarget: List[String]
+        algebraName: String,
+        domain: List[Map[String, String]],
+        codomainName: String,
+        codomainTarget: List[String]
     ): Assertion = {
       weave.domain.map(_.map(a => a.name -> a.instance.show(a.target.value)).toMap) shouldBe domain
       weave.algebraName shouldBe algebraName

@@ -26,7 +26,7 @@ class autoInvariant extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoInvariantMacros.invariantInst
 }
 
-private[tagless] class autoInvariantMacros(override val c: whitebox.Context) extends MacroUtils  {
+private[tagless] class autoInvariantMacros(override val c: whitebox.Context) extends MacroUtils {
   import c.universe._
 
   private def generateInvariantFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =

@@ -36,7 +36,7 @@ class autoProfunctorTests extends CatsTaglessTestSuite {
 }
 
 object autoProfunctorTests {
-   import TestInstances._
+  import TestInstances._
 
   @autoProfunctor
   trait TestAlgebra[A, B] {

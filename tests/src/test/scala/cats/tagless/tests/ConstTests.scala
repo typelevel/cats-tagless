@@ -39,5 +39,3 @@ class ConstTests extends CatsTaglessTestSuite {
     safe.parseInt("NaN") shouldBe 1
   }
 }
-
-

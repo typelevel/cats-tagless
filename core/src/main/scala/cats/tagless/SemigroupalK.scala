@@ -90,7 +90,10 @@ trait SemigroupalKInstances01 extends SemigroupalKInstances02 {
 
   implicit val catsTaglessSemigroupalKForUnorderedTraverse: SemigroupalK[UnorderedTraverse] =
     new SemigroupalK[UnorderedTraverse] {
-      def productK[F[_], G[_]](af: UnorderedTraverse[F], ag: UnorderedTraverse[G]): UnorderedTraverse[Tuple2K[F, G, *]] =
+      def productK[F[_], G[_]](
+          af: UnorderedTraverse[F],
+          ag: UnorderedTraverse[G]
+      ): UnorderedTraverse[Tuple2K[F, G, *]] =
         new Tup2KUnorderedTraverse[F, G] { val F = af; val G = ag }
     }
 
@@ -104,13 +107,19 @@ trait SemigroupalKInstances01 extends SemigroupalKInstances02 {
 trait SemigroupalKInstances02 extends SemigroupalKInstances03 {
   implicit val catsTaglessSemigroupalKForUnorderedFoldable: SemigroupalK[UnorderedFoldable] =
     new SemigroupalK[UnorderedFoldable] {
-      def productK[F[_], G[_]](af: UnorderedFoldable[F], ag: UnorderedFoldable[G]): UnorderedFoldable[Tuple2K[F, G, *]] =
+      def productK[F[_], G[_]](
+          af: UnorderedFoldable[F],
+          ag: UnorderedFoldable[G]
+      ): UnorderedFoldable[Tuple2K[F, G, *]] =
         new Tup2KUnorderedFoldable[F, G] { val F = af; val G = ag }
     }
 
   implicit val catsTaglessSemigroupalKForContravariantMonoidal: SemigroupalK[ContravariantMonoidal] =
     new SemigroupalK[ContravariantMonoidal] {
-      def productK[F[_], G[_]](af: ContravariantMonoidal[F], ag: ContravariantMonoidal[G]): ContravariantMonoidal[Tuple2K[F, G, *]] =
+      def productK[F[_], G[_]](
+          af: ContravariantMonoidal[F],
+          ag: ContravariantMonoidal[G]
+      ): ContravariantMonoidal[Tuple2K[F, G, *]] =
         new Tup2KContravariantMonoidal[F, G] { val F = af; val G = ag }
     }
 
@@ -130,7 +139,10 @@ trait SemigroupalKInstances03 extends SemigroupalKInstances04 {
 
   implicit val catsTaglessSemigroupalKForContravariantSemigroupal: SemigroupalK[ContravariantSemigroupal] =
     new SemigroupalK[ContravariantSemigroupal] {
-      def productK[F[_], G[_]](af: ContravariantSemigroupal[F], ag: ContravariantSemigroupal[G]): ContravariantSemigroupal[Tuple2K[F, G, *]] =
+      def productK[F[_], G[_]](
+          af: ContravariantSemigroupal[F],
+          ag: ContravariantSemigroupal[G]
+      ): ContravariantSemigroupal[Tuple2K[F, G, *]] =
         new Tup2KContravariantSemigroupal[F, G] { val F = af; val G = ag }
     }
 }
@@ -144,7 +156,10 @@ trait SemigroupalKInstances04 extends SemigroupalKInstances05 {
 
   implicit val catsTaglessSemigroupalKForInvariantMonoidal: SemigroupalK[InvariantMonoidal] =
     new SemigroupalK[InvariantMonoidal] {
-      def productK[F[_], G[_]](af: InvariantMonoidal[F], ag: InvariantMonoidal[G]): InvariantMonoidal[Tuple2K[F, G, *]] =
+      def productK[F[_], G[_]](
+          af: InvariantMonoidal[F],
+          ag: InvariantMonoidal[G]
+      ): InvariantMonoidal[Tuple2K[F, G, *]] =
         new Tup2KInvariantMonoidal[F, G] { val F = af; val G = ag }
     }
 
@@ -158,7 +173,10 @@ trait SemigroupalKInstances04 extends SemigroupalKInstances05 {
 trait SemigroupalKInstances05 extends SemigroupalKInstances06 {
   implicit val catsTaglessSemigroupalKForInvariantSemigroupal: SemigroupalK[InvariantSemigroupal] =
     new SemigroupalK[InvariantSemigroupal] {
-      def productK[F[_], G[_]](af: InvariantSemigroupal[F], ag: InvariantSemigroupal[G]): InvariantSemigroupal[Tuple2K[F, G, *]] =
+      def productK[F[_], G[_]](
+          af: InvariantSemigroupal[F],
+          ag: InvariantSemigroupal[G]
+      ): InvariantSemigroupal[Tuple2K[F, G, *]] =
         new Tup2KInvariantSemigroupal[F, G] { val F = af; val G = ag }
     }
 
@@ -181,7 +199,7 @@ trait SemigroupalKInstances06 extends SemigroupalKInstances07 {
       def productK[F[_], G[_]](af: Contravariant[F], ag: Contravariant[G]): Contravariant[Tuple2K[F, G, *]] =
         new Tup2KContravariant[F, G] { val F = af; val G = ag }
     }
-  
+
   implicit val catsTaglessSemigroupalKForSemigroupal: SemigroupalK[Semigroupal] =
     new SemigroupalK[Semigroupal] {
       def productK[F[_], G[_]](af: Semigroupal[F], ag: Semigroupal[G]): Semigroupal[Tuple2K[F, G, *]] =
@@ -233,20 +251,24 @@ private trait Tup2KDistributive[F[_], G[_]] extends Distributive[Tuple2K[F, G, *
 }
 
 private trait Tup2KContravariantMonoidal[F[_], G[_]]
-    extends ContravariantMonoidal[Tuple2K[F, G, *]] with Tup2KSemigroupal[F, G] with Tup2KContravariant[F, G] {
+    extends ContravariantMonoidal[Tuple2K[F, G, *]]
+    with Tup2KSemigroupal[F, G]
+    with Tup2KContravariant[F, G] {
   def F: ContravariantMonoidal[F]
   def G: ContravariantMonoidal[G]
   final override def unit: Tuple2K[F, G, Unit] = Tuple2K(F.unit, G.unit)
 }
 
 private trait Tup2KApply[F[_], G[_]]
-    extends Apply[Tuple2K[F, G, *]] with Tup2KFunctor[F, G] with Tup2KSemigroupal[F, G] {
+    extends Apply[Tuple2K[F, G, *]]
+    with Tup2KFunctor[F, G]
+    with Tup2KSemigroupal[F, G] {
   def F: Apply[F]
   def G: Apply[G]
   final override def ap[A, B](f: Tuple2K[F, G, A => B])(fa: Tuple2K[F, G, A]): Tuple2K[F, G, B] =
     Tuple2K(F.ap(f.first)(fa.first), G.ap(f.second)(fa.second))
   final override def map2Eval[A, B, Z](fa: Tuple2K[F, G, A], fb: Eval[Tuple2K[F, G, B]])(
-    f: (A, B) => Z
+      f: (A, B) => Z
   ): Eval[Tuple2K[F, G, Z]] = {
     val fbMemo = fb.memoize // don't recompute this twice internally
     for {
@@ -257,19 +279,25 @@ private trait Tup2KApply[F[_], G[_]]
 }
 
 private trait Tup2KContravariantSemigroupal[F[_], G[_]]
-    extends ContravariantSemigroupal[Tuple2K[F, G, *]] with Tup2KSemigroupal[F, G] with Tup2KContravariant[F, G] {
+    extends ContravariantSemigroupal[Tuple2K[F, G, *]]
+    with Tup2KSemigroupal[F, G]
+    with Tup2KContravariant[F, G] {
   def F: ContravariantSemigroupal[F]
   def G: ContravariantSemigroupal[G]
 }
 
 private trait Tup2KInvariantSemigroupal[F[_], G[_]]
-    extends InvariantSemigroupal[Tuple2K[F, G, *]] with Tup2KSemigroupal[F, G] with Tup2KInvariant[F, G] {
+    extends InvariantSemigroupal[Tuple2K[F, G, *]]
+    with Tup2KSemigroupal[F, G]
+    with Tup2KInvariant[F, G] {
   def F: InvariantSemigroupal[F]
   def G: InvariantSemigroupal[G]
 }
 
 private trait Tup2KInvariantMonoidal[F[_], G[_]]
-    extends InvariantMonoidal[Tuple2K[F, G, *]] with Tup2KSemigroupal[F, G] with Tup2KInvariant[F, G] {
+    extends InvariantMonoidal[Tuple2K[F, G, *]]
+    with Tup2KSemigroupal[F, G]
+    with Tup2KInvariant[F, G] {
   def F: InvariantMonoidal[F]
   def G: InvariantMonoidal[G]
   final override def unit: Tuple2K[F, G, Unit] = Tuple2K[F, G, Unit](F.unit, G.unit)
@@ -295,7 +323,9 @@ private trait Tup2KMonoidK[F[_], G[_]] extends MonoidK[Tuple2K[F, G, *]] with Tu
 }
 
 private trait Tup2KAlternative[F[_], G[_]]
-    extends Alternative[Tuple2K[F, G, *]] with Tup2KApplicative[F, G] with Tup2KMonoidK[F, G] {
+    extends Alternative[Tuple2K[F, G, *]]
+    with Tup2KApplicative[F, G]
+    with Tup2KMonoidK[F, G] {
   def F: Alternative[F]
   def G: Alternative[G]
 }
@@ -310,7 +340,9 @@ private trait Tup2KFlatMap[F[_], G[_]] extends FlatMap[Tuple2K[F, G, *]] with Tu
 }
 
 private trait Tup2KMonad[F[_], G[_]]
-    extends Monad[Tuple2K[F, G, *]] with Tup2KApplicative[F, G] with Tup2KFlatMap[F, G] {
+    extends Monad[Tuple2K[F, G, *]]
+    with Tup2KApplicative[F, G]
+    with Tup2KFlatMap[F, G] {
   def F: Monad[F]
   def G: Monad[G]
 }
@@ -331,22 +363,22 @@ private trait Tup2KUnorderedFoldable[F[_], G[_]] extends UnorderedFoldable[Tuple
     F.unorderedFoldMap(fa.first)(f) |+| G.unorderedFoldMap(fa.second)(f)
 }
 
-private trait Tup2KTraverse[F[_], G[_]]
-  extends Traverse[Tuple2K[F, G, *]] with Tup2KFoldable[F, G] {
+private trait Tup2KTraverse[F[_], G[_]] extends Traverse[Tuple2K[F, G, *]] with Tup2KFoldable[F, G] {
   def F: Traverse[F]
   def G: Traverse[G]
-  final override def traverse[H[_], A, B](fa: Tuple2K[F, G, A])(f: A => H[B])(
-    implicit H: Applicative[H]
+  final override def traverse[H[_], A, B](fa: Tuple2K[F, G, A])(f: A => H[B])(implicit
+      H: Applicative[H]
   ): H[Tuple2K[F, G, B]] =
     H.map2(F.traverse(fa.first)(f), G.traverse(fa.second)(f))(Tuple2K.apply)
 }
 
 private trait Tup2KUnorderedTraverse[F[_], G[_]]
-  extends UnorderedTraverse[Tuple2K[F, G, *]] with Tup2KUnorderedFoldable[F, G] {
+    extends UnorderedTraverse[Tuple2K[F, G, *]]
+    with Tup2KUnorderedFoldable[F, G] {
   def F: UnorderedTraverse[F]
   def G: UnorderedTraverse[G]
-  final override def unorderedTraverse[H[_], A, B](fa: Tuple2K[F, G, A])(f: A => H[B])(
-    implicit H: CommutativeApplicative[H]
+  final override def unorderedTraverse[H[_], A, B](fa: Tuple2K[F, G, A])(f: A => H[B])(implicit
+      H: CommutativeApplicative[H]
   ): H[Tuple2K[F, G, B]] =
     H.map2(F.unorderedTraverse(fa.first)(f), G.unorderedTraverse(fa.second)(f))(Tuple2K.apply)
 }

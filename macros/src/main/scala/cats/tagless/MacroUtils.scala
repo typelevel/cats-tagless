@@ -18,7 +18,7 @@ package cats.tagless
 import scala.collection.immutable.Seq
 import scala.reflect.macros.blackbox
 
-private[tagless] abstract class MacroUtils {
+abstract private[tagless] class MacroUtils {
   val c: blackbox.Context
 
   import c.universe._
@@ -32,36 +32,33 @@ private[tagless] abstract class MacroUtils {
     def typeSig = AppliedTypeTree(ident, tArgs(tparams))
     def applied(targs: Ident*) = AppliedTypeTree(ident, targs.toList)
     def companion = maybeCompanion.getOrElse(
-        q"object ${name.toTermName} { }".asInstanceOf[ModuleDef]
-      )
+      q"object ${name.toTermName} { }".asInstanceOf[ModuleDef]
+    )
 
     //TODO: this will not work for inherited type members. We'll need to figure out later how to make it work.
-    lazy val abstractTypeMembers: Seq[TypeDef] = defn.impl.body.collect { case dt: TypeDef if dt.mods.hasFlag(Flag.DEFERRED) => dt }
+    lazy val abstractTypeMembers: Seq[TypeDef] = defn.impl.body.collect {
+      case dt: TypeDef if dt.mods.hasFlag(Flag.DEFERRED) => dt
+    }
     def hasAbstractTypeMembers = abstractTypeMembers.nonEmpty
 
     private def Name0(name: TypeName) = TypeName(name.decodedName.toString + "0")
-    lazy val fullyRefinedTypeMembers: Seq[TypeDef] = {
+    lazy val fullyRefinedTypeMembers: Seq[TypeDef] =
       abstractTypeMembers.map { td =>
         val typeDefBody =
-          if(td.tparams.nonEmpty)
+          if (td.tparams.nonEmpty)
             AppliedTypeTree(Ident(Name0(td.name)), tArgs(td.tparams))
           else
             Ident(Name0(td.name))
         TypeDef(Modifiers(), td.name, td.tparams, typeDefBody)
       }
-    }
 
     lazy val refinedTParams: Seq[TypeDef] =
-      abstractTypeMembers.map(
-        defn =>
-          TypeDef(Modifiers(Flag.PARAM), Name0(defn.name), defn.tparams, defn.rhs)
-      )
+      abstractTypeMembers.map(defn => TypeDef(Modifiers(Flag.PARAM), Name0(defn.name), defn.tparams, defn.rhs))
 
-    def newDependentTypeMembers(definedAt: TermName) = {
-      abstractTypeMembers.map(
-        t => TypeDef(Modifiers(), t.name, t.tparams,  tq"$definedAt.${t.name}[..${tArgs(t.tparams)}]")
+    def newDependentTypeMembers(definedAt: TermName) =
+      abstractTypeMembers.map(t =>
+        TypeDef(Modifiers(), t.name, t.tparams, tq"$definedAt.${t.name}[..${tArgs(t.tparams)}]")
       )
-    }
   }
 
   object TypeDefinition {
@@ -74,13 +71,13 @@ private[tagless] abstract class MacroUtils {
     }
   }
 
-  def enrich(defn: Seq[c.Tree])(f: TypeDefinition => Seq[Tree]) : Tree = {
+  def enrich(defn: Seq[c.Tree])(f: TypeDefinition => Seq[Tree]): Tree =
     defn match {
-      case TypeDefinition.FromAnnottees(td) => val trees = f(td)
+      case TypeDefinition.FromAnnottees(td) =>
+        val trees = f(td)
         q"..$trees"
       case _ => abort(s"$defn is not a class or trait.")
     }
-  }
 
   sealed abstract class AlgDefn(numberOfEffectTypeParams: Int) {
     private val needsTypeLambda = cls.tparams.lengthCompare(numberOfEffectTypeParams) != 0
@@ -111,12 +108,15 @@ private[tagless] abstract class MacroUtils {
 
   object AlgDefn {
 
-    case class UnaryAlg(override val cls: TypeDefinition,
-                        effectType: TypeDef, effectTypeArity: Int,
-                        override val extraTypeParams: Seq[TypeDef]) extends AlgDefn(1) {
+    case class UnaryAlg(
+        override val cls: TypeDefinition,
+        effectType: TypeDef,
+        effectTypeArity: Int,
+        override val extraTypeParams: Seq[TypeDef]
+    ) extends AlgDefn(1) {
       private def tArgs(effTpeName: TypeName): List[Ident] = cls.tparams.map {
         case `effectType` => Ident(effTpeName)
-        case tp =>  Ident(tp.name)
+        case tp => Ident(tp.name)
       }
 
       def newTypeSig(newEffectTypeName: TypeName): AppliedTypeTree = AppliedTypeTree(typeName, tArgs(newEffectTypeName))
@@ -127,10 +127,11 @@ private[tagless] abstract class MacroUtils {
         val typeSig = newTypeSig(newEffectTypeName)
         if (refinedTypes.isEmpty) typeSig else tq"$typeSig { ..$refinedTypes }".asInstanceOf[CompoundTypeTree]
       }
-      private def refinedTypeSig(newEffectTypeName: String,  refinedTypes: Seq[TypeDef]): TypTree =
+      private def refinedTypeSig(newEffectTypeName: String, refinedTypes: Seq[TypeDef]): TypTree =
         refinedTypeSig(TypeName(newEffectTypeName), refinedTypes)
 
-      def fullyRefinedTypeSig(newEffectTypeName: String) = refinedTypeSig(newEffectTypeName, cls.fullyRefinedTypeMembers)
+      def fullyRefinedTypeSig(newEffectTypeName: String) =
+        refinedTypeSig(newEffectTypeName, cls.fullyRefinedTypeMembers)
       def fullyRefinedTypeSig(newEffectType: TypeDef) = refinedTypeSig(newEffectType.name, cls.fullyRefinedTypeMembers)
 
       def dependentRefinedTypeSig(newEffectType: TypeDef, dependent: TermName): TypTree =
@@ -142,15 +143,16 @@ private[tagless] abstract class MacroUtils {
         tq"({type λ[${createTypeParam("Ƒ", effectTypeArity)}] = ${fullyRefinedTypeSig("Ƒ")}})#λ"
     }
 
-    case class BinaryAlg(override val cls: TypeDefinition,
-                         effectType1: (TypeDef, Int),
-                         effectType2: (TypeDef, Int),
-                         override val extraTypeParams: Seq[TypeDef]) extends AlgDefn(2) {
-      private def tArgs(effTpeName1: TypeName, effTpeName2: TypeName): List[Ident] = cls.tparams.map(
-        tp =>
-          if (tp == effectType1._1) Ident(effTpeName1)
-          else if (tp == effectType2._1) Ident(effTpeName2)
-          else Ident(tp.name)
+    case class BinaryAlg(
+        override val cls: TypeDefinition,
+        effectType1: (TypeDef, Int),
+        effectType2: (TypeDef, Int),
+        override val extraTypeParams: Seq[TypeDef]
+    ) extends AlgDefn(2) {
+      private def tArgs(effTpeName1: TypeName, effTpeName2: TypeName): List[Ident] = cls.tparams.map(tp =>
+        if (tp == effectType1._1) Ident(effTpeName1)
+        else if (tp == effectType2._1) Ident(effTpeName2)
+        else Ident(tp.name)
       )
 
       def newTypeSig(newEffectTypeName1: TypeName, newEffectTypeName2: TypeName): AppliedTypeTree =
@@ -158,11 +160,19 @@ private[tagless] abstract class MacroUtils {
       def newTypeSig(newEffectTypeName1: String, newEffectTypeName2: String): AppliedTypeTree =
         newTypeSig(TypeName(newEffectTypeName1), TypeName(newEffectTypeName2))
 
-      private def refinedTypeSig(newEffectTypeName1: TypeName, newEffectTypeName2: TypeName, refinedTypes: Seq[TypeDef]): TypTree = {
+      private def refinedTypeSig(
+          newEffectTypeName1: TypeName,
+          newEffectTypeName2: TypeName,
+          refinedTypes: Seq[TypeDef]
+      ): TypTree = {
         val typeSig = newTypeSig(newEffectTypeName1, newEffectTypeName2)
         if (refinedTypes.isEmpty) typeSig else tq"$typeSig { ..$refinedTypes }".asInstanceOf[CompoundTypeTree]
       }
-      private def refinedTypeSig(newEffectTypeName1: String, newEffectTypeName2: String,  refinedTypes: Seq[TypeDef]): TypTree =
+      private def refinedTypeSig(
+          newEffectTypeName1: String,
+          newEffectTypeName2: String,
+          refinedTypes: Seq[TypeDef]
+      ): TypTree =
         refinedTypeSig(TypeName(newEffectTypeName1), TypeName(newEffectTypeName2), refinedTypes)
 
       def fullyRefinedTypeSig(newEffectTypeName1: String, newEffectTypeName2: String) =
@@ -198,19 +208,17 @@ private[tagless] abstract class MacroUtils {
           .find(_.tparams.lengthCompare(1) == 0)
           .fold[Either[String, Defn]](
             Left(s"${cls.name} does not have a higher-kinded type parameter of shape F[_]")
-          )(effectType =>
-              Right(AlgDefn.UnaryAlg(cls, effectType, 1, cls.tparams.filterNot(Set(effectType))))
-          )
+          )(effectType => Right(AlgDefn.UnaryAlg(cls, effectType, 1, cls.tparams.filterNot(Set(effectType)))))
     }
 
     def LastRegularTypeParam: Unary = new AlgebraResolver {
       override type Defn = AlgDefn.UnaryAlg
       override def apply(cls: TypeDefinition) =
-        cls.tparams.lastOption.filter(_.tparams.isEmpty).fold[Either[String, Defn]](
-          Left(s"${cls.name} must have a type paramter of shape F as its last type parameter")
-        )(effectType =>
-            Right(AlgDefn.UnaryAlg(cls, effectType, 0, cls.tparams.dropRight(1)))
-        )
+        cls.tparams.lastOption
+          .filter(_.tparams.isEmpty)
+          .fold[Either[String, Defn]](
+            Left(s"${cls.name} must have a type paramter of shape F as its last type parameter")
+          )(effectType => Right(AlgDefn.UnaryAlg(cls, effectType, 0, cls.tparams.dropRight(1))))
     }
 
     def AnyLastTypeParam: Unary = new AlgebraResolver {
@@ -218,28 +226,27 @@ private[tagless] abstract class MacroUtils {
       override def apply(cls: TypeDefinition) =
         cls.tparams.lastOption.fold[Either[String, Defn]](
           Left(s"${cls.name} does not have any type parameter")
-        )(effectType =>
-            Right(AlgDefn.UnaryAlg(cls, effectType, effectType.tparams.length, cls.tparams.dropRight(1)))
-        )
+        )(effectType => Right(AlgDefn.UnaryAlg(cls, effectType, effectType.tparams.length, cls.tparams.dropRight(1))))
     }
 
     def TwoLastRegularTypeParams: Binary = new AlgebraResolver {
       override type Defn = AlgDefn.BinaryAlg
       override def apply(cls: TypeDefinition) =
         cls.tparams.takeRight(2).filter(_.tparams.isEmpty) match {
-        case t1 :: t2 :: Nil =>
+          case t1 :: t2 :: Nil =>
             Right(AlgDefn.BinaryAlg(cls, (t1, 0), (t2, 0), cls.tparams.dropRight(2)))
-        case _ =>
+          case _ =>
             Left(
               s"${cls.name} must have two type parameters of shape F as its last type parameters"
             )
-      }
+        }
     }
 
   }
 
   def enrichAlgebra[A <: AlgebraResolver](defn: Seq[c.Tree], resolver: A = AlgebraResolver.FirstHigherKindedTypeParam)(
-    f: resolver.Defn => Seq[Tree]): Tree = {
+      f: resolver.Defn => Seq[Tree]
+  ): Tree =
     enrich(defn) { cls =>
       resolver(cls) match {
         case Right(ad) =>
@@ -248,17 +255,18 @@ private[tagless] abstract class MacroUtils {
         case Left(err) => abort(err)
       }
     }
-  }
 
   def abort(msg: String) = c.abort(c.enclosingPosition, msg)
 
-  def addStats(obj: ModuleDef, stats: Seq[Tree]): ModuleDef = if (stats.isEmpty) obj else {
+  def addStats(obj: ModuleDef, stats: Seq[Tree]): ModuleDef = if (stats.isEmpty) obj
+  else {
     val impl = obj.impl
     ModuleDef(obj.mods, obj.name, Template(impl.parents, impl.self, impl.body ++ stats))
   }
 
   def createTypeParam(name: Name, arity: Int): TypeDef = {
-    val tparams = List.fill(arity)(TypeDef(Modifiers(Flag.PARAM), typeNames.WILDCARD, Nil, TypeBoundsTree(EmptyTree, EmptyTree)))
+    val tparams =
+      List.fill(arity)(TypeDef(Modifiers(Flag.PARAM), typeNames.WILDCARD, Nil, TypeBoundsTree(EmptyTree, EmptyTree)))
     TypeDef(Modifiers(Flag.PARAM), name.toTypeName, tparams, TypeBoundsTree(EmptyTree, EmptyTree))
   }
   def createTypeParam(name: String, arity: Int): TypeDef = createTypeParam(TypeName(name), arity)
@@ -271,7 +279,8 @@ private[tagless] abstract class MacroUtils {
   def arguments(params: Seq[Tree]): Seq[Tree] =
     params.collect {
       case ValDef(_, name, AppliedTypeTree(ref: RefTree, _ :: Nil), _)
-        if ref.name == definitions.RepeatedParamClass.name => q"$name: _*"
+          if ref.name == definitions.RepeatedParamClass.name =>
+        q"$name: _*"
       case ValDef(_, name, _, _) => Ident(name)
     }
 
@@ -283,9 +292,9 @@ private[tagless] abstract class MacroUtils {
     else q"implicit def $name[..$typeParams]: $resultType = $rhs"
 
   lazy val autoDerive: Boolean = c.prefix.tree match {
-    case q"new ${_}(${arg: Boolean})"                  => arg
+    case q"new ${_}(${arg: Boolean})" => arg
     case q"new ${_}(autoDerivation = ${arg: Boolean})" => arg
-    case _                                             => true
+    case _ => true
   }
 
 }

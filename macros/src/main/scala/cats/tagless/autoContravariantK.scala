@@ -26,7 +26,7 @@ class autoContravariantK(autoDerivation: Boolean = true) extends StaticAnnotatio
   def macroTransform(annottees: Any*): Any = macro autoContravariantKMacros.contravariantKInst
 }
 
-private [tagless] class autoContravariantKMacros(override val c: whitebox.Context) extends MacroUtils {
+private[tagless] class autoContravariantKMacros(override val c: whitebox.Context) extends MacroUtils {
   import c.universe._
 
   private def generateContravariantKFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =

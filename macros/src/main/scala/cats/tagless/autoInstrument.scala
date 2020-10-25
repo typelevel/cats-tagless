@@ -26,7 +26,7 @@ class autoInstrument extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoInstrumentMacros.instrumentInst
 }
 
-private[tagless] class autoInstrumentMacros(override val c: whitebox.Context) extends MacroUtils  {
+private[tagless] class autoInstrumentMacros(override val c: whitebox.Context) extends MacroUtils {
   import c.universe._
 
   private def generateInstrumentFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =

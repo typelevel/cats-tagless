@@ -19,15 +19,14 @@ import scala.annotation.{StaticAnnotation, compileTimeOnly}
 import scala.collection.immutable.Seq
 import scala.reflect.macros.whitebox
 
-/**
-  * auto generates methods in companion object to compose multiple interpreters into an interpreter of a `TupleNK` effects
+/** auto generates methods in companion object to compose multiple interpreters into an interpreter of a `TupleNK` effects
   */
 @compileTimeOnly("Cannot expand @autoProductK")
 class autoProductNK extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoProductNKMacros.productKInst
 }
 
-private [tagless] class autoProductNKMacros(override val c: whitebox.Context) extends MacroUtils {
+private[tagless] class autoProductNKMacros(override val c: whitebox.Context) extends MacroUtils {
   import c.universe._
 
   def productMethod(typedef: TypeDefinition)(arity: Int): Tree = {
@@ -57,14 +56,13 @@ private [tagless] class autoProductNKMacros(override val c: whitebox.Context) ex
 
     //af1: A[F1], af2: A[F2], af3: A[F3]
     val inboundInterpreters: Seq[ValDef] =
-      (range zip effectTypeParamsNames).map {
-        case (idx, fx) =>
-          ValDef(
-            Modifiers(Flag.PARAM),
-            af(idx),
-            typedef.applied(fx),
-            EmptyTree
-          )
+      (range.zip(effectTypeParamsNames)).map { case (idx, fx) =>
+        ValDef(
+          Modifiers(Flag.PARAM),
+          af(idx),
+          typedef.applied(fx),
+          EmptyTree
+        )
       }
 
     q"""

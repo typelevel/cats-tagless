@@ -1,9 +1,11 @@
 import com.typesafe.sbt.SbtGit.git
 import _root_.sbtcrossproject.CrossPlugin.autoImport.CrossType
 
+addCommandAlias("validateJVM", "all scalafmtCheckAll scalafmtSbtCheck testsJVM/test")
+addCommandAlias("validateJS", ";testsJS/test")
+addCommandAlias("fmt", "all scalafmtSbt scalafmtAll")
+addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVersion.value.get + \"-SNAPSHOT\"")
-
-addCommandAlias("validateJVM", ";testsJVM/test ; docs/makeMicrosite")
 
 lazy val libs = org.typelevel.libraries
   .add("scalatestplus", version = "3.2.2.0", org = "org.scalatestplus", "scalacheck-1-14")

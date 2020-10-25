@@ -32,14 +32,14 @@ jobs:
 
     - &js_tests
       env: TEST="JS tests"
-      script: sbt ";project rootJS;++$TRAVIS_SCALA_VERSION test"
+      script: sbt ++$TRAVIS_SCALA_VERSION validateJS
       scala: *scala_version_212
     - <<: *js_tests
       scala: *scala_version_213
 
     - &jvm_tests
       env: TEST="JVM tests"
-      script: sbt ";project rootJVM; ++$TRAVIS_SCALA_VERSION test"
+      script: sbt ++$TRAVIS_SCALA_VERSION validateJVM
       scala: *scala_version_212
     - <<: *jvm_tests
       scala: *scala_version_213

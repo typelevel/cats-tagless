@@ -7,6 +7,52 @@ addCommandAlias("fmt", "all scalafmtSbt scalafmtAll")
 addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVersion.value.get + \"-SNAPSHOT\"")
 
+val Scala212 = "2.12.12"
+val Scala213 = "2.13.3" // 2.13.4 would be nice but it scolds us because of match errors
+
+// update to scala 3 requires swapping from scalatest to munit
+ThisBuild / crossScalaVersions := Seq(Scala212, Scala213 /*, "3.0.0-M1", "3.0.0-M2"*/ )
+ThisBuild / scalaVersion := Scala212
+
+ThisBuild / githubWorkflowPublishTargetBranches := Seq()
+ThisBuild / githubWorkflowArtifactUpload := false
+
+ThisBuild / githubWorkflowBuildMatrixAdditions +=
+  "ci" -> List("validateJS", "validateJVM")
+
+ThisBuild / githubWorkflowBuild := Seq(WorkflowStep.Sbt(List("${{ matrix.ci }}"), name = Some("Validation")))
+
+ThisBuild / githubWorkflowAddedJobs ++= Seq(
+  WorkflowJob(
+    "coverage",
+    "Coverage",
+    githubWorkflowJobSetup.value.toList ::: List(
+      WorkflowStep.Use("actions", "setup-python", "v2", name = Some("Setup Python")),
+      WorkflowStep.Run(List("pip install codecov"), name = Some("Install Codecov")),
+      WorkflowStep
+        .Sbt(List("coverage", "rootJVM/test", "rootJVM/coverageReport"), name = Some("Calculate test coverage")),
+      WorkflowStep.Run(List("codecov"), name = Some("Upload coverage results"))
+    ),
+    scalas = crossScalaVersions.value.toList.filter(_.startsWith("2."))
+  ),
+  WorkflowJob(
+    "microsite",
+    "Microsite",
+    githubWorkflowJobSetup.value.toList ::: List(
+      WorkflowStep.Use(
+        "ruby",
+        "setup-ruby",
+        "v1",
+        name = Some("Setup Ruby"),
+        params = Map("ruby-version" -> "2.6", "bundler-cache" -> "true")
+      ),
+      WorkflowStep.Run(List("gem install jekyll -v 2.5"), name = Some("Install Jekyll")),
+      WorkflowStep.Sbt(List("docs/makeMicrosite"), name = Some("Build microsite"))
+    ),
+    scalas = List(Scala212)
+  )
+)
+
 lazy val libs = org.typelevel.libraries
   .add("discipline-scalatest", version = "2.1.0", org = org.typelevel.typeLevelOrg)
   .add("cats", version = "2.3.0")
@@ -24,19 +70,19 @@ lazy val `cats-tagless` = project
   .configure(mkRootConfig(rootSettings, rootJVM))
   .aggregate(rootJVM, rootJS, docs)
   .dependsOn(rootJVM, rootJS)
-  .settings(noPublishSettings, crossScalaVersions := Nil)
+  .settings(noPublishSettings, crossScalaVersions := Seq(Scala212))
 
 lazy val rootJVM = project
   .configure(mkRootJvmConfig(gh.proj, rootSettings, commonJvmSettings))
   .aggregate(coreJVM, lawsJVM, testsJVM, macrosJVM)
   .dependsOn(coreJVM, lawsJVM, testsJVM, macrosJVM)
-  .settings(noPublishSettings, crossScalaVersions := Nil)
+  .settings(noPublishSettings, crossScalaVersions := Seq(Scala212))
 
 lazy val rootJS = project
   .configure(mkRootJsConfig(gh.proj, rootSettings, commonJsSettings))
   .aggregate(coreJS, lawsJS, testsJS, macrosJS)
   .dependsOn(coreJS, lawsJS, testsJS, macrosJS)
-  .settings(noPublishSettings, crossScalaVersions := Nil)
+  .settings(noPublishSettings, crossScalaVersions := Seq(Scala212))
 
 lazy val core = prj(coreM)
 lazy val coreJVM = coreM.jvm
@@ -105,7 +151,7 @@ lazy val docs = project
   .enablePlugins(MicrositesPlugin)
   .enablePlugins(SiteScaladocPlugin)
   .settings(
-    crossScalaVersions -= libs.vers("scalac_2.13"),
+    crossScalaVersions := Seq(Scala212),
     docsMappingsAPIDir := "api",
     addMappingsToSiteDir(mappings in packageDoc in Compile in coreJVM, docsMappingsAPIDir),
     organization := gh.organisation,
@@ -140,9 +186,8 @@ lazy val docsMappingsAPIDir = settingKey[String]("Name of subdirectory in site t
 lazy val buildSettings = sharedBuildSettings(gh, libs)
 
 lazy val commonSettings = sharedCommonSettings ++ Seq(
+  crossScalaVersions := (ThisBuild / crossScalaVersions).value,
   parallelExecution in Test := false,
-  scalaVersion := libs.vers("scalac_2.12"),
-  crossScalaVersions := Seq(scalaVersion.value, libs.vers("scalac_2.13")),
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
   addCompilerPlugin(("org.typelevel" % "kind-projector" % "0.11.1").cross(CrossVersion.full)),
   developers := List(

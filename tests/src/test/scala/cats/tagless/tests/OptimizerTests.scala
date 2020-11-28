@@ -27,7 +27,7 @@ import scala.concurrent.ExecutionContext
 
 class OptimizerTests extends CatsTaglessTestSuite {
 
-  implicit val cs = IO.contextShift(ExecutionContext.global)
+  implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
 
   type StateO[A] = State[StateInfo, A]
 
@@ -121,27 +121,6 @@ class OptimizerTests extends CatsTaglessTestSuite {
 
     type Cache = Map[String, String]
     type CachedAction[A] = StateT[F, Cache, A]
-
-    def transform(interp: KVStore[F]): KVStore[CachedAction] = new KVStore[CachedAction] {
-      def put(key: String, v: String): CachedAction[Unit] =
-        StateT.liftF[F, Cache, Unit](interp.put(key, v)) *> StateT.modify(_.updated(key, v))
-
-      def get(key: String): CachedAction[Option[String]] = for {
-        cache <- StateT.get[F, Cache]
-        result <- cache.get(key) match {
-          case s @ Some(_) => s.pure[CachedAction]
-          case None =>
-            StateT
-              .liftF[F, Cache, Option[String]](interp.get(key))
-              .flatTap(updateCache(key))
-        }
-      } yield result
-
-      def updateCache(key: String)(ov: Option[String]): CachedAction[Unit] = ov match {
-        case Some(v) => StateT.modify(_.updated(key, v))
-        case None => ().pure[CachedAction]
-      }
-    }
 
     def rebuild(interp: KVStore[F]): KVStore[Kleisli[F, M, *]] = new KVStore[Kleisli[F, M, *]] {
       def get(key: String): Kleisli[F, M, Option[String]] = Kleisli(m =>

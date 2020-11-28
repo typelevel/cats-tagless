@@ -108,6 +108,11 @@ class DeriveMacros(val c: blackbox.Context) {
     }
   }
 
+  case class MethodDef(name: String, rhs: Type => Option[Tree])
+  object MethodDef {
+    def apply(name: String)(rhs: PartialFunction[Type, Tree]): MethodDef = apply(name, rhs.lift)
+  }
+
   final class ParamExtractor(symbol: Symbol) {
     def apply(tpe: Type): Type = appliedType(symbol, tpe)
     def unapply(tpe: Type): Option[Type] = if (tpe.typeSymbol == symbol) Some(tpe.typeArgs.head) else None
@@ -210,7 +215,7 @@ class DeriveMacros(val c: blackbox.Context) {
   def declare(instance: Type): Tree = {
     val members = overridableMembersOf(instance).filter(_.isAbstract)
     val stubs = delegateMethods(instance, members, NoSymbol) { case m => m.copy(body = q"_root_.scala.Predef.???") }
-    val Block(List(declaration), _) = typeCheckWithFreshTypeParams(q"new $instance { ..$stubs }")
+    val Block(List(declaration), _) = typeCheckWithFreshTypeParams(q"new $instance { ..$stubs }"): @unchecked
     declaration
   }
 
@@ -235,18 +240,20 @@ class DeriveMacros(val c: blackbox.Context) {
   /** Create a new instance of `typeClass` for `algebra`.
     * `rhs` should define a mapping for each method (by name) to an implementation function based on type signature.
     */
-  def instantiate[T: WeakTypeTag](tag: WeakTypeTag[_], typeArgs: Type*)(
-      rhs: (Type => (String, Type => Tree))*
-  ): Tree = {
+  def instantiate[T: WeakTypeTag](tag: WeakTypeTag[_], typeArgs: Type*)(methods: (Type => MethodDef)*): Tree = {
     val algebra = typeConstructorOf(tag)
     val Ta = appliedType(symbolOf[T], algebra :: typeArgs.toList)
-    val impl = rhs.map(_.apply(algebra)).toMap
-    val declaration @ ClassDef(_, _, _, Template(parents, self, members)) = declare(Ta)
-    val implementations = for (member <- members) yield member match {
-      case dd: DefDef =>
+    val rhsMap = methods.iterator.map(_.apply(algebra)).flatMap(MethodDef.unapply).toMap
+    val declaration @ ClassDef(_, _, _, Template(parents, self, members)) = declare(Ta): @unchecked
+    val implementations = members.map {
+      case member: DefDef =>
         val method = member.symbol.asMethod
-        impl.get(method.name.toString).fold(dd)(f => defDef(method, f(method.typeSignatureIn(Ta))))
-      case other => other
+        val impl = for {
+          rhsOf <- rhsMap.get(method.name.toString)
+          rhs <- rhsOf(method.typeSignatureIn(Ta))
+        } yield defDef(method, rhs)
+        impl.getOrElse(member)
+      case member => member
     }
 
     val definition = classDef(declaration.symbol, Template(parents, self, implementations))
@@ -254,8 +261,8 @@ class DeriveMacros(val c: blackbox.Context) {
   }
 
   // def map[A, B](fa: F[A])(f: A => B): F[B]
-  def map(algebra: Type): (String, Type => Tree) =
-    "map" -> { case PolyType(List(a, b), MethodType(List(fa), MethodType(List(f), _))) =>
+  def map(algebra: Type): MethodDef = MethodDef("map") {
+    case PolyType(List(a, b), MethodType(List(fa), MethodType(List(f), _))) =>
       val Fa = singleType(NoPrefix, fa)
       val members = overridableMembersOf(Fa)
       val types = delegateAbstractTypes(Fa, members, Fa)
@@ -273,11 +280,11 @@ class DeriveMacros(val c: blackbox.Context) {
       }
 
       implement(algebra)(b)(types ++ methods)
-    }
+  }
 
   // def mapK[F[_], G[_]](af: A[F])(fk: F ~> G): A[G]
-  def mapK(algebra: Type): (String, Type => Tree) =
-    "mapK" -> { case PolyType(List(f, g), MethodType(List(af), MethodType(List(fk), _))) =>
+  def mapK(algebra: Type): MethodDef = MethodDef("mapK") {
+    case PolyType(List(f, g), MethodType(List(af), MethodType(List(fk), _))) =>
       val Af = singleType(NoPrefix, af)
       val members = overridableMembersOf(Af)
       val types = delegateAbstractTypes(Af, members, Af)
@@ -294,11 +301,11 @@ class DeriveMacros(val c: blackbox.Context) {
       }
 
       implement(algebra)(g)(types ++ methods)
-    }
+  }
 
   // def contramap[A, B](fa: F[A])(f: B => A): F[B]
-  def contramap(algebra: Type): (String, Type => Tree) =
-    "contramap" -> { case PolyType(List(a, b), MethodType(List(fa), MethodType(List(f), _))) =>
+  def contramap(algebra: Type): MethodDef = MethodDef("contramap") {
+    case PolyType(List(a, b), MethodType(List(fa), MethodType(List(f), _))) =>
       val Fa = singleType(NoPrefix, fa)
       val members = overridableMembersOf(Fa)
       val types = delegateAbstractTypes(Fa, members, Fa)
@@ -316,11 +323,11 @@ class DeriveMacros(val c: blackbox.Context) {
       }
 
       implement(algebra)(b)(types ++ methods)
-    }
+  }
 
   // def contramapK[F, G](af: A[F])(fk: G => F): A[G]
-  def contramapK(algebra: Type): (String, Type => Tree) =
-    "contramapK" -> { case PolyType(List(f, g), MethodType(List(af), MethodType(List(fk), _))) =>
+  def contramapK(algebra: Type): MethodDef = MethodDef("contramapK") {
+    case PolyType(List(f, g), MethodType(List(af), MethodType(List(fk), _))) =>
       val Af = singleType(NoPrefix, af)
       val members = overridableMembersOf(Af)
       val types = delegateAbstractTypes(Af, members, Af)
@@ -338,11 +345,11 @@ class DeriveMacros(val c: blackbox.Context) {
       }
 
       implement(algebra)(g)(types ++ methods)
-    }
+  }
 
   // def imap[A, B](fa: F[A])(f: A => B)(g: B => A): F[B]
-  def imap(algebra: Type): (String, Type => Tree) =
-    "imap" -> { case PolyType(List(a, b), MethodType(List(fa), MethodType(List(f), MethodType(List(g), _)))) =>
+  def imap(algebra: Type): MethodDef = MethodDef("imap") {
+    case PolyType(List(a, b), MethodType(List(fa), MethodType(List(f), MethodType(List(g), _)))) =>
       val Fa = singleType(NoPrefix, fa)
       val members = overridableMembersOf(Fa)
       val types = delegateAbstractTypes(Fa, members, Fa)
@@ -360,11 +367,11 @@ class DeriveMacros(val c: blackbox.Context) {
       }
 
       implement(algebra)(b)(types ++ methods)
-    }
+  }
 
   // def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gK: G ~> F): A[G]
-  def imapK(algebra: Type): (String, Type => Tree) =
-    "imapK" -> { case PolyType(List(f, g), MethodType(List(af), MethodType(List(fk), MethodType(List(gk), _)))) =>
+  def imapK(algebra: Type): MethodDef = MethodDef("imapK") {
+    case PolyType(List(f, g), MethodType(List(af), MethodType(List(fk), MethodType(List(gk), _)))) =>
       val Af = singleType(NoPrefix, af)
       val members = overridableMembersOf(Af)
       val types = delegateAbstractTypes(Af, members, Af)
@@ -382,11 +389,11 @@ class DeriveMacros(val c: blackbox.Context) {
       }
 
       implement(algebra)(g)(types ++ methods)
-    }
+  }
 
   // def ap[A, B](ff: F[A => B])(fa: F[A]): F[B]
-  def ap(algebra: Type): (String, Type => Tree) =
-    "ap" -> { case PolyType(List(a, b), MethodType(List(ff), MethodType(List(fa), _))) =>
+  def ap(algebra: Type): MethodDef = MethodDef("ap") {
+    case PolyType(List(a, b), MethodType(List(ff), MethodType(List(fa), _))) =>
       val A = a.asType.toType
       val B = b.asType.toType
       val Fa = singleType(NoPrefix, fa)
@@ -403,11 +410,11 @@ class DeriveMacros(val c: blackbox.Context) {
       }
 
       implement(algebra)(b)(types ++ methods)
-    }
+  }
 
   // def product[A, B](fa F[A], fb: F[B]): F[(A, B)]
-  def product(algebra: Type): (String, Type => Tree) =
-    "product" -> { case PolyType(List(a, b), MethodType(List(fa, fb), _)) =>
+  def product(algebra: Type): MethodDef = MethodDef("product") {
+    case PolyType(List(a, b), MethodType(List(fa, fb), _)) =>
       val A = a.asType.toType
       val B = b.asType.toType
       val P = appliedType(symbolOf[(Any, Any)], A, B)
@@ -425,11 +432,11 @@ class DeriveMacros(val c: blackbox.Context) {
       }
 
       implement(appliedType(algebra, P))()(types ++ methods)
-    }
+  }
 
   // def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Tuple2K[F, G, *]]
-  def productK(algebra: Type): (String, Type => Tree) =
-    "productK" -> { case PolyType(List(f, g), MethodType(List(af, ag), _)) =>
+  def productK(algebra: Type): MethodDef = MethodDef("productK") {
+    case PolyType(List(f, g), MethodType(List(af, ag), _)) =>
       val Tuple2K = symbolOf[Tuple2K[Any, Any, Any]]
       val F = f.asType.toTypeConstructor
       val G = g.asType.toTypeConstructor
@@ -451,11 +458,11 @@ class DeriveMacros(val c: blackbox.Context) {
       val typeArgs = F :: G :: typeParams.map(_.asType.toType)
       val Tuple2kAlg = appliedType(algebra, polyType(typeParams, appliedType(Tuple2K, typeArgs)))
       implement(Tuple2kAlg)()(types ++ methods)
-    }
+  }
 
   // def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B]
-  def flatMap_(algebra: Type): (String, Type => Tree) =
-    "flatMap" -> { case PolyType(List(a, b), MethodType(List(fa), MethodType(List(f), _))) =>
+  def flatMap_(algebra: Type): MethodDef = MethodDef("flatMap") {
+    case PolyType(List(a, b), MethodType(List(fa), MethodType(List(f), _))) =>
       val Fa = singleType(NoPrefix, fa)
       val members = overridableMembersOf(Fa)
       val types = delegateAbstractTypes(Fa, members, Fa)
@@ -469,11 +476,11 @@ class DeriveMacros(val c: blackbox.Context) {
       }
 
       implement(algebra)(b)(types ++ methods)
-    }
+  }
 
   // def tailRecM[A, B](x: A)(f: A => F[Either[A, B]]): F[B]
-  def tailRecM(algebra: Type): (String, Type => Tree) =
-    "tailRecM" -> { case PolyType(List(a, b), MethodType(List(x), MethodType(List(f), _))) =>
+  def tailRecM(algebra: Type): MethodDef = MethodDef("tailRecM") {
+    case PolyType(List(a, b), MethodType(List(x), MethodType(List(f), _))) =>
       val Fa = appliedType(algebra, a.asType.toType)
       val methods = delegateMethods(Fa, overridableMembersOf(Fa), NoSymbol) {
         case method if method.returnType.typeSymbol == a =>
@@ -498,11 +505,11 @@ class DeriveMacros(val c: blackbox.Context) {
       }
 
       implement(algebra)(b)(methods)
-    }
+  }
 
   // def dimap[A, B, C, D](fab: F[A, B])(f: C => A)(g: B => D): F[C, D]
-  def dimap(algebra: Type): (String, Type => Tree) =
-    "dimap" -> { case PolyType(List(a, b, c, d), MethodType(List(fab), MethodType(List(f), MethodType(List(g), _)))) =>
+  def dimap(algebra: Type): MethodDef = MethodDef("dimap") {
+    case PolyType(List(a, b, c, d), MethodType(List(fab), MethodType(List(f), MethodType(List(g), _)))) =>
       val Fab = singleType(NoPrefix, fab)
       val members = overridableMembersOf(Fab)
       val types = delegateAbstractTypes(Fab, members, Fab)
@@ -532,11 +539,11 @@ class DeriveMacros(val c: blackbox.Context) {
       }
 
       implement(algebra)(c, d)(types ++ methods)
-    }
+  }
 
   // def bimap[A, B, C, D](fab: F[A, B])(f: A => C, g: B => D): F[C, D]
-  def bimap(algebra: Type): (String, Type => Tree) =
-    "bimap" -> { case PolyType(List(a, b, c, d), MethodType(List(fab), MethodType(List(f, g), _))) =>
+  def bimap(algebra: Type): MethodDef = MethodDef("bimap") {
+    case PolyType(List(a, b, c, d), MethodType(List(fab), MethodType(List(f, g), _))) =>
       val Fab = singleType(NoPrefix, fab)
       val members = overridableMembersOf(Fab)
       val types = delegateAbstractTypes(Fab, members, Fab)
@@ -567,11 +574,11 @@ class DeriveMacros(val c: blackbox.Context) {
       }
 
       implement(algebra)(c, d)(types ++ methods)
-    }
+  }
 
   // def instrument[F[_]](af: Alg[F]): Alg[Instrumentation[F, *]]
-  def instrumentation(algebra: Type): (String, Type => Tree) =
-    "instrument" -> { case PolyType(List(f), MethodType(List(af), _)) =>
+  def instrumentation(algebra: Type): MethodDef = MethodDef("instrument") {
+    case PolyType(List(f), MethodType(List(af), _)) =>
       val Instrumentation = symbolOf[Instrumentation[Any, Any]]
       val F = f.asType.toTypeConstructor
       val Af = singleType(NoPrefix, af)
@@ -591,11 +598,11 @@ class DeriveMacros(val c: blackbox.Context) {
       val InstrumentationType = appliedType(Instrumentation, F :: F.typeParams.map(_.asType.toType))
       val InstrumentedAlg = appliedType(algebra, polyType(F.typeParams, InstrumentationType))
       implement(InstrumentedAlg)()(types ++ methods)
-    }
+  }
 
   // def weave[F[_]](af: Alg[F]): Alg[Aspect.Weave[F, Dom, Cod, *]]
-  def weave(Dom: Type, Cod: Type)(algebra: Type): (String, Type => Tree) =
-    "weave" -> { case PolyType(List(f), MethodType(List(af), _)) =>
+  def weave(Dom: Type, Cod: Type)(algebra: Type): MethodDef = MethodDef("weave") {
+    case PolyType(List(f), MethodType(List(af), _)) =>
       val AspectWeave = symbolOf[Aspect.Weave[Any, Any, Any, Any]]
       val F = f.asType.toTypeConstructor
       val Af = singleType(NoPrefix, af)
@@ -625,7 +632,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val WeaveType = appliedType(AspectWeave, F :: Dom :: Cod :: F.typeParams.map(_.asType.toType))
       val WeavedAlg = appliedType(algebra, polyType(F.typeParams, WeaveType))
       implement(WeavedAlg)()(types ++ methods)
-    }
+  }
 
   def const[Alg[_[_]], A](value: Tree)(implicit tag: WeakTypeTag[Alg[Any]], a: WeakTypeTag[A]): Tree = {
     val algebra = typeConstructorOf(tag)

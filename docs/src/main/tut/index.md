@@ -26,6 +26,9 @@ libraryDependencies +=
  
  // For Scala 2.10-2.12, scalamacros paradise is needed as well. 
  addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
+ 
+ // For Scala 2.13, enable macro annotations
+ scalacOptions += "-Ymacro-annotations"
 
 ```
 

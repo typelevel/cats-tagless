@@ -189,7 +189,7 @@ lazy val commonSettings = sharedCommonSettings ++ Seq(
   crossScalaVersions := (ThisBuild / crossScalaVersions).value,
   parallelExecution in Test := false,
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
-  addCompilerPlugin(("org.typelevel" % "kind-projector" % "0.11.2").cross(CrossVersion.full)),
+  addCompilerPlugin(("org.typelevel" % "kind-projector" % "0.11.3").cross(CrossVersion.full)),
   developers := List(
     Developer(
       "Georgi Krastev",

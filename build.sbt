@@ -27,7 +27,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
     "coverage",
     "Coverage",
     githubWorkflowJobSetup.value.toList ::: List(
-      WorkflowStep.Use("actions", "setup-python", "v2", name = Some("Setup Python")),
+      WorkflowStep.Use(UseRef.Public("actions", "setup-python", "v2"), name = Some("Setup Python")),
       WorkflowStep.Run(List("pip install codecov"), name = Some("Install Codecov")),
       WorkflowStep
         .Sbt(List("coverage", "rootJVM/test", "rootJVM/coverageReport"), name = Some("Calculate test coverage")),
@@ -40,9 +40,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
     "Microsite",
     githubWorkflowJobSetup.value.toList ::: List(
       WorkflowStep.Use(
-        "ruby",
-        "setup-ruby",
-        "v1",
+        UseRef.Public("ruby", "setup-ruby", "v1"),
         name = Some("Setup Ruby"),
         params = Map("ruby-version" -> "2.6", "bundler-cache" -> "true")
       ),

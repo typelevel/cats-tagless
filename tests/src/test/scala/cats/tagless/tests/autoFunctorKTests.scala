@@ -96,7 +96,6 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
     }
 
     tryInt.mapK(fk).a(3) should be(Some("3"))
-    import AlgWithTypeMember.fullyRefined._
     import AlgWithTypeMember.fullyRefined.autoDerive._
     val op: AlgWithTypeMember.Aux[Option, String] = implicitly
     op.a(3) should be(Some("3"))
@@ -110,7 +109,6 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
     }
 
     tryB.mapK(fk).t should be(Some(B))
-    import AlgWithTypeBound.fullyRefined._
     import AlgWithTypeBound.fullyRefined.autoDerive._
     val op: AlgWithTypeBound.Aux[Option, B.type] = implicitly
     op.t should be(Some(B))

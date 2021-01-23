@@ -27,11 +27,10 @@ implicit val tryFoo: Foo[Try, String] = new Foo[Try, String] {
 }
 
 implicit val fk: Try ~> Option = λ[Try ~> Option](_.toOption)
-
-import Foo.autoDerive._
 ```
 
 ```scala mdoc
+import Foo.autoDerive._
 Foo[Option, String].a(3)
 ```
 
@@ -47,30 +46,29 @@ trait Bar[F[_]] {
   def a(i: Int): F[T]
 }
 
-implicit val tryBarInt = new Bar[Try] {
+implicit val tryBarString = new Bar[Try] {
    type T = String
    def a(i: Int): Try[String] = Try(i.toString)
 }
-
-import Bar.autoDerive._
 ```
 
-If you try to map this `tryBarInt` to a `Bar[Option]`, the `type T` of the `Bar[Option]` isn't refined.  That is, you can do
+If you try to map this `tryBarString` to a `Bar[Option]`, the `type T` of the `Bar[Option]` isn't refined. That is, you can do
 
 ```scala mdoc
+import Bar.autoDerive._
 Bar[Option].a(3)
 ```
 
-But you can't create a `Bar[Option]{ type T = String }` from the `tryBarInt` using `FunctorK`.
+But you can't create a `Bar[Option] { type T = String }` from the `tryBarString` using `FunctorK`.
 
 ```scala mdoc:fail
-val barOption: Bar[Option] { type T = String } = tryBarInt.mapK(fk)
+val barOption: Bar[Option] { type T = String } = tryBarString.mapK(fk)
 ```
 
 However, there is also `mapK` function added to the companion object of the algebra which gives you more precise type.
 
 ```scala mdoc
-val barOption: Bar[Option] { type T = String } = Bar.mapK(tryBarInt)(fk)
+val barOption: Bar[Option] { type T = String } = Bar.mapK(tryBarString)(fk)
 ```
 
 Also since the `FunctorK` (or `InvariantK`) instance uses a dependent type on the original interpreter, you may run into dependent type related issues. In those cases, this `mapK` (or `imapK`) on the companion object may give better result.

@@ -65,7 +65,7 @@ Similar to [simulacrum](https://github.com/mpilquist/simulacrum), `@finalAlg` ad
 ExpressionAlg[Try]
 ```
 
-Cats-tagless provides a [`FunctorK`](typeclasses.html#functorK) type class to map over algebras using [cats](http://typelevel.org/cats)' [`FunctionK`](http://typelevel.org/cats/datatypes/functionk.html).
+Cats-tagless provides a [`FunctorK`](typeclasses.md#functorK) type class to map over algebras using [cats](http://typelevel.org/cats)' [`FunctionK`](http://typelevel.org/cats/datatypes/functionk.html).
 More specifically With an instance of `FunctorK[ExpressionAlg]`, you can transform an `ExpressionAlg[F]` to a `ExpressionAlg[G]` using a `FunctionK[F, G]`, a.k.a. `F ~> G`.
 
 The `@autoFunctorK` annotation adds the following line (among some other code) in the companion object.
@@ -97,12 +97,11 @@ Note that the `Try ~> Option` is implemented using [kind projector's polymorphic
 `@autoFunctorK` also add an auto derivation, so that if you have an implicit  `ExpressionAlg[F]` and an implicit
 `F ~> G`, you automatically have a `ExpressionAlg[G]`.
 
-Obviously [`FunctorK`](typeclasses.html#functorK) instance is only possible when the effect type `F[_]` appears only in the
-covariant position (i.e. the return types). For algebras with effect type also appearing in the contravariant position (i.e. argument types), Cats-tagless provides a [`InvariantK`](typeclasses.html#invariantK) type class and an `autoInvariantK` annotation to automatically generate instances.
+Obviously [`FunctorK`](typeclasses.md#functorK) instance is only possible when the effect type `F[_]` appears only in the
+covariant position (i.e. the return types). For algebras with effect type also appearing in the contravariant position (i.e. argument types), Cats-tagless provides a [`InvariantK`](typeclasses.md#invariantK) type class and an `autoInvariantK` annotation to automatically generate instances.
 
 ```scala mdoc
 import ExpressionAlg.autoDerive._
-
 ExpressionAlg[Option]
 ```
 
@@ -182,13 +181,12 @@ class StringCalculatorOption(implicit exp: ExpressionAlg[Option]) extends String
 Note that the `ExpressionAlg` interpreter needed here is a `ExpressionAlg[Option]`, while we only defined a `ExpressionAlg[Try]`. However since we have a `fk: Try ~> Option` in scope, we can automatically have `ExpressionAlg[Option]` in scope through `autoDerive`. We can just write
 
 ```scala mdoc
-import ExpressionAlg.autoDerive._
 new StringCalculatorOption
 ```
 
 ## <a id="horizontal-comp" href="#horizontal-comp"></a>Horizontal composition
 
-You can use the [`SemigroupalK`](typeclasses.html#semigroupalK) type class to create a new interpreter that runs two interpreters simultaneously and return the result as a `cats.Tuple2K`. The `@autoSemigroupalK` attribute add an instance of `SemigroupalK` to the companion object. Example:
+You can use the [`SemigroupalK`](typeclasses.md#semigroupalK) type class to create a new interpreter that runs two interpreters simultaneously and return the result as a `cats.Tuple2K`. The `@autoSemigroupalK` attribute add an instance of `SemigroupalK` to the companion object. Example:
 
 ```scala mdoc
 val prod = ExpressionAlg[Option].productK(ExpressionAlg[Try])

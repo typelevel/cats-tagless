@@ -42,63 +42,64 @@ private[tagless] class autoFunctorKMacros(override val c: whitebox.Context)
   def instanceDef(algebra: AlgDefn.UnaryAlg): Tree =
     algebra.forVaryingEffectType(generateFunctorKFor(algebra.name))
 
-  def instanceDefFullyRefined(algDefn: AlgDefn.UnaryAlg): Tree =
-    algDefn.forVaryingEffectTypeFullyRefined { (algebraType, tparams) =>
-      val impl = Seq(
-        generateFunctorKFor("FullyRefined" + algDefn.name)(
-          algebraType,
-          tparams
-        ),
-        generateAutoDerive(algDefn.fullyRefinedTypeSig)(
-          algebraType,
-          tparams
-        )
+  def instanceDefFullyRefined(algebra: AlgDefn.UnaryAlg): Tree =
+    algebra.forVaryingEffectTypeFullyRefined { (algebraType, typeParams) =>
+      val algebraName = "FullyRefined" + algebra.name
+      val methods = List(
+        generateFunctorKFor(algebraName)(algebraType, typeParams),
+        generateAutoDerive(algebra.fullyRefinedTypeSig, algebraName)(algebraType, typeParams)
       )
-      q"object fullyRefined { ..$impl }"
+      q"object fullyRefined { ..$methods }"
     }
 
   def newDef(annottees: c.Tree*): c.Tree =
-    enrichAlgebra(annottees.toList)(algebra =>
-      instanceDef(algebra) :: companionMapKDef(algebra) :: instanceDefFullyRefined(algebra) :: autoDerivationDef(
-        algebra
-      ) :: Nil
-    )
+    enrichAlgebra(annottees.toList) { algebra =>
+      List(
+        instanceDef(algebra),
+        companionMapKDef(algebra),
+        instanceDefFullyRefined(algebra),
+        autoDerivationDef(algebra)
+      )
+    }
 }
 
 private[tagless] trait CovariantKMethodsGenerator { self: MacroUtils =>
   import c.universe._
 
-  def companionMapKDef(algDefn: AlgDefn.UnaryAlg) = {
-    val from = TermName("af")
+  def companionMapKDef(algebra: AlgDefn.UnaryAlg) = {
+    val af = c.freshName(TermName("af"))
+    val fk = c.freshName(TermName("fk"))
     val F = createFreshTypeParam("F", 1)
     val G = createFreshTypeParam("G", 1)
-    val algebraF = algDefn.newTypeSig(F)
-    val fullyRefinedAlgebraG = algDefn.dependentRefinedTypeSig(G, from)
+    val algebraF = algebra.newTypeSig(F)
+    val fullyRefinedAlgebraG = algebra.dependentRefinedTypeSig(G, af)
 
-    algDefn.forVaryingEffectType((algebraType, tparams) => q"""
-      def mapK[$F, $G, ..$tparams]($from: $algebraF)(fk: _root_.cats.~>[..${tArgs(F, G)}]): $fullyRefinedAlgebraG =
-        _root_.cats.tagless.FunctorK[$algebraType].mapK($from)(fk).asInstanceOf[$fullyRefinedAlgebraG]
+    algebra.forVaryingEffectType((algebraType, typeParams) => q"""
+      def mapK[$F, $G, ..$typeParams]($af: $algebraF)($fk: _root_.cats.~>[..${tArgs(F, G)}]): $fullyRefinedAlgebraG =
+        _root_.cats.tagless.FunctorK[$algebraType].mapK($af)($fk).asInstanceOf[$fullyRefinedAlgebraG]
     """)
   }
 
-  def generateAutoDerive(newTypeSig: TypeDef => TypTree)(algebraType: Tree, tparams: Seq[TypeDef]) = {
+  def generateAutoDerive(
+      algebraTypeOf: TypeDef => TypTree,
+      algebraName: String
+  )(algebraType: Tree, typeParams: Seq[TypeDef]) = {
+    val _ = algebraType
+    val af = c.freshName(TermName("af"))
+    val fk = c.freshName(TermName("fk"))
     val F = createFreshTypeParam("F", 1)
     val G = createFreshTypeParam("G", 1)
-    val algebraF = newTypeSig(F)
-    val algebraG = newTypeSig(G)
+    val algebraF = algebraTypeOf(F)
+    val algebraG = algebraTypeOf(G)
 
-    q"""
-      object autoDerive {
-        @SuppressWarnings(Array("org.wartremover.warts.ImplicitParameter"))
-        implicit def fromFunctorK[$F, $G, ..$tparams](
-          implicit fk: _root_.cats.~>[..${tArgs(F, G)}],
-          FK: _root_.cats.tagless.FunctorK[$algebraType],
-          af: $algebraF)
-          : $algebraG = FK.mapK(af)(fk)
-      }"""
+    q"""object autoDerive {
+      @SuppressWarnings(Array("org.wartremover.warts.ImplicitParameter"))
+      implicit def ${TermName("fromFunctorK" + algebraName)}[$F, $G, ..$typeParams](
+        implicit $fk: _root_.cats.~>[..${tArgs(F, G)}], $af: $algebraF
+      ): $algebraG = mapK($af)($fk)
+    }"""
   }
 
-  def autoDerivationDef(algDefn: AlgDefn.UnaryAlg) =
-    if (autoDerive) algDefn.forVaryingEffectType(generateAutoDerive(algDefn.newTypeSig)) else EmptyTree
-
+  def autoDerivationDef(algebra: AlgDefn.UnaryAlg) =
+    if (autoDerive) algebra.forVaryingEffectType(generateAutoDerive(algebra.newTypeSig, algebra.name)) else EmptyTree
 }

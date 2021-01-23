@@ -148,6 +148,7 @@ lazy val docs = project
   .enablePlugins(MicrositesPlugin)
   .enablePlugins(SiteScaladocPlugin)
   .settings(
+    scalaVersion := Scala212,
     crossScalaVersions := Seq(Scala212),
     docsMappingsAPIDir := "api",
     addMappingsToSiteDir(mappings in packageDoc in Compile in coreJVM, docsMappingsAPIDir),

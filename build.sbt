@@ -7,12 +7,12 @@ addCommandAlias("fmt", "all scalafmtSbt scalafmtAll")
 addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVersion.value.get + \"-SNAPSHOT\"")
 
-val Scala212 = "2.12.12"
+val Scala212 = "2.12.13"
 val Scala213 = "2.13.4"
 
 // update to scala 3 requires swapping from scalatest to munit and reimplementing all macros
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala213 /*, "3.0.0-M1", "3.0.0-M2"*/ )
-ThisBuild / scalaVersion := Scala212
+ThisBuild / scalaVersion := Scala213
 
 ThisBuild / githubWorkflowPublishTargetBranches := Seq()
 ThisBuild / githubWorkflowArtifactUpload := false
@@ -33,7 +33,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
         .Sbt(List("coverage", "rootJVM/test", "rootJVM/coverageReport"), name = Some("Calculate test coverage")),
       WorkflowStep.Run(List("codecov"), name = Some("Upload coverage results"))
     ),
-    scalas = crossScalaVersions.value.toList.filter(_.startsWith("2."))
+    scalas = List(Scala213)
   ),
   WorkflowJob(
     "microsite",
@@ -68,19 +68,19 @@ lazy val `cats-tagless` = project
   .configure(mkRootConfig(rootSettings, rootJVM))
   .aggregate(rootJVM, rootJS, docs)
   .dependsOn(rootJVM, rootJS)
-  .settings(noPublishSettings, crossScalaVersions := Seq(Scala212))
+  .settings(noPublishSettings)
 
 lazy val rootJVM = project
   .configure(mkRootJvmConfig(gh.proj, rootSettings, commonJvmSettings))
   .aggregate(coreJVM, lawsJVM, testsJVM, macrosJVM)
   .dependsOn(coreJVM, lawsJVM, testsJVM, macrosJVM)
-  .settings(noPublishSettings, crossScalaVersions := Seq(Scala212))
+  .settings(noPublishSettings)
 
 lazy val rootJS = project
   .configure(mkRootJsConfig(gh.proj, rootSettings, commonJsSettings))
   .aggregate(coreJS, lawsJS, testsJS, macrosJS)
   .dependsOn(coreJS, lawsJS, testsJS, macrosJS)
-  .settings(noPublishSettings, crossScalaVersions := Seq(Scala212))
+  .settings(noPublishSettings)
 
 lazy val core = prj(coreM)
 lazy val coreJVM = coreM.jvm

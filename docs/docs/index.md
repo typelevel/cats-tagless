@@ -131,8 +131,9 @@ def program[F[_]: Monad: Increment](i: Int): F[Int] = for {
 
 Obviously, this program is not stack safe.
 
-```scala mdoc:crash
+```scala mdoc:compile-only
 program[Try](0)
+// java.lang.StackOverflowError
 ```
 
 Now lets use auto derivation to lift the interpreter with `Try` into an interpreter with `Free`

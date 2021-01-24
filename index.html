@@ -51,7 +51,7 @@ Add the following dependency in <code class="language-plaintext highlighter-roug
 <p>Similar to <a href="https://github.com/mpilquist/simulacrum">simulacrum</a>, <code class="language-plaintext highlighter-rouge">@finalAlg</code> adds an <code class="language-plaintext highlighter-rouge">apply</code> method in the companion object so that you can do implicit calling.</p>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">ExpressionAlg</span><span class="o">[</span><span class="kt">Try</span><span class="o">]</span>
-<span class="c1">// res0: ExpressionAlg[Try] = repl.MdocSession$App$tryExpression$@47d6c37c</span>
+<span class="c1">// res0: ExpressionAlg[Try] = repl.MdocSession$App$tryExpression$@73c7276f</span>
 </code></pre></div></div>
 
 <p>Cats-tagless provides a <a href="typeclasses.md#functorK"><code class="language-plaintext highlighter-rouge">FunctorK</code></a> type class to map over algebras using <a href="http://typelevel.org/cats">cats</a>’ <a href="http://typelevel.org/cats/datatypes/functionk.html"><code class="language-plaintext highlighter-rouge">FunctionK</code></a>.
@@ -75,10 +75,10 @@ More specifically With an instance of <code class="language-plaintext highlighte
 </code></pre></div></div>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">implicit</span> <span class="k">val</span> <span class="nv">fk</span> <span class="k">:</span> <span class="kt">Try</span> <span class="kt">~&gt;</span> <span class="kt">Option</span> <span class="o">=</span> <span class="n">λ</span><span class="o">[</span><span class="kt">Try</span> <span class="kt">~&gt;</span> <span class="kt">Option</span><span class="o">](</span><span class="nv">_</span><span class="o">.</span><span class="py">toOption</span><span class="o">)</span>
-<span class="c1">// fk: Try ~&gt; Option = repl.MdocSession$App$$anon$14@549116c5</span>
+<span class="c1">// fk: Try ~&gt; Option = repl.MdocSession$App$$anon$14@7bfa9414</span>
 
 <span class="nv">tryExpression</span><span class="o">.</span><span class="py">mapK</span><span class="o">(</span><span class="n">fk</span><span class="o">)</span>
-<span class="c1">// res1: ExpressionAlg[Option] = repl.MdocSession$App$ExpressionAlg$$anon$1$$anon$2@7798f769</span>
+<span class="c1">// res1: ExpressionAlg[Option] = repl.MdocSession$App$ExpressionAlg$$anon$1$$anon$2@66a373e1</span>
 </code></pre></div></div>
 
 <p>Note that the <code class="language-plaintext highlighter-rouge">Try ~&gt; Option</code> is implemented using <a href="https://github.com/non/kind-projector#polymorphic-lambda-values">kind projector’s polymorphic lambda syntax</a>.
@@ -90,7 +90,7 @@ covariant position (i.e. the return types). For algebras with effect type also a
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="nn">ExpressionAlg.autoDerive._</span>
 <span class="nc">ExpressionAlg</span><span class="o">[</span><span class="kt">Option</span><span class="o">]</span>
-<span class="c1">// res2: ExpressionAlg[Option] = repl.MdocSession$App$ExpressionAlg$$anon$1$$anon$2@277a0a2e</span>
+<span class="c1">// res2: ExpressionAlg[Option] = repl.MdocSession$App$ExpressionAlg$$anon$1$$anon$2@5f19a102</span>
 </code></pre></div></div>
 
 <p>This auto derivation can be turned off using an annotation argument: <code class="language-plaintext highlighter-rouge">@autoFunctorK(autoDerivation = false)</code>.</p>
@@ -119,1031 +119,6 @@ covariant position (i.e. the return types). For algebras with effect type also a
 <p>Obviously, this program is not stack safe.</p>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">program</span><span class="o">[</span><span class="kt">Try</span><span class="o">](</span><span class="mi">0</span><span class="o">)</span>
-<span class="c1">// java.lang.StackOverflowError</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$ToFlatMapOps$$anon$2.flatMap(FlatMap.scala:243)</span>
-<span class="c1">// 	at repl.MdocSession$App.program(index.md:84)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:85)</span>
-<span class="c1">// 	at repl.MdocSession$App$$anonfun$program$1.apply(index.md:84)</span>
-<span class="c1">// 	at scala.util.Success.flatMap(Try.scala:251)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:37)</span>
-<span class="c1">// 	at cats.instances.TryInstances$$anon$1.flatMap(try.scala:14)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap(FlatMap.scala:229)</span>
-<span class="c1">// 	at cats.FlatMap$Ops.flatMap$(FlatMap.scala:229)</span>
 </code></pre></div></div>
 
 <p>Now lets use auto derivation to lift the interpreter with <code class="language-plaintext highlighter-rouge">Try</code> into an interpreter with <code class="language-plaintext highlighter-rouge">Free</code></p>
@@ -1156,7 +131,7 @@ covariant position (i.e. the return types). For algebras with effect type also a
 </code></pre></div></div>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">program</span><span class="o">[</span><span class="kt">Free</span><span class="o">[</span><span class="kt">Try</span>, <span class="kt">*</span><span class="o">]](</span><span class="mi">0</span><span class="o">).</span><span class="py">foldMap</span><span class="o">(</span><span class="nv">FunctionK</span><span class="o">.</span><span class="py">id</span><span class="o">)</span>
-<span class="c1">// res3: Try[Int] = Success(10000)</span>
+<span class="c1">// res4: Try[Int] = Success(10000)</span>
 </code></pre></div></div>
 
 <p>Again the magic here is that Cats-tagless auto derive an <code class="language-plaintext highlighter-rouge">Increment[Free[Try, *]]</code> when there is an implicit <code class="language-plaintext highlighter-rouge">Try ~&gt; Free[Try, *]</code> and a <code class="language-plaintext highlighter-rouge">Increment[Try]</code> in scope. This auto derivation can be turned off using an annotation argument: <code class="language-plaintext highlighter-rouge">@autoFunctorK(autoDerivation = false)</code>.</p>
@@ -1189,7 +164,7 @@ covariant position (i.e. the return types). For algebras with effect type also a
 <p>Note that the <code class="language-plaintext highlighter-rouge">ExpressionAlg</code> interpreter needed here is a <code class="language-plaintext highlighter-rouge">ExpressionAlg[Option]</code>, while we only defined a <code class="language-plaintext highlighter-rouge">ExpressionAlg[Try]</code>. However since we have a <code class="language-plaintext highlighter-rouge">fk: Try ~&gt; Option</code> in scope, we can automatically have <code class="language-plaintext highlighter-rouge">ExpressionAlg[Option]</code> in scope through <code class="language-plaintext highlighter-rouge">autoDerive</code>. We can just write</p>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">new</span> <span class="nc">StringCalculatorOption</span>
-<span class="c1">// res4: StringCalculatorOption = repl.MdocSession$App$StringCalculatorOption@5559091a</span>
+<span class="c1">// res5: StringCalculatorOption = repl.MdocSession$App$StringCalculatorOption@3ada7554</span>
 </code></pre></div></div>
 
 <h2 id="horizontal-composition"><a id="horizontal-comp" href="#horizontal-comp"></a>Horizontal composition</h2>
@@ -1197,9 +172,9 @@ covariant position (i.e. the return types). For algebras with effect type also a
 <p>You can use the <a href="typeclasses.md#semigroupalK"><code class="language-plaintext highlighter-rouge">SemigroupalK</code></a> type class to create a new interpreter that runs two interpreters simultaneously and return the result as a <code class="language-plaintext highlighter-rouge">cats.Tuple2K</code>. The <code class="language-plaintext highlighter-rouge">@autoSemigroupalK</code> attribute add an instance of <code class="language-plaintext highlighter-rouge">SemigroupalK</code> to the companion object. Example:</p>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nv">prod</span> <span class="k">=</span> <span class="nc">ExpressionAlg</span><span class="o">[</span><span class="kt">Option</span><span class="o">].</span><span class="py">productK</span><span class="o">(</span><span class="nc">ExpressionAlg</span><span class="o">[</span><span class="kt">Try</span><span class="o">])</span>
-<span class="c1">// prod: ExpressionAlg[data.Tuple2K[Option, Try, γ$0$]] = repl.MdocSession$App$ExpressionAlg$$anon$5$$anon$6@38e169bf</span>
+<span class="c1">// prod: ExpressionAlg[data.Tuple2K[Option, Try, γ$0$]] = repl.MdocSession$App$ExpressionAlg$$anon$5$$anon$6@3894f726</span>
 <span class="nv">prod</span><span class="o">.</span><span class="py">num</span><span class="o">(</span><span class="s">"2"</span><span class="o">)</span>
-<span class="c1">// res5: data.Tuple2K[Option, Try, Float] = Tuple2K(Some(2.0F), Success(2.0F))</span>
+<span class="c1">// res6: data.Tuple2K[Option, Try, Float] = Tuple2K(Some(2.0F), Success(2.0F))</span>
 </code></pre></div></div>
 
 <p>If you want to combine more than 2 interpreters, the <code class="language-plaintext highlighter-rouge">@autoProductNK</code> attribute add a series of <code class="language-plaintext highlighter-rouge">product{n}K (n = 3..9)</code> methods to the companion object.</p>
@@ -1211,10 +186,10 @@ covariant position (i.e. the return types). For algebras with effect type also a
 </code></pre></div></div>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nv">prod4</span> <span class="k">=</span> <span class="nv">ExpressionAlg</span><span class="o">.</span><span class="py">product4K</span><span class="o">(</span><span class="nc">ExpressionAlg</span><span class="o">[</span><span class="kt">Try</span><span class="o">],</span> <span class="nc">ExpressionAlg</span><span class="o">[</span><span class="kt">Option</span><span class="o">],</span> <span class="n">listInterpreter</span><span class="o">,</span> <span class="n">vectorInterpreter</span><span class="o">)</span>
-<span class="c1">// prod4: ExpressionAlg[Tuple4[Try[T], Option[T], List[T], Vector[T]]] = repl.MdocSession$App$ExpressionAlg$$anon$8@7037409b</span>
+<span class="c1">// prod4: ExpressionAlg[Tuple4[Try[T], Option[T], List[T], Vector[T]]] = repl.MdocSession$App$ExpressionAlg$$anon$8@154fa4cf</span>
 
 <span class="nv">prod4</span><span class="o">.</span><span class="py">num</span><span class="o">(</span><span class="s">"3"</span><span class="o">)</span>
-<span class="c1">// res6: (Try[Float], Option[Float], List[Float], Vector[Float]) = (</span>
+<span class="c1">// res7: (Try[Float], Option[Float], List[Float], Vector[Float]) = (</span>
 <span class="c1">//   Success(3.0F),</span>
 <span class="c1">//   Some(3.0F),</span>
 <span class="c1">//   List(3.0F),</span>
@@ -1222,7 +197,7 @@ covariant position (i.e. the return types). For algebras with effect type also a
 <span class="c1">// )</span>
 
 <span class="nv">prod4</span><span class="o">.</span><span class="py">num</span><span class="o">(</span><span class="s">"invalid"</span><span class="o">)</span>
-<span class="c1">// res7: (Try[Float], Option[Float], List[Float], Vector[Float]) = (</span>
+<span class="c1">// res8: (Try[Float], Option[Float], List[Float], Vector[Float]) = (</span>
 <span class="c1">//   Failure(java.lang.NumberFormatException: For input string: "invalid"),</span>
 <span class="c1">//   None,</span>
 <span class="c1">//   List(),</span>
@@ -1251,13 +226,13 @@ covariant position (i.e. the return types). For algebras with effect type also a
 </code></pre></div></div>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">SimpleAlg</span><span class="o">[</span><span class="kt">Int</span><span class="o">].</span><span class="py">map</span><span class="o">(</span><span class="k">_</span> <span class="o">+</span> <span class="mi">1</span><span class="o">).</span><span class="py">foo</span><span class="o">(</span><span class="s">"blah"</span><span class="o">)</span>
-<span class="c1">// res8: Int = 5</span>
+<span class="c1">// res9: Int = 5</span>
 </code></pre></div></div>
 
 <p>Methods which return not the effect type are unaffected by the <code class="language-plaintext highlighter-rouge">map</code> function.</p>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">SimpleAlg</span><span class="o">[</span><span class="kt">Int</span><span class="o">].</span><span class="py">map</span><span class="o">(</span><span class="k">_</span> <span class="o">+</span> <span class="mi">1</span><span class="o">).</span><span class="py">bar</span><span class="o">(</span><span class="mi">2</span><span class="o">)</span>
-<span class="c1">// res9: Double = 4.0</span>
+<span class="c1">// res10: Double = 4.0</span>
 </code></pre></div></div>
 <h3 id="autoflatmap"><code class="language-plaintext highlighter-rouge">@autoFlatMap</code></h3>
 
@@ -1281,7 +256,7 @@ covariant position (i.e. the return types). For algebras with effect type also a
 </code></pre></div></div>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">hintAlg</span><span class="o">.</span><span class="py">foo</span><span class="o">(</span><span class="s">"Password"</span><span class="o">)</span>
-<span class="c1">// res10: String = "P*******"</span>
+<span class="c1">// res11: String = "P*******"</span>
 </code></pre></div></div>
 
 <h3 id="autoinvariant"><code class="language-plaintext highlighter-rouge">@autoInvariant</code></h3>
@@ -1297,7 +272,7 @@ covariant position (i.e. the return types). For algebras with effect type also a
 </code></pre></div></div>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">SimpleInvAlg</span><span class="o">[</span><span class="kt">String</span><span class="o">].</span><span class="py">imap</span><span class="o">(</span><span class="nv">_</span><span class="o">.</span><span class="py">toInt</span><span class="o">)(</span><span class="nv">_</span><span class="o">.</span><span class="py">toString</span><span class="o">).</span><span class="py">foo</span><span class="o">(</span><span class="mi">12</span><span class="o">)</span>
-<span class="c1">// res11: Int = 21</span>
+<span class="c1">// res12: Int = 21</span>
 </code></pre></div></div>
 
 <h3 id="autocontravariant"><code class="language-plaintext highlighter-rouge">@autoContravariant</code></h3>
@@ -1313,7 +288,7 @@ covariant position (i.e. the return types). For algebras with effect type also a
 </code></pre></div></div>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">SimpleContraAlg</span><span class="o">[</span><span class="kt">String</span><span class="o">].</span><span class="py">contramap</span><span class="o">[</span><span class="kt">Int</span><span class="o">](</span><span class="nv">_</span><span class="o">.</span><span class="py">toString</span><span class="o">).</span><span class="py">foo</span><span class="o">(</span><span class="mi">12</span><span class="o">)</span>
-<span class="c1">// res12: String = "21"</span>
+<span class="c1">// res13: String = "21"</span>
 </code></pre></div></div>
 
 <p>Note that if there are multiple type parameters on the trait, <code class="language-plaintext highlighter-rouge">@autoFunctor</code>, <code class="language-plaintext highlighter-rouge">@autoInvariant</code>, <code class="language-plaintext highlighter-rouge">@autoContravariant</code> will treat the last one as the target <code class="language-plaintext highlighter-rouge">T</code>.</p>

@@ -60,7 +60,7 @@ The <code class="language-plaintext highlighter-rouge">FunctorK</code> instance 
 <p>However, there is also <code class="language-plaintext highlighter-rouge">mapK</code> function added to the companion object of the algebra which gives you more precise type.</p>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nv">barOption</span><span class="k">:</span> <span class="kt">Bar</span><span class="o">[</span><span class="kt">Option</span><span class="o">]</span> <span class="o">{</span> <span class="k">type</span> <span class="kt">T</span> <span class="o">=</span> <span class="nc">String</span> <span class="o">}</span> <span class="k">=</span> <span class="nv">Bar</span><span class="o">.</span><span class="py">mapK</span><span class="o">(</span><span class="n">tryBarString</span><span class="o">)(</span><span class="n">fk</span><span class="o">)</span>
-<span class="c1">// barOption: Bar[Option]{type T = String} = repl.MdocSession$App$Bar$$anon$7$$anon$8@50f0ddb8</span>
+<span class="c1">// barOption: Bar[Option]{type T = String} = repl.MdocSession$App$Bar$$anon$7$$anon$8@68ce8aeb</span>
 </code></pre></div></div>
 
 <p>Also since the <code class="language-plaintext highlighter-rouge">FunctorK</code> (or <code class="language-plaintext highlighter-rouge">InvariantK</code>) instance uses a dependent type on the original interpreter, you may run into dependent type related issues. In those cases, this <code class="language-plaintext highlighter-rouge">mapK</code> (or <code class="language-plaintext highlighter-rouge">imapK</code>) on the companion object may give better result.

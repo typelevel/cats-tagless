@@ -87,9 +87,6 @@ lazy val coreJVM = coreM.jvm
 lazy val coreJS = coreM.js
 lazy val coreM = module("core", CrossType.Pure)
   .settings(libs.dependency("cats-core"))
-  .settings(simulacrumSettings(libs))
-  // simulacrum causes unused import warnings
-  .settings(scalacOptions ++= (if (scalaVersion.value == Scala213) Some("-Wconf:cat=unused-imports:s") else None))
   .enablePlugins(AutomateHeaderPlugin)
 
 lazy val laws = prj(lawsM)
@@ -108,7 +105,6 @@ lazy val macrosM = module("macros", CrossType.Pure)
   .dependsOn(coreM)
   .aggregate(coreM)
   .settings(scalaMacroDependencies(libs))
-  .settings(macroAnnotationsSettings)
   .settings(copyrightHeader)
   .settings(libs.testDependencies("scalatest", "scalacheck"))
   .enablePlugins(AutomateHeaderPlugin)
@@ -130,7 +126,6 @@ lazy val testsM = module("tests", CrossType.Pure)
     ),
     scalacOptions in Test := (scalacOptions in Test).value.filter(_ != "-Xfatal-warnings"),
     scalaMacroDependencies(libs),
-    macroAnnotationsSettings,
     noPublishSettings
   )
   .enablePlugins(AutomateHeaderPlugin)

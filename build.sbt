@@ -52,7 +52,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
 )
 
 lazy val libs = org.typelevel.libraries
-  .add("discipline-scalatest", version = "2.1.1", org = org.typelevel.typeLevelOrg)
+  .add("discipline-scalatest", version = "2.1.2", org = org.typelevel.typeLevelOrg)
   .add("cats", version = "2.4.1")
   .add("paradise", version = "2.1.1")
   .add("circe-core", version = "0.13.0", org = "io.circe")

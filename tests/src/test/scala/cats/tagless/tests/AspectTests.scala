@@ -133,5 +133,9 @@ object AspectTests extends TestInstances {
     implicit val jsonAspect: Aspect[GeoAlgebra, Encoder, Decoder] = Derive.aspect
   }
 
-  final case class HttpRequest[A: Decoder](method: String, url: String, body: Option[Json] = None)
+  final case class HttpRequest[A](
+      method: String,
+      url: String,
+      body: Option[Json] = None
+  )(implicit val decoder: Decoder[A])
 }

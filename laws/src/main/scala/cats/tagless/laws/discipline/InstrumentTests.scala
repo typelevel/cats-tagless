@@ -26,7 +26,7 @@ import cats.tagless.laws.InstrumentLaws
 trait InstrumentTests[F[_[_]]] extends FunctorKTests[F] {
   def laws: InstrumentLaws[F]
 
-  def instrument[A[_], B[_], C[_], T: Arbitrary](implicit
+  def instrument[A[_], B[_], C[_], T](implicit
       ArbFA: Arbitrary[F[A]],
       ArbitraryFK: Arbitrary[A ~> B],
       ArbitraryFK2: Arbitrary[B ~> C],

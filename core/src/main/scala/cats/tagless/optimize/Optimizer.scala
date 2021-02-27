@@ -41,6 +41,6 @@ object Optimizer {
   def apply[Alg[_[_]], F[_]](implicit ev: Optimizer[Alg, F]): Optimizer[Alg, F] = ev
 
   implicit class OptimizerOps[Alg[_[_]], A](val value: Program[Alg, Applicative, A]) extends AnyVal {
-    def optimize[F[_]: Monad](interp: Alg[F])(implicit O: Optimizer[Alg, F]): F[A] = O.optimize(value)(interp)
+    def optimize[F[_]](interp: Alg[F])(implicit O: Optimizer[Alg, F]): F[A] = O.optimize(value)(interp)
   }
 }

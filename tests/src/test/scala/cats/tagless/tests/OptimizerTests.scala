@@ -130,7 +130,7 @@ class OptimizerTests extends CatsTaglessTestSuite {
         }
       )
 
-      def put(key: String, a: String): Kleisli[F, M, Unit] = Kleisli(m => interp.put(key, a))
+      def put(key: String, a: String): Kleisli[F, M, Unit] = Kleisli(_ => interp.put(key, a))
     }
 
     def extract: KVStore[* => M] = new KVStore[* => M] {

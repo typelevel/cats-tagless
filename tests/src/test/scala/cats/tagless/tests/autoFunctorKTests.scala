@@ -25,6 +25,7 @@ import cats.laws.discipline.SerializableTests
 import cats.tagless.laws.discipline.FunctorKTests
 import shapeless.test.illTyped
 
+import scala.annotation.nowarn
 import scala.util.Try
 
 class autoFunctorKTests extends CatsTaglessTestSuite {
@@ -129,6 +130,7 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
   }
 
   test("turn off auto derivation") {
+    @nowarn("cat=unused")
     implicit object foo extends AlgWithoutAutoDerivation[Try] {
       def a(i: Int): Try[Int] = util.Success(i)
     }

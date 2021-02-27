@@ -1,8 +1,7 @@
 import com.typesafe.sbt.SbtGit.git
-import _root_.sbtcrossproject.CrossPlugin.autoImport.CrossType
 
 addCommandAlias("validateJVM", "all scalafmtCheckAll scalafmtSbtCheck testsJVM/test")
-addCommandAlias("validateJS", ";testsJS/test")
+addCommandAlias("validateJS", "all testsJS/test")
 addCommandAlias("fmt", "all scalafmtSbt scalafmtAll")
 addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVersion.value.get + \"-SNAPSHOT\"")
@@ -10,31 +9,23 @@ addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVe
 val Scala212 = "2.12.13"
 val Scala213 = "2.13.5"
 
+val gitRepo = "git@github.com:typelevel/cats-tagless.git"
+val homePage = "https://typelevel.org/cats-tagless"
+
+// sbt-spiewak settings
+ThisBuild / baseVersion := "0.12"
+ThisBuild / publishGithubUser := "joroKr21"
+ThisBuild / publishFullName := "Georgi Krastev"
+enablePlugins(SonatypeCiReleasePlugin)
+
 // update to scala 3 requires swapping from scalatest to munit and reimplementing all macros
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala213 /*, "3.0.0-M1", "3.0.0-M2"*/ )
 ThisBuild / scalaVersion := Scala213
-
-ThisBuild / githubWorkflowPublishTargetBranches := Seq()
+ThisBuild / githubWorkflowPublishTargetBranches := Nil
 ThisBuild / githubWorkflowArtifactUpload := false
-
-ThisBuild / githubWorkflowBuildMatrixAdditions +=
-  "ci" -> List("validateJS", "validateJVM")
-
-ThisBuild / githubWorkflowBuild := Seq(WorkflowStep.Sbt(List("${{ matrix.ci }}"), name = Some("Validation")))
-
+ThisBuild / githubWorkflowBuildMatrixAdditions += "ci" -> List("validateJS", "validateJVM")
+ThisBuild / githubWorkflowBuild := List(WorkflowStep.Sbt(List("${{ matrix.ci }}"), name = Some("Validation")))
 ThisBuild / githubWorkflowAddedJobs ++= Seq(
-  WorkflowJob(
-    "coverage",
-    "Coverage",
-    githubWorkflowJobSetup.value.toList ::: List(
-      WorkflowStep.Use(UseRef.Public("actions", "setup-python", "v2"), name = Some("Setup Python")),
-      WorkflowStep.Run(List("pip install codecov"), name = Some("Install Codecov")),
-      WorkflowStep
-        .Sbt(List("coverage", "rootJVM/test", "rootJVM/coverageReport"), name = Some("Calculate test coverage")),
-      WorkflowStep.Run(List("codecov"), name = Some("Upload coverage results"))
-    ),
-    scalas = List(Scala213)
-  ),
   WorkflowJob(
     "microsite",
     "Microsite",
@@ -47,107 +38,123 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
       WorkflowStep.Run(List("gem install jekyll -v 2.5"), name = Some("Install Jekyll")),
       WorkflowStep.Sbt(List("docs/makeMicrosite"), name = Some("Build microsite"))
     ),
-    scalas = List(Scala212)
+    scalas = List(Scala213)
   )
 )
 
-lazy val libs = org.typelevel.libraries
-  .add("discipline-scalatest", version = "2.1.2", org = org.typelevel.typeLevelOrg)
-  .add("cats", version = "2.4.2")
-  .add("paradise", version = "2.1.1")
-  .add("circe-core", version = "0.13.0", org = "io.circe")
+val catsVersion = "2.4.2"
+val catsEffectVersion = "2.3.3"
+val circeVersion = "0.13.0"
+val disciplineVersion = "1.1.4"
+val disciplineScalaTestVersion = "2.1.2"
+val paradiseVersion = "2.1.1"
+val scalaCheckVersion = "1.15.3"
+val shapelessVersion = "2.3.3"
 
-val apache2 = "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")
-val gh = GitHubSettings(org = "typelevel", proj = "cats-tagless", publishOrg = "org.typelevel", license = apache2)
-
-lazy val rootSettings = buildSettings ++ commonSettings ++ publishSettings
-lazy val module = mkModuleFactory(gh.proj, mkConfig(rootSettings, commonJvmSettings, commonJsSettings))
-lazy val prj = mkPrjFactory(rootSettings)
+val macroSettings = List(
+  libraryDependencies ++=
+    List("scala-compiler", "scala-reflect").map("org.scala-lang" % _ % scalaVersion.value % Provided),
+  scalacOptions ++= (scalaBinaryVersion.value match {
+    case "2.13" => List("-Ymacro-annotations")
+    case _ => Nil
+  }),
+  libraryDependencies ++= (scalaBinaryVersion.value match {
+    case "2.13" => Nil
+    case _ => List(compilerPlugin(("org.scalamacros" %% "paradise" % paradiseVersion).cross(CrossVersion.full)))
+  })
+)
 
 lazy val `cats-tagless` = project
-  .configure(mkRootConfig(rootSettings, rootJVM))
   .aggregate(rootJVM, rootJS, docs)
   .dependsOn(rootJVM, rootJS)
-  .settings(noPublishSettings)
+  .settings(rootSettings, noPublishSettings)
 
 lazy val rootJVM = project
-  .configure(mkRootJvmConfig(gh.proj, rootSettings, commonJvmSettings))
   .aggregate(coreJVM, lawsJVM, testsJVM, macrosJVM)
   .dependsOn(coreJVM, lawsJVM, testsJVM, macrosJVM)
-  .settings(noPublishSettings)
+  .settings(rootSettings, noPublishSettings)
 
 lazy val rootJS = project
-  .configure(mkRootJsConfig(gh.proj, rootSettings, commonJsSettings))
   .aggregate(coreJS, lawsJS, testsJS, macrosJS)
   .dependsOn(coreJS, lawsJS, testsJS, macrosJS)
-  .settings(noPublishSettings)
+  .settings(rootSettings, noPublishSettings, commonJsSettings)
 
-lazy val core = prj(coreM)
-lazy val coreJVM = coreM.jvm
-lazy val coreJS = coreM.js
-lazy val coreM = module("core", CrossType.Pure)
-  .settings(libs.dependency("cats-core"))
+lazy val coreJVM = core.jvm
+lazy val coreJS = core.js
+lazy val core = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
   .enablePlugins(AutomateHeaderPlugin)
-
-lazy val laws = prj(lawsM)
-lazy val lawsJVM = lawsM.jvm
-lazy val lawsJS = lawsM.js
-lazy val lawsM = module("laws", CrossType.Pure)
-  .dependsOn(coreM)
-  .settings(libs.dependency("cats-laws"))
-  .settings(disciplineDependencies)
-  .enablePlugins(AutomateHeaderPlugin)
-
-lazy val macros = prj(macrosM)
-lazy val macrosJVM = macrosM.jvm
-lazy val macrosJS = macrosM.js
-lazy val macrosM = module("macros", CrossType.Pure)
-  .dependsOn(coreM)
-  .aggregate(coreM)
-  .settings(scalaMacroDependencies(libs))
-  .settings(copyrightHeader)
-  .settings(libs.testDependencies("scalatest", "scalacheck"))
-  .enablePlugins(AutomateHeaderPlugin)
-
-lazy val tests = prj(testsM)
-lazy val testsJVM = testsM.jvm
-lazy val testsJS = testsM.js
-lazy val testsM = module("tests", CrossType.Pure)
-  .dependsOn(macrosM, lawsM)
+  .jsSettings(commonJsSettings)
+  .settings(rootSettings)
   .settings(
-    libs.testDependencies(
-      "shapeless",
-      "scalatest",
-      "cats-free",
-      "cats-effect",
-      "cats-testkit",
-      "discipline-scalatest",
-      "circe-core"
-    ),
-    scalacOptions in Test := (scalacOptions in Test).value.filter(_ != "-Xfatal-warnings"),
-    scalaMacroDependencies(libs),
-    noPublishSettings
+    moduleName := "cats-tagless-core",
+    libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion
   )
+
+lazy val lawsJVM = laws.jvm
+lazy val lawsJS = laws.js
+lazy val laws = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .dependsOn(core)
   .enablePlugins(AutomateHeaderPlugin)
+  .jsSettings(commonJsSettings)
+  .settings(rootSettings)
+  .settings(
+    moduleName := "cats-tagless-laws",
+    libraryDependencies ++= List(
+      "org.typelevel" %%% "cats-laws" % catsVersion,
+      "org.typelevel" %%% "discipline-core" % disciplineVersion
+    )
+  )
+
+lazy val macrosJVM = macros.jvm
+lazy val macrosJS = macros.js
+lazy val macros = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .dependsOn(core)
+  .aggregate(core)
+  .enablePlugins(AutomateHeaderPlugin)
+  .jsSettings(commonJsSettings)
+  .settings(rootSettings, macroSettings, copyrightHeader)
+  .settings(
+    moduleName := "cats-tagless-macros",
+    scalacOptions := scalacOptions.value.filterNot(_.startsWith("-Wunused")).filterNot(_.startsWith("-Ywarn-unused")),
+    libraryDependencies += "org.scalacheck" %%% "scalacheck" % scalaCheckVersion % Test
+  )
+
+lazy val testsJVM = tests.jvm
+lazy val testsJS = tests.js
+lazy val tests = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .dependsOn(macros, laws)
+  .enablePlugins(AutomateHeaderPlugin)
+  .jsSettings(commonJsSettings)
+  .settings(rootSettings, macroSettings, noPublishSettings)
+  .settings(
+    moduleName := "cats-tagless-tests",
+    libraryDependencies ++= List(
+      "org.typelevel" %%% "cats-free" % catsVersion,
+      "org.typelevel" %%% "cats-testkit" % catsVersion,
+      "org.typelevel" %%% "cats-effect" % catsEffectVersion,
+      "io.circe" %%% "circe-core" % circeVersion,
+      "org.typelevel" %%% "discipline-scalatest" % disciplineScalaTestVersion,
+      "com.chuusai" %%% "shapeless" % shapelessVersion
+    ).map(_ % Test)
+  )
 
 /** Docs - Generates and publishes the scaladoc API documents and the project web site. */
 lazy val docs = project
-  .settings(rootSettings)
-  .settings(moduleName := gh.proj + "-docs")
-  .settings(noPublishSettings)
-  .settings(unidocCommonSettings)
-  .settings(commonJvmSettings)
-  .settings(scalaMacroDependencies(libs))
-  .settings(libs.dependency("cats-free"))
   .dependsOn(List(macrosJVM).map(ClasspathDependency(_, Some("compile;test->test"))): _*)
-  .enablePlugins(MicrositesPlugin)
-  .enablePlugins(SiteScaladocPlugin)
+  .enablePlugins(MicrositesPlugin, SiteScaladocPlugin)
+  .settings(rootSettings, macroSettings, noPublishSettings)
   .settings(
-    scalaVersion := Scala212,
-    crossScalaVersions := Seq(Scala212),
+    moduleName := "cats-tagless-docs",
+    libraryDependencies += "org.typelevel" %%% "cats-free" % catsVersion,
+    scalaVersion := Scala213,
+    crossScalaVersions := Seq(Scala213),
     docsMappingsAPIDir := "api",
     addMappingsToSiteDir(mappings in packageDoc in Compile in coreJVM, docsMappingsAPIDir),
-    organization := gh.organisation,
+    organization := "org.typelevel",
     autoAPIMappings := true,
     micrositeName := "Cats-tagless",
     micrositeDescription := "A library of utilities for tagless final algebras",
@@ -168,53 +175,59 @@ lazy val docs = project
     ),
     ghpagesNoJekyll := false,
     micrositeAuthor := "cats-tagless Contributors",
-    scalacOptions --= Seq("-Ywarn-unused-import", "-Ywarn-unused:imports", "-Ywarn-dead-code"),
-    git.remoteRepo := gh.repo,
+    scalacOptions -= "-Xfatal-warnings",
+    git.remoteRepo := gitRepo,
     includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md"
   )
 
 lazy val docsMappingsAPIDir = settingKey[String]("Name of subdirectory in site target directory for api docs")
+lazy val rootSettings = (organization := "org.typelevel") :: commonSettings ::: publishSettings
 
-lazy val buildSettings = sharedBuildSettings(gh, libs)
-
-lazy val commonSettings = sharedCommonSettings ++ Seq(
+lazy val commonSettings = copyrightHeader ::: List(
   crossScalaVersions := (ThisBuild / crossScalaVersions).value,
   parallelExecution in Test := false,
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
-  addCompilerPlugin(("org.typelevel" % "kind-projector" % "0.11.3").cross(CrossVersion.full)),
+  addCompilerPlugin(("org.typelevel" % "kind-projector" % "0.11.3").cross(CrossVersion.full))
+)
+
+lazy val commonJsSettings = List(
+  scalaJSStage in Global := FastOptStage,
+  // currently sbt-doctest doesn't work in JS builds
+  // https://github.com/tkawachi/sbt-doctest/issues/52
+  doctestGenTests := Nil
+)
+
+lazy val noPublishSettings = List(
+  skip in publish := true
+)
+
+lazy val publishSettings = List(
+  homepage := Some(url(homePage)),
+  scmInfo := Some(ScmInfo(url(homePage), gitRepo)),
+  licenses := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")),
   developers := List(
     Developer(
       "Georgi Krastev",
       "@joroKr21",
       "joro.kr.21@gmail.com",
-      new java.net.URL("https://www.linkedin.com/in/georgykr")
+      url("https://www.linkedin.com/in/georgykr")
     ),
-    Developer("Kailuo Wang", "@kailuowang", "kailuo.wang@gmail.com", new java.net.URL("http://kailuowang.com")),
+    Developer(
+      "Kailuo Wang",
+      "@kailuowang",
+      "kailuo.wang@gmail.com",
+      url("http://kailuowang.com")
+    ),
     Developer(
       "Luka Jacobowitz",
       "@LukaJCB",
       "luka.jacobowitz@fh-duesseldorf.de",
-      new java.net.URL("http://stackoverflow.com/users/3795501/luka-jacobowitz")
+      url("http://stackoverflow.com/users/3795501/luka-jacobowitz")
     )
   )
-) ++ scalacAllSettings ++ unidocCommonSettings ++ copyrightHeader
-
-lazy val commonJsSettings = Seq(
-  scalaJSStage in Global := FastOptStage,
-  // currently sbt-doctest doesn't work in JS builds
-  // https://github.com/tkawachi/sbt-doctest/issues/52
-  doctestGenTests := Seq.empty
 )
 
-lazy val commonJvmSettings = scoverageSettings
-
-lazy val publishSettings = sharedPublishSettings(gh) ++ credentialSettings ++ sharedReleaseProcess
-
-lazy val scoverageSettings = sharedScoverageSettings(60)
-
-lazy val disciplineDependencies = libs.dependencies("discipline-core", "scalacheck")
-
-lazy val copyrightHeader = Seq(
+lazy val copyrightHeader = List(
   startYear := Some(2019),
   organizationName := "cats-tagless maintainers"
 )

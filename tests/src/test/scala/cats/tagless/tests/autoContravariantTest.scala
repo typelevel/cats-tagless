@@ -103,7 +103,7 @@ object autoContravariantTest {
     def foo(a: String, b: Float): Int = (a.length.toFloat + b).toInt
   }
 
-  implicit def eqForSimpleAlg[T: ExhaustiveCheck: Eq]: Eq[SimpleAlg[T]] =
+  implicit def eqForSimpleAlg[T: ExhaustiveCheck]: Eq[SimpleAlg[T]] =
     Eq.by(algebra => (algebra.foo _, algebra.bar _))
 
   implicit def arbitrarySimpleAlg[T: Cogen]: Arbitrary[SimpleAlg[T]] =

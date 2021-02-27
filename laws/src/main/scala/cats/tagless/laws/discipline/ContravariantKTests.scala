@@ -26,7 +26,7 @@ import org.scalacheck.Prop._
 trait ContravariantKTests[F[_[_]]] extends InvariantKTests[F] {
   def laws: ContravariantKLaws[F]
 
-  def contravariantK[A[_], B[_], C[_], T: Arbitrary](implicit
+  def contravariantK[A[_], B[_], C[_], T](implicit
       arbFa: Arbitrary[F[A]],
       arbFkAB: Arbitrary[A ~> B],
       arbFkBC: Arbitrary[B ~> C],

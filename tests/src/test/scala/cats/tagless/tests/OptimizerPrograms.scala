@@ -40,7 +40,7 @@ object Programs {
 
   private def monadProgramF[F[_]: Monad](F: KVStore[F]): F[List[String]] = for {
     _ <- F.put("dog", "Daawwwwgg")
-    dog <- F.get("dog")
+    _ <- F.get("dog")
     list <- putGetProgramF(F)
   } yield list
 

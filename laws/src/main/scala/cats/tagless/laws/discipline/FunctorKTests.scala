@@ -26,7 +26,7 @@ import cats.laws.discipline._
 trait FunctorKTests[F[_[_]]] extends InvariantKTests[F] {
   def laws: FunctorKLaws[F]
 
-  def functorK[A[_], B[_], C[_], T: Arbitrary](implicit
+  def functorK[A[_], B[_], C[_], T](implicit
       ArbFA: Arbitrary[F[A]],
       ArbitraryFK: Arbitrary[A ~> B],
       ArbitraryFK2: Arbitrary[B ~> C],

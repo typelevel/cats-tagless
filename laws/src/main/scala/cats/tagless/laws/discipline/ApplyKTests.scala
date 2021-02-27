@@ -28,7 +28,7 @@ import cats.tagless.laws.discipline.SemigroupalKTests.IsomorphismsK
 trait ApplyKTests[F[_[_]]] extends FunctorKTests[F] with SemigroupalKTests[F] {
   def laws: ApplyKLaws[F]
 
-  def applyK[A[_], B[_], C[_], T: Arbitrary](implicit
+  def applyK[A[_], B[_], C[_], T](implicit
       ArbFA: Arbitrary[F[A]],
       ArbCG: Arbitrary[F[B]],
       ArbCH: Arbitrary[F[C]],

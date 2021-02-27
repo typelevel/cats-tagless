@@ -25,7 +25,7 @@ trait MonadSyntax {
 }
 
 class MonadOptimizerOps[Alg[_[_]], A](val value: Program[Alg, Monad, A]) extends AnyVal {
-  def optimizeM[F[_]: Monad](interp: Alg[F])(implicit O: MonadOptimizer[Alg, F]): F[A] =
+  def optimizeM[F[_]](interp: Alg[F])(implicit O: MonadOptimizer[Alg, F]): F[A] =
     O.optimizeM(value)(interp)
 }
 

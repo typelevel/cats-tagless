@@ -184,8 +184,7 @@ lazy val commonSettings = copyrightHeader ::: List(
   scalaVersion := (ThisBuild / scalaVersion).value,
   crossScalaVersions := (ThisBuild / crossScalaVersions).value,
   parallelExecution in Test := false,
-  resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
-  addCompilerPlugin(("org.typelevel" % "kind-projector" % "0.11.3").cross(CrossVersion.full))
+  resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots"))
 )
 
 lazy val commonJsSettings = List(

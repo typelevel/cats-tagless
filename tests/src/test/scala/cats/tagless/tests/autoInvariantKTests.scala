@@ -21,7 +21,6 @@ import cats.~>
 import cats.laws.discipline.SerializableTests
 import cats.laws.discipline.arbitrary._
 import cats.tagless.laws.discipline.InvariantKTests
-import shapeless.test.illTyped
 
 import scala.annotation.nowarn
 import scala.util.Try
@@ -106,7 +105,7 @@ class autoInvariantKTests extends CatsTaglessTestSuite {
       def a(i: Try[Int]): Try[Int] = i
     }
 
-    illTyped(""" AlgWithoutAutoDerivation.autoDerive """)
+    assertDoesNotCompile("AlgWithoutAutoDerivation.autoDerive")
   }
 
   test("with default impl") {

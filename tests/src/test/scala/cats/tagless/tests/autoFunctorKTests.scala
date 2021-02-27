@@ -23,7 +23,6 @@ import cats.data.Cokleisli
 import cats.free.Free
 import cats.laws.discipline.SerializableTests
 import cats.tagless.laws.discipline.FunctorKTests
-import shapeless.test.illTyped
 
 import scala.annotation.nowarn
 import scala.util.Try
@@ -135,7 +134,7 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
       def a(i: Int): Try[Int] = util.Success(i)
     }
 
-    illTyped("AlgWithoutAutoDerivation.autoDerive")
+    assertDoesNotCompile("AlgWithoutAutoDerivation.autoDerive")
   }
 
   test("defs with no params") {

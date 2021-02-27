@@ -49,7 +49,6 @@ val disciplineVersion = "1.1.4"
 val disciplineScalaTestVersion = "2.1.2"
 val paradiseVersion = "2.1.1"
 val scalaCheckVersion = "1.15.3"
-val shapelessVersion = "2.3.3"
 
 val macroSettings = List(
   libraryDependencies ++=
@@ -64,10 +63,11 @@ val macroSettings = List(
   })
 )
 
-lazy val `cats-tagless` = project
+lazy val catsTagless = project
   .aggregate(rootJVM, rootJS, docs)
   .dependsOn(rootJVM, rootJS)
   .settings(rootSettings, noPublishSettings)
+  .settings(moduleName := "cats-tagless")
 
 lazy val rootJVM = project
   .aggregate(coreJVM, lawsJVM, testsJVM, macrosJVM)
@@ -137,21 +137,18 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform)
       "org.typelevel" %%% "cats-testkit" % catsVersion,
       "org.typelevel" %%% "cats-effect" % catsEffectVersion,
       "io.circe" %%% "circe-core" % circeVersion,
-      "org.typelevel" %%% "discipline-scalatest" % disciplineScalaTestVersion,
-      "com.chuusai" %%% "shapeless" % shapelessVersion
+      "org.typelevel" %%% "discipline-scalatest" % disciplineScalaTestVersion
     ).map(_ % Test)
   )
 
 /** Docs - Generates and publishes the scaladoc API documents and the project web site. */
 lazy val docs = project
-  .dependsOn(List(macrosJVM).map(ClasspathDependency(_, Some("compile;test->test"))): _*)
+  .dependsOn(macrosJVM)
   .enablePlugins(MicrositesPlugin, SiteScaladocPlugin)
   .settings(rootSettings, macroSettings, noPublishSettings)
   .settings(
     moduleName := "cats-tagless-docs",
     libraryDependencies += "org.typelevel" %%% "cats-free" % catsVersion,
-    scalaVersion := Scala213,
-    crossScalaVersions := Seq(Scala213),
     docsMappingsAPIDir := "api",
     addMappingsToSiteDir(mappings in packageDoc in Compile in coreJVM, docsMappingsAPIDir),
     organization := "org.typelevel",
@@ -184,6 +181,7 @@ lazy val docsMappingsAPIDir = settingKey[String]("Name of subdirectory in site t
 lazy val rootSettings = (organization := "org.typelevel") :: commonSettings ::: publishSettings
 
 lazy val commonSettings = copyrightHeader ::: List(
+  scalaVersion := (ThisBuild / scalaVersion).value,
   crossScalaVersions := (ThisBuild / crossScalaVersions).value,
   parallelExecution in Test := false,
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),

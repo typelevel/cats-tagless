@@ -7,7 +7,7 @@ addCommandAlias("fmt", "all scalafmtSbt scalafmtAll")
 addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVersion.value.get + \"-SNAPSHOT\"")
 
-val Scala212 = "2.12.13"
+val Scala212 = "2.13.5"
 val Scala213 = "2.13.4"
 
 // update to scala 3 requires swapping from scalatest to munit and reimplementing all macros

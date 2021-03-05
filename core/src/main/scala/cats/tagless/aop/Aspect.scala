@@ -81,7 +81,7 @@ object Aspect {
     * It witnesses that for some value `F[A]` there exists a compatible type class / constraint instance `G[A]`.
     * The target type `A` is existentially quantified to enable capturing all arguments lists of a method.
     *
-    * @tparam F The carrier type of the target value ([[Eval]] for method arguments).
+    * @tparam F The carrier type of the target value (`Eval` for method arguments).
     * @tparam G The type class / constraint that defines the behaviour of this [[Aspect.Advice]].
     */
   trait Advice[F[_], G[_]] extends Serializable {

@@ -86,7 +86,7 @@ object autoFunctorTests {
       )
     }
 
-  implicit def arbitraryTestAlgebra[T: Arbitrary: Cogen]: Arbitrary[TestAlgebra[T]] =
+  implicit def arbitraryTestAlgebra[T: Arbitrary]: Arbitrary[TestAlgebra[T]] =
     Arbitrary {
       for {
         absEff <- Arbitrary.arbitrary[String => T]

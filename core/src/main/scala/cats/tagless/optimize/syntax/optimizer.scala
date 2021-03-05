@@ -16,8 +16,8 @@
 
 package cats.tagless.optimize.syntax
 
-import cats.{Applicative, Monad}
-import cats.tagless.optimize.{Program, Optimizer}
+import cats.Applicative
+import cats.tagless.optimize.{Optimizer, Program}
 
 trait OptimizerSyntax {
   implicit def optimizerOps[Alg[_[_]], A](value: Program[Alg, Applicative, A]): OptimizerOps[Alg, A] =
@@ -25,7 +25,7 @@ trait OptimizerSyntax {
 }
 
 class OptimizerOps[Alg[_[_]], A](val value: Program[Alg, Applicative, A]) extends AnyVal {
-  def optimize[F[_]: Monad](interp: Alg[F])(implicit O: Optimizer[Alg, F]): F[A] = O.optimize(value)(interp)
+  def optimize[F[_]](interp: Alg[F])(implicit O: Optimizer[Alg, F]): F[A] = O.optimize(value)(interp)
 }
 
 object optimizer extends OptimizerSyntax

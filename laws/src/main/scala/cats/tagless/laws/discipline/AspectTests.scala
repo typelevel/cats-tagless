@@ -26,7 +26,7 @@ import cats.tagless.laws.AspectLaws
 trait AspectTests[F[_[_]], Dom[_], Cod[_]] extends InstrumentTests[F] {
   def laws: AspectLaws[F, Dom, Cod]
 
-  def aspect[A[_], B[_], C[_], T: Arbitrary](implicit
+  def aspect[A[_], B[_], C[_], T](implicit
       ArbFA: Arbitrary[F[A]],
       ArbitraryFK: Arbitrary[A ~> B],
       ArbitraryFK2: Arbitrary[B ~> C],

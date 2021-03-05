@@ -21,8 +21,8 @@ import cats.~>
 import cats.laws.discipline.SerializableTests
 import cats.laws.discipline.arbitrary._
 import cats.tagless.laws.discipline.InvariantKTests
-import shapeless.test.illTyped
 
+import scala.annotation.nowarn
 import scala.util.Try
 
 class autoInvariantKTests extends CatsTaglessTestSuite {
@@ -100,16 +100,17 @@ class autoInvariantKTests extends CatsTaglessTestSuite {
   }
 
   test("turn off auto derivation") {
+    @nowarn("cat=unused")
     implicit object foo extends AlgWithoutAutoDerivation[Try] {
       def a(i: Try[Int]): Try[Int] = i
     }
 
-    illTyped(""" AlgWithoutAutoDerivation.autoDerive """)
+    assertDoesNotCompile("AlgWithoutAutoDerivation.autoDerive")
   }
 
   test("with default impl") {
     implicit object foo extends AlgWithDefaultImpl[Try]
-    foo.imapK(toFk)(otFk).const(Option(1)) should be(3)
+    foo.imapK(toFk)(otFk).const(Option(1)) should contain(1)
   }
 
   test("with methods with type param") {
@@ -174,7 +175,7 @@ object autoInvariantKTests {
 
   @autoInvariantK @finalAlg
   trait AlgWithDefaultImpl[F[_]] {
-    def const(i: F[Int]): Int = 3
+    def const(i: F[Int]): F[Int] = i
   }
 
   @autoInvariantK @finalAlg

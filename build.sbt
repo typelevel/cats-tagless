@@ -52,7 +52,7 @@ val scalaCheckVersion = "1.15.3"
 
 val macroSettings = List(
   libraryDependencies ++=
-    List("scala-compiler", "scala-reflect").map("org.scala-lang" % _ % scalaVersion.value),
+    List("scala-compiler", "scala-reflect").map("org.scala-lang" % _ % scalaVersion.value % Provided),
   scalacOptions ++= (scalaBinaryVersion.value match {
     case "2.13" => List("-Ymacro-annotations")
     case _ => Nil
@@ -82,7 +82,7 @@ lazy val rootJS = project
 lazy val rootNative = project
   .aggregate(coreNative, lawsNative, testsNative, macrosNative)
   .dependsOn(coreNative, lawsNative, testsNative, macrosNative)
-  .settings(rootSettings, noPublishSettings)
+  .settings(rootSettings, noPublishSettings, commonNativeSettings)
 
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
@@ -91,6 +91,7 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .enablePlugins(AutomateHeaderPlugin)
   .jsSettings(commonJsSettings)
+  .nativeSettings(commonNativeSettings)
   .settings(rootSettings)
   .settings(
     moduleName := "cats-tagless-core",
@@ -105,6 +106,7 @@ lazy val laws = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .dependsOn(core)
   .enablePlugins(AutomateHeaderPlugin)
   .jsSettings(commonJsSettings)
+  .nativeSettings(commonNativeSettings)
   .settings(rootSettings)
   .settings(
     moduleName := "cats-tagless-laws",
@@ -123,6 +125,7 @@ lazy val macros = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .aggregate(core)
   .enablePlugins(AutomateHeaderPlugin)
   .jsSettings(commonJsSettings)
+  .nativeSettings(commonNativeSettings)
   .settings(rootSettings, macroSettings, copyrightHeader)
   .settings(
     moduleName := "cats-tagless-macros",
@@ -134,11 +137,13 @@ lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
 lazy val testsNative = tests.native
 lazy val tests = crossProject(JVMPlatform, JSPlatform, NativePlatform)
-  .crossType(CrossType.Pure)
+  .crossType(CrossType.Full)
   .dependsOn(macros, laws)
   .enablePlugins(AutomateHeaderPlugin)
+  .jvmSettings(libraryDependencies += "io.circe" %% "circe-core" % circeVersion % Test)
   .jsSettings(commonJsSettings)
   .jsSettings(scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)))
+  .nativeSettings(commonNativeSettings)
   .settings(rootSettings, macroSettings, noPublishSettings)
   .settings(
     moduleName := "cats-tagless-tests",
@@ -200,6 +205,10 @@ lazy val commonJsSettings = List(
   scalaJSStage in Global := FastOptStage,
   // currently sbt-doctest doesn't work in JS builds
   // https://github.com/tkawachi/sbt-doctest/issues/52
+  doctestGenTests := Nil
+)
+
+lazy val commonNativeSettings = List(
   doctestGenTests := Nil
 )
 

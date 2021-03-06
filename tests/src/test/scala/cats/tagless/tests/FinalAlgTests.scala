@@ -23,15 +23,15 @@ import FinalAlgTests._
 class FinalAlgTests extends CatsTaglessTestSuite {
   test("companion apply") {
     import Interpreters.tryInterpreter
-    SafeAlg[Try].parseInt("10") should be(Success(10))
+    assertEquals(SafeAlg[Try].parseInt("10"), Success(10))
   }
 
   test("extra TP") {
-    AlgWithExtraTP[Try, String].a(3) should be(Success("3"))
+    assertEquals(AlgWithExtraTP[Try, String].a(3), Success("3"))
   }
 
   test("simple effect Type") {
-    AlgWithSimpleEffectT[String].a(3) should be("3")
+    assertEquals(AlgWithSimpleEffectT[String].a(3), "3")
   }
 
 }

@@ -36,7 +36,7 @@ class autoInvariantKTests extends CatsTaglessTestSuite {
       def a(i: Int): Int = i
     }
 
-    tryInt.imapK(toFk)(otFk).a(2) should be(2)
+    assertEquals(tryInt.imapK(toFk)(otFk).a(2), 2)
   }
 
   test("Alg with contravariant Eff method") {
@@ -46,8 +46,8 @@ class autoInvariantKTests extends CatsTaglessTestSuite {
     }
 
     val oInt = tryInt.imapK(toFk)(otFk)
-    oInt.a(Option(2), "ignored") should be(2)
-    oInt.b(Option(3)) should be(3)
+    assertEquals(oInt.a(Option(2), "ignored"), 2)
+    assertEquals(oInt.b(Option(3)), 3)
   }
 
   test("Alg with Invariant effect method") {
@@ -56,7 +56,7 @@ class autoInvariantKTests extends CatsTaglessTestSuite {
     }
 
     val oInt = tryInt.imapK(toFk)(otFk)
-    oInt.a(Option(2), "ignored") should be(Some(2))
+    assertEquals(oInt.a(Option(2), "ignored"), Some(2))
   }
 
   test("Alg with extra type parameters auto derivation") {
@@ -65,8 +65,8 @@ class autoInvariantKTests extends CatsTaglessTestSuite {
       def b(i: Try[Int]) = i.map(_.toString)
     }
     import WithExtraTpeParam.autoDerive._
-    WithExtraTpeParam[Option, String].a(Some("5")) should be(Some("5"))
-    WithExtraTpeParam[Option, String].b(Some(5)) should be(Some("5"))
+    assertEquals(WithExtraTpeParam[Option, String].a(Some("5")), Some("5"))
+    assertEquals(WithExtraTpeParam[Option, String].b(Some(5)), Some("5"))
   }
 
   test("Alg with extra type parameters before effect type") {
@@ -74,7 +74,7 @@ class autoInvariantKTests extends CatsTaglessTestSuite {
       def a(i: Try[Int]) = i.map(_.toString)
     }
     import AlgWithExtraTP2.autoDerive._
-    AlgWithExtraTP2[String, Option].a(Some(5)) should be(Some("5"))
+    assertEquals(AlgWithExtraTP2[String, Option].a(Some(5)), Some("5"))
   }
 
   test("Alg with type member") {
@@ -83,7 +83,7 @@ class autoInvariantKTests extends CatsTaglessTestSuite {
       def a(i: Try[String]): Try[String] = i.map(_ + "a")
     }
 
-    AlgWithTypeMember.imapK(tryInt)(toFk)(otFk).a(Some("4")) should be(Some("4a"))
+    assertEquals(AlgWithTypeMember.imapK(tryInt)(toFk)(otFk).a(Some("4")), Some("4a"))
   }
 
   test("Alg with type member fully refined") {
@@ -96,7 +96,7 @@ class autoInvariantKTests extends CatsTaglessTestSuite {
     import AlgWithTypeMember.fullyRefined.autoDerive._
 
     val algAux: AlgWithTypeMember.Aux[Option, String] = implicitly
-    algAux.a(Some("4")) should be(Some("4a"))
+    assertEquals(algAux.a(Some("4")), Some("4a"))
   }
 
   test("turn off auto derivation") {
@@ -105,19 +105,25 @@ class autoInvariantKTests extends CatsTaglessTestSuite {
       def a(i: Try[Int]): Try[Int] = i
     }
 
-    assertDoesNotCompile("AlgWithoutAutoDerivation.autoDerive")
+    assertNoDiff(
+      compileErrors("AlgWithoutAutoDerivation.autoDerive"),
+      """|error: value autoDerive is not a member of object cats.tagless.tests.autoInvariantKTests.AlgWithoutAutoDerivation
+         |AlgWithoutAutoDerivation.autoDerive
+         |                         ^
+         |""".stripMargin
+    )
   }
 
   test("with default impl") {
     implicit object foo extends AlgWithDefaultImpl[Try]
-    foo.imapK(toFk)(otFk).const(Option(1)) should contain(1)
+    assertEquals(foo.imapK(toFk)(otFk).const(Option(1)), Some(1))
   }
 
   test("with methods with type param") {
     implicit object foo extends AlgWithTypeParam[Try] {
       def a[T](i: Try[T]): Try[String] = i.map(_.toString)
     }
-    foo.imapK(toFk)(otFk).a(Option(1)) should be(Some("1"))
+    assertEquals(foo.imapK(toFk)(otFk).a(Option(1)), Some("1"))
   }
 }
 

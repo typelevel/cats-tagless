@@ -29,13 +29,13 @@ class autoContravariantTests extends CatsTaglessTestSuite {
 
   test("non effect method correctly delegated") {
     val doubleAlg: AlgWithNonEffectMethod[String] = AlgWithNonEffectMethodFloat.contramap[String](_.toFloat)
-    doubleAlg.foo2("big") should be("gib")
-    doubleAlg.foo3("3") should be("3")
+    assertEquals(doubleAlg.foo2("big"), "gib")
+    assertEquals(doubleAlg.foo3("3"), "3")
   }
 
   test("extra type param correctly handled") {
     val doubleAlg: AlgWithExtraTypeParam[String, String] = AlgWithExtraTypeParamFloat.contramap[String](_.toFloat)
-    doubleAlg.foo("big", "3") should be(6)
+    assertEquals(doubleAlg.foo("big", "3"), 6)
   }
 
   test("Alg with non effect method with default Impl") {
@@ -43,8 +43,8 @@ class autoContravariantTests extends CatsTaglessTestSuite {
       def plusOne(i: Int): Int = i + 1
     }
 
-    intAlg.contramap[String](_.toInt).plusOne("3") should be(4)
-    intAlg.contramap[String](_.toInt).minusOne(2) should be(1)
+    assertEquals(intAlg.contramap[String](_.toInt).plusOne("3"), 4)
+    assertEquals(intAlg.contramap[String](_.toInt).minusOne(2), 1)
   }
 }
 

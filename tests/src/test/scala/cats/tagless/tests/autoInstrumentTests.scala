@@ -39,9 +39,9 @@ class autoInstrumentTests extends CatsTaglessTestSuite {
     val instrumented = instrument.instrument(store)
     val result = instrumented.get("key1")
 
-    result.algebraName shouldBe "KVStore"
-    result.methodName shouldBe "get"
-    result.value shouldBe Some("Test key1")
+    assertEquals(result.algebraName, "KVStore")
+    assertEquals(result.methodName, "get")
+    assertEquals(result.value, Some("Test key1"))
   }
 
   test("autoInstrument annotation") {
@@ -52,9 +52,9 @@ class autoInstrumentTests extends CatsTaglessTestSuite {
     val instrumented = lookup.instrument
     val result = instrumented -> "key1"
 
-    result.algebraName shouldBe "Lookup"
-    result.methodName shouldBe "->"
-    result.value shouldBe Some(1)
+    assertEquals(result.algebraName, "Lookup")
+    assertEquals(result.methodName, "->")
+    assertEquals(result.value, Option(1L))
   }
 }
 

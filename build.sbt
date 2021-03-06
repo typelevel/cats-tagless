@@ -2,6 +2,7 @@ import com.typesafe.sbt.SbtGit.git
 
 addCommandAlias("validateJVM", "all scalafmtCheckAll scalafmtSbtCheck testsJVM/test")
 addCommandAlias("validateJS", "all testsJS/test")
+addCommandAlias("validateNative", "all testsNative/test")
 addCommandAlias("fmt", "all scalafmtSbt scalafmtAll")
 addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVersion.value.get + \"-SNAPSHOT\"")
@@ -23,7 +24,7 @@ ThisBuild / crossScalaVersions := Seq(Scala212, Scala213 /*, "3.0.0-M1", "3.0.0-
 ThisBuild / scalaVersion := Scala213
 ThisBuild / githubWorkflowPublishTargetBranches := Nil
 ThisBuild / githubWorkflowArtifactUpload := false
-ThisBuild / githubWorkflowBuildMatrixAdditions += "ci" -> List("validateJS", "validateJVM")
+ThisBuild / githubWorkflowBuildMatrixAdditions += "ci" -> List("validateJVM", "validateJS", "validateNative")
 ThisBuild / githubWorkflowBuild := List(WorkflowStep.Sbt(List("${{ matrix.ci }}"), name = Some("Validation")))
 ThisBuild / githubWorkflowAddedJobs ++= Seq(
   WorkflowJob(
@@ -43,16 +44,15 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
 )
 
 val catsVersion = "2.4.2"
-val catsEffectVersion = "2.3.3"
 val circeVersion = "0.13.0"
 val disciplineVersion = "1.1.4"
-val disciplineScalaTestVersion = "2.1.2"
+val disciplineMunitVersion = "1.0.6"
 val paradiseVersion = "2.1.1"
 val scalaCheckVersion = "1.15.3"
 
 val macroSettings = List(
   libraryDependencies ++=
-    List("scala-compiler", "scala-reflect").map("org.scala-lang" % _ % scalaVersion.value % Provided),
+    List("scala-compiler", "scala-reflect").map("org.scala-lang" % _ % scalaVersion.value),
   scalacOptions ++= (scalaBinaryVersion.value match {
     case "2.13" => List("-Ymacro-annotations")
     case _ => Nil
@@ -64,8 +64,8 @@ val macroSettings = List(
 )
 
 lazy val catsTagless = project
-  .aggregate(rootJVM, rootJS, docs)
-  .dependsOn(rootJVM, rootJS)
+  .aggregate(rootJVM, rootJS, rootNative, docs)
+  .dependsOn(rootJVM, rootJS, rootNative)
   .settings(rootSettings, noPublishSettings)
   .settings(moduleName := "cats-tagless")
 
@@ -79,9 +79,15 @@ lazy val rootJS = project
   .dependsOn(coreJS, lawsJS, testsJS, macrosJS)
   .settings(rootSettings, noPublishSettings, commonJsSettings)
 
+lazy val rootNative = project
+  .aggregate(coreNative, lawsNative, testsNative, macrosNative)
+  .dependsOn(coreNative, lawsNative, testsNative, macrosNative)
+  .settings(rootSettings, noPublishSettings)
+
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
-lazy val core = crossProject(JSPlatform, JVMPlatform)
+lazy val coreNative = core.native
+lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .enablePlugins(AutomateHeaderPlugin)
   .jsSettings(commonJsSettings)
@@ -93,7 +99,8 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
 
 lazy val lawsJVM = laws.jvm
 lazy val lawsJS = laws.js
-lazy val laws = crossProject(JSPlatform, JVMPlatform)
+lazy val lawsNative = laws.native
+lazy val laws = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .dependsOn(core)
   .enablePlugins(AutomateHeaderPlugin)
@@ -109,7 +116,8 @@ lazy val laws = crossProject(JSPlatform, JVMPlatform)
 
 lazy val macrosJVM = macros.jvm
 lazy val macrosJS = macros.js
-lazy val macros = crossProject(JSPlatform, JVMPlatform)
+lazy val macrosNative = macros.native
+lazy val macros = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .dependsOn(core)
   .aggregate(core)
@@ -124,20 +132,21 @@ lazy val macros = crossProject(JSPlatform, JVMPlatform)
 
 lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
-lazy val tests = crossProject(JSPlatform, JVMPlatform)
+lazy val testsNative = tests.native
+lazy val tests = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .dependsOn(macros, laws)
   .enablePlugins(AutomateHeaderPlugin)
   .jsSettings(commonJsSettings)
+  .jsSettings(scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)))
   .settings(rootSettings, macroSettings, noPublishSettings)
   .settings(
     moduleName := "cats-tagless-tests",
+    testFrameworks += new TestFramework("munit.Framework"),
     libraryDependencies ++= List(
       "org.typelevel" %%% "cats-free" % catsVersion,
       "org.typelevel" %%% "cats-testkit" % catsVersion,
-      "org.typelevel" %%% "cats-effect" % catsEffectVersion,
-      "io.circe" %%% "circe-core" % circeVersion,
-      "org.typelevel" %%% "discipline-scalatest" % disciplineScalaTestVersion
+      "org.typelevel" %%% "discipline-munit" % disciplineMunitVersion
     ).map(_ % Test)
   )
 

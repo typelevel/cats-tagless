@@ -31,7 +31,7 @@ class autoProfunctorTests extends CatsTaglessTestSuite {
 
   test("extra type param correctly handled") {
     val asStringAlg = AlgWithExtraTypeParamString.dimap((s: String) => s.length)(_ + 1)
-    asStringAlg.foo("base", "x2") should be(9d)
+    assertEquals(asStringAlg.foo("base", "x2"), 9d)
   }
 }
 

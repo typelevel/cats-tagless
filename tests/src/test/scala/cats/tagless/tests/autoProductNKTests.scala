@@ -29,12 +29,12 @@ class autoProductNKTests extends CatsTaglessTestSuite {
     val prodInterpreter: SafeAlg[Tuple3K[Try, List, Option]#λ] =
       SafeAlg.product3K(Interpreters.tryInterpreter, listInterpreter, optionInterpreter)
 
-    prodInterpreter.parseInt("3") shouldBe ((Try(3), List(3f), Some(3f)))
+    assertEquals(prodInterpreter.parseInt("3"), (Try(3), List(3), Some(3)))
     val failure = prodInterpreter.parseInt("3.5")
-    failure._1.isFailure shouldBe true
-    failure._2 shouldBe Nil
-    failure._3 shouldBe None
-    prodInterpreter.divide(3f, 3f) shouldBe ((Try(1f), List(1f), Some(1f)))
+    assertEquals(failure._1.isFailure, true)
+    assertEquals(failure._2, Nil)
+    assertEquals(failure._3, None)
+    assertEquals(prodInterpreter.divide(3f, 3f), (Try(1f), List(1f), Some(1f)))
   }
 }
 

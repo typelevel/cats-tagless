@@ -31,10 +31,10 @@ class autoSemigroupalKTests extends CatsTaglessTestSuite {
 
   test("simple product") {
     val prodInterpreter = Interpreters.tryInterpreter.productK(Interpreters.lazyInterpreter)
-    prodInterpreter.parseInt("3").first shouldBe Try(3)
-    prodInterpreter.parseInt("3").second.value shouldBe 3
-    prodInterpreter.parseInt("sd").first.isSuccess shouldBe false
-    prodInterpreter.divide(3f, 3f).second.value shouldBe 1f
+    assertEquals(prodInterpreter.parseInt("3").first, Try(3))
+    assertEquals(prodInterpreter.parseInt("3").second.value, 3)
+    assertEquals(prodInterpreter.parseInt("sd").first.isSuccess, false)
+    assertEquals(prodInterpreter.divide(3f, 3f).second.value, 1f)
   }
 }
 

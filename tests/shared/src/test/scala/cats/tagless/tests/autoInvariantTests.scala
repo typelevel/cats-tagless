@@ -30,14 +30,14 @@ class autoInvariantTests extends CatsTaglessTestSuite {
 
   test("non effect method correctly delegated") {
     val doubleAlg = AlgWithNonEffectMethodFloat.imap(_.toDouble)(_.toFloat)
-    doubleAlg.foo("big") should be(3d)
-    doubleAlg.foo2("big") should be("gib")
-    doubleAlg.foo3(3d) should be("3")
+    assertEquals(doubleAlg.foo("big"), 3d)
+    assertEquals(doubleAlg.foo2("big"), "gib")
+    assertEquals(doubleAlg.foo3(3d), "3")
   }
 
   test("extra type param correctly handled") {
     val doubleAlg = AlgWithExtraTypeParamFloat.imap(_.toDouble)(_.toFloat)
-    doubleAlg.foo("big", 3d) should be(6d)
+    assertEquals(doubleAlg.foo("big", 3d), 6d)
   }
 
   test("Alg with non effect method with default Impl") {
@@ -45,8 +45,8 @@ class autoInvariantTests extends CatsTaglessTestSuite {
       def plusOne(i: Int): Int = i + 1
     }
 
-    intAlg.imap(_.toString)(_.toInt).plusOne("3") should be("4")
-    intAlg.imap(_.toString)(_.toInt).minusOne(2) should be(1)
+    assertEquals(intAlg.imap(_.toString)(_.toInt).plusOne("3"), "4")
+    assertEquals(intAlg.imap(_.toString)(_.toInt).minusOne(2), 1)
   }
 }
 

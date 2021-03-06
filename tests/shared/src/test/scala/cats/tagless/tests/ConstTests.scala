@@ -22,20 +22,20 @@ class ConstTests extends CatsTaglessTestSuite {
 
   test("const(42)") {
     val safe = Derive.const[SafeAlg, Int](42)
-    safe.divide(1, 2) shouldBe 42
-    safe.parseInt("NaN") shouldBe 42
+    assertEquals(safe.divide(1, 2), 42)
+    assertEquals(safe.parseInt("NaN"), 42)
   }
 
   test("void") {
     val store = Derive.void[KVStore]
-    store.get("tea") should be(())
-    store.put("tea", "mint") should be(())
+    assertEquals(store.get("tea"), ())
+    assertEquals(store.put("tea", "mint"), ())
   }
 
   test("side effects") {
     val it = (1 to 5).iterator
     val safe = Derive.const[SafeAlg, Int](it.next())
-    safe.divide(1, 2) shouldBe 1
-    safe.parseInt("NaN") shouldBe 1
+    assertEquals(safe.divide(1, 2), 1)
+    assertEquals(safe.parseInt("NaN"), 1)
   }
 }

@@ -28,7 +28,7 @@ jobs:
         os: [ubuntu-latest]
         scala: [2.12.13, 2.13.5]
         java: [adopt@1.8]
-        ci: [validateJS, validateJVM]
+        ci: [validateJVM, validateJS, validateNative]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)

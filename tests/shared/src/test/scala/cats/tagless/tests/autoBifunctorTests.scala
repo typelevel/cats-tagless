@@ -33,9 +33,9 @@ class autoBifunctorTests extends CatsTaglessTestSuite {
 
   test("extra type param correctly handled") {
     val transformedAlg = AlgWithExtraTypeParamString.bimap(i => if (i > 0) Some(i) else None, new String(_))
-    transformedAlg.foo("") should be(None)
-    transformedAlg.foo("1") should be(Some(1))
-    transformedAlg.boo("adsfdsd") should be("adsfdsd")
+    assertEquals(transformedAlg.foo(""), None)
+    assertEquals(transformedAlg.foo("1"), Some(1))
+    assertEquals(transformedAlg.boo("adsfdsd"), "adsfdsd")
   }
 }
 

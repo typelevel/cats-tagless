@@ -35,22 +35,20 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
 
   test("simple mapK") {
     val optionParse: SafeAlg[Option] = Interpreters.tryInterpreter.mapK(fk)
-    optionParse.parseInt("3") should be(Some(3))
-    optionParse.parseInt("sd") should be(None)
-    optionParse.divide(3f, 3f) should be(Some(1f))
+    assertEquals(optionParse.parseInt("3"), Some(3))
+    assertEquals(optionParse.parseInt("sd"), None)
+    assertEquals(optionParse.divide(3f, 3f), Some(1f))
   }
 
   test("simple instance summon with autoDeriveFromFunctorK on") {
     implicit val listParse: SafeAlg[List] = Interpreters.tryInterpreter.mapK(λ[Try ~> List](_.toList))
-    SafeAlg[List].parseInt("3") should be(List(3))
-    succeed
+    assertEquals(SafeAlg[List].parseInt("3"), List(3))
   }
 
   test("auto derive from functor k") {
     import SafeAlg.autoDerive._
     import Interpreters.tryInterpreter
     SafeAlg[Option]
-    succeed
   }
 
   test("Alg with non effect method") {
@@ -59,8 +57,8 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
       def b(i: Int): Int = i
     }
 
-    tryInt.mapK(fk).a(3) should be(Some(3))
-    tryInt.mapK(fk).b(2) should be(2)
+    assertEquals(tryInt.mapK(fk).a(3), Some(3))
+    assertEquals(tryInt.mapK(fk).b(2), 2)
   }
 
   test("Alg with non effect method with default Impl") {
@@ -68,8 +66,8 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
       def plusOne(i: Int): Try[Int] = Try(i + 1)
     }
 
-    tryInt.mapK(fk).plusOne(3) should be(Some(4))
-    tryInt.mapK(fk).minusOne(2) should be(1)
+    assertEquals(tryInt.mapK(fk).plusOne(3), Some(4))
+    assertEquals(tryInt.mapK(fk).minusOne(2), 1)
   }
 
   test("Alg with extra type parameters") {
@@ -78,7 +76,7 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
     }
 
     import AlgWithExtraTP.autoDerive._
-    AlgWithExtraTP[Option, String].a(5) should be(Some("5"))
+    assertEquals(AlgWithExtraTP[Option, String].a(5), Some("5"))
   }
 
   test("Alg with extra type parameters before effect type") {
@@ -86,7 +84,7 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
       def a(i: Int) = Try(i.toString)
     }
 
-    algWithExtraTP.mapK(fk).a(5) should be(Some("5"))
+    assertEquals(algWithExtraTP.mapK(fk).a(5), Some("5"))
   }
 
   test("Alg with type member") {
@@ -95,10 +93,10 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
       def a(i: Int): Try[String] = Try(i.toString)
     }
 
-    tryInt.mapK(fk).a(3) should be(Some("3"))
+    assertEquals[Option[Any], Option[Any]](tryInt.mapK(fk).a(3), Some("3"))
     import AlgWithTypeMember.fullyRefined.autoDerive._
     val op: AlgWithTypeMember.Aux[Option, String] = implicitly
-    op.a(3) should be(Some("3"))
+    assertEquals(op.a(3), Option("3"))
   }
 
   test("Alg with type bound") {
@@ -108,10 +106,10 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
       override def t = Try(B)
     }
 
-    tryB.mapK(fk).t should be(Some(B))
+    assertEquals[Option[A], Option[A]](tryB.mapK(fk).t, Option(B))
     import AlgWithTypeBound.fullyRefined.autoDerive._
     val op: AlgWithTypeBound.Aux[Option, B.type] = implicitly
-    op.t should be(Some(B))
+    assertEquals(op.t, Option(B))
   }
 
   test("Stack safety with Free") {
@@ -125,7 +123,7 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
       j <- incFree.plusOne(i)
       z <- if (j < 10000) a(j) else Free.pure[Try, Int](j)
     } yield z
-    a(0).foldMap(FunctionK.id) should be(util.Success(10000))
+    assertEquals(a(0).foldMap(FunctionK.id), util.Success(10000))
   }
 
   test("turn off auto derivation") {
@@ -134,7 +132,13 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
       def a(i: Int): Try[Int] = util.Success(i)
     }
 
-    assertDoesNotCompile("AlgWithoutAutoDerivation.autoDerive")
+    assertNoDiff(
+      compileErrors("AlgWithoutAutoDerivation.autoDerive"),
+      """|error: value autoDerive is not a member of object cats.tagless.tests.autoFunctorKTests.AlgWithoutAutoDerivation
+         |AlgWithoutAutoDerivation.autoDerive
+         |                         ^
+         |""".stripMargin
+    )
   }
 
   test("defs with no params") {
@@ -142,7 +146,7 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
       def a = Try(1)
     }
 
-    foo.mapK(fk).a should be(Some(1))
+    assertEquals(foo.mapK(fk).a, Some(1))
   }
 
   test("method with type params") {
@@ -150,12 +154,11 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
       def a[T](t: T): Try[String] = Try(t.toString)
     }
 
-    foo.mapK(fk).a(32) should be(Some("32"))
+    assertEquals(foo.mapK(fk).a(32), Some("32"))
   }
 
   test("auto deriviation with existing derivation") {
     AlgWithOwnDerivation[Option]
-    succeed
   }
 
   test("alg with abstract type class fully refined resolve instance") {
@@ -168,7 +171,7 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
     // Scalac needs help when abstract type is high order.
     implicit val fShow: FunctorK[AlgWithAbstractTypeClass.Aux[*[_], Show]] =
       functorKForFullyRefinedAlgWithAbstractTypeClass[Show]
-    fShow.mapK(foo)(fk).a(true) should be(Some("true"))
+    assertEquals(fShow.mapK(foo)(fk).a(true), Some("true"))
   }
 
   test("alg with abstract type class") {
@@ -177,7 +180,7 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
       def a[T: TC](t: T): Try[String] = Try(t.show)
     }
 
-    AlgWithAbstractTypeClass.mapK(foo)(fk).a(true) should be(Some("true"))
+    assertEquals(AlgWithAbstractTypeClass.mapK(foo)(fk).a(true), Some("true"))
   }
 
   test("alg with default parameter") {
@@ -186,8 +189,8 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
     }
 
     val bar = AlgWithDefaultParameter.mapK(foo)(fk)
-    bar.greet() should be(Some("Hello World"))
-    bar.greet("John Doe") should be(Some("Hello John Doe"))
+    assertEquals(bar.greet(), Some("Hello World"))
+    assertEquals(bar.greet("John Doe"), Some("Hello John Doe"))
   }
 
   test("alg with final method") {
@@ -196,8 +199,8 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
     }
 
     val bar = AlgWithFinalMethod.mapK(foo)(fk)
-    bar.info("green") should be(Some("[info] green"))
-    bar.warn("yellow") should be(Some("[warn] yellow"))
+    assertEquals(bar.info("green"), Some("[info] green"))
+    assertEquals(bar.warn("yellow"), Some("[warn] yellow"))
   }
 
   test("alg with by-name parameter") {
@@ -206,13 +209,13 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
     }
 
     val bar = AlgWithByNameParameter.mapK(foo)(fk)
-    bar.log("level".reverse) should be(Some("level"))
+    assertEquals(bar.log("level".reverse), Some("level"))
   }
 
   test("builder-style algebra") {
     val listBuilder: BuilderAlgebra[List] = BuilderAlgebra.Named("foo")
     val optionBuilder = listBuilder.mapK[Option](λ[List ~> Option](_.headOption))
-    optionBuilder.withFoo("bar").unit shouldBe Some(())
+    assertEquals(optionBuilder.withFoo("bar").unit, Some(()))
   }
 }
 

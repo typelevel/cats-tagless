@@ -30,7 +30,7 @@ class autoFunctorTests extends CatsTaglessTestSuite {
 
   test("extra type param correctly handled") {
     val doubleAlg = AlgWithExtraTypeParamFloat.map(_.toDouble)
-    doubleAlg.foo("big") should be(3d)
+    assertEquals(doubleAlg.foo("big"), 3d)
   }
 }
 

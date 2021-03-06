@@ -36,10 +36,12 @@ class ReaderTTests extends CatsTaglessTestSuite {
 
   test("Dependency injection") {
     val eventHorizon = Failure(Error("past event horizon"))
-    spaceAlg.blackHole(ReaderT(_ => eventHorizon)).run(dependency) shouldBe eventHorizon
-    spaceAlg.distance(milkyWay, andromeda).run(dependency) shouldBe Success(881.0)
-    spaceAlg.collision(milkyWay.pure[F], andromeda.pure[F]).run(dependency) shouldBe
+    assertEquals(spaceAlg.blackHole(ReaderT(_ => eventHorizon)).run(dependency), eventHorizon)
+    assertEquals(spaceAlg.distance(milkyWay, andromeda).run(dependency), Success(881.0))
+    assertEquals(
+      spaceAlg.collision(milkyWay.pure[F], andromeda.pure[F]).run(dependency),
       Success(Galaxy("MAinldkryo mWeadya"))
+    )
   }
 }
 

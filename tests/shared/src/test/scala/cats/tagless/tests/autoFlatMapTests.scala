@@ -30,7 +30,7 @@ class autoFlatMapTests extends CatsTaglessTestSuite {
 
   test("extra type param correctly handled") {
     val doubleAlg: AlgWithExtraTypeParam[String, Double] = AlgWithExtraTypeParamFloat.map(_.toDouble)
-    doubleAlg.foo("big") should be(3d)
+    assertEquals(doubleAlg.foo("big"), 3d)
   }
 }
 

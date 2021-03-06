@@ -18,17 +18,11 @@ package cats.tagless.tests
 
 import cats._
 import cats.data._
-import cats.effect._
 import cats.tagless.ApplyK
 import cats.tagless.optimize._
 import cats.tagless.tests.Interpreters.StateInfo
 
-import scala.concurrent.ExecutionContext
-
 class OptimizerTests extends CatsTaglessTestSuite {
-
-  implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
-
   type StateO[A] = State[StateInfo, A]
 
   def kVStoreOptimizer[F[_]: Monad]: Optimizer[KVStore, F] = new Optimizer[KVStore, F] {
@@ -60,20 +54,21 @@ class OptimizerTests extends CatsTaglessTestSuite {
 
   }
 
-  def rebuildPutGet(info: KVStoreInfo, interp: KVStore[IO]): IO[KVStore[IO]] =
+  def rebuildPutGet(info: KVStoreInfo, interp: KVStore[Eval]): Eval[KVStore[Eval]] =
     info.queries.toList
       .filterNot(info.cache.contains)
-      .parTraverse(key => interp.get(key).map(_.map(s => (key, s))))
+      .traverse(key => interp.get(key).map(_.map(s => (key, s))))
       .map { list =>
         val table: Map[String, String] = list.flatten.toMap
 
-        new KVStore[IO] {
+        new KVStore[Eval] {
           def get(key: String) = table.get(key).orElse(info.cache.get(key)) match {
-            case Some(a) => Option(a).pure[IO]
+            case Some(a) => Option(a).pure[Eval]
             case None => interp.get(key)
           }
 
-          def put(key: String, a: String): IO[Unit] = interp.put(key, a)
+          def put(key: String, a: String): Eval[Unit] =
+            interp.put(key, a)
         }
       }
 
@@ -153,13 +148,10 @@ class OptimizerTests extends CatsTaglessTestSuite {
     val (info, result) =
       optimize.optimizeM(Programs.monadProgram).apply(interp).run(StateInfo.empty).value
 
-    info.searches.size shouldBe 2
-    info.inserts.size shouldBe 3
-
+    assertEquals(info.searches.size, 2)
+    assertEquals(info.inserts.size, 3)
     val control = Programs.monadProgram(interp).runA(StateInfo.empty).value
-
-    result shouldBe control
-
+    assertEquals(result, control)
   }
 
   test("Optimizer should optimize duplicates and put-get-elimination") {
@@ -173,13 +165,10 @@ class OptimizerTests extends CatsTaglessTestSuite {
       .run(StateInfo(Map.empty, Map.empty))
       .value
 
-    info.searches.size shouldBe 2
-    info.inserts.size shouldBe 2
-
+    assertEquals(info.searches.size, 2)
+    assertEquals(info.inserts.size, 2)
     val control = Programs.putGetProgram(interp).runA(StateInfo(Map.empty, Map.empty)).value
-
-    result shouldBe control
-
+    assertEquals(result, control)
   }
 
   test("SemigroupalOptimizer duplicates should be removed") {
@@ -191,12 +180,10 @@ class OptimizerTests extends CatsTaglessTestSuite {
     val (info, result) =
       optimizer.nonEmptyOptimize(Programs.applicativeProgram)(interp).run(StateInfo.empty).value
 
-    info.inserts.size shouldBe 1
-    info.searches.size shouldBe 2
-
+    assertEquals(info.inserts.size, 1)
+    assertEquals(info.searches.size, 2)
     val control = Programs.applicativeProgram(interp).runA(StateInfo.empty).value
-
-    result shouldBe control
+    assertEquals(result, control)
   }
 
   test("Optimizer duplicates should be removed") {
@@ -212,13 +199,9 @@ class OptimizerTests extends CatsTaglessTestSuite {
     }
 
     val interp = Interpreters.KVStoreInterpreter
-
     val (info, result) = optimizer.optimize(p)(interp).run(StateInfo.empty).value
-
-    info.searches.size shouldBe 3
-
+    assertEquals(info.searches.size, 3)
     val control = program(interp).runA(StateInfo.empty).value
-
-    result shouldBe control
+    assertEquals(result, control)
   }
 }

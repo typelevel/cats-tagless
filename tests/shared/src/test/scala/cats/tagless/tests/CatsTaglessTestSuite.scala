@@ -24,26 +24,14 @@ import cats.tagless.aop.Instrumentation
 import cats.tagless.laws.discipline.SemigroupalKTests.IsomorphismsK
 import cats.tagless.syntax.AllSyntax
 import cats.tagless.{InvariantK, Tuple3K}
+import munit.DisciplineSuite
 import org.scalacheck.{Arbitrary, Gen}
-import org.scalatest.funsuite.AnyFunSuiteLike
-import org.scalatest.matchers.should.Matchers
-import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import org.typelevel.discipline.scalatest.FunSuiteDiscipline
 
 import scala.util.Try
 
-class CatsTaglessTestSuite
-    extends AnyFunSuiteLike
-    with Matchers
-    with ScalaCheckDrivenPropertyChecks
-    with FunSuiteDiscipline
-    with cats.syntax.AllSyntax
-    with StrictCatsEquality
-    with TestInstances
-    with AllSyntax
+class CatsTaglessTestSuite extends DisciplineSuite with cats.syntax.AllSyntax with TestInstances with AllSyntax
 
 object TestInstances extends TestInstances
-
 trait TestInstances {
 
   implicit val catsDataArbitraryOptionList: Arbitrary[FunctionK[Option, List]] =
@@ -152,29 +140,4 @@ trait TestInstances {
   implicit def catsTaglessLawsEqForWriterTTuple3K[F[_], G[_], H[_], A, B](implicit
       ev: Eq[(F[(A, B)], G[(A, B)], H[(A, B)])]
   ): Eq[WriterT[Tuple3K[F, G, H]#λ, A, B]] = Eq.by(_.run)
-}
-
-import org.scalactic.TripleEqualsSupport.{AToBEquivalenceConstraint, BToAEquivalenceConstraint}
-import org.scalactic._
-
-// The code in this file was taken and only slightly modified from
-// https://github.com/bvenners/equality-integration-demo
-// Thanks for the great examples, Bill!
-
-final class CatsEquivalence[T](T: Eq[T]) extends Equivalence[T] {
-  def areEquivalent(a: T, b: T): Boolean = T.eqv(a, b)
-}
-
-trait LowPriorityStrictCatsConstraints extends TripleEquals {
-  implicit def lowPriorityCatsCanEqual[A, B](implicit B: Eq[B], ev: A <:< B): CanEqual[A, B] =
-    new AToBEquivalenceConstraint[A, B](new CatsEquivalence(B), ev)
-}
-
-trait StrictCatsEquality extends LowPriorityStrictCatsConstraints {
-  override def convertToEqualizer[T](left: T): Equalizer[T] = super.convertToEqualizer[T](left)
-  implicit override def convertToCheckingEqualizer[T](left: T): CheckingEqualizer[T] = new CheckingEqualizer(left)
-  override def unconstrainedEquality[A, B](implicit equalityOfA: Equality[A]): CanEqual[A, B] =
-    super.unconstrainedEquality[A, B]
-  implicit def catsCanEqual[A, B](implicit A: Eq[A], ev: B <:< A): CanEqual[A, B] =
-    new BToAEquivalenceConstraint[A, B](new CatsEquivalence(A), ev)
 }

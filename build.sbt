@@ -12,7 +12,7 @@ val Scala213 = "2.13.5"
 val gitRepo = "git@github.com:typelevel/cats-tagless.git"
 val homePage = "https://typelevel.org/cats-tagless"
 
-// sbt-spiewak settings
+// GitHub actions configuration
 ThisBuild / baseVersion := "0.12"
 ThisBuild / publishGithubUser := "joroKr21"
 ThisBuild / publishFullName := "Georgi Krastev"
@@ -25,6 +25,7 @@ ThisBuild / scalaVersion := Scala213
 ThisBuild / githubWorkflowArtifactUpload := false
 ThisBuild / githubWorkflowBuildMatrixAdditions += "ci" -> List("validateJVM", "validateJS", "validateNative")
 ThisBuild / githubWorkflowBuild := List(WorkflowStep.Sbt(List("${{ matrix.ci }}"), name = Some("Validation")))
+ThisBuild / githubWorkflowPublishPreamble += WorkflowStep.Use(UseRef.Public("olafurpg", "setup-gpg", "v3"))
 ThisBuild / githubWorkflowAddedJobs ++= Seq(
   WorkflowJob(
     "microsite",

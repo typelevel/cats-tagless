@@ -5,7 +5,6 @@ addCommandAlias("validateJS", "all testsJS/test")
 addCommandAlias("validateNative", "all testsNative/test")
 addCommandAlias("fmt", "all scalafmtSbt scalafmtAll")
 addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
-addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVersion.value.get + \"-SNAPSHOT\"")
 
 val Scala212 = "2.12.13"
 val Scala213 = "2.13.5"
@@ -17,12 +16,12 @@ val homePage = "https://typelevel.org/cats-tagless"
 ThisBuild / baseVersion := "0.12"
 ThisBuild / publishGithubUser := "joroKr21"
 ThisBuild / publishFullName := "Georgi Krastev"
+ThisBuild / spiewakCiReleaseSnapshots := true
+ThisBuild / spiewakMainBranches := Seq("master")
 enablePlugins(SonatypeCiReleasePlugin)
 
-// update to scala 3 requires swapping from scalatest to munit and reimplementing all macros
-ThisBuild / crossScalaVersions := Seq(Scala212, Scala213 /*, "3.0.0-M1", "3.0.0-M2"*/ )
+ThisBuild / crossScalaVersions := Seq(Scala212, Scala213)
 ThisBuild / scalaVersion := Scala213
-ThisBuild / githubWorkflowPublishTargetBranches := Nil
 ThisBuild / githubWorkflowArtifactUpload := false
 ThisBuild / githubWorkflowBuildMatrixAdditions += "ci" -> List("validateJVM", "validateJS", "validateNative")
 ThisBuild / githubWorkflowBuild := List(WorkflowStep.Sbt(List("${{ matrix.ci }}"), name = Some("Validation")))
@@ -66,23 +65,27 @@ val macroSettings = List(
 lazy val catsTagless = project
   .aggregate(rootJVM, rootJS, rootNative, docs)
   .dependsOn(rootJVM, rootJS, rootNative)
-  .settings(rootSettings, noPublishSettings)
+  .settings(rootSettings)
   .settings(moduleName := "cats-tagless")
+  .enablePlugins(NoPublishPlugin)
 
 lazy val rootJVM = project
   .aggregate(coreJVM, lawsJVM, testsJVM, macrosJVM)
   .dependsOn(coreJVM, lawsJVM, testsJVM, macrosJVM)
-  .settings(rootSettings, noPublishSettings)
+  .settings(rootSettings)
+  .enablePlugins(NoPublishPlugin)
 
 lazy val rootJS = project
   .aggregate(coreJS, lawsJS, testsJS, macrosJS)
   .dependsOn(coreJS, lawsJS, testsJS, macrosJS)
-  .settings(rootSettings, noPublishSettings, commonJsSettings)
+  .settings(rootSettings, commonJsSettings)
+  .enablePlugins(NoPublishPlugin)
 
 lazy val rootNative = project
   .aggregate(coreNative, lawsNative, testsNative, macrosNative)
   .dependsOn(coreNative, lawsNative, testsNative, macrosNative)
-  .settings(rootSettings, noPublishSettings, commonNativeSettings)
+  .settings(rootSettings, commonNativeSettings)
+  .enablePlugins(NoPublishPlugin)
 
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
@@ -126,7 +129,7 @@ lazy val macros = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .enablePlugins(AutomateHeaderPlugin)
   .jsSettings(commonJsSettings)
   .nativeSettings(commonNativeSettings)
-  .settings(rootSettings, macroSettings, copyrightHeader)
+  .settings(rootSettings, macroSettings)
   .settings(
     moduleName := "cats-tagless-macros",
     scalacOptions := scalacOptions.value.filterNot(_.startsWith("-Wunused")).filterNot(_.startsWith("-Ywarn-unused")),
@@ -139,12 +142,12 @@ lazy val testsNative = tests.native
 lazy val tests = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Full)
   .dependsOn(macros, laws)
-  .enablePlugins(AutomateHeaderPlugin)
+  .enablePlugins(AutomateHeaderPlugin, NoPublishPlugin)
   .jvmSettings(libraryDependencies += "io.circe" %% "circe-core" % circeVersion % Test)
   .jsSettings(commonJsSettings)
   .jsSettings(scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)))
   .nativeSettings(commonNativeSettings)
-  .settings(rootSettings, macroSettings, noPublishSettings)
+  .settings(rootSettings, macroSettings)
   .settings(
     moduleName := "cats-tagless-tests",
     testFrameworks += new TestFramework("munit.Framework"),
@@ -158,13 +161,13 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform, NativePlatform)
 /** Docs - Generates and publishes the scaladoc API documents and the project web site. */
 lazy val docs = project
   .dependsOn(macrosJVM)
-  .enablePlugins(MicrositesPlugin, SiteScaladocPlugin)
-  .settings(rootSettings, macroSettings, noPublishSettings)
+  .enablePlugins(MicrositesPlugin, SiteScaladocPlugin, NoPublishPlugin)
+  .settings(rootSettings, macroSettings)
   .settings(
     moduleName := "cats-tagless-docs",
     libraryDependencies += "org.typelevel" %%% "cats-free" % catsVersion,
     docsMappingsAPIDir := "api",
-    addMappingsToSiteDir(mappings in packageDoc in Compile in coreJVM, docsMappingsAPIDir),
+    addMappingsToSiteDir(coreJVM / Compile / packageDoc / mappings, docsMappingsAPIDir),
     organization := "org.typelevel",
     autoAPIMappings := true,
     micrositeName := "Cats-tagless",
@@ -188,21 +191,23 @@ lazy val docs = project
     micrositeAuthor := "cats-tagless Contributors",
     scalacOptions -= "-Xfatal-warnings",
     git.remoteRepo := gitRepo,
-    includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md"
+    makeSite / includeFilter := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md"
   )
 
 lazy val docsMappingsAPIDir = settingKey[String]("Name of subdirectory in site target directory for api docs")
 lazy val rootSettings = (organization := "org.typelevel") :: commonSettings ::: publishSettings
 
-lazy val commonSettings = copyrightHeader ::: List(
+lazy val commonSettings = List(
   scalaVersion := (ThisBuild / scalaVersion).value,
   crossScalaVersions := (ThisBuild / crossScalaVersions).value,
-  parallelExecution in Test := false,
-  resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots"))
+  Test / parallelExecution := false,
+  resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
+  startYear := Some(2019),
+  organizationName := "cats-tagless maintainers"
 )
 
 lazy val commonJsSettings = List(
-  scalaJSStage in Global := FastOptStage,
+  Global / scalaJSStage := FastOptStage,
   // currently sbt-doctest doesn't work in JS builds
   // https://github.com/tkawachi/sbt-doctest/issues/52
   doctestGenTests := Nil
@@ -210,10 +215,6 @@ lazy val commonJsSettings = List(
 
 lazy val commonNativeSettings = List(
   doctestGenTests := Nil
-)
-
-lazy val noPublishSettings = List(
-  skip in publish := true
 )
 
 lazy val publishSettings = List(
@@ -240,9 +241,4 @@ lazy val publishSettings = List(
       url("http://stackoverflow.com/users/3795501/luka-jacobowitz")
     )
   )
-)
-
-lazy val copyrightHeader = List(
-  startYear := Some(2019),
-  organizationName := "cats-tagless maintainers"
 )

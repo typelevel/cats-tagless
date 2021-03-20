@@ -25,7 +25,7 @@ ThisBuild / scalaVersion := Scala213
 ThisBuild / githubWorkflowArtifactUpload := false
 ThisBuild / githubWorkflowBuildMatrixAdditions += "ci" -> List("validateJVM", "validateJS", "validateNative")
 ThisBuild / githubWorkflowBuild := List(WorkflowStep.Sbt(List("${{ matrix.ci }}"), name = Some("Validation")))
-ThisBuild / githubWorkflowPublishPreamble += WorkflowStep.Use(UseRef.Public("olafurpg", "setup-gpg", "v3"))
+ThisBuild / githubWorkflowEnv += "GPG_TTY" -> "$(tty)"
 ThisBuild / githubWorkflowAddedJobs ++= Seq(
   WorkflowJob(
     "microsite",

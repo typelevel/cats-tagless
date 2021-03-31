@@ -16,8 +16,6 @@ val homePage = "https://typelevel.org/cats-tagless"
 ThisBuild / baseVersion := "0.12"
 ThisBuild / publishGithubUser := "joroKr21"
 ThisBuild / publishFullName := "Georgi Krastev"
-ThisBuild / spiewakCiReleaseSnapshots := true
-ThisBuild / spiewakMainBranches := Seq("master")
 enablePlugins(SonatypeCiReleasePlugin)
 
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala213)
@@ -196,7 +194,7 @@ lazy val docs = project
   )
 
 lazy val docsMappingsAPIDir = settingKey[String]("Name of subdirectory in site target directory for api docs")
-lazy val rootSettings = (organization := "org.typelevel") :: commonSettings ::: publishSettings
+lazy val rootSettings = commonSettings ::: publishSettings
 
 lazy val commonSettings = List(
   scalaVersion := (ThisBuild / scalaVersion).value,
@@ -204,7 +202,10 @@ lazy val commonSettings = List(
   Test / parallelExecution := false,
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
   startYear := Some(2019),
-  organizationName := "cats-tagless maintainers"
+  organization := "org.typelevel",
+  organizationName := "cats-tagless maintainers",
+  apiURL := Some(url("https://typelevel.org/cats-tagless/api/")),
+  autoAPIMappings := true
 )
 
 lazy val commonJsSettings = List(

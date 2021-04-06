@@ -1,9 +1,9 @@
-[![Typelevel incubator](https://img.shields.io/badge/typelevel-incubator-F51C2B.svg)](http://typelevel.org)
-[![Build Status](https://travis-ci.org/typelevel/cats-tagless.svg?branch=master)](https://travis-ci.org/typelevel/cats-tagless)
-[![codecov](https://codecov.io/gh/typelevel/cats-tagless/branch/master/graph/badge.svg)](https://codecov.io/gh/typelevel/cats-tagless)
-[![Join the chat at https://gitter.im/typelevel/cats-tagless](https://badges.gitter.im/typelevel/cats-tagless.svg)](https://gitter.im/typelevel/cats-tagless?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Scala.js](http://scala-js.org/assets/badges/scalajs-0.6.15.svg)](http://scala-js.org)
+[![Typelevel library](https://img.shields.io/badge/typelevel-library-green.svg)](https://typelevel.org/projects#cats)
+[![Build status](https://github.com/typelevel/cats-tagless/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/typelevel/cats-tagless/actions)
+[![Gitter channel](https://badges.gitter.im/typelevel/cats-tagless.svg)](https://gitter.im/typelevel/cats-tagless)
+[![Scala.js](http://scala-js.org/assets/badges/scalajs-1.5.0.svg)](http://scala-js.org)
 [![Latest version](https://index.scala-lang.org/typelevel/cats-tagless/cats-tagless-core/latest.svg?color=orange)](https://index.scala-lang.org/typelevel/cats-tagless/cats-tagless-core)
+[![Cats friendly](https://typelevel.org/cats/img/cats-badge-tiny.png)](https://typelevel.org/cats)
 
 
 Cats-tagless is a small library built to facilitate transforming and composing tagless final encoded algebras.

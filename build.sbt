@@ -22,6 +22,8 @@ enablePlugins(SonatypeCiReleasePlugin)
 
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala213)
 ThisBuild / scalaVersion := Scala213
+ThisBuild / spiewakCiReleaseSnapshots := true
+ThisBuild / spiewakMainBranches := Seq("master")
 ThisBuild / githubWorkflowArtifactUpload := false
 ThisBuild / githubWorkflowBuildMatrixAdditions += "ci" -> List("validateJVM", "validateJS", "validateNative")
 ThisBuild / githubWorkflowBuild := List(WorkflowStep.Sbt(List("${{ matrix.ci }}"), name = Some("Validation")))
@@ -63,11 +65,11 @@ val macroSettings = List(
   })
 )
 
-lazy val catsTagless = project
+lazy val `cats-tagless` = project
+  .in(file("."))
   .aggregate(rootJVM, rootJS, rootNative, docs)
   .dependsOn(rootJVM, rootJS, rootNative)
   .settings(rootSettings)
-  .settings(moduleName := "cats-tagless")
   .enablePlugins(NoPublishPlugin)
 
 lazy val rootJVM = project

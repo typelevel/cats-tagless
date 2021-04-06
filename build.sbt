@@ -13,7 +13,9 @@ val gitRepo = "git@github.com:typelevel/cats-tagless.git"
 val homePage = "https://typelevel.org/cats-tagless"
 
 // GitHub actions configuration
-ThisBuild / baseVersion := "0.12"
+ThisBuild / organization := "org.typelevel"
+ThisBuild / organizationName := "cats-tagless maintainers"
+ThisBuild / baseVersion := "0.13"
 ThisBuild / publishGithubUser := "joroKr21"
 ThisBuild / publishFullName := "Georgi Krastev"
 enablePlugins(SonatypeCiReleasePlugin)
@@ -202,8 +204,6 @@ lazy val commonSettings = List(
   Test / parallelExecution := false,
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
   startYear := Some(2019),
-  organization := "org.typelevel",
-  organizationName := "cats-tagless maintainers",
   apiURL := Some(url("https://typelevel.org/cats-tagless/api/")),
   autoAPIMappings := true
 )

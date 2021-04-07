@@ -27,7 +27,6 @@ ThisBuild / spiewakMainBranches := Seq("master")
 ThisBuild / githubWorkflowArtifactUpload := false
 ThisBuild / githubWorkflowBuildMatrixAdditions += "ci" -> List("validateJVM", "validateJS", "validateNative")
 ThisBuild / githubWorkflowBuild := List(WorkflowStep.Sbt(List("${{ matrix.ci }}"), name = Some("Validation")))
-ThisBuild / githubWorkflowEnv += "GPG_TTY" -> "$(tty)"
 ThisBuild / githubWorkflowAddedJobs ++= Seq(
   WorkflowJob(
     "microsite",

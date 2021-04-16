@@ -20,7 +20,7 @@ Currently there are five type classes defined in Cats-tagless: [FunctorK](#funct
 
 For tagless final algebras whose effect `F` appears only in the covariant position, instance of `FunctorK` can be auto generated through the `autoFunctorK` annotation.
 
-### <a id="contravariantK" href="#functorK"></a>`ContravariantK`
+### <a id="contravariantK" href="#contravariantK"></a>`ContravariantK`
 ```
   def contramapK[F[_], G[_]](af: A[F])(fk: G ~> F): A[G]
 ```

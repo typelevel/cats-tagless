@@ -9,7 +9,7 @@ position: 4
 ## Type classes
 
 
-Currently there are four type classes defined in Cats-tagless: [FunctorK](#functorK), [InvariantK](#invariantK), [SemigroupalK](#semigroupalK), and [ApplyK](#applyK). They can be deemed as somewhat higher kinded versions of the corresponding type classes in cats.
+Currently there are five type classes defined in Cats-tagless: [FunctorK](#functorK), [ContravariantK](#contravariantK), [InvariantK](#invariantK), [SemigroupalK](#semigroupalK), and [ApplyK](#applyK). They can be deemed as somewhat higher kinded versions of the corresponding type classes in cats.
 
 
 
@@ -20,7 +20,7 @@ Currently there are four type classes defined in Cats-tagless: [FunctorK](#funct
 
 For tagless final algebras whose effect `F` appears only in the covariant position, instance of `FunctorK` can be auto generated through the `autoFunctorK` annotation.
 
-### <a id="functorK" href="#functorK"></a>`FunctorK`
+### <a id="contravariantK" href="#contravariantK"></a>`ContravariantK`
 ```
   def contramapK[F[_], G[_]](af: A[F])(fk: G ~> F): A[G]
 ```

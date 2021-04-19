@@ -17,17 +17,24 @@
 package cats.tagless
 package tests
 
+import cats.Eq
 import cats.laws.discipline.SerializableTests
+import cats.laws.discipline.arbitrary._
 import cats.tagless.laws.discipline.SemigroupalKTests
 
 import scala.util.Try
 
 class autoSemigroupalKTests extends CatsTaglessTestSuite {
-  // Type inference issue.
-  implicit val eqForSafeAlg = SafeAlg.eqForSafeAlg[Tuple3K[Try, Option, List]#λ]
+  type T3K[A] = Tuple3K[Try, Option, List]#λ[A]
+  // Type inference issues on Scala 2.12
+  implicit val eqForSafeAlg: Eq[SafeAlg[T3K]] = SafeAlg.eqForSafeAlg[T3K]
+  implicit val eqForSafeInvAlg: Eq[SafeInvAlg[T3K]] = SafeInvAlg.eqForSafeInvAlg[T3K]
+  implicit val eqForCalculatorAlg: Eq[CalculatorAlg[T3K]] = CalculatorAlg.eqForCalculatorAlg[T3K]
 
-  checkAll("ParseAlg[Option]", SemigroupalKTests[SafeAlg].semigroupalK[Try, Option, List])
-  checkAll("SemigroupalK[ParseAlg]", SerializableTests.serializable(SemigroupalK[SafeAlg]))
+  checkAll("SemigroupalK[SafeAlg]", SemigroupalKTests[SafeAlg].semigroupalK[Try, Option, List])
+  checkAll("SemigroupalK[SafeInvAlg]", SemigroupalKTests[SafeInvAlg].semigroupalK[Try, Option, List])
+  checkAll("SemigroupalK[CalculatorAlg]", SemigroupalKTests[CalculatorAlg].semigroupalK[Try, Option, List])
+  checkAll("SemigroupalK is Serializable", SerializableTests.serializable(SemigroupalK[SafeAlg]))
 
   test("simple product") {
     val prodInterpreter = Interpreters.tryInterpreter.productK(Interpreters.lazyInterpreter)

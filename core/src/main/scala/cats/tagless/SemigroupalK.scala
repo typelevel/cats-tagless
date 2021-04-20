@@ -17,6 +17,7 @@
 package cats.tagless
 
 import cats._
+import cats.arrow.FunctionK
 import cats.data._
 import cats.kernel.CommutativeMonoid
 import cats.syntax.all._
@@ -29,6 +30,12 @@ trait SemigroupalK[Alg[_[_]]] extends Serializable {
 }
 
 object SemigroupalK extends SemigroupalKInstances {
+  private[this] val _1k = FunctionK.liftFunction[Tuple2K[Id, Id, *], Id](_.first)
+  private[this] val _2k = FunctionK.liftFunction[Tuple2K[Id, Id, *], Id](_.second)
+
+  def firstK[F[_], G[_]]: Tuple2K[F, G, *] ~> F = _1k.asInstanceOf[Tuple2K[F, G, *] ~> F]
+  def secondK[F[_], G[_]]: Tuple2K[F, G, *] ~> G = _2k.asInstanceOf[Tuple2K[F, G, *] ~> G]
+
   implicit def catsTaglessSemigroupalKForEitherK[F[_], A]: SemigroupalK[EitherK[F, *[_], A]] =
     InvariantK.catsTaglessApplyKForEitherK[F, A]
 

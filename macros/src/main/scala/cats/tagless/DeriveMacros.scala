@@ -58,7 +58,7 @@ class DeriveMacros(val c: blackbox.Context) {
       }
 
     /** Construct a new set of argument lists based on their name and type. */
-    def transformedArgLists(f: PartialFunction[Parameter, Tree]): List[List[Tree]] = {
+    def transformedArgLists(f: PartialFunction[Parameter, Tree] = PartialFunction.empty): List[List[Tree]] = {
       def id(param: Parameter): Tree = Ident(param.name)
 
       val f_* : Parameter => Tree = {
@@ -76,9 +76,9 @@ class DeriveMacros(val c: blackbox.Context) {
     }
 
     /** Transform this method into another by applying transformations to types, arguments and body. */
-    def transform(instance: Tree)(types: PartialFunction[Type, Type])(
-        argLists: PartialFunction[Parameter, Tree]
-    )(body: PartialFunction[Tree, Tree]): Method = copy(
+    def transform(instance: Tree)(types: PartialFunction[Type, Type] = PartialFunction.empty)(
+        argLists: PartialFunction[Parameter, Tree] = PartialFunction.empty
+    )(body: PartialFunction[Tree, Tree] = PartialFunction.empty): Method = copy(
       paramLists = transformedParamLists(types),
       returnType = types.applyOrElse(returnType, identity[Type]),
       body = body.applyOrElse(delegate(instance, transformedArgLists(argLists)), identity[Tree])
@@ -93,7 +93,7 @@ class DeriveMacros(val c: blackbox.Context) {
     }
 
     /** Delegate this method to an existing instance, optionally providing different argument lists. */
-    def delegate(to: Tree, argLists: List[List[Tree]] = transformedArgLists(PartialFunction.empty)): Tree = {
+    def delegate(to: Tree, argLists: List[List[Tree]] = transformedArgLists()): Tree = {
       val typeArgs = for (tp <- typeParams) yield typeRef(NoPrefix, tp.symbol, Nil)
       q"$to.$name[..$typeArgs](...$argLists)"
     }
@@ -438,20 +438,34 @@ class DeriveMacros(val c: blackbox.Context) {
   def productK(algebra: Type): MethodDef = MethodDef("productK") {
     case PolyType(List(f, g), MethodType(List(af, ag), _)) =>
       val Tuple2K = symbolOf[Tuple2K[Any, Any, Any]]
+      val SemiK = typeOf[SemigroupalK.type].termSymbol
       val F = f.asType.toTypeConstructor
       val G = g.asType.toTypeConstructor
       val t2k = polyType(F.typeParams, appliedType(Tuple2K, F :: G :: F.typeParams.map(_.asType.toType)))
       val Af = singleType(NoPrefix, af)
       val members = overridableMembersOf(Af)
       val types = delegateAbstractTypes(Af, members, Af)
+      val transformType: PartialFunction[Type, Type] = {
+        case tpe if occursIn(tpe)(f) =>
+          tpe.map(t => if (t.typeSymbol == f) appliedType(t2k, t.typeArgs) else t)
+      }
+
+      val firstK = q"$SemiK.firstK[$F, $G]"
+      val secondK = q"$SemiK.secondK[$F, $G]"
       val methods = delegateMethods(Af, members, af) {
-        case method if method.occursOnlyInReturn(f) =>
-          val returnType = method.returnType.map(t => if (t.typeSymbol == f) appliedType(t2k, t.typeArgs) else t)
-          val Sk = method.summon[SemigroupalK[Any]](polyType(f :: Nil, method.returnType))
-          val body = q"$Sk.productK[$F, $G](${method.body}, ${method.delegate(Ident(ag))})"
-          method.copy(returnType = returnType, body = body)
         case method if method.occursInSignature(f) =>
-          abort(s"Type parameter $F occurs in contravariant position in method ${method.displayName}")
+          def transformParam(fk: Tree): PartialFunction[Parameter, Tree] = {
+            case Parameter(pn, pt, _) if occursIn(pt)(f) =>
+              val Fk = method.summon[FunctorK[Any]](polyType(f :: Nil, pt))
+              q"$Fk.mapK($pn)($fk)"
+          }
+
+          val mf = method.transform(q"$af")(transformType)(transformParam(firstK))()
+          if (method.occursInReturn(f)) {
+            val mg = method.transform(q"$ag")(transformType)(transformParam(secondK))()
+            val Sk = method.summon[SemigroupalK[Any]](polyType(f :: Nil, method.returnType))
+            mf.copy(body = q"$Sk.productK[$F, $G](${mf.body}, ${mg.body})")
+          } else mf
       }
 
       val typeParams = Tuple2K.typeParams.drop(2)

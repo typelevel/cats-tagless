@@ -28,8 +28,9 @@ import scala.util.Try
 class autoInvariantKTests extends CatsTaglessTestSuite {
   import autoInvariantKTests._
 
-  checkAll("SafeInvAlg[Option]", InvariantKTests[SafeInvAlg].invariantK[Try, Option, List])
-  checkAll("InvariantK[SafeInvAlg]", SerializableTests.serializable(InvariantK[SafeInvAlg]))
+  checkAll("InvariantK[SafeInvAlg]", InvariantKTests[SafeInvAlg].invariantK[Try, Option, List])
+  checkAll("InvariantK[CalculatorAlg]", InvariantKTests[CalculatorAlg].invariantK[Try, Option, List])
+  checkAll("InvariantK is Serializable", SerializableTests.serializable(InvariantK[SafeInvAlg]))
 
   test("Alg with non effect method") {
     val tryInt = new NoEffectMethod[Try] {

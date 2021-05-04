@@ -47,7 +47,7 @@ val circeVersion = "0.13.0"
 val disciplineVersion = "1.1.4"
 val disciplineMunitVersion = "1.0.8"
 val paradiseVersion = "2.1.1"
-val scalaCheckVersion = "1.15.3"
+val scalaCheckVersion = "1.15.4"
 
 val macroSettings = List(
   libraryDependencies ++=

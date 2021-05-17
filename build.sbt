@@ -7,7 +7,7 @@ addCommandAlias("fmt", "all scalafmtSbt scalafmtAll")
 addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 
 val Scala212 = "2.12.13"
-val Scala213 = "2.13.5"
+val Scala213 = "2.13.6"
 
 val gitRepo = "git@github.com:typelevel/cats-tagless.git"
 val homePage = "https://typelevel.org/cats-tagless"

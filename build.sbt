@@ -46,6 +46,7 @@ val catsVersion = "2.6.1"
 val circeVersion = "0.13.0"
 val disciplineVersion = "1.1.5"
 val disciplineMunitVersion = "1.0.9"
+val kindProjectorVersion = "0.13.0"
 val paradiseVersion = "2.1.1"
 val scalaCheckVersion = "1.15.4"
 
@@ -204,7 +205,10 @@ lazy val commonSettings = List(
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
   startYear := Some(2019),
   apiURL := Some(url("https://typelevel.org/cats-tagless/api/")),
-  autoAPIMappings := true
+  autoAPIMappings := true,
+  libraryDependencies += compilerPlugin(
+    ("org.typelevel" %% "kind-projector" % kindProjectorVersion).cross(CrossVersion.full)
+  )
 )
 
 lazy val commonJsSettings = List(

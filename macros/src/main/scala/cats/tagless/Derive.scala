@@ -29,8 +29,8 @@ object Derive {
   /** Derives an implementation of `Alg` where all abstract methods return `Unit`. */
   def void[Alg[_[_]]]: Alg[Void] = macro DeriveMacros.void[Alg]
 
-  /** Derives an implementation of `Alg` that forwards all calls to another one supplied via `ReaderT`.
-    * This enables a form of dependency injection.
+  /** Derives an implementation of `Alg` that forwards all calls to another one supplied via `ReaderT`. This enables a
+    * form of dependency injection.
     */
   def readerT[Alg[_[_]], F[_]]: Alg[ReaderT[F, Alg[F], *]] = macro DeriveMacros.readerT[Alg, F]
 
@@ -48,12 +48,12 @@ object Derive {
     * scala> import util.Try
     * scala> import cats.~>
     * scala> trait StringAlg[F[_]] {
-    *      |   def head(s: String): F[String]
-    *      | }
+    *       |   def head(s: String): F[String]
+    *       | }
     * scala> val tryInterpreter = new StringAlg[Try] {
-    *      |    //for simplicity we use a Try here, but we are not encouraging it.
-    *      |    def head(s: String): Try[String] = Try(s.head).map(_.toString)
-    *      | }
+    *       |    //for simplicity we use a Try here, but we are not encouraging it.
+    *       |    def head(s: String): Try[String] = Try(s.head).map(_.toString)
+    *       | }
     * scala> val derived = cats.tagless.Derive.functorK[StringAlg]
     * scala> val optionInterpreter = derived.mapK(tryInterpreter)(λ[Try ~> Option]{ _.toOption })
     * scala> optionInterpreter.head("blah")
@@ -70,13 +70,12 @@ object Derive {
   def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = macro DeriveMacros.semigroupalK[Alg]
   def applyK[Alg[_[_]]]: ApplyK[Alg] = macro DeriveMacros.applyK[Alg]
 
-  /** Type class for instrumenting an algebra.
-    * Note: This feature is experimental, API is likely to change.
+  /** Type class for instrumenting an algebra. Note: This feature is experimental, API is likely to change.
     */
   def instrument[Alg[_[_]]]: Instrument[Alg] = macro DeriveMacros.instrument[Alg]
 
-  /** Type class supporting Aspect-Oriented Programming (AOP) for a tagless final algebra.
-    * Note: This feature is experimental, API is likely to change.
+  /** Type class supporting Aspect-Oriented Programming (AOP) for a tagless final algebra. Note: This feature is
+    * experimental, API is likely to change.
     */
   def aspect[Alg[_[_]], Dom[_], Cod[_]]: Aspect[Alg, Dom, Cod] = macro DeriveMacros.aspect[Alg, Dom, Cod]
 }

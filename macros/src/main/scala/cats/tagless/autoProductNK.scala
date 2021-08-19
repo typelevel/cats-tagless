@@ -19,7 +19,8 @@ import scala.annotation.{StaticAnnotation, compileTimeOnly}
 import scala.collection.immutable.Seq
 import scala.reflect.macros.whitebox
 
-/** auto generates methods in companion object to compose multiple interpreters into an interpreter of a `TupleNK` effects
+/** auto generates methods in companion object to compose multiple interpreters into an interpreter of a `TupleNK`
+  * effects
   */
 @compileTimeOnly("Cannot expand @autoProductK")
 class autoProductNK extends StaticAnnotation {

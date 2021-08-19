@@ -140,9 +140,9 @@ class DeriveMacros(val c: blackbox.Context) {
 
   /** Temporarily refresh type parameter names, type-check the `tree` and restore the original names.
     *
-    * The purpose is to avoid warnings about type parameter shadowing, which can be problematic when
-    * `-Xfatal-warnings` is enabled. We know the warnings are harmless because we deal with types directly.
-    * Unfortunately `c.typecheck(tree, silent = true)` does not suppress warnings.
+    * The purpose is to avoid warnings about type parameter shadowing, which can be problematic when `-Xfatal-warnings`
+    * is enabled. We know the warnings are harmless because we deal with types directly. Unfortunately
+    * `c.typecheck(tree, silent = true)` does not suppress warnings.
     */
   def typeCheckWithFreshTypeParams(tree: Tree): Tree = {
     val typeParams = tree.collect { case method: DefDef =>
@@ -237,8 +237,8 @@ class DeriveMacros(val c: blackbox.Context) {
     }
   }
 
-  /** Create a new instance of `typeClass` for `algebra`.
-    * `rhs` should define a mapping for each method (by name) to an implementation function based on type signature.
+  /** Create a new instance of `typeClass` for `algebra`. `rhs` should define a mapping for each method (by name) to an
+    * implementation function based on type signature.
     */
   def instantiate[T: WeakTypeTag](tag: WeakTypeTag[_], typeArgs: Type*)(methods: (Type => MethodDef)*): Tree = {
     val algebra = typeConstructorOf(tag)

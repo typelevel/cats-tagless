@@ -20,8 +20,7 @@ import cats.~>
 
 import scala.annotation.implicitNotFound
 
-/** A higher-kinded `Contravariant` functor.
-  * Must obey the laws in `cats.tagless.laws.ContravariantKLaws`.
+/** A higher-kinded `Contravariant` functor. Must obey the laws in `cats.tagless.laws.ContravariantKLaws`.
   */
 @implicitNotFound("Could not find an instance of ContravariantK for ${Alg}")
 trait ContravariantK[Alg[_[_]]] extends InvariantK[Alg] {

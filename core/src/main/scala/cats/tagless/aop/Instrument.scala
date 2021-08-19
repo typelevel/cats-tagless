@@ -23,10 +23,10 @@ import scala.annotation.implicitNotFound
 /** The result of an algebra method `F[A]` instrumented with the method name. */
 final case class Instrumentation[F[_], A](value: F[A], algebraName: String, methodName: String)
 
-/** Type class for instrumenting an algebra.
-  * Note: This feature is experimental, API is likely to change.
+/** Type class for instrumenting an algebra. Note: This feature is experimental, API is likely to change.
   *
-  * @tparam Alg The algebra to be instrumented.
+  * @tparam Alg
+  *   The algebra to be instrumented.
   */
 @implicitNotFound("Could not find an instance of Instrument for ${Alg}")
 trait Instrument[Alg[_[_]]] extends FunctorK[Alg] {

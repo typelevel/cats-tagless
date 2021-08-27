@@ -46,7 +46,7 @@ val catsVersion = "2.6.1"
 val circeVersion = "0.14.1"
 val disciplineVersion = "1.1.5"
 val disciplineMunitVersion = "1.0.9"
-val kindProjectorVersion = "0.13.0"
+val kindProjectorVersion = "0.13.1"
 val paradiseVersion = "2.1.1"
 val scalaCheckVersion = "1.15.4"
 

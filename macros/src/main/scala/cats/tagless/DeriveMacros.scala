@@ -89,7 +89,7 @@ class DeriveMacros(val c: blackbox.Context) {
         argLists: PartialFunction[Parameter, Tree]
     )(body: PartialFunction[Tree, Tree]): Method = {
       val (from, to) = types.toList.unzip
-      transform(Ident(instance))({ case tpe => tpe.substituteSymbols(from, to) })(argLists)(body)
+      transform(Ident(instance)) { case tpe => tpe.substituteSymbols(from, to) }(argLists)(body)
     }
 
     /** Delegate this method to an existing instance, optionally providing different argument lists. */

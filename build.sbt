@@ -163,40 +163,42 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform, NativePlatform)
 lazy val docs = project
   .dependsOn(macrosJVM)
   .enablePlugins(MicrositesPlugin, SiteScaladocPlugin, NoPublishPlugin)
-  .settings(rootSettings, macroSettings)
+  .settings(docSettings, macroSettings)
   .settings(
     moduleName := "cats-tagless-docs",
-    libraryDependencies += "org.typelevel" %%% "cats-free" % catsVersion,
-    docsMappingsAPIDir := "api",
-    addMappingsToSiteDir(coreJVM / Compile / packageDoc / mappings, docsMappingsAPIDir),
-    organization := "org.typelevel",
-    autoAPIMappings := true,
-    micrositeName := "Cats-tagless",
-    micrositeDescription := "A library of utilities for tagless final algebras",
-    micrositeBaseUrl := "cats-tagless",
-    micrositeGithubOwner := "typelevel",
-    micrositeGithubRepo := "cats-tagless",
-    micrositeHighlightTheme := "atom-one-light",
-    micrositeTheme := "pattern",
-    micrositePalette := Map(
-      "brand-primary" -> "#51839A",
-      "brand-secondary" -> "#EDAF79",
-      "brand-tertiary" -> "#96A694",
-      "gray-dark" -> "#192946",
-      "gray" -> "#424F67",
-      "gray-light" -> "#E3E2E3",
-      "gray-lighter" -> "#F4F3F4",
-      "white-color" -> "#FFFFFF"
-    ),
-    ghpagesNoJekyll := false,
-    micrositeAuthor := "cats-tagless Contributors",
-    scalacOptions -= "-Xfatal-warnings",
-    git.remoteRepo := gitRepo,
-    makeSite / includeFilter := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md"
+    libraryDependencies += "org.typelevel" %%% "cats-free" % catsVersion
   )
 
 lazy val docsMappingsAPIDir = settingKey[String]("Name of subdirectory in site target directory for api docs")
-lazy val rootSettings = commonSettings ::: publishSettings
+lazy val rootSettings = (scalacOptions += "-Xsource:3") :: commonSettings ::: publishSettings
+lazy val docSettings = commonSettings ::: publishSettings ::: List(
+  docsMappingsAPIDir := "api",
+  addMappingsToSiteDir(coreJVM / Compile / packageDoc / mappings, docsMappingsAPIDir),
+  organization := "org.typelevel",
+  autoAPIMappings := true,
+  micrositeName := "Cats-tagless",
+  micrositeDescription := "A library of utilities for tagless final algebras",
+  micrositeBaseUrl := "cats-tagless",
+  micrositeGithubOwner := "typelevel",
+  micrositeGithubRepo := "cats-tagless",
+  micrositeHighlightTheme := "atom-one-light",
+  micrositeTheme := "pattern",
+  micrositePalette := Map(
+    "brand-primary" -> "#51839A",
+    "brand-secondary" -> "#EDAF79",
+    "brand-tertiary" -> "#96A694",
+    "gray-dark" -> "#192946",
+    "gray" -> "#424F67",
+    "gray-light" -> "#E3E2E3",
+    "gray-lighter" -> "#F4F3F4",
+    "white-color" -> "#FFFFFF"
+  ),
+  ghpagesNoJekyll := false,
+  micrositeAuthor := "cats-tagless Contributors",
+  scalacOptions -= "-Xfatal-warnings",
+  git.remoteRepo := gitRepo,
+  makeSite / includeFilter := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md"
+)
 
 lazy val commonSettings = List(
   scalaVersion := (ThisBuild / scalaVersion).value,

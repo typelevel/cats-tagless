@@ -41,7 +41,7 @@ private[tagless] class autoProductNKMacros(override val c: whitebox.Context) ext
       range.map(n => createTypeParam("F" + n, 1)).toList
     val effectTypeParamsNames = tArgs(effectTypeParams)
 
-    //Tuple3K
+    // Tuple3K
     val productTypeName = tq"_root_.cats.tagless.${TypeName("Tuple" + arity + "K")}"
 
     val methods = typedef.impl.body.map {
@@ -55,7 +55,7 @@ private[tagless] class autoProductNKMacros(override val c: whitebox.Context) ext
         abort(s"autoProductK does not support algebra with such statement: $statement")
     }
 
-    //af1: A[F1], af2: A[F2], af3: A[F3]
+    // af1: A[F1], af2: A[F2], af3: A[F3]
     val inboundInterpreters: Seq[ValDef] =
       (range.zip(effectTypeParamsNames)).map { case (idx, fx) =>
         ValDef(

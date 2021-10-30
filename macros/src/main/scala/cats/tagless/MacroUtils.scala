@@ -35,7 +35,7 @@ abstract private[tagless] class MacroUtils {
       q"object ${name.toTermName} { }".asInstanceOf[ModuleDef]
     )
 
-    //TODO: this will not work for inherited type members. We'll need to figure out later how to make it work.
+    // TODO: this will not work for inherited type members. We'll need to figure out later how to make it work.
     lazy val abstractTypeMembers: Seq[TypeDef] = defn.impl.body.collect {
       case dt: TypeDef if dt.mods.hasFlag(Flag.DEFERRED) => dt
     }

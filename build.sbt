@@ -8,7 +8,7 @@ addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 
 val Scala212 = "2.12.15"
 val Scala213 = "2.13.7"
-val Java8 = JavaSpec(JavaSpec.Distribution.Adopt, "1.8")
+val Java8 = JavaSpec.temurin("8")
 
 val gitRepo = "git@github.com:typelevel/cats-tagless.git"
 val homePage = "https://typelevel.org/cats-tagless"

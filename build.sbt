@@ -8,6 +8,7 @@ addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 
 val Scala212 = "2.12.15"
 val Scala213 = "2.13.7"
+val Java8 = JavaSpec.temurin("8")
 
 val gitRepo = "git@github.com:typelevel/cats-tagless.git"
 val homePage = "https://typelevel.org/cats-tagless"
@@ -22,6 +23,7 @@ enablePlugins(SonatypeCiReleasePlugin)
 
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala213)
 ThisBuild / scalaVersion := Scala213
+ThisBuild / githubWorkflowJavaVersions := List(Java8)
 ThisBuild / githubWorkflowArtifactUpload := false
 ThisBuild / githubWorkflowBuildMatrixAdditions += "ci" -> List("validateJVM", "validateJS", "validateNative")
 ThisBuild / githubWorkflowBuild := List(WorkflowStep.Sbt(List("${{ matrix.ci }}"), name = Some("Validation")))
@@ -38,7 +40,8 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
       WorkflowStep.Run(List("gem install jekyll -v 2.5"), name = Some("Install Jekyll")),
       WorkflowStep.Sbt(List("docs/makeMicrosite"), name = Some("Build microsite"))
     ),
-    scalas = List(Scala213)
+    scalas = List(Scala213),
+    javas = List(Java8)
   )
 )
 

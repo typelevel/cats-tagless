@@ -67,7 +67,9 @@ private[tagless] class autoProductNKMacros(override val c: whitebox.Context) ext
       }
 
     q"""
-        def ${TermName("product" + arity + "K")}[..$effectTypeParams](..$inboundInterpreters): $name[$productTypeName[..$effectTypeParamsNames]#λ] =
+        def ${TermName(
+      "product" + arity + "K"
+    )}[..$effectTypeParams](..$inboundInterpreters): $name[$productTypeName[..$effectTypeParamsNames]#λ] =
           new $name[$productTypeName[..$effectTypeParamsNames]#λ] {
             ..$methods
           }

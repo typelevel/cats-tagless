@@ -1,5 +1,3 @@
-import com.typesafe.sbt.SbtGit.git
-
 addCommandAlias("validateJVM", "all scalafmtCheckAll scalafmtSbtCheck testsJVM/test")
 addCommandAlias("validateJS", "all testsJS/test")
 addCommandAlias("validateNative", "all testsNative/test")
@@ -14,19 +12,10 @@ val gitRepo = "git@github.com:typelevel/cats-tagless.git"
 val homePage = "https://typelevel.org/cats-tagless"
 
 // GitHub actions configuration
-ThisBuild / organization := "org.typelevel"
 ThisBuild / organizationName := "cats-tagless maintainers"
-ThisBuild / baseVersion := "0.13"
-ThisBuild / publishGithubUser := "joroKr21"
-ThisBuild / publishFullName := "Georgi Krastev"
-enablePlugins(SonatypeCiReleasePlugin)
+ThisBuild / tlBaseVersion := "0.14"
 
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala213)
-ThisBuild / scalaVersion := Scala213
-ThisBuild / githubWorkflowJavaVersions := List(Java8)
-ThisBuild / githubWorkflowArtifactUpload := false
-ThisBuild / githubWorkflowBuildMatrixAdditions += "ci" -> List("validateJVM", "validateJS", "validateNative")
-ThisBuild / githubWorkflowBuild := List(WorkflowStep.Sbt(List("${{ matrix.ci }}"), name = Some("Validation")))
 ThisBuild / githubWorkflowAddedJobs ++= Seq(
   WorkflowJob(
     "microsite",
@@ -66,30 +55,7 @@ val macroSettings = List(
   })
 )
 
-lazy val `cats-tagless` = project
-  .in(file("."))
-  .aggregate(rootJVM, rootJS, rootNative, docs)
-  .dependsOn(rootJVM, rootJS, rootNative)
-  .settings(rootSettings)
-  .enablePlugins(NoPublishPlugin)
-
-lazy val rootJVM = project
-  .aggregate(coreJVM, lawsJVM, testsJVM, macrosJVM)
-  .dependsOn(coreJVM, lawsJVM, testsJVM, macrosJVM)
-  .settings(rootSettings)
-  .enablePlugins(NoPublishPlugin)
-
-lazy val rootJS = project
-  .aggregate(coreJS, lawsJS, testsJS, macrosJS)
-  .dependsOn(coreJS, lawsJS, testsJS, macrosJS)
-  .settings(rootSettings, commonJsSettings)
-  .enablePlugins(NoPublishPlugin)
-
-lazy val rootNative = project
-  .aggregate(coreNative, lawsNative, testsNative, macrosNative)
-  .dependsOn(coreNative, lawsNative, testsNative, macrosNative)
-  .settings(rootSettings, commonNativeSettings)
-  .enablePlugins(NoPublishPlugin)
+lazy val root = tlCrossRootProject.aggregate(core, laws, tests, macros)
 
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
@@ -173,8 +139,8 @@ lazy val docs = project
   )
 
 lazy val docsMappingsAPIDir = settingKey[String]("Name of subdirectory in site target directory for api docs")
-lazy val rootSettings = (scalacOptions += "-Xsource:3") :: commonSettings ::: publishSettings
-lazy val docSettings = commonSettings ::: publishSettings ::: List(
+lazy val rootSettings = (scalacOptions += "-Xsource:3") :: commonSettings
+lazy val docSettings = commonSettings ::: List(
   docsMappingsAPIDir := "api",
   addMappingsToSiteDir(coreJVM / Compile / packageDoc / mappings, docsMappingsAPIDir),
   organization := "org.typelevel",
@@ -210,14 +176,10 @@ lazy val commonSettings = List(
   resolvers ++= Seq(Resolver.sonatypeRepo("releases"), Resolver.sonatypeRepo("snapshots")),
   startYear := Some(2019),
   apiURL := Some(url("https://typelevel.org/cats-tagless/api/")),
-  autoAPIMappings := true,
-  libraryDependencies += compilerPlugin(
-    ("org.typelevel" %% "kind-projector" % kindProjectorVersion).cross(CrossVersion.full)
-  )
+  autoAPIMappings := true
 )
 
 lazy val commonJsSettings = List(
-  Global / scalaJSStage := FastOptStage,
   // currently sbt-doctest doesn't work in JS builds
   // https://github.com/tkawachi/sbt-doctest/issues/52
   doctestGenTests := Nil
@@ -227,28 +189,24 @@ lazy val commonNativeSettings = List(
   doctestGenTests := Nil
 )
 
-lazy val publishSettings = List(
-  homepage := Some(url(homePage)),
-  scmInfo := Some(ScmInfo(url(homePage), gitRepo)),
-  licenses := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.html")),
-  developers := List(
-    Developer(
-      "Georgi Krastev",
-      "@joroKr21",
-      "joro.kr.21@gmail.com",
-      url("https://www.linkedin.com/in/georgykr")
-    ),
-    Developer(
-      "Kailuo Wang",
-      "@kailuowang",
-      "kailuo.wang@gmail.com",
-      url("http://kailuowang.com")
-    ),
-    Developer(
-      "Luka Jacobowitz",
-      "@LukaJCB",
-      "luka.jacobowitz@fh-duesseldorf.de",
-      url("http://stackoverflow.com/users/3795501/luka-jacobowitz")
-    )
+ThisBuild / homepage := Some(url(homePage))
+ThisBuild / developers := List(
+  Developer(
+    "Georgi Krastev",
+    "@joroKr21",
+    "joro.kr.21@gmail.com",
+    url("https://www.linkedin.com/in/georgykr")
+  ),
+  Developer(
+    "Kailuo Wang",
+    "@kailuowang",
+    "kailuo.wang@gmail.com",
+    url("http://kailuowang.com")
+  ),
+  Developer(
+    "Luka Jacobowitz",
+    "@LukaJCB",
+    "luka.jacobowitz@fh-duesseldorf.de",
+    url("http://stackoverflow.com/users/3795501/luka-jacobowitz")
   )
 )

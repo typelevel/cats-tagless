@@ -16,6 +16,7 @@ ThisBuild / organizationName := "cats-tagless maintainers"
 ThisBuild / tlBaseVersion := "0.14"
 
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala213)
+ThisBuild / tlCiReleaseBranches := Seq("master")
 ThisBuild / githubWorkflowAddedJobs ++= Seq(
   WorkflowJob(
     "microsite",

@@ -16,4 +16,4 @@
 
 package cats.tagless
 
-object implicits extends syntax.AllSyntax
+package object implicits extends syntax.AllSyntax

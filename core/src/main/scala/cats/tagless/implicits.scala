@@ -16,4 +16,9 @@
 
 package cats.tagless
 
-package object implicits extends syntax.AllSyntax
+import scala.annotation.nowarn
+
+package implicits {
+  @nowarn("cat=deprecation") // required for bincompat
+  object `package` extends syntax.AllSyntax
+}

@@ -65,9 +65,9 @@ private[tagless] class autoInvariantKMacros(override val c: whitebox.Context) ex
     algDefn.forVaryingEffectType((algebraType, tparams) =>
       q"""
       def imapK[$F, $G, ..$tparams]($from: $algebraF)(fk: _root_.cats.~>[..${tArgs(
-        F,
-        G
-      )}])(gk: _root_.cats.~>[..${tArgs(G, F)}]): $fullyRefinedAlgebraG =
+          F,
+          G
+        )}])(gk: _root_.cats.~>[..${tArgs(G, F)}]): $fullyRefinedAlgebraG =
         _root_.cats.tagless.InvariantK[$algebraType].imapK($from)(fk)(gk).asInstanceOf[$fullyRefinedAlgebraG]
     """
     )

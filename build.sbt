@@ -191,6 +191,7 @@ lazy val commonNativeSettings = List(
 )
 
 ThisBuild / homepage := Some(url(homePage))
+ThisBuild / licenses := Seq(License.Apache2)
 ThisBuild / developers := List(
   Developer(
     "Georgi Krastev",

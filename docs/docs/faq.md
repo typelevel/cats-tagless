@@ -140,3 +140,23 @@ If you see error likes the following when you try to summon a specific instance 
 > [error] starting with method autoDeriveFromFunctorK in object MyAlgebra
 
 It probably means that necessary implicit `MyAlgebra` instance and/or the corresponding `FunctionK` is missing in scope.
+
+### I'm seeing `java.lang.NoClassDefFoundError` at runtime
+
+If you see an error like the following 
+
+> java.lang.NoClassDefFoundError: com/mypackage/MyAlgebra$
+
+This can be due to multiple annotations on a trait without a companion object.
+This is a known [issue](https://github.com/typelevel/cats-tagless/issues/125).
+The solution is to add an empty companion object:
+
+```scala mdoc
+@finalAlg
+@autoContravariant
+trait MyAlgebra[T] {
+  def foo(t: T): String
+}
+
+object MyAlgebra {}
+```

@@ -42,7 +42,7 @@ val disciplineVersion = "1.4.0"
 val disciplineMunitVersion = "1.0.9"
 val kindProjectorVersion = "0.13.2"
 val paradiseVersion = "2.1.1"
-val scalaCheckVersion = "1.15.4"
+val scalaCheckVersion = "1.16.0"
 
 val macroSettings = List(
   libraryDependencies ++=

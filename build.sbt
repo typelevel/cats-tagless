@@ -38,7 +38,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
 
 val catsVersion = "2.6.1"
 val circeVersion = "0.14.1"
-val disciplineVersion = "1.5.0"
+val disciplineVersion = "1.5.1"
 val disciplineMunitVersion = "1.0.9"
 val kindProjectorVersion = "0.13.2"
 val paradiseVersion = "2.1.1"

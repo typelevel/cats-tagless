@@ -19,7 +19,7 @@ ThisBuild / crossScalaVersions := Seq(Scala212, Scala213)
 ThisBuild / tlCiReleaseBranches := Seq("master")
 ThisBuild / mergifyStewardConfig := Some(
   MergifyStewardConfig(
-    author = "typlevel-steward",
+    author = "typelevel-steward",
     mergeMinors = true
   )
 )

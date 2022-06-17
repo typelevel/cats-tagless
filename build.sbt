@@ -4,7 +4,7 @@ addCommandAlias("validateNative", "all testsNative/test")
 addCommandAlias("fmt", "all scalafmtSbt scalafmtAll")
 addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 
-val Scala212 = "2.12.15"
+val Scala212 = "2.12.16"
 val Scala213 = "2.13.8"
 val Java8 = JavaSpec.temurin("8")
 
@@ -17,7 +17,12 @@ ThisBuild / tlBaseVersion := "0.14"
 
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala213)
 ThisBuild / tlCiReleaseBranches := Seq("master")
-ThisBuild / mergifyStewardConfig ~= (_.map(_.copy(mergeMinors = true)))
+ThisBuild / mergifyStewardConfig := Some(
+  MergifyStewardConfig(
+    author = "typelevel-steward[bot]",
+    mergeMinors = true
+  )
+)
 ThisBuild / githubWorkflowAddedJobs ++= Seq(
   WorkflowJob(
     "microsite",
@@ -36,8 +41,8 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
   )
 )
 
-val catsVersion = "2.6.1"
-val circeVersion = "0.14.2"
+val catsVersion = "2.8.0"
+val circeVersion = "0.14.1"
 val disciplineVersion = "1.5.1"
 val disciplineMunitVersion = "1.0.9"
 val kindProjectorVersion = "0.13.2"

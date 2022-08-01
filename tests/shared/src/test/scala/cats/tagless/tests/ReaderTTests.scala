@@ -19,7 +19,7 @@ package cats.tagless.tests
 import cats.arrow.FunctionK
 import cats.data.ReaderT
 import cats.tagless.{Derive, InvariantK}
-import cats.~>
+import cats.{FlatMap, ~>}
 
 import scala.util.{Failure, Success, Try}
 
@@ -72,6 +72,22 @@ class ReaderTTests extends CatsTaglessTestSuite {
     assertEquals(successful, 1)
     assertEquals(collision(), Success(Galaxy("MAinldkryo mWeadya")))
     assertEquals(successful, 2)
+  }
+
+  // The same approach could be used for accessing a service in a Ref
+  test("Try ~> Try") {
+    def provide[G[_]: FlatMap, A](service: G[A]) =
+      λ[ReaderT[G, A, *] ~> G](r => service.flatMap(r.run))
+
+    val alg = spaceAlg.imapK(provide(Success(dependency)))(ReaderT.liftK)
+    assertEquals(alg.blackHole(eventHorizon), eventHorizon)
+    assertEquals(alg.distance(milkyWay, andromeda), Success(881.0))
+    assertEquals(alg.collision(Success(milkyWay), Success(andromeda)), Success(Galaxy("MAinldkryo mWeadya")))
+
+    val failingAlg = spaceAlg.imapK(provide(eventHorizon))(ReaderT.liftK)
+    assertEquals(failingAlg.blackHole(eventHorizon), eventHorizon)
+    assertEquals(failingAlg.distance(milkyWay, andromeda), eventHorizon)
+    assertEquals(failingAlg.collision(Success(milkyWay), Success(andromeda)), eventHorizon)
   }
 }
 

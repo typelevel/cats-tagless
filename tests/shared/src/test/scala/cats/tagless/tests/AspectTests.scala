@@ -16,16 +16,18 @@
 
 package cats.tagless.tests
 
-import cats.Show
 import cats.kernel.laws.discipline.SerializableTests
 import cats.tagless.aop.Aspect
 import cats.tagless.laws.discipline
-import cats.tagless.{Derive, Trivial}
+import cats.tagless.{Derive, Trivial, Void}
+import cats.{Show, ~>}
+import io.circe.syntax.*
+import io.circe.{Decoder, Encoder, Json, JsonObject}
 
 import scala.util.Try
 
 class AspectTests extends CatsTaglessTestSuite {
-  import AspectTests._
+  import AspectTests.*
 
   checkAll("Aspect[SafeAlg]", discipline.AspectTests[SafeAlg, Show, Show].aspect[Try, Option, List, Int])
   checkAll("Aspect is Serializable", SerializableTests.serializable(Aspect.function[SafeAlg, Show]))
@@ -66,9 +68,51 @@ class AspectTests extends CatsTaglessTestSuite {
     testWeave(logF)("ShowFAlgebra", List(Map("message" -> "2")), "logF", Nil)
     testWeave(logF)("ShowFAlgebra", List(Map("message" -> "3")), "logF", Nil)
   }
+
+  test("Json aspect") {
+    val void = Derive.void[GeoAlgebra]
+    val toRequest = λ[Aspect.Weave[Void, Encoder, Decoder, *] ~> HttpRequest] { weave =>
+      import weave.codomain.instance
+      val hasArgs = weave.domain.nonEmpty
+      val method = if (hasArgs) "POST" else "GET"
+      val url = s"https://foo.bar/${weave.codomain.name}"
+      val body = hasArgs.guard[Option].map { _ =>
+        weave.domain.foldLeft(JsonObject.empty) { (body, args) =>
+          args.foldLeft(body) { (body, advice) =>
+            body.add(advice.name, advice.instance(advice.target.value))
+          }
+        }
+      }
+
+      HttpRequest(method, url, body.filter(_.nonEmpty).map(Json.fromJsonObject))
+    }
+
+    val client = void.weave[Encoder, Decoder].mapK(toRequest)
+    val location: Location = (42.56, 23.27)
+    assertEquals(client.currentLocation, HttpRequest[Location]("GET", "https://foo.bar/currentLocation"))
+
+    assertEquals(
+      client.area(location, 1.0),
+      HttpRequest[Double](
+        "POST",
+        "https://foo.bar/area",
+        Some(Json.obj("center" -> location.asJson, "radius" -> 1.0.asJson))
+      )
+    )
+
+    assertEquals(
+      client.nearestCity(location),
+      HttpRequest[String](
+        "POST",
+        "https://foo.bar/nearestCity",
+        Some(Json.obj("to" -> location.asJson))
+      )
+    )
+  }
 }
 
 object AspectTests extends TestInstances {
+  type Location = (Double, Double)
   implicit val showSafeAlg: Aspect.Function[SafeAlg, Show] = Derive.aspect
 
   trait ShowFAlgebra[F[_]] {
@@ -82,4 +126,20 @@ object AspectTests extends TestInstances {
     implicit val showAspect: Aspect.Function[ShowFAlgebra, Show] = Derive.aspect
     implicit val trivialAspect: Aspect.Function[ShowFAlgebra, Trivial] = Derive.aspect
   }
+
+  trait GeoAlgebra[F[_]] {
+    def currentLocation: F[Location]
+    def area(center: Location, radius: Double): F[Double]
+    def nearestCity(to: Location): F[String]
+  }
+
+  object GeoAlgebra {
+    implicit val jsonAspect: Aspect[GeoAlgebra, Encoder, Decoder] = Derive.aspect
+  }
+
+  final case class HttpRequest[A](
+      method: String,
+      url: String,
+      body: Option[Json] = None
+  )(implicit val decoder: Decoder[A])
 }

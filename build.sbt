@@ -120,7 +120,6 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Full)
   .dependsOn(macros, laws)
   .enablePlugins(AutomateHeaderPlugin, NoPublishPlugin)
-  .jvmSettings(libraryDependencies += "io.circe" %% "circe-core" % circeVersion % Test)
   .jsSettings(commonJsSettings)
   .jsSettings(scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)))
   .nativeSettings(commonNativeSettings)
@@ -131,7 +130,8 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     libraryDependencies ++= List(
       "org.typelevel" %%% "cats-free" % catsVersion,
       "org.typelevel" %%% "cats-testkit" % catsVersion,
-      "org.typelevel" %%% "discipline-munit" % disciplineMunitVersion
+      "org.typelevel" %%% "discipline-munit" % disciplineMunitVersion,
+      "io.circe" %%% "circe-core" % circeVersion
     ).map(_ % Test)
   )
 

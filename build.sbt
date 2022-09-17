@@ -117,7 +117,7 @@ lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
 lazy val testsNative = tests.native
 lazy val tests = crossProject(JVMPlatform, JSPlatform, NativePlatform)
-  .crossType(CrossType.Full)
+  .crossType(CrossType.Pure)
   .dependsOn(macros, laws)
   .enablePlugins(AutomateHeaderPlugin, NoPublishPlugin)
   .jsSettings(commonJsSettings)

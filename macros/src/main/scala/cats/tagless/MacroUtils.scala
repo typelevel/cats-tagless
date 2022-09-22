@@ -15,50 +15,50 @@
  */
 
 package cats.tagless
+
 import scala.collection.immutable.Seq
 import scala.reflect.macros.blackbox
 
 abstract private[tagless] class MacroUtils {
   val c: blackbox.Context
-
-  import c.universe._
+  import c.universe.*
 
   class TypeDefinition(val defn: ClassDef, maybeCompanion: Option[ModuleDef]) {
-    val name = defn.name
-    val tparams = defn.tparams
-    val impl = defn.impl
+    val name: TypeName = defn.name
+    val tparams: List[TypeDef] = defn.tparams
+    val impl: Template = defn.impl
 
-    def ident = Ident(name)
-    def typeSig = AppliedTypeTree(ident, tArgs(tparams))
-    def applied(targs: Ident*) = AppliedTypeTree(ident, targs.toList)
-    def companion = maybeCompanion.getOrElse(
-      q"object ${name.toTermName} { }".asInstanceOf[ModuleDef]
-    )
+    def ident: Ident = Ident(name)
+    def typeSig: AppliedTypeTree = AppliedTypeTree(ident, tArgs(tparams))
+    def applied(targs: Ident*): AppliedTypeTree = AppliedTypeTree(ident, targs.toList)
+    def companion: ModuleDef = maybeCompanion.getOrElse(q"object ${name.toTermName} { }".asInstanceOf[ModuleDef])
 
     // TODO: this will not work for inherited type members. We'll need to figure out later how to make it work.
     lazy val abstractTypeMembers: Seq[TypeDef] = defn.impl.body.collect {
       case dt: TypeDef if dt.mods.hasFlag(Flag.DEFERRED) => dt
     }
-    def hasAbstractTypeMembers = abstractTypeMembers.nonEmpty
 
-    private def Name0(name: TypeName) = TypeName(name.decodedName.toString + "0")
+    def hasAbstractTypeMembers: Boolean =
+      abstractTypeMembers.nonEmpty
+
+    private def Name0(name: TypeName) =
+      TypeName(name.decodedName.toString + "0")
+
     lazy val fullyRefinedTypeMembers: Seq[TypeDef] =
       abstractTypeMembers.map { td =>
         val typeDefBody =
-          if (td.tparams.nonEmpty)
-            AppliedTypeTree(Ident(Name0(td.name)), tArgs(td.tparams))
-          else
-            Ident(Name0(td.name))
+          if (td.tparams.nonEmpty) AppliedTypeTree(Ident(Name0(td.name)), tArgs(td.tparams))
+          else Ident(Name0(td.name))
         TypeDef(Modifiers(), td.name, td.tparams, typeDefBody)
       }
 
     lazy val refinedTParams: Seq[TypeDef] =
       abstractTypeMembers.map(defn => TypeDef(Modifiers(Flag.PARAM), Name0(defn.name), defn.tparams, defn.rhs))
 
-    def newDependentTypeMembers(definedAt: TermName) =
-      abstractTypeMembers.map(t =>
+    def newDependentTypeMembers(definedAt: TermName): Seq[TypeDef] =
+      abstractTypeMembers.map { t =>
         TypeDef(Modifiers(), t.name, t.tparams, tq"$definedAt.${t.name}[..${tArgs(t.tparams)}]")
-      )
+      }
   }
 
   object TypeDefinition {
@@ -73,9 +73,7 @@ abstract private[tagless] class MacroUtils {
 
   def enrich(defn: Seq[c.Tree])(f: TypeDefinition => Seq[Tree]): Tree =
     defn match {
-      case TypeDefinition.FromAnnottees(td) =>
-        val trees = f(td)
-        q"..$trees"
+      case TypeDefinition.FromAnnottees(td) => q"..${f(td)}"
       case _ => abort(s"$defn is not a class or trait.")
     }
 
@@ -83,27 +81,29 @@ abstract private[tagless] class MacroUtils {
     private val needsTypeLambda = cls.tparams.lengthCompare(numberOfEffectTypeParams) != 0
 
     def cls: TypeDefinition
-    final def typeName = cls.ident
-    final def name = cls.name.decodedName.toString
+    final def typeName: Ident = cls.ident
+    final def name: String = cls.name.decodedName.toString
 
     def extraTypeParams: Seq[TypeDef]
 
     protected def typeLambdaVaryingEffect: Tree
-    final def forVaryingEffectType(gen: (Tree, Seq[TypeDef]) => Tree) =
+    protected def typeLambdaVaryingEffectFullyRefined: Tree
+
+    final def forVaryingEffectType(gen: (Tree, Seq[TypeDef]) => Tree): Tree =
       gen(if (!needsTypeLambda) typeName else typeLambdaVaryingEffect, extraTypeParams)
 
-    protected def typeLambdaVaryingEffectFullyRefined: Tree
-    final def forVaryingEffectTypeFullyRefined(gen: (Tree, Seq[TypeDef]) => Tree) = if (cls.hasAbstractTypeMembers) {
-      val typeLambda =
-        if (!needsTypeLambda)
-          tq"$typeName { ..${cls.fullyRefinedTypeMembers} }"
-        else
-          typeLambdaVaryingEffectFullyRefined
-      val fullyRefinedTypeParams = extraTypeParams ++ cls.refinedTParams
-      gen(typeLambda, fullyRefinedTypeParams)
-    } else forVaryingEffectType(gen)
+    final def forVaryingEffectTypeFullyRefined(gen: (Tree, Seq[TypeDef]) => Tree): Tree =
+      if (cls.hasAbstractTypeMembers)
+        gen(
+          if (!needsTypeLambda) tq"$typeName { ..${cls.fullyRefinedTypeMembers} }"
+          else typeLambdaVaryingEffectFullyRefined,
+          extraTypeParams ++ cls.refinedTParams
+        )
+      else
+        forVaryingEffectType(gen)
 
-    final def forAlgebraType(gen: (AppliedTypeTree, Seq[TypeDef]) => Tree) = gen(cls.typeSig, cls.tparams)
+    final def forAlgebraType(gen: (AppliedTypeTree, Seq[TypeDef]) => Tree): Tree =
+      gen(cls.typeSig, cls.tparams)
   }
 
   object AlgDefn {
@@ -127,19 +127,20 @@ abstract private[tagless] class MacroUtils {
         val typeSig = newTypeSig(newEffectTypeName)
         if (refinedTypes.isEmpty) typeSig else tq"$typeSig { ..$refinedTypes }".asInstanceOf[CompoundTypeTree]
       }
+
       private def refinedTypeSig(newEffectTypeName: String, refinedTypes: Seq[TypeDef]): TypTree =
         refinedTypeSig(TypeName(newEffectTypeName), refinedTypes)
 
-      def fullyRefinedTypeSig(newEffectTypeName: String) =
+      def fullyRefinedTypeSig(newEffectTypeName: String): TypTree =
         refinedTypeSig(newEffectTypeName, cls.fullyRefinedTypeMembers)
-      def fullyRefinedTypeSig(newEffectType: TypeDef) = refinedTypeSig(newEffectType.name, cls.fullyRefinedTypeMembers)
-
+      def fullyRefinedTypeSig(newEffectType: TypeDef): TypTree =
+        refinedTypeSig(newEffectType.name, cls.fullyRefinedTypeMembers)
       def dependentRefinedTypeSig(newEffectType: TypeDef, dependent: TermName): TypTree =
         refinedTypeSig(newEffectType.name, cls.newDependentTypeMembers(dependent))
 
-      override protected def typeLambdaVaryingEffect =
+      override protected def typeLambdaVaryingEffect: SelectFromTypeTree =
         tq"({type λ[${createTypeParam("Ƒ", effectTypeArity)}] = ${newTypeSig("Ƒ")}})#λ"
-      override protected def typeLambdaVaryingEffectFullyRefined =
+      override protected def typeLambdaVaryingEffectFullyRefined: SelectFromTypeTree =
         tq"({type λ[${createTypeParam("Ƒ", effectTypeArity)}] = ${fullyRefinedTypeSig("Ƒ")}})#λ"
     }
 
@@ -168,6 +169,7 @@ abstract private[tagless] class MacroUtils {
         val typeSig = newTypeSig(newEffectTypeName1, newEffectTypeName2)
         if (refinedTypes.isEmpty) typeSig else tq"$typeSig { ..$refinedTypes }".asInstanceOf[CompoundTypeTree]
       }
+
       private def refinedTypeSig(
           newEffectTypeName1: String,
           newEffectTypeName2: String,
@@ -175,14 +177,15 @@ abstract private[tagless] class MacroUtils {
       ): TypTree =
         refinedTypeSig(TypeName(newEffectTypeName1), TypeName(newEffectTypeName2), refinedTypes)
 
-      def fullyRefinedTypeSig(newEffectTypeName1: String, newEffectTypeName2: String) =
+      def fullyRefinedTypeSig(newEffectTypeName1: String, newEffectTypeName2: String): TypTree =
         refinedTypeSig(newEffectTypeName1, newEffectTypeName2, cls.fullyRefinedTypeMembers)
 
       private def asTypeParams(name1: String, name2: String) =
         List(createTypeParam(name1, effectType1._2), createTypeParam(name2, effectType2._2))
-      override protected def typeLambdaVaryingEffect =
+
+      override protected def typeLambdaVaryingEffect: SelectFromTypeTree =
         tq"({type λ[..${asTypeParams("Ƒ1", "Ƒ2")}] = ${newTypeSig("Ƒ1", "Ƒ2")}})#λ"
-      override protected def typeLambdaVaryingEffectFullyRefined =
+      override protected def typeLambdaVaryingEffectFullyRefined: SelectFromTypeTree =
         tq"({type λ[..${asTypeParams("Ƒ1", "Ƒ2")}] = ${fullyRefinedTypeSig("Ƒ1", "Ƒ2")}})#λ"
     }
 

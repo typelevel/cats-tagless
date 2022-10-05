@@ -733,13 +733,11 @@ class DeriveMacros(val c: blackbox.Context) {
           case Parameter(_, pt, _) if pt.typeSymbol == f =>
             abort("Not implemented")
         } { case delegate =>
-          val r = q"${reify(fs2.Stream)}.eval[({type L[A] = ${ReaderT.typeSymbol}[$F, $Af, A]})#L, $Rt](${reify(
+          q"${reify(fs2.Stream)}.eval[({type L[A] = ${ReaderT.typeSymbol}[$F, $Af, A]})#L, $Rt](${reify(
               cats.data.Reader
             )}[$Af, $Rt](($af: $Af) => $delegate).lift[$F]).flatMap(_.translate(${reify(
               cats.data.Kleisli
             )}.liftK[$F, $Af]))"
-          println(r)
-          r
         }
       case method =>
         abort(

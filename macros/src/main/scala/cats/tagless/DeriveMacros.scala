@@ -19,7 +19,8 @@ package cats.tagless
 import cats.arrow.Profunctor
 import cats.data.{ReaderT, Tuple2K}
 import cats.tagless.aop.{Aspect, Instrument, Instrumentation}
-import cats.{Bifunctor, Contravariant, FlatMap, Functor, Invariant, Semigroupal}
+import cats.{Bifunctor, Contravariant, FlatMap, Functor, Invariant, Monad, Semigroupal}
+import fs2.Stream
 
 import scala.reflect.macros.blackbox
 
@@ -693,6 +694,57 @@ class DeriveMacros(val c: blackbox.Context) {
         }
       case method =>
         abort(s"Abstract method ${method.displayName} cannot be derived because it does not return in $F")
+    }
+
+    val b = ReaderT.typeParams.last.asType
+    val typeArg = polyType(b :: Nil, appliedType(ReaderT, F, Af, b.toType))
+    implement(appliedType(algebra, typeArg))()(methods)
+  }
+
+  def readerTStream[Alg[_[_]], F[_]](
+      m: c.Expr[cats.Monad[F]]
+  )(implicit tag: WeakTypeTag[Alg[Any]], fTag: WeakTypeTag[F[Any]]): Tree = {
+    val algebra = typeConstructorOf(tag)
+    val F = typeConstructorOf(fTag)
+    val f = F.typeSymbol
+    val Af = appliedType(algebra, F)
+    val af = c.freshName(TermName("af"))
+    val ReaderT = typeOf[ReaderT[Any, Any, Any]].typeConstructor
+    val Stream = typeOf[Stream[Any, Any]].typeConstructor
+    val abstractMembers = overridableMembersOf(Af).filter(_.isAbstract)
+    val methods = delegateMethods(Af, abstractMembers, NoSymbol) {
+      case method if method.returnType.typeSymbol == f =>
+        method.transform(q"$af") {
+          case tpe if tpe.typeSymbol == f =>
+            appliedType(ReaderT, F :: Af :: tpe.typeArgs)
+        } {
+          case Parameter(pn, pt, _) if pt.typeSymbol == f =>
+            q"$pn.run($af)"
+        } { case delegate =>
+          val typeArgs = F :: Af :: method.returnType.typeArgs
+          q"${reify(cats.data.ReaderT)}[..$typeArgs](($af: $Af) => $delegate)"
+        }
+      case method if method.returnType.typeConstructor == Stream && method.returnType.typeArgs.head == F =>
+        val Rt = method.returnType
+        method.transform(q"$af") {
+          case tpe if tpe.typeConstructor == Stream && tpe.typeArgs.head == F =>
+            c.typecheck(tq"${Stream.typeSymbol}[({type L[A] = ${ReaderT.typeSymbol}[$F, $Af, A]})#L, ${tpe.typeArgs(1)}]", mode = c.TYPEmode).tpe
+        } {
+          case Parameter(_, pt, _) if pt.typeSymbol == f =>
+            abort("Not implemented")
+        } { case delegate =>
+          val r = q"${reify(fs2.Stream)}.eval[({type L[A] = ${ReaderT.typeSymbol}[$F, $Af, A]})#L, $Rt](${reify(
+              cats.data.Reader
+            )}[$Af, $Rt](($af: $Af) => $delegate).lift[$F]).flatMap(_.translate(${reify(
+              cats.data.Kleisli
+            )}.liftK[$F, $Af]))"
+          println(r)
+          r
+        }
+      case method =>
+        abort(
+          s"Abstract method ${method.displayName} with return type ${method.returnType} cannot be derived because it does not return in $F"
+        )
     }
 
     val b = ReaderT.typeParams.last.asType

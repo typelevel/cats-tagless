@@ -19,7 +19,7 @@ package cats.tagless
 import cats.arrow.Profunctor
 import cats.data.ReaderT
 import cats.tagless.aop.{Aspect, Instrument}
-import cats.{Apply, Bifunctor, Contravariant, FlatMap, Functor, Invariant, Semigroupal}
+import cats.{Apply, Bifunctor, Contravariant, FlatMap, Functor, Invariant, Monad, Semigroupal}
 
 object Derive {
 
@@ -33,6 +33,10 @@ object Derive {
     * form of dependency injection.
     */
   def readerT[Alg[_[_]], F[_]]: Alg[ReaderT[F, Alg[F], *]] = macro DeriveMacros.readerT[Alg, F]
+
+  /** As readerT, but also supports methods that return Stream[F, _]
+    */
+  def readerTStream[Alg[_[_]], F[_]: Monad]: Alg[ReaderT[F, Alg[F], *]] = macro DeriveMacros.readerTStream[Alg, F]
 
   def functor[F[_]]: Functor[F] = macro DeriveMacros.functor[F]
   def contravariant[F[_]]: Contravariant[F] = macro DeriveMacros.contravariant[F]

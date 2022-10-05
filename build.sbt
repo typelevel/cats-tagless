@@ -110,7 +110,10 @@ lazy val macros = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .settings(
     moduleName := "cats-tagless-macros",
     scalacOptions := scalacOptions.value.filterNot(_.startsWith("-Wunused")).filterNot(_.startsWith("-Ywarn-unused")),
-    libraryDependencies += "org.scalacheck" %%% "scalacheck" % scalaCheckVersion % Test
+    libraryDependencies ++= Seq(
+      "co.fs2" %% "fs2-core" % "3.3.0" % Optional,
+      "org.scalacheck" %%% "scalacheck" % scalaCheckVersion % Test
+    )
   )
 
 lazy val testsJVM = tests.jvm

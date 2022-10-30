@@ -18,12 +18,12 @@ package cats.tagless.tests
 
 import cats.{Bifunctor, Eq}
 import cats.laws.discipline.{BifunctorTests, SerializableTests}
-import cats.laws.discipline.eq._
+import cats.laws.discipline.eq.*
 import cats.tagless.autoBifunctor
 import org.scalacheck.{Arbitrary, Cogen}
 
 class autoBifunctorTests extends CatsTaglessTestSuite {
-  import autoBifunctorTests._
+  import autoBifunctorTests.*
 
   checkAll(
     "Bifunctor[TestAlgebra]",

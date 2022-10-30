@@ -17,9 +17,9 @@
 package cats.tagless.laws.discipline
 
 import org.scalacheck.Arbitrary
-import org.scalacheck.Prop._
+import org.scalacheck.Prop.*
 import cats.{Eq, ~>}
-import cats.laws.discipline._
+import cats.laws.discipline.*
 import cats.tagless.aop.{Aspect, Instrumentation}
 import cats.tagless.laws.AspectLaws
 

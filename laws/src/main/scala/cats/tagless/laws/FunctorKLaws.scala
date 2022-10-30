@@ -18,8 +18,8 @@ package cats.tagless
 package laws
 
 import cats.arrow.FunctionK
-import cats.laws._
-import syntax.all._
+import cats.laws.*
+import syntax.all.*
 import cats.~>
 
 trait FunctorKLaws[F[_[_]]] extends InvariantKLaws[F] {

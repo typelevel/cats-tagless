@@ -19,11 +19,11 @@ package tests
 
 import cats.{Eq, Functor}
 import cats.laws.discipline.{FunctorTests, SerializableTests}
-import cats.laws.discipline.eq._
+import cats.laws.discipline.eq.*
 import org.scalacheck.{Arbitrary, Cogen}
 
 class autoFunctorTests extends CatsTaglessTestSuite {
-  import autoFunctorTests._
+  import autoFunctorTests.*
 
   checkAll("Functor[TestAlgebra]", FunctorTests[TestAlgebra].functor[Long, String, Int])
   checkAll("Serializable Functor[TestAlgebra]", SerializableTests.serializable(Functor[TestAlgebra]))
@@ -35,7 +35,7 @@ class autoFunctorTests extends CatsTaglessTestSuite {
 }
 
 object autoFunctorTests {
-  import TestInstances._
+  import TestInstances.*
 
   @autoFunctor
   trait TestAlgebra[T] {

@@ -17,7 +17,7 @@
 package cats.tagless.tests
 
 import cats.{Applicative, Apply, Monad}
-import cats.syntax.all._
+import cats.syntax.all.*
 import cats.tagless.optimize.Program
 
 object Programs {

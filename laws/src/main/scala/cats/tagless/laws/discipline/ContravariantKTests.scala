@@ -16,12 +16,12 @@
 
 package cats.tagless.laws.discipline
 
-import cats.laws.discipline._
+import cats.laws.discipline.*
 import cats.tagless.ContravariantK
 import cats.tagless.laws.ContravariantKLaws
 import cats.{Eq, ~>}
 import org.scalacheck.Arbitrary
-import org.scalacheck.Prop._
+import org.scalacheck.Prop.*
 
 trait ContravariantKTests[F[_[_]]] extends InvariantKTests[F] {
   def laws: ContravariantKLaws[F]

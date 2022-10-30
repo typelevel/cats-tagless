@@ -19,7 +19,7 @@ package tests
 
 import cats.Eq
 import cats.laws.discipline.SerializableTests
-import cats.laws.discipline.arbitrary._
+import cats.laws.discipline.arbitrary.*
 import cats.tagless.laws.discipline.SemigroupalKTests
 
 import scala.util.Try

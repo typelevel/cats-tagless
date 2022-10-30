@@ -26,7 +26,7 @@ class autoProfunctor extends StaticAnnotation {
 }
 
 private[tagless] class autoProfunctorMacros(override val c: whitebox.Context) extends MacroUtils {
-  import c.universe._
+  import c.universe.*
 
   private def generateProfunctorFor(
       algebraName: String

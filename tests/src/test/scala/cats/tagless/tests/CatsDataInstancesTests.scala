@@ -17,9 +17,9 @@
 package cats.tagless.tests
 
 import cats.Eval
-import cats.data._
-import cats.laws.discipline.arbitrary._
-import cats.laws.discipline.eq._
+import cats.data.*
+import cats.laws.discipline.arbitrary.*
+import cats.laws.discipline.eq.*
 import cats.tagless.IdK
 import cats.tagless.laws.discipline.SemigroupalKTests.IsomorphismsK
 import cats.tagless.laws.discipline.{ApplyKTests, ContravariantKTests, FunctorKTests}

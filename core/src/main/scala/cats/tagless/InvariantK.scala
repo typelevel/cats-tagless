@@ -16,9 +16,9 @@
 
 package cats.tagless
 
-import cats._
+import cats.*
 import cats.arrow.FunctionK
-import cats.data._
+import cats.data.*
 import cats.kernel.CommutativeMonoid
 
 import scala.annotation.implicitNotFound

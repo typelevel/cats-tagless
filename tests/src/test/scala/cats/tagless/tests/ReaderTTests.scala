@@ -24,7 +24,7 @@ import cats.{FlatMap, ~>}
 import scala.util.{Failure, Success, Try}
 
 class ReaderTTests extends CatsTaglessTestSuite {
-  import ReaderTTests._
+  import ReaderTTests.*
 
   type F[A] = ReaderT[Try, SpaceAlg[Try], A]
   type SyncIO[A] = () => Try[A] // poor man's SyncIO

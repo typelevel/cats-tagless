@@ -16,11 +16,11 @@
 
 package cats.tagless
 
-import cats._
+import cats.*
 import cats.arrow.FunctionK
-import cats.data._
+import cats.data.*
 import cats.kernel.CommutativeMonoid
-import cats.syntax.all._
+import cats.syntax.all.*
 
 import scala.annotation.implicitNotFound
 

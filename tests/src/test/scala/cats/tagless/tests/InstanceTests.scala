@@ -16,10 +16,10 @@
 
 package cats.tagless.tests
 
-import cats.data._
+import cats.data.*
 import cats.laws.discipline.MiniInt
-import cats.laws.discipline.arbitrary._
-import cats.laws.discipline.eq._
+import cats.laws.discipline.arbitrary.*
+import cats.laws.discipline.eq.*
 import cats.tagless.laws.discipline.{ApplyKTests, ContravariantKTests, FunctorKTests}
 
 import scala.util.Try

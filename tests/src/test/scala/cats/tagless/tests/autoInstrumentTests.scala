@@ -20,7 +20,7 @@ import cats.Id
 import cats.kernel.laws.discipline.SerializableTests
 import cats.tagless.aop.Instrument
 import cats.tagless.laws.discipline.InstrumentTests
-import cats.tagless.tests.autoInstrumentTests._
+import cats.tagless.tests.autoInstrumentTests.*
 import cats.tagless.{Derive, autoInstrument, finalAlg}
 
 import scala.util.Try

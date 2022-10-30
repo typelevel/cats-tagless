@@ -18,12 +18,12 @@ package cats.tagless.tests
 
 import cats.{Eq, FlatMap}
 import cats.laws.discipline.{FlatMapTests, SerializableTests}
-import cats.laws.discipline.eq._
+import cats.laws.discipline.eq.*
 import cats.tagless.autoFlatMap
 import org.scalacheck.{Arbitrary, Cogen}
 
 class autoFlatMapTests extends CatsTaglessTestSuite {
-  import autoFlatMapTests._
+  import autoFlatMapTests.*
 
   checkAll("FlatMap[TestAlgebra]", FlatMapTests[TestAlgebra].flatMap[Float, String, Int])
   checkAll("serializable FlatMap[TestAlgebra]", SerializableTests.serializable(FlatMap[TestAlgebra]))
@@ -35,7 +35,7 @@ class autoFlatMapTests extends CatsTaglessTestSuite {
 }
 
 object autoFlatMapTests {
-  import TestInstances._
+  import TestInstances.*
 
   @autoFlatMap
   trait TestAlgebra[T] {

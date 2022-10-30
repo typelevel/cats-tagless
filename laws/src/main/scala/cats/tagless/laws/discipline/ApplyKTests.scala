@@ -19,10 +19,10 @@ package laws
 package discipline
 
 import org.scalacheck.Arbitrary
-import org.scalacheck.Prop._
+import org.scalacheck.Prop.*
 import cats.{Eq, ~>}
 import cats.data.Tuple2K
-import cats.laws.discipline._
+import cats.laws.discipline.*
 import cats.tagless.laws.discipline.SemigroupalKTests.IsomorphismsK
 
 trait ApplyKTests[F[_[_]]] extends FunctorKTests[F] with SemigroupalKTests[F] {

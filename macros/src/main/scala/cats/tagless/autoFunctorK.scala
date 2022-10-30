@@ -29,7 +29,7 @@ class autoFunctorK(autoDerivation: Boolean = true) extends StaticAnnotation {
 private[tagless] class autoFunctorKMacros(override val c: whitebox.Context)
     extends MacroUtils
     with CovariantKMethodsGenerator {
-  import c.universe._
+  import c.universe.*
 
   private def generateFunctorKFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =
     typeClassInstance(
@@ -64,7 +64,7 @@ private[tagless] class autoFunctorKMacros(override val c: whitebox.Context)
 }
 
 private[tagless] trait CovariantKMethodsGenerator { self: MacroUtils =>
-  import c.universe._
+  import c.universe.*
 
   def companionMapKDef(algebra: AlgDefn.UnaryAlg) = {
     val af = c.freshName(TermName("af"))

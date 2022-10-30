@@ -18,7 +18,7 @@ package cats.tagless
 package tests
 
 import scala.util.{Success, Try}
-import FinalAlgTests._
+import FinalAlgTests.*
 
 class FinalAlgTests extends CatsTaglessTestSuite {
   test("companion apply") {

@@ -17,7 +17,7 @@
 package cats.tagless.optimize
 
 import cats.{Monad, Monoid, ~>}
-import cats.data._
+import cats.data.*
 import cats.tagless.ApplyK
 
 trait MonadOptimizer[Alg[_[_]], F[_]] {

@@ -18,9 +18,9 @@ package cats.tagless
 package laws
 
 import cats.arrow.FunctionK
-import cats.laws._
+import cats.laws.*
 import cats.~>
-import syntax.all._
+import syntax.all.*
 
 trait InvariantKLaws[F[_[_]]] {
   implicit def F: InvariantK[F]

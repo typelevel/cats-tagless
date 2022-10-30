@@ -16,21 +16,21 @@
 
 package cats.tagless.tests
 
-import cats.laws.discipline.eq._
+import cats.laws.discipline.eq.*
 import cats.laws.discipline.{ApplyTests, SerializableTests}
 import cats.tagless.autoApply
 import cats.{Apply, Eq}
 import org.scalacheck.Arbitrary
 
 class autoApplyTests extends CatsTaglessTestSuite {
-  import autoApplyTests._
+  import autoApplyTests.*
 
   checkAll("Apply[TestAlgebra]", ApplyTests[TestAlgebra].apply[Long, String, Int])
   checkAll("Serializable Apply[TestAlgebra]", SerializableTests.serializable(Apply[TestAlgebra]))
 }
 
 object autoApplyTests {
-  import TestInstances._
+  import TestInstances.*
 
   @autoApply
   trait TestAlgebra[T] {

@@ -28,7 +28,7 @@ import scala.annotation.nowarn
 import scala.util.Try
 
 class autoFunctorKTests extends CatsTaglessTestSuite {
-  import autoFunctorKTests._
+  import autoFunctorKTests.*
 
   checkAll("FunctorK[SafeAlg]", FunctorKTests[SafeAlg].functorK[Try, Option, List, Int])
   checkAll("FunctorK is Serializable", SerializableTests.serializable(FunctorK[SafeAlg]))
@@ -46,7 +46,7 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
   }
 
   test("auto derive from functor k") {
-    import SafeAlg.autoDerive._
+    import SafeAlg.autoDerive.*
     import Interpreters.tryInterpreter
     SafeAlg[Option]
   }
@@ -75,7 +75,7 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
       def a(i: Int) = Try(i.toString)
     }
 
-    import AlgWithExtraTP.autoDerive._
+    import AlgWithExtraTP.autoDerive.*
     assertEquals(AlgWithExtraTP[Option, String].a(5), Some("5"))
   }
 
@@ -94,20 +94,20 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
     }
 
     assertEquals[Option[Any], Option[Any]](tryInt.mapK(fk).a(3), Some("3"))
-    import AlgWithTypeMember.fullyRefined.autoDerive._
+    import AlgWithTypeMember.fullyRefined.autoDerive.*
     val op: AlgWithTypeMember.Aux[Option, String] = implicitly
     assertEquals(op.a(3), Option("3"))
   }
 
   test("Alg with type bound") {
-    import AlgWithTypeBound._
+    import AlgWithTypeBound.*
     implicit val tryB: AlgWithTypeBound.Aux[Try, B.type] = new AlgWithTypeBound[Try] {
       type T = B.type
       override def t = Try(B)
     }
 
     assertEquals[Option[A], Option[A]](tryB.mapK(fk).t, Option(B))
-    import AlgWithTypeBound.fullyRefined.autoDerive._
+    import AlgWithTypeBound.fullyRefined.autoDerive.*
     val op: AlgWithTypeBound.Aux[Option, B.type] = implicitly
     assertEquals(op.t, Option(B))
   }
@@ -167,7 +167,7 @@ class autoFunctorKTests extends CatsTaglessTestSuite {
       def a[T: TC](t: T): Try[String] = Try(t.show)
     }
 
-    import AlgWithAbstractTypeClass.fullyRefined._
+    import AlgWithAbstractTypeClass.fullyRefined.*
     // Scalac needs help when abstract type is high order.
     implicit val fShow: FunctorK[AlgWithAbstractTypeClass.Aux[*[_], Show]] =
       functorKForFullyRefinedAlgWithAbstractTypeClass[Show]

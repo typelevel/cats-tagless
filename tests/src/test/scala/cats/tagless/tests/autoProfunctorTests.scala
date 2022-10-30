@@ -20,11 +20,11 @@ package tests
 import cats.Eq
 import cats.arrow.Profunctor
 import cats.laws.discipline.{ProfunctorTests, SerializableTests}
-import cats.laws.discipline.eq._
+import cats.laws.discipline.eq.*
 import org.scalacheck.{Arbitrary, Cogen}
 
 class autoProfunctorTests extends CatsTaglessTestSuite {
-  import autoProfunctorTests._
+  import autoProfunctorTests.*
 
   checkAll("Profunctor[TestAlgebra]", ProfunctorTests[TestAlgebra].profunctor[Long, String, Int, Long, String, Int])
   checkAll("Serializable Profunctor[TestAlgebra]", SerializableTests.serializable(Profunctor[TestAlgebra]))
@@ -36,7 +36,7 @@ class autoProfunctorTests extends CatsTaglessTestSuite {
 }
 
 object autoProfunctorTests {
-  import TestInstances._
+  import TestInstances.*
 
   @autoProfunctor
   trait TestAlgebra[A, B] {

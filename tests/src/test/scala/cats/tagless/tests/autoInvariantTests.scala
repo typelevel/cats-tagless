@@ -19,11 +19,11 @@ package tests
 
 import cats.{Eq, Invariant}
 import cats.laws.discipline.{InvariantTests, SerializableTests}
-import cats.laws.discipline.eq._
+import cats.laws.discipline.eq.*
 import org.scalacheck.{Arbitrary, Cogen}
 
 class autoInvariantTests extends CatsTaglessTestSuite {
-  import autoInvariantTests._
+  import autoInvariantTests.*
 
   checkAll("SimpleAlg[Option]", InvariantTests[SimpleAlg].invariant[Float, String, Int])
   checkAll("Invariant[SimpleAlg]", SerializableTests.serializable(Invariant[SimpleAlg]))
@@ -51,7 +51,7 @@ class autoInvariantTests extends CatsTaglessTestSuite {
 }
 
 object autoInvariantTests {
-  import TestInstances._
+  import TestInstances.*
 
   @autoInvariant
   trait SimpleAlg[T] {

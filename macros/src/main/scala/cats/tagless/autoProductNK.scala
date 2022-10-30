@@ -28,7 +28,7 @@ class autoProductNK extends StaticAnnotation {
 }
 
 private[tagless] class autoProductNKMacros(override val c: whitebox.Context) extends MacroUtils {
-  import c.universe._
+  import c.universe.*
 
   def productMethod(typedef: TypeDefinition)(arity: Int): Tree = {
     def af(n: Int) = TermName("af" + n)

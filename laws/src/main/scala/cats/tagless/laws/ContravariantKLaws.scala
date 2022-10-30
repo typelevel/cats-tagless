@@ -17,9 +17,9 @@
 package cats.tagless.laws
 
 import cats.arrow.FunctionK
-import cats.laws._
+import cats.laws.*
 import cats.tagless.ContravariantK
-import cats.tagless.syntax.contravariantK._
+import cats.tagless.syntax.contravariantK.*
 import cats.~>
 
 trait ContravariantKLaws[F[_[_]]] extends InvariantKLaws[F] {

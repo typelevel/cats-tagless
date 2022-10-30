@@ -27,7 +27,7 @@ class autoFunctor extends StaticAnnotation {
 }
 
 private[tagless] class autoFunctorMacros(override val c: whitebox.Context) extends MacroUtils {
-  import c.universe._
+  import c.universe.*
 
   private def generateFunctorFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =
     typeClassInstance(

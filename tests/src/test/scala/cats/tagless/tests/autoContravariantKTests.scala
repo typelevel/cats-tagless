@@ -19,8 +19,8 @@ package cats.tagless.tests
 import cats.Eq
 import cats.data.Cokleisli
 import cats.laws.discipline.SerializableTests
-import cats.laws.discipline.arbitrary._
-import cats.laws.discipline.eq._
+import cats.laws.discipline.arbitrary.*
+import cats.laws.discipline.eq.*
 import cats.tagless.{ContravariantK, autoContravariantK}
 import cats.tagless.laws.discipline.ContravariantKTests
 import org.scalacheck.{Arbitrary, Cogen}
@@ -28,14 +28,14 @@ import org.scalacheck.{Arbitrary, Cogen}
 import scala.util.Try
 
 class autoContravariantKTests extends CatsTaglessTestSuite {
-  import autoContravariantKTests._
+  import autoContravariantKTests.*
 
   checkAll("ContravariantK[TestAlgebra]", ContravariantKTests[TestAlgebra].contravariantK[Try, Option, List, Int])
   checkAll("Serializable ContravariantK[TestAlgebra]", SerializableTests.serializable(ContravariantK[TestAlgebra]))
 }
 
 object autoContravariantKTests {
-  import TestInstances._
+  import TestInstances.*
 
   @autoContravariantK
   trait TestAlgebra[F[_]] {

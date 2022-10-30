@@ -16,21 +16,21 @@
 
 package cats.tagless.tests
 
-import cats.laws.discipline.eq._
+import cats.laws.discipline.eq.*
 import cats.laws.discipline.{SemigroupalTests, SerializableTests}
 import cats.tagless.{autoInvariant, autoSemigroupal}
 import cats.{Eq, Semigroupal}
 import org.scalacheck.Arbitrary
 
 class autoSemigroupalTests extends CatsTaglessTestSuite {
-  import autoSemigroupalTests._
+  import autoSemigroupalTests.*
 
   checkAll("Semigroupal[TestAlgebra]", SemigroupalTests[TestAlgebra].semigroupal[Long, String, Int])
   checkAll("Serializable Semigroupal[TestAlgebra]", SerializableTests.serializable(Semigroupal[TestAlgebra]))
 }
 
 object autoSemigroupalTests {
-  import TestInstances._
+  import TestInstances.*
 
   @autoSemigroupal
   @autoInvariant // Needed for Isomorphisms

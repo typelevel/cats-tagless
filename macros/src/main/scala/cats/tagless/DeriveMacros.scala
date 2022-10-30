@@ -24,8 +24,8 @@ import cats.{Bifunctor, Contravariant, FlatMap, Functor, Invariant, Semigroupal}
 import scala.reflect.macros.blackbox
 
 class DeriveMacros(val c: blackbox.Context) {
-  import c.internal._
-  import c.universe._
+  import c.internal.*
+  import c.universe.*
 
   /** A reified parameter definition with some useful methods for transforming it. */
   case class Parameter(name: TermName, signature: Type, modifiers: Modifiers) {
@@ -103,7 +103,7 @@ class DeriveMacros(val c: blackbox.Context) {
 
     /** Summon an implicit instance of `A`'s type constructor applied to `typeArgs` if one exists in scope. */
     def summon[A: TypeTag](typeArgs: Type*): Tree = {
-      val tpe = appliedType(typeOf[A].typeConstructor, typeArgs: _*)
+      val tpe = appliedType(typeOf[A].typeConstructor, typeArgs*)
       c.inferImplicitValue(tpe).orElse(abort(s"could not find implicit value of type $tpe in method $displayName"))
     }
   }
@@ -131,7 +131,7 @@ class DeriveMacros(val c: blackbox.Context) {
   /** Return the set of overridable members of `tpe`, excluding some undesired cases. */
   // TODO: Figure out what to do about different visibility modifiers.
   def overridableMembersOf(tpe: Type): Iterable[Symbol] = {
-    import definitions._
+    import definitions.*
     val exclude = Set[Symbol](AnyClass, AnyRefClass, AnyValClass, ObjectClass)
     tpe.members.filterNot(m =>
       m.isConstructor || m.isFinal || m.isImplementationArtifact || m.isSynthetic || exclude(m.owner)

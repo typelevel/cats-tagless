@@ -6,3 +6,6 @@ addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.4.7")
 addSbtPlugin("com.github.tkawachi" % "sbt-doctest" % "0.10.0")
 addSbtPlugin("com.47deg" % "sbt-microsites" % "1.3.4")
 addSbtPlugin("org.scalameta" % "sbt-mdoc" % "2.3.6")
+
+ThisBuild / libraryDependencySchemes +=
+  "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always

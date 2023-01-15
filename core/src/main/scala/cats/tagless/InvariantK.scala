@@ -16,6 +16,7 @@
 
 package cats.tagless
 
+import cats.tagless.derived.DerivedInvariantK
 import cats.*
 import cats.arrow.FunctionK
 import cats.data.*
@@ -28,63 +29,67 @@ trait InvariantK[Alg[_[_]]] extends Serializable {
   def imapK[F[_], G[_]](af: Alg[F])(fk: F ~> G)(gk: G ~> F): Alg[G]
 }
 
-object InvariantK extends InvariantKInstances01 {
-  implicit def catsTaglessApplyKForEitherK[F[_], A]: ApplyK[EitherK[F, *[_], A]] =
-    eitherKInstance.asInstanceOf[ApplyK[EitherK[F, *[_], A]]]
+object InvariantK extends InvariantKInstances01 with DerivedInvariantK {
+  implicit def catsTaglessApplyKForEitherK[F[_], A]: ApplyK[({ type W[g[_]] = EitherK[F, g, A] })#W] =
+    eitherKInstance.asInstanceOf[ApplyK[({ type W[g[_]] = EitherK[F, g, A] })#W]]
 
-  implicit def catsTaglessApplyKForEitherT[A, B]: ApplyK[EitherT[*[_], A, B]] =
-    eitherTInstance.asInstanceOf[ApplyK[EitherT[*[_], A, B]]]
+  implicit def catsTaglessApplyKForEitherT[A, B]: ApplyK[({ type W[f[_]] = EitherT[f, A, B] })#W] =
+    eitherTInstance.asInstanceOf[ApplyK[({ type W[f[_]] = EitherT[f, A, B] })#W]]
 
-  implicit def catsTaglessApplyKForFunc[A, B]: ApplyK[Func[*[_], A, B]] =
-    funcInstance.asInstanceOf[ApplyK[Func[*[_], A, B]]]
+  implicit def catsTaglessApplyKForFunc[A, B]: ApplyK[({ type W[f[_]] = Func[f, A, B] })#W] =
+    funcInstance.asInstanceOf[ApplyK[({ type W[f[_]] = Func[f, A, B] })#W]]
 
-  implicit def catsTaglessApplyKForIdT[A]: ApplyK[IdT[*[_], A]] =
-    idTInstance.asInstanceOf[ApplyK[IdT[*[_], A]]]
+  implicit def catsTaglessApplyKForIdT[A]: ApplyK[({ type W[f[_]] = IdT[f, A] })#W] =
+    idTInstance.asInstanceOf[ApplyK[({ type W[f[_]] = IdT[f, A] })#W]]
 
-  implicit def catsTaglessApplyKForIorT[A, B]: ApplyK[IorT[*[_], A, B]] =
-    iOrTInstance.asInstanceOf[ApplyK[IorT[*[_], A, B]]]
+  implicit def catsTaglessApplyKForIorT[A, B]: ApplyK[({ type W[f[_]] = IorT[f, A, B] })#W] =
+    iOrTInstance.asInstanceOf[ApplyK[({ type W[f[_]] = IorT[f, A, B] })#W]]
 
-  implicit def catsTaglessApplyKForKleisli[A, B]: ApplyK[Kleisli[*[_], A, B]] =
-    kleisliInstance.asInstanceOf[ApplyK[Kleisli[*[_], A, B]]]
+  implicit def catsTaglessApplyKForKleisli[A, B]: ApplyK[({ type W[f[_]] = Kleisli[f, A, B] })#W] =
+    kleisliInstance.asInstanceOf[ApplyK[({ type W[f[_]] = Kleisli[f, A, B] })#W]]
 
-  implicit def catsTaglessApplyKForOptionT[A]: ApplyK[OptionT[*[_], A]] =
-    optionTInstance.asInstanceOf[ApplyK[OptionT[*[_], A]]]
+  implicit def catsTaglessApplyKForOptionT[A]: ApplyK[({ type W[f[_]] = OptionT[f, A] })#W] =
+    optionTInstance.asInstanceOf[ApplyK[({ type W[f[_]] = OptionT[f, A] })#W]]
 
-  implicit def catsTaglessApplyKForWriterT[A, B]: ApplyK[WriterT[*[_], A, B]] =
-    writerTInstance.asInstanceOf[ApplyK[WriterT[*[_], A, B]]]
+  implicit def catsTaglessApplyKForWriterT[A, B]: ApplyK[({ type W[f[_]] = WriterT[f, A, B] })#W] =
+    writerTInstance.asInstanceOf[ApplyK[({ type W[f[_]] = WriterT[f, A, B] })#W]]
 
-  implicit def catsTaglessContravariantKForCokleisli[A, B]: ContravariantK[Cokleisli[*[_], A, B]] =
-    cokleisliInstance.asInstanceOf[ContravariantK[Cokleisli[*[_], A, B]]]
+  implicit def catsTaglessContravariantKForCokleisli[A, B]: ContravariantK[({ type W[f[_]] = Cokleisli[f, A, B] })#W] =
+    cokleisliInstance.asInstanceOf[ContravariantK[({ type W[f[_]] = Cokleisli[f, A, B] })#W]]
 
-  implicit def catsTaglessFunctorKForNested[G[_], A]: FunctorK[Nested[*[_], G, A]] =
-    nestedInstance.asInstanceOf[FunctorK[Nested[*[_], G, A]]]
+  implicit def catsTaglessFunctorKForNested[G[_], A]: FunctorK[({ type W[f[_]] = Nested[f, G, A] })#W] =
+    nestedInstance.asInstanceOf[FunctorK[({ type W[f[_]] = Nested[f, G, A] })#W]]
 
-  implicit def catsTaglessApplyKForOneAnd[A](implicit A: Semigroup[A]): ApplyK[OneAnd[*[_], A]] =
-    new ApplyK[OneAnd[*[_], A]] {
+  implicit def catsTaglessApplyKForOneAnd[A](implicit A: Semigroup[A]): ApplyK[({ type W[s[_]] = OneAnd[s, A] })#W] =
+    new ApplyK[({ type W[s[_]] = OneAnd[s, A] })#W] {
       def mapK[F[_], G[_]](af: OneAnd[F, A])(fk: F ~> G) = af.mapK(fk)
       def productK[F[_], G[_]](af: OneAnd[F, A], ag: OneAnd[G, A]) =
         OneAnd(A.combine(af.head, ag.head), Tuple2K(af.tail, ag.tail))
     }
 
-  implicit def catsTaglessApplyKForTuple2K1[H[_], A](implicit H: SemigroupK[H]): ApplyK[Tuple2K[*[_], H, A]] =
-    new ApplyK[Tuple2K[*[_], H, A]] {
+  implicit def catsTaglessApplyKForTuple2K1[H[_], A](implicit
+      H: SemigroupK[H]
+  ): ApplyK[({ type W[f[_]] = Tuple2K[f, H, A] })#W] =
+    new ApplyK[({ type W[f[_]] = Tuple2K[f, H, A] })#W] {
       def mapK[F[_], G[_]](af: Tuple2K[F, H, A])(fk: F ~> G) = Tuple2K(fk(af.first), af.second)
       def productK[F[_], G[_]](af: Tuple2K[F, H, A], ag: Tuple2K[G, H, A]): Tuple2K[Tuple2K[F, G, *], H, A] =
         Tuple2K(Tuple2K(af.first, ag.first), H.combineK(af.second, ag.second))
     }
 
-  implicit def catsTaglessApplyKForTuple2K2[H[_], A](implicit H: SemigroupK[H]): ApplyK[Tuple2K[H, *[_], A]] =
-    new ApplyK[Tuple2K[H, *[_], A]] {
+  implicit def catsTaglessApplyKForTuple2K2[H[_], A](implicit
+      H: SemigroupK[H]
+  ): ApplyK[({ type W[g[_]] = Tuple2K[H, g, A] })#W] =
+    new ApplyK[({ type W[g[_]] = Tuple2K[H, g, A] })#W] {
       def mapK[F[_], G[_]](af: Tuple2K[H, F, A])(fk: F ~> G) = af.mapK(fk)
       def productK[F[_], G[_]](af: Tuple2K[H, F, A], ag: Tuple2K[H, G, A]) =
         Tuple2K(H.combineK(af.first, ag.first), Tuple2K(af.second, ag.second))
     }
 
-  implicit def catsTaglessContravariantForKFunctionK[G[_]]: ContravariantK[FunctionK[*[_], G]] =
-    functionKContravariantK.asInstanceOf[ContravariantK[FunctionK[*[_], G]]]
+  implicit def catsTaglessContravariantForKFunctionK[G[_]]: ContravariantK[({ type W[f[_]] = FunctionK[f, G] })#W] =
+    functionKContravariantK.asInstanceOf[ContravariantK[({ type W[f[_]] = FunctionK[f, G] })#W]]
 
-  implicit def catsTaglessFunctorKForFunctionK[F[_]]: FunctorK[FunctionK[F, *[_]]] =
-    functionKFunctorK.asInstanceOf[FunctorK[FunctionK[F, *[_]]]]
+  implicit def catsTaglessFunctorKForFunctionK[F[_]]: FunctorK[({ type W[g[_]] = FunctionK[F, g] })#W] =
+    functionKFunctorK.asInstanceOf[FunctorK[({ type W[g[_]] = FunctionK[F, g] })#W]]
 
   implicit def catsTaglessContravariantKForFoldable: ContravariantK[Foldable] =
     new ContravariantK[Foldable] {
@@ -98,75 +103,83 @@ object InvariantK extends InvariantKInstances01 {
         new ContraUnorderedFoldable[F, G] { val F = af; val from = gf }
     }
 
-  private val eitherKInstance: ApplyK[EitherK[Any, *[_], Any]] = new ApplyK[EitherK[Any, *[_], Any]] {
-    def mapK[F[_], G[_]](af: EitherK[Any, F, Any])(fk: F ~> G) = af.mapK(fk)
-    def productK[F[_], G[_]](af: EitherK[Any, F, Any], ag: EitherK[Any, G, Any]) =
-      (af.run, ag.run) match {
-        case (Left(x), _) => EitherK.leftc[Any, Tuple2K[F, G, *], Any](x)
-        case (_, Left(y)) => EitherK.leftc[Any, Tuple2K[F, G, *], Any](y)
-        case (Right(fa), Right(ga)) => EitherK.rightc[Any, Tuple2K[F, G, *], Any](Tuple2K(fa, ga))
-      }
-  }
+  private val eitherKInstance: ApplyK[({ type W[g[_]] = EitherK[AnyK, g, Any] })#W] =
+    new ApplyK[({ type W[g[_]] = EitherK[AnyK, g, Any] })#W] {
+      def mapK[F[_], G[_]](af: EitherK[AnyK, F, Any])(fk: F ~> G) = af.mapK(fk)
+      def productK[F[_], G[_]](af: EitherK[AnyK, F, Any], ag: EitherK[AnyK, G, Any]) =
+        (af.run, ag.run) match {
+          case (Left(x), _) => EitherK.leftc[AnyK, Tuple2K[F, G, *], Any](x)
+          case (_, Left(y)) => EitherK.leftc[AnyK, Tuple2K[F, G, *], Any](y)
+          case (Right(fa), Right(ga)) => EitherK.rightc[AnyK, Tuple2K[F, G, *], Any](Tuple2K(fa, ga))
+        }
+    }
 
-  private val eitherTInstance: ApplyK[EitherT[*[_], Any, Any]] = new ApplyK[EitherT[*[_], Any, Any]] {
-    def mapK[F[_], G[_]](af: EitherT[F, Any, Any])(fk: F ~> G) = af.mapK(fk)
-    def productK[F[_], G[_]](af: EitherT[F, Any, Any], ag: EitherT[G, Any, Any]) =
-      EitherT(Tuple2K(af.value, ag.value))
-  }
+  private val eitherTInstance: ApplyK[({ type W[f[_]] = EitherT[f, Any, Any] })#W] =
+    new ApplyK[({ type W[f[_]] = EitherT[f, Any, Any] })#W] {
+      def mapK[F[_], G[_]](af: EitherT[F, Any, Any])(fk: F ~> G) = af.mapK(fk)
+      def productK[F[_], G[_]](af: EitherT[F, Any, Any], ag: EitherT[G, Any, Any]) =
+        EitherT(Tuple2K(af.value, ag.value))
+    }
 
-  private val funcInstance: ApplyK[Func[*[_], Any, Any]] = new ApplyK[Func[*[_], Any, Any]] {
-    def mapK[F[_], G[_]](af: Func[F, Any, Any])(fk: F ~> G) = af.mapK(fk)
-    def productK[F[_], G[_]](af: Func[F, Any, Any], ag: Func[G, Any, Any]) =
-      Func.func(x => Tuple2K(af.run(x), ag.run(x)))
-  }
+  private val funcInstance: ApplyK[({ type W[f[_]] = Func[f, Any, Any] })#W] =
+    new ApplyK[({ type W[f[_]] = Func[f, Any, Any] })#W] {
+      def mapK[F[_], G[_]](af: Func[F, Any, Any])(fk: F ~> G) = af.mapK(fk)
+      def productK[F[_], G[_]](af: Func[F, Any, Any], ag: Func[G, Any, Any]) =
+        Func.func(x => Tuple2K(af.run(x), ag.run(x)))
+    }
 
-  private val idTInstance: ApplyK[IdT[*[_], Any]] = new ApplyK[IdT[*[_], Any]] {
+  private val idTInstance: ApplyK[({ type W[f[_]] = IdT[f, Any] })#W] = new ApplyK[({ type W[f[_]] = IdT[f, Any] })#W] {
     def mapK[F[_], G[_]](af: IdT[F, Any])(fk: F ~> G) = af.mapK(fk)
     def productK[F[_], G[_]](af: IdT[F, Any], ag: IdT[G, Any]) =
       IdT(Tuple2K(af.value, ag.value))
   }
 
-  private val iOrTInstance: ApplyK[IorT[*[_], Any, Any]] = new ApplyK[IorT[*[_], Any, Any]] {
-    def mapK[F[_], G[_]](af: IorT[F, Any, Any])(fk: F ~> G) = af.mapK(fk)
-    def productK[F[_], G[_]](af: IorT[F, Any, Any], ag: IorT[G, Any, Any]) =
-      IorT(Tuple2K(af.value, ag.value))
-  }
+  private val iOrTInstance: ApplyK[({ type W[f[_]] = IorT[f, Any, Any] })#W] =
+    new ApplyK[({ type W[f[_]] = IorT[f, Any, Any] })#W] {
+      def mapK[F[_], G[_]](af: IorT[F, Any, Any])(fk: F ~> G) = af.mapK(fk)
+      def productK[F[_], G[_]](af: IorT[F, Any, Any], ag: IorT[G, Any, Any]) =
+        IorT(Tuple2K(af.value, ag.value))
+    }
 
-  private val kleisliInstance: ApplyK[Kleisli[*[_], Any, Any]] = new ApplyK[Kleisli[*[_], Any, Any]] {
-    def mapK[F[_], G[_]](af: Kleisli[F, Any, Any])(fk: F ~> G) = af.mapK(fk)
-    def productK[F[_], G[_]](af: Kleisli[F, Any, Any], ag: Kleisli[G, Any, Any]) =
-      Kleisli(x => Tuple2K(af.run(x), ag.run(x)))
-  }
+  private val kleisliInstance: ApplyK[({ type W[f[_]] = Kleisli[f, Any, Any] })#W] =
+    new ApplyK[({ type W[f[_]] = Kleisli[f, Any, Any] })#W] {
+      def mapK[F[_], G[_]](af: Kleisli[F, Any, Any])(fk: F ~> G) = af.mapK(fk)
+      def productK[F[_], G[_]](af: Kleisli[F, Any, Any], ag: Kleisli[G, Any, Any]) =
+        Kleisli(x => Tuple2K(af.run(x), ag.run(x)))
+    }
 
-  private val optionTInstance: ApplyK[OptionT[*[_], Any]] = new ApplyK[OptionT[*[_], Any]] {
-    def mapK[F[_], G[_]](af: OptionT[F, Any])(fk: F ~> G) = af.mapK(fk)
-    def productK[F[_], G[_]](af: OptionT[F, Any], ag: OptionT[G, Any]) =
-      OptionT(Tuple2K(af.value, ag.value))
-  }
+  private val optionTInstance: ApplyK[({ type W[f[_]] = OptionT[f, Any] })#W] =
+    new ApplyK[({ type W[f[_]] = OptionT[f, Any] })#W] {
+      def mapK[F[_], G[_]](af: OptionT[F, Any])(fk: F ~> G) = af.mapK(fk)
+      def productK[F[_], G[_]](af: OptionT[F, Any], ag: OptionT[G, Any]) =
+        OptionT(Tuple2K(af.value, ag.value))
+    }
 
-  private val writerTInstance: ApplyK[WriterT[*[_], Any, Any]] = new ApplyK[WriterT[*[_], Any, Any]] {
-    def mapK[F[_], G[_]](af: WriterT[F, Any, Any])(fk: F ~> G) = af.mapK(fk)
-    def productK[F[_], G[_]](af: WriterT[F, Any, Any], ag: WriterT[G, Any, Any]) =
-      WriterT(Tuple2K(af.run, ag.run))
-  }
+  private val writerTInstance: ApplyK[({ type W[f[_]] = WriterT[f, Any, Any] })#W] =
+    new ApplyK[({ type W[f[_]] = WriterT[f, Any, Any] })#W] {
+      def mapK[F[_], G[_]](af: WriterT[F, Any, Any])(fk: F ~> G) = af.mapK(fk)
+      def productK[F[_], G[_]](af: WriterT[F, Any, Any], ag: WriterT[G, Any, Any]) =
+        WriterT(Tuple2K(af.run, ag.run))
+    }
 
-  private val cokleisliInstance: ContravariantK[Cokleisli[*[_], Any, Any]] =
-    new ContravariantK[Cokleisli[*[_], Any, Any]] {
+  private val cokleisliInstance: ContravariantK[({ type W[f[_]] = Cokleisli[f, Any, Any] })#W] =
+    new ContravariantK[({ type W[f[_]] = Cokleisli[f, Any, Any] })#W] {
       def contramapK[F[_], G[_]](af: Cokleisli[F, Any, Any])(fk: G ~> F) = Cokleisli(ga => af.run(fk(ga)))
     }
 
-  private val nestedInstance: FunctorK[Nested[*[_], Any, Any]] = new FunctorK[Nested[*[_], Any, Any]] {
-    def mapK[F[_], G[_]](af: Nested[F, Any, Any])(fk: F ~> G) = af.mapK(fk)
-  }
-
-  private val functionKContravariantK: ContravariantK[FunctionK[*[_], Any]] =
-    new ContravariantK[FunctionK[*[_], Any]] {
-      def contramapK[F[_], G[_]](af: F ~> Any)(fk: G ~> F) = af.compose(fk)
+  private val nestedInstance: FunctorK[({ type W[f[_]] = Nested[f, AnyK, Any] })#W] =
+    new FunctorK[({ type W[f[_]] = Nested[f, AnyK, Any] })#W] {
+      def mapK[F[_], G[_]](af: Nested[F, AnyK, Any])(fk: F ~> G) = af.mapK(fk)
     }
 
-  private val functionKFunctorK: FunctorK[FunctionK[Any, *[_]]] =
-    new FunctorK[FunctionK[Any, *[_]]] {
-      def mapK[F[_], G[_]](af: Any ~> F)(fn: F ~> G) = af.andThen(fn)
+  private val functionKContravariantK: ContravariantK[({ type W[f[_]] = FunctionK[f, AnyK] })#W] =
+    new ContravariantK[({ type W[f[_]] = FunctionK[f, AnyK] })#W] {
+      def contramapK[F[_], G[_]](af: F ~> AnyK)(fk: G ~> F) = af.compose(fk)
+    }
+
+  private val functionKFunctorK: FunctorK[({ type W[g[_]] = FunctionK[AnyK, g] })#W] =
+    new FunctorK[({ type W[g[_]] = FunctionK[AnyK, g] })#W] {
+      def mapK[F[_], G[_]](af: AnyK ~> F)(fn: F ~> G) = af.andThen(fn)
     }
 
   // =======================
@@ -212,19 +225,21 @@ object InvariantK extends InvariantKInstances01 {
 }
 
 sealed private[tagless] trait InvariantKInstances01 {
-  implicit def catsTaglessFunctorKForOneAnd[A]: FunctorK[OneAnd[*[_], A]] =
-    oneAndFunctorK.asInstanceOf[FunctorK[OneAnd[*[_], A]]]
+  implicit def catsTaglessFunctorKForOneAnd[A]: FunctorK[({ type W[s[_]] = OneAnd[s, A] })#W] =
+    oneAndFunctorK.asInstanceOf[FunctorK[({ type W[s[_]] = OneAnd[s, A] })#W]]
 
-  implicit def catsTaglessFunctorKForTuple2K[F[_], A]: FunctorK[Tuple2K[F, *[_], A]] =
-    tuple2KFunctorK.asInstanceOf[FunctorK[Tuple2K[F, *[_], A]]]
+  implicit def catsTaglessFunctorKForTuple2K[F[_], A]: FunctorK[({ type W[g[_]] = Tuple2K[F, g, A] })#W] =
+    tuple2KFunctorK.asInstanceOf[FunctorK[({ type W[g[_]] = Tuple2K[F, g, A] })#W]]
 
-  private val oneAndFunctorK: FunctorK[OneAnd[*[_], Any]] = new FunctorK[OneAnd[*[_], Any]] {
-    def mapK[F[_], G[_]](af: OneAnd[F, Any])(fk: F ~> G) = af.mapK(fk)
-  }
+  private val oneAndFunctorK: FunctorK[({ type W[s[_]] = OneAnd[s, Any] })#W] =
+    new FunctorK[({ type W[s[_]] = OneAnd[s, Any] })#W] {
+      def mapK[F[_], G[_]](af: OneAnd[F, Any])(fk: F ~> G) = af.mapK(fk)
+    }
 
-  private val tuple2KFunctorK: FunctorK[Tuple2K[Any, *[_], Any]] = new FunctorK[Tuple2K[Any, *[_], Any]] {
-    def mapK[F[_], G[_]](af: Tuple2K[Any, F, Any])(fk: F ~> G) = af.mapK(fk)
-  }
+  private val tuple2KFunctorK: FunctorK[({ type W[g[_]] = Tuple2K[AnyK, g, Any] })#W] =
+    new FunctorK[({ type W[g[_]] = Tuple2K[AnyK, g, Any] })#W] {
+      def mapK[F[_], G[_]](af: Tuple2K[AnyK, F, Any])(fk: F ~> G) = af.mapK(fk)
+    }
 }
 
 private trait ContraUnorderedFoldable[F[_], G[_]] extends UnorderedFoldable[G] {

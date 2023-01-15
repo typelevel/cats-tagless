@@ -18,3 +18,11 @@ project/plugins/project/
 .scala_dependencies
 .worksheet
 /.bsp/
+
+# VSCode
+.vscode
+
+# Metals / Bloop
+.metals
+.bloop
+metals.sbt

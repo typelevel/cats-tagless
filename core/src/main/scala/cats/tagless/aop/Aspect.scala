@@ -16,7 +16,7 @@
 
 package cats.tagless.aop
 
-import cats.tagless.Trivial
+import cats.tagless.{Trivial, FunctionKLift}
 import cats.{Eval, ~>}
 
 /** Type class supporting Aspect-Oriented Programming (AOP) for a tagless final algebra. The behaviour of this aspect is
@@ -85,7 +85,7 @@ object Aspect {
     type Function[F[_], G[_], A] = Weave[F, G, G, A]
 
     def instrumentationK[F[_], Dom[_], Cod[_]]: Weave[F, Dom, Cod, *] ~> Instrumentation[F, *] =
-      λ[Aspect.Weave[F, Dom, Cod, *] ~> Instrumentation[F, *]](_.instrumentation)
+      FunctionKLift[Aspect.Weave[F, Dom, Cod, *], Instrumentation[F, *]](_.instrumentation)
   }
 
   /** An [[Aspect.Advice]] represents the effect of a particular [[Aspect]] on a single value (the `target`). It

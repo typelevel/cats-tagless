@@ -6,6 +6,7 @@ addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 
 val Scala212 = "2.12.17"
 val Scala213 = "2.13.10"
+val Scala3 = "3.2.2"
 val Java8 = JavaSpec.temurin("8")
 
 val gitRepo = "git@github.com:typelevel/cats-tagless.git"
@@ -15,7 +16,7 @@ val homePage = "https://typelevel.org/cats-tagless"
 ThisBuild / organizationName := "cats-tagless maintainers"
 ThisBuild / tlBaseVersion := "0.14"
 
-ThisBuild / crossScalaVersions := Seq(Scala212, Scala213)
+ThisBuild / crossScalaVersions := Seq(Scala212, Scala213, Scala3)
 ThisBuild / tlCiReleaseBranches := Seq("master")
 ThisBuild / mergifyStewardConfig := Some(
   MergifyStewardConfig(
@@ -44,20 +45,23 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
 val catsVersion = "2.9.0"
 val circeVersion = "0.14.5"
 val disciplineVersion = "1.5.1"
-val disciplineMunitVersion = "1.0.9"
+val disciplineMunitVersion = "2.0.0-M3"
 val kindProjectorVersion = "0.13.2"
 val paradiseVersion = "2.1.1"
 val scalaCheckVersion = "1.17.0"
 
 val macroSettings = List(
-  libraryDependencies ++=
-    List("scala-compiler", "scala-reflect").map("org.scala-lang" % _ % scalaVersion.value % Provided),
+  libraryDependencies ++= (CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((2, _)) =>
+      List("scala-compiler", "scala-reflect").map("org.scala-lang" % _ % scalaVersion.value % Provided)
+    case _ => Nil
+  }),
   scalacOptions ++= (scalaBinaryVersion.value match {
     case "2.13" => List("-Ymacro-annotations")
     case _ => Nil
   }),
-  libraryDependencies ++= (scalaBinaryVersion.value match {
-    case "2.13" => Nil
+  libraryDependencies ++= (CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((2, 13)) | Some((3, _)) => Nil
     case _ => List(compilerPlugin(("org.scalamacros" %% "paradise" % paradiseVersion).cross(CrossVersion.full)))
   })
 )
@@ -146,7 +150,7 @@ lazy val docs = project
   )
 
 lazy val docsMappingsAPIDir = settingKey[String]("Name of subdirectory in site target directory for api docs")
-lazy val rootSettings = (scalacOptions += "-Xsource:3") :: commonSettings
+lazy val rootSettings = commonSettings
 lazy val docSettings = commonSettings ::: List(
   docsMappingsAPIDir := "api",
   addMappingsToSiteDir(coreJVM / Compile / packageDoc / mappings, docsMappingsAPIDir),
@@ -184,7 +188,20 @@ lazy val commonSettings = List(
   resolvers ++= Resolver.sonatypeOssRepos("snapshots"),
   startYear := Some(2019),
   apiURL := Some(url("https://typelevel.org/cats-tagless/api/")),
-  autoAPIMappings := true
+  autoAPIMappings := true,
+  scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((3, _)) =>
+      Seq(
+        "-language:adhocExtensions",
+        "-source:future",
+        "-explain"
+      )
+    case Some((2, 12 | 13)) => Seq("-Xsource:3", "-P:kind-projector:underscore-placeholders")
+    case _ => Nil
+  }),
+  // sbt-typelevel sets -source:3.0-migration, we'd like to replace it with -source:future
+  scalacOptions := scalacOptions.value.filterNot(_ == "-source:3.0-migration"),
+  tlVersionIntroduced := Map("3" -> "0.15.0")
 )
 
 lazy val commonJsSettings = List(

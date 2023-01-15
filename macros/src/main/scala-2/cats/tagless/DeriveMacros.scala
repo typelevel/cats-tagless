@@ -125,7 +125,7 @@ class DeriveMacros(val c: blackbox.Context) {
   val ByNameParam = new ParamExtractor(definitions.ByNameParamClass)
 
   /** Return the dealiased and eta-expanded type constructor of this tag's type. */
-  def typeConstructorOf(tag: WeakTypeTag[_]): Type =
+  def typeConstructorOf(tag: WeakTypeTag[?]): Type =
     tag.tpe.typeConstructor.dealias.etaExpand
 
   /** Return the set of overridable members of `tpe`, excluding some undesired cases. */
@@ -240,7 +240,7 @@ class DeriveMacros(val c: blackbox.Context) {
   /** Create a new instance of `typeClass` for `algebra`. `rhs` should define a mapping for each method (by name) to an
     * implementation function based on type signature.
     */
-  def instantiate[T: WeakTypeTag](tag: WeakTypeTag[_], typeArgs: Type*)(methods: (Type => MethodDef)*): Tree = {
+  def instantiate[T: WeakTypeTag](tag: WeakTypeTag[?], typeArgs: Type*)(methods: (Type => MethodDef)*): Tree = {
     val algebra = typeConstructorOf(tag)
     val Ta = appliedType(symbolOf[T], algebra :: typeArgs.toList)
     val rhsMap = methods.iterator.map(_.apply(algebra)).flatMap(MethodDef.unapply).toMap

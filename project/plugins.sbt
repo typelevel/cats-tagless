@@ -1,5 +1,5 @@
-addSbtPlugin("org.typelevel" % "sbt-typelevel" % "0.4.16")
-addSbtPlugin("org.typelevel" % "sbt-typelevel-mergify" % "0.4.16")
+addSbtPlugin("org.typelevel" % "sbt-typelevel" % "0.4.19")
+addSbtPlugin("org.typelevel" % "sbt-typelevel-mergify" % "0.4.19")
 addSbtPlugin("org.portable-scala" % "sbt-scala-native-crossproject" % "1.3.0")
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.13.0")
 addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.4.12")

@@ -29,7 +29,7 @@ class autoApplyK(autoDerivation: Boolean = true) extends StaticAnnotation {
 private[tagless] class autoApplyKMacros(override val c: whitebox.Context)
     extends MacroUtils
     with CovariantKMethodsGenerator {
-  import c.universe._
+  import c.universe.*
 
   private def generateApplyKFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =
     typeClassInstance(

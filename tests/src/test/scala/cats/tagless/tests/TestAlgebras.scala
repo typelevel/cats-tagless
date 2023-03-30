@@ -19,9 +19,9 @@ package tests
 
 import cats.data.{EitherT, Kleisli, State, Tuple2K}
 import cats.laws.discipline.ExhaustiveCheck
-import cats.laws.discipline.arbitrary._
-import cats.laws.discipline.eq._
-import cats.syntax.all._
+import cats.laws.discipline.arbitrary.*
+import cats.laws.discipline.eq.*
+import cats.syntax.all.*
 import cats.{Eq, Eval, Monoid, ~>}
 import org.scalacheck.{Arbitrary, Cogen}
 
@@ -34,7 +34,7 @@ trait SafeAlg[F[_]] {
 }
 
 object SafeAlg {
-  import TestInstances._
+  import TestInstances.*
 
   implicit def eqForSafeAlg[F[_]](implicit eqFi: Eq[F[Int]], eqFf: Eq[F[Float]]): Eq[SafeAlg[F]] =
     Eq.by(algebra => (algebra.parseInt _, algebra.divide _))
@@ -59,7 +59,7 @@ trait SafeInvAlg[F[_]] {
 }
 
 object SafeInvAlg {
-  import TestInstances._
+  import TestInstances.*
 
   implicit def eqForSafeInvAlg[F[_]](implicit
       eqFi: Eq[F[Int]],
@@ -94,7 +94,7 @@ trait CalculatorAlg[F[_]] {
 }
 
 object CalculatorAlg {
-  import TestInstances._
+  import TestInstances.*
 
   implicit def eqForCalculatorAlg[F[_]](implicit
       eqFi: Eq[F[Int]],

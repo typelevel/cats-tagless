@@ -18,7 +18,7 @@ package cats.tagless
 package laws
 
 import cats.~>
-import cats.laws._
+import cats.laws.*
 import cats.data.Tuple2K
 
 trait ApplyKLaws[F[_[_]]] extends SemigroupalKLaws[F] with FunctorKLaws[F] {

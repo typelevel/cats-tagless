@@ -21,7 +21,7 @@ package discipline
 import cats.{Eq, ~>}
 import cats.data.Tuple2K
 import cats.tagless.laws.discipline.SemigroupalKTests.IsomorphismsK
-import org.scalacheck.Prop._
+import org.scalacheck.Prop.*
 import org.scalacheck.{Arbitrary, Prop}
 import org.typelevel.discipline.Laws
 
@@ -48,7 +48,7 @@ object SemigroupalKTests {
   def apply[F[_[_]]: SemigroupalK]: SemigroupalKTests[F] =
     new SemigroupalKTests[F] { def laws: SemigroupalKLaws[F] = SemigroupalKLaws[F] }
 
-  import IsomorphismsK._
+  import IsomorphismsK.*
 
   trait IsomorphismsK[F[_[_]]] {
     def associativity[A[_], B[_], C[_]](fs: (F[ProdA_BC[A, B, C]#λ], F[ProdAB_C[A, B, C]#λ]))(implicit

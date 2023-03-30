@@ -16,10 +16,10 @@
 
 package cats.tagless.tests
 
-import cats._
-import cats.data._
+import cats.*
+import cats.data.*
 import cats.tagless.ApplyK
-import cats.tagless.optimize._
+import cats.tagless.optimize.*
 import cats.tagless.tests.Interpreters.StateInfo
 
 class OptimizerTests extends CatsTaglessTestSuite {

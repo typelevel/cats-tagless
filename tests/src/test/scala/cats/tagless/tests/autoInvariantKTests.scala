@@ -19,14 +19,14 @@ package tests
 
 import cats.~>
 import cats.laws.discipline.SerializableTests
-import cats.laws.discipline.arbitrary._
+import cats.laws.discipline.arbitrary.*
 import cats.tagless.laws.discipline.InvariantKTests
 
 import scala.annotation.nowarn
 import scala.util.Try
 
 class autoInvariantKTests extends CatsTaglessTestSuite {
-  import autoInvariantKTests._
+  import autoInvariantKTests.*
 
   checkAll("InvariantK[SafeInvAlg]", InvariantKTests[SafeInvAlg].invariantK[Try, Option, List])
   checkAll("InvariantK[CalculatorAlg]", InvariantKTests[CalculatorAlg].invariantK[Try, Option, List])
@@ -65,7 +65,7 @@ class autoInvariantKTests extends CatsTaglessTestSuite {
       def a(i: Try[String]) = i
       def b(i: Try[Int]) = i.map(_.toString)
     }
-    import WithExtraTpeParam.autoDerive._
+    import WithExtraTpeParam.autoDerive.*
     assertEquals(WithExtraTpeParam[Option, String].a(Some("5")), Some("5"))
     assertEquals(WithExtraTpeParam[Option, String].b(Some(5)), Some("5"))
   }
@@ -74,7 +74,7 @@ class autoInvariantKTests extends CatsTaglessTestSuite {
     implicit val algWithExtraTP: AlgWithExtraTP2[String, Try] = new AlgWithExtraTP2[String, Try] {
       def a(i: Try[Int]) = i.map(_.toString)
     }
-    import AlgWithExtraTP2.autoDerive._
+    import AlgWithExtraTP2.autoDerive.*
     assertEquals(AlgWithExtraTP2[String, Option].a(Some(5)), Some("5"))
   }
 
@@ -93,8 +93,8 @@ class autoInvariantKTests extends CatsTaglessTestSuite {
       def a(i: Try[String]): Try[String] = i.map(_ + "a")
     }
 
-    import AlgWithTypeMember.fullyRefined._
-    import AlgWithTypeMember.fullyRefined.autoDerive._
+    import AlgWithTypeMember.fullyRefined.*
+    import AlgWithTypeMember.fullyRefined.autoDerive.*
 
     val algAux: AlgWithTypeMember.Aux[Option, String] = implicitly
     assertEquals(algAux.a(Some("4")), Some("4a"))

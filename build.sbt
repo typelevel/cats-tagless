@@ -5,7 +5,7 @@ addCommandAlias("fmt", "all scalafmtSbt scalafmtAll")
 addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 
 val Scala212 = "2.12.17"
-val Scala213 = "2.13.9"
+val Scala213 = "2.13.10"
 val Java8 = JavaSpec.temurin("8")
 
 val gitRepo = "git@github.com:typelevel/cats-tagless.git"
@@ -41,8 +41,8 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
   )
 )
 
-val catsVersion = "2.8.0"
-val circeVersion = "0.14.3"
+val catsVersion = "2.9.0"
+val circeVersion = "0.14.5"
 val disciplineVersion = "1.5.1"
 val disciplineMunitVersion = "1.0.9"
 val kindProjectorVersion = "0.13.2"

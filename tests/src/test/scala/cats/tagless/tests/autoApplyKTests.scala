@@ -20,8 +20,8 @@ package tests
 import cats.Eq
 import cats.data.EitherT
 import cats.laws.discipline.SerializableTests
-import cats.laws.discipline.arbitrary._
-import cats.laws.discipline.eq._
+import cats.laws.discipline.arbitrary.*
+import cats.laws.discipline.eq.*
 import cats.tagless.laws.discipline.ApplyKTests
 import cats.tagless.tests.autoApplyKTests.AutoApplyKTestAlg
 import org.scalacheck.Arbitrary
@@ -45,7 +45,7 @@ object autoApplyKTests {
   }
 
   object AutoApplyKTestAlg {
-    import TestInstances._
+    import TestInstances.*
 
     implicit def eqForAutoApplyKTestAlg[F[_]](implicit
         eqFi: Eq[F[Int]],

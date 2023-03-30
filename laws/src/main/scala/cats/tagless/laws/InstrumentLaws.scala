@@ -16,7 +16,7 @@
 
 package cats.tagless.laws
 
-import cats.laws._
+import cats.laws.*
 import cats.tagless.aop.{Instrument, Instrumentation}
 import cats.~>
 

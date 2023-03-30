@@ -26,7 +26,7 @@ class autoBifunctor extends StaticAnnotation {
 }
 
 private[tagless] class autoBifunctorMacros(override val c: whitebox.Context) extends MacroUtils {
-  import c.universe._
+  import c.universe.*
 
   private def generateBifunctorFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =
     typeClassInstance(

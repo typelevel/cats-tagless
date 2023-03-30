@@ -27,7 +27,7 @@ class autoApply extends StaticAnnotation {
 }
 
 private[tagless] class autoApplyMacros(override val c: whitebox.Context) extends MacroUtils {
-  import c.universe._
+  import c.universe.*
 
   private def generateApplyFor(algebraName: String)(algebraType: Tree, typeParams: Seq[TypeDef]) =
     typeClassInstance(

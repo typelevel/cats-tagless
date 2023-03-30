@@ -19,8 +19,8 @@ package tests
 
 import cats.{Contravariant, Eq}
 import cats.laws.discipline.{ContravariantTests, ExhaustiveCheck, SerializableTests}
-import cats.laws.discipline.eq._
-import cats.tagless.tests.autoContravariantTest._
+import cats.laws.discipline.eq.*
+import cats.tagless.tests.autoContravariantTest.*
 import org.scalacheck.{Arbitrary, Cogen}
 
 class autoContravariantTests extends CatsTaglessTestSuite {

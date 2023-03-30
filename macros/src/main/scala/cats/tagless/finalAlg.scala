@@ -25,7 +25,7 @@ class finalAlg extends StaticAnnotation {
 }
 
 private[tagless] class finalAlgMacros(override val c: whitebox.Context) extends MacroUtils {
-  import c.universe._
+  import c.universe.*
 
   private def generateApply(algebraType: Tree, tparams: Seq[TypeDef]) =
     q"def apply[..$tparams](implicit inst: $algebraType): $algebraType = inst"

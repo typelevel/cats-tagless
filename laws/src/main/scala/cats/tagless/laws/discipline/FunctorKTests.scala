@@ -19,9 +19,9 @@ package laws
 package discipline
 
 import org.scalacheck.Arbitrary
-import org.scalacheck.Prop._
+import org.scalacheck.Prop.*
 import cats.{Eq, ~>}
-import cats.laws.discipline._
+import cats.laws.discipline.*
 
 trait FunctorKTests[F[_[_]]] extends InvariantKTests[F] {
   def laws: FunctorKLaws[F]

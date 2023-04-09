@@ -61,7 +61,7 @@ val macroSettings = List(
   )
 )
 
-lazy val root = tlCrossRootProject.aggregate(core, laws, tests, macros)
+lazy val root = tlCrossRootProject.aggregate(core, laws, tests, macros, examples)
 
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
@@ -134,6 +134,15 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform, NativePlatform)
       "org.typelevel" %%% "discipline-munit" % disciplineMunitVersion,
       "io.circe" %%% "circe-core" % circeVersion
     ).map(_ % Test)
+  )
+
+lazy val examples = project
+  .dependsOn(macros.jvm, laws.jvm)
+  .enablePlugins(AutomateHeaderPlugin, NoPublishPlugin)
+  .settings(rootSettings, macroSettings)
+  .settings(
+    moduleName := "cats-tagless-examples",
+    libraryDependencies += "org.typelevel" %%% "cats-free" % catsVersion
   )
 
 /** Docs - Generates and publishes the scaladoc API documents and the project web site. */

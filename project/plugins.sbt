@@ -7,5 +7,7 @@ addSbtPlugin("com.github.tkawachi" % "sbt-doctest" % "0.10.0")
 addSbtPlugin("com.47deg" % "sbt-microsites" % "1.3.4")
 addSbtPlugin("org.scalameta" % "sbt-mdoc" % "2.3.7")
 
-ThisBuild / libraryDependencySchemes +=
-  "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
+ThisBuild / libraryDependencySchemes ++= List(
+  "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always,
+  "io.circe" %% "circe-core" % VersionScheme.Always
+)

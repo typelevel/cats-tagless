@@ -19,7 +19,6 @@ package cats.tagless.example
 import cats.tagless.*
 import scala.util.Try
 import cats.tagless.implicits.*
-import cats.implicits.*
 import cats.*
 
 object AutoFunctorKExample extends App {

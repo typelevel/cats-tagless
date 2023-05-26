@@ -27,8 +27,8 @@ private object Curried {
   type Func[A, B] = { type λ[F[_]] = data.Func[F, A, B] }
   type Kleisli[A, B] = { type λ[F[_]] = data.Kleisli[F, A, B] }
   type Cokleisli[A, B] = { type λ[F[_]] = data.Cokleisli[F, A, B] }
-  type FunctionKLeft[G[_]] = { type λ[F[_]] = arrow.FunctionK[F, G] }
-  type FunctionKRight[F[_]] = { type λ[G[_]] = arrow.FunctionK[F, G] }
+  type FunctionKFrom[G[_]] = { type λ[F[_]] = arrow.FunctionK[F, G] }
+  type FunctionKTo[F[_]] = { type λ[G[_]] = arrow.FunctionK[F, G] }
   type Tuple2KFirst[G[_], A] = { type λ[F[_]] = data.Tuple2K[F, G, A] }
   type Tuple2KSecond[F[_], A] = { type λ[G[_]] = data.Tuple2K[F, G, A] }
   type EitherKLeft[G[_], A] = { type λ[F[_]] = data.EitherK[F, G, A] }

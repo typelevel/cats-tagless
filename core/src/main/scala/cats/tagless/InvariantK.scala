@@ -80,11 +80,11 @@ object InvariantK extends InvariantKInstances01 with DerivedInvariantK {
         Tuple2K(F.combineK(ag.first, ah.first), Tuple2K(ag.second, ah.second))
     }
 
-  implicit def catsTaglessContravariantForKFunctionK[G[_]]: ContravariantK[Curried.FunctionKLeft[G]#λ] =
-    functionKContravariantK.asInstanceOf[ContravariantK[Curried.FunctionKLeft[G]#λ]]
+  implicit def catsTaglessContravariantForKFunctionK[G[_]]: ContravariantK[Curried.FunctionKFrom[G]#λ] =
+    functionKContravariantK.asInstanceOf[ContravariantK[Curried.FunctionKFrom[G]#λ]]
 
-  implicit def catsTaglessFunctorKForFunctionK[F[_]]: FunctorK[Curried.FunctionKRight[F]#λ] =
-    functionKFunctorK.asInstanceOf[FunctorK[Curried.FunctionKRight[F]#λ]]
+  implicit def catsTaglessFunctorKForFunctionK[F[_]]: FunctorK[Curried.FunctionKTo[F]#λ] =
+    functionKFunctorK.asInstanceOf[FunctorK[Curried.FunctionKTo[F]#λ]]
 
   implicit def catsTaglessContravariantKForFoldable: ContravariantK[Foldable] =
     new ContravariantK[Foldable] {
@@ -167,13 +167,13 @@ object InvariantK extends InvariantKInstances01 with DerivedInvariantK {
       def mapK[F[_], G[_]](af: Nested[F, AnyK, Any])(fk: F ~> G) = af.mapK(fk)
     }
 
-  private val functionKContravariantK: ContravariantK[Curried.FunctionKLeft[AnyK]#λ] =
-    new ContravariantK[Curried.FunctionKLeft[AnyK]#λ] {
+  private val functionKContravariantK: ContravariantK[Curried.FunctionKFrom[AnyK]#λ] =
+    new ContravariantK[Curried.FunctionKFrom[AnyK]#λ] {
       def contramapK[F[_], G[_]](af: F ~> AnyK)(fk: G ~> F) = af.compose(fk)
     }
 
-  private val functionKFunctorK: FunctorK[Curried.FunctionKRight[AnyK]#λ] =
-    new FunctorK[Curried.FunctionKRight[AnyK]#λ] {
+  private val functionKFunctorK: FunctorK[Curried.FunctionKTo[AnyK]#λ] =
+    new FunctorK[Curried.FunctionKTo[AnyK]#λ] {
       def mapK[F[_], G[_]](af: AnyK ~> F)(fn: F ~> G) = af.andThen(fn)
     }
 

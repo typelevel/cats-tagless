@@ -20,7 +20,7 @@ import cats.arrow.FunctionK
 
 // https://github.com/typelevel/cats/issues/2553#issuecomment-493712879
 // https://github.com/typelevel/cats/blob/v2.9.0/core/src/main/scala-2/src/main/scala/cats/arrow/FunctionKMacros.scala
-object FunctionKLift {
+private [tagless] object FunctionKLift {
 
   /** Used in the signature of `lift` to emulate a polymorphic function type */
   protected type τ[F[_], G[_]]

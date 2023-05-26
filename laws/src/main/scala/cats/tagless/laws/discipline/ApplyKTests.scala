@@ -21,29 +21,36 @@ package discipline
 import org.scalacheck.Arbitrary
 import org.scalacheck.Prop.*
 import cats.{Eq, ~>}
+import cats.data.Tuple2K
 import cats.laws.discipline.*
+import cats.tagless.laws.discipline.SemigroupalKTests.IsomorphismsK
 
-trait FunctorKTests[F[_[_]]] extends InvariantKTests[F] {
-  def laws: FunctorKLaws[F]
+trait ApplyKTests[F[_[_]]] extends FunctorKTests[F] with SemigroupalKTests[F] {
+  def laws: ApplyKLaws[F]
 
-  def functorK[A[_], B[_], C[_], T](implicit
+  def applyK[A[_], B[_], C[_], T](implicit
       ArbFA: Arbitrary[F[A]],
+      ArbCG: Arbitrary[F[B]],
+      ArbCH: Arbitrary[F[C]],
+      iso: IsomorphismsK[F],
       ArbitraryFK: Arbitrary[A ~> B],
       ArbitraryFK2: Arbitrary[B ~> C],
       ArbitraryFK3: Arbitrary[B ~> A],
       ArbitraryFK4: Arbitrary[C ~> B],
       EqFA: Eq[F[A]],
-      EqFC: Eq[F[C]]
+      EqFC: Eq[F[C]],
+      EqFG: Eq[F[Tuple2K[A, Tuple2K[B, C, *], *]]],
+      EqFGH: Eq[F[Tuple3K[A, B, C]#λ]]
   ): RuleSet =
-    new DefaultRuleSet(
-      name = "functorK",
-      parent = Some(invariantK[A, B, C]),
-      "covariant identity" -> forAll(laws.covariantIdentity[A]),
-      "covariant composition" -> forAll(laws.covariantComposition[A, B, C])
-    )
+    new RuleSet {
+      val name = "applyK"
+      val parents = List(functorK[A, B, C, T], semigroupalK[A, B, C])
+      val bases = List.empty
+      val props = List("applyK associativity" -> forAll(laws.applyKAssociativity[A, B, C](_, _, _)))
+    }
 }
 
-object FunctorKTests {
-  def apply[F[_[_]]: FunctorK]: FunctorKTests[F] =
-    new FunctorKTests[F] { def laws: FunctorKLaws[F] = FunctorKLaws[F] }
+object ApplyKTests {
+  def apply[F[_[_]]: ApplyK]: ApplyKTests[F] =
+    new ApplyKTests[F] { def laws: ApplyKLaws[F] = ApplyKLaws[F] }
 }

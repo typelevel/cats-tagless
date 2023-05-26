@@ -39,8 +39,8 @@ trait InvariantKTests[F[_[_]]] extends Laws {
     new DefaultRuleSet(
       name = "invariantK",
       parent = None,
-      "invariant identity" -> forAll(laws.invariantIdentity[A] _),
-      "invariant composition" -> forAll(laws.invariantComposition[A, B, C] _)
+      "invariant identity" -> forAll(laws.invariantIdentity[A](_)),
+      "invariant composition" -> forAll(laws.invariantComposition[A, B, C](_, _, _, _, _))
     )
 }
 

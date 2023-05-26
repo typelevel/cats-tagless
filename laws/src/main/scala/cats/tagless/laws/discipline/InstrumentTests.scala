@@ -20,33 +20,29 @@ import org.scalacheck.Arbitrary
 import org.scalacheck.Prop.*
 import cats.{Eq, ~>}
 import cats.laws.discipline.*
-import cats.tagless.aop.{Aspect, Instrumentation}
-import cats.tagless.laws.AspectLaws
+import cats.tagless.aop.Instrument
+import cats.tagless.laws.InstrumentLaws
 
-trait AspectTests[F[_[_]], Dom[_], Cod[_]] extends InstrumentTests[F] {
-  def laws: AspectLaws[F, Dom, Cod]
+trait InstrumentTests[F[_[_]]] extends FunctorKTests[F] {
+  def laws: InstrumentLaws[F]
 
-  def aspect[A[_], B[_], C[_], T](implicit
+  def instrument[A[_], B[_], C[_], T](implicit
       ArbFA: Arbitrary[F[A]],
       ArbitraryFK: Arbitrary[A ~> B],
       ArbitraryFK2: Arbitrary[B ~> C],
       ArbitraryFK3: Arbitrary[B ~> A],
       ArbitraryFK4: Arbitrary[C ~> B],
       EqFA: Eq[F[A]],
-      EqFC: Eq[F[C]],
-      EqFInstrumentation: Eq[F[Instrumentation[A, *]]]
+      EqFC: Eq[F[C]]
   ): RuleSet = new RuleSet {
-    val name = "aspect"
-    val parents = List(instrument[A, B, C, T])
+    val name = "instrument"
+    val parents = List(functorK[A, B, C, T])
     val bases = Nil
-    val props = List(
-      "weave preserving semantics" -> forAll(laws.weavePreservingSemantics[A]),
-      "weave instrument consistency" -> forAll(laws.weaveInstrumentConsistency[A])
-    )
+    val props = List("instrument preserving semantics" -> forAll(laws.instrumentPreservingSemantics[A](_)))
   }
 }
 
-object AspectTests {
-  def apply[F[_[_]], Dom[_], Cod[_]](implicit ev: Aspect[F, Dom, Cod]): AspectTests[F, Dom, Cod] =
-    new AspectTests[F, Dom, Cod] { def laws: AspectLaws[F, Dom, Cod] = AspectLaws[F, Dom, Cod] }
+object InstrumentTests {
+  def apply[F[_[_]]: Instrument]: InstrumentTests[F] =
+    new InstrumentTests[F] { def laws: InstrumentLaws[F] = InstrumentLaws[F] }
 }

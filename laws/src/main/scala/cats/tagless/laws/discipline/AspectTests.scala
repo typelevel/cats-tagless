@@ -14,43 +14,39 @@
  * limitations under the License.
  */
 
-package cats.tagless
-package laws
-package discipline
+package cats.tagless.laws.discipline
 
 import org.scalacheck.Arbitrary
 import org.scalacheck.Prop.*
 import cats.{Eq, ~>}
-import cats.data.Tuple2K
 import cats.laws.discipline.*
-import cats.tagless.laws.discipline.SemigroupalKTests.IsomorphismsK
+import cats.tagless.aop.{Aspect, Instrumentation}
+import cats.tagless.laws.AspectLaws
 
-trait ApplyKTests[F[_[_]]] extends FunctorKTests[F] with SemigroupalKTests[F] {
-  def laws: ApplyKLaws[F]
+trait AspectTests[F[_[_]], Dom[_], Cod[_]] extends InstrumentTests[F] {
+  def laws: AspectLaws[F, Dom, Cod]
 
-  def applyK[A[_], B[_], C[_], T](implicit
+  def aspect[A[_], B[_], C[_], T](implicit
       ArbFA: Arbitrary[F[A]],
-      ArbCG: Arbitrary[F[B]],
-      ArbCH: Arbitrary[F[C]],
-      iso: IsomorphismsK[F],
       ArbitraryFK: Arbitrary[A ~> B],
       ArbitraryFK2: Arbitrary[B ~> C],
       ArbitraryFK3: Arbitrary[B ~> A],
       ArbitraryFK4: Arbitrary[C ~> B],
       EqFA: Eq[F[A]],
       EqFC: Eq[F[C]],
-      EqFG: Eq[F[Tuple2K[A, Tuple2K[B, C, *], *]]],
-      EqFGH: Eq[F[Tuple3K[A, B, C]#λ]]
-  ): RuleSet =
-    new RuleSet {
-      val name = "applyK"
-      val parents = List(functorK[A, B, C, T], semigroupalK[A, B, C])
-      val bases = List.empty
-      val props = List("applyK associativity" -> forAll(laws.applyKAssociativity[A, B, C]))
-    }
+      EqFInstrumentation: Eq[F[Instrumentation[A, *]]]
+  ): RuleSet = new RuleSet {
+    val name = "aspect"
+    val parents = List(instrument[A, B, C, T])
+    val bases = Nil
+    val props = List(
+      "weave preserving semantics" -> forAll(laws.weavePreservingSemantics[A](_)),
+      "weave instrument consistency" -> forAll(laws.weaveInstrumentConsistency[A](_))
+    )
+  }
 }
 
-object ApplyKTests {
-  def apply[F[_[_]]: ApplyK]: ApplyKTests[F] =
-    new ApplyKTests[F] { def laws: ApplyKLaws[F] = ApplyKLaws[F] }
+object AspectTests {
+  def apply[F[_[_]], Dom[_], Cod[_]](implicit ev: Aspect[F, Dom, Cod]): AspectTests[F, Dom, Cod] =
+    new AspectTests[F, Dom, Cod] { def laws: AspectLaws[F, Dom, Cod] = AspectLaws[F, Dom, Cod] }
 }

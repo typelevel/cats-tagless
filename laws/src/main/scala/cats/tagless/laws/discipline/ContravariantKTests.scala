@@ -37,8 +37,8 @@ trait ContravariantKTests[F[_[_]]] extends InvariantKTests[F] {
   ): RuleSet = new DefaultRuleSet(
     name = "contravariantK",
     parent = Some(invariantK[A, B, C]),
-    "contravariant identity" -> forAll(laws.contravariantIdentity[A] _),
-    "contravariant composition" -> forAll(laws.contravariantComposition[A, B, C] _)
+    "contravariant identity" -> forAll(laws.contravariantIdentity[A](_)),
+    "contravariant composition" -> forAll(laws.contravariantComposition[A, B, C](_, _, _))
   )
 }
 

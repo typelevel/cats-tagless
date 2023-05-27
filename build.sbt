@@ -66,6 +66,13 @@ val macroSettings = List(
   })
 )
 
+val macroPublishSettings = List(
+  publish / skip := (CrossVersion.partialVersion(scalaVersion.value) match {
+    case Some((3, _)) => true
+    case _ => false
+  })
+)
+
 lazy val root = tlCrossRootProject.aggregate(core, laws, tests, macros)
 
 lazy val coreJVM = core.jvm
@@ -110,7 +117,7 @@ lazy val macros = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .enablePlugins(AutomateHeaderPlugin)
   .jsSettings(commonJsSettings)
   .nativeSettings(commonNativeSettings)
-  .settings(rootSettings, macroSettings)
+  .settings(rootSettings, macroSettings, macroPublishSettings)
   .settings(
     moduleName := "cats-tagless-macros",
     scalacOptions := scalacOptions.value.filterNot(_.startsWith("-Wunused")).filterNot(_.startsWith("-Ywarn-unused")),

@@ -50,27 +50,16 @@ val kindProjectorVersion = "0.13.2"
 val paradiseVersion = "2.1.1"
 val scalaCheckVersion = "1.17.0"
 
-val macroSettings = List(
-  libraryDependencies ++= (CrossVersion.partialVersion(scalaVersion.value) match {
-    case Some((2, _)) =>
-      List("scala-compiler", "scala-reflect").map("org.scala-lang" % _ % scalaVersion.value % Provided)
-    case _ => Nil
-  }),
-  scalacOptions ++= (scalaBinaryVersion.value match {
-    case "2.13" => List("-Ymacro-annotations")
-    case _ => Nil
-  }),
-  libraryDependencies ++= (CrossVersion.partialVersion(scalaVersion.value) match {
-    case Some((2, 13)) | Some((3, _)) => Nil
-    case _ => List(compilerPlugin(("org.scalamacros" %% "paradise" % paradiseVersion).cross(CrossVersion.full)))
-  })
-)
+def when[A](condition: Boolean)(values: A*): Seq[A] =
+  if (condition) values else Nil
 
-val macroPublishSettings = List(
-  publish / skip := (CrossVersion.partialVersion(scalaVersion.value) match {
-    case Some((3, _)) => true
-    case _ => false
-  })
+val macroSettings = List(
+  scalacOptions ++= when(scalaBinaryVersion.value == "2.13")("-Ymacro-annotations"),
+  libraryDependencies ++= when(scalaBinaryVersion.value.startsWith("2"))("scala-compiler", "scala-reflect")
+    .map("org.scala-lang" % _ % scalaVersion.value % Provided),
+  libraryDependencies ++= when(scalaBinaryVersion.value == "2.12")(
+    compilerPlugin(("org.scalamacros" %% "paradise" % paradiseVersion).cross(CrossVersion.full))
+  )
 )
 
 lazy val root = tlCrossRootProject.aggregate(core, laws, tests, macros)
@@ -117,11 +106,12 @@ lazy val macros = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .enablePlugins(AutomateHeaderPlugin)
   .jsSettings(commonJsSettings)
   .nativeSettings(commonNativeSettings)
-  .settings(rootSettings, macroSettings, macroPublishSettings)
+  .settings(rootSettings, macroSettings)
   .settings(
     moduleName := "cats-tagless-macros",
-    scalacOptions := scalacOptions.value.filterNot(_.startsWith("-Wunused")).filterNot(_.startsWith("-Ywarn-unused")),
-    libraryDependencies += "org.scalacheck" %%% "scalacheck" % scalaCheckVersion % Test
+    scalacOptions ~= (_.filterNot(opt => opt.startsWith("-Wunused") || opt.startsWith("-Ywarn-unused"))),
+    libraryDependencies += "org.scalacheck" %%% "scalacheck" % scalaCheckVersion % Test,
+    publish / skip := scalaBinaryVersion.value.startsWith("3")
   )
 
 lazy val testsJVM = tests.jvm
@@ -196,19 +186,13 @@ lazy val commonSettings = List(
   startYear := Some(2019),
   apiURL := Some(url("https://typelevel.org/cats-tagless/api/")),
   autoAPIMappings := true,
-  scalacOptions ++= (CrossVersion.partialVersion(scalaVersion.value) match {
-    case Some((3, _)) =>
-      Seq(
-        "-language:adhocExtensions",
-        "-source:future",
-        "-explain"
-      )
-    case Some((2, 12 | 13)) => Seq("-Xsource:3", "-P:kind-projector:underscore-placeholders")
-    case _ => Nil
-  }),
+  tlVersionIntroduced := Map("3" -> "0.15.0"),
   // sbt-typelevel sets -source:3.0-migration, we'd like to replace it with -source:future
   scalacOptions ~= (_.filterNot(_ == "-source:3.0-migration")),
-  tlVersionIntroduced := Map("3" -> "0.15.0")
+  scalacOptions ++= (scalaBinaryVersion.value match {
+    case "3" => List("-language:adhocExtensions", "-source:future", "-explain")
+    case _ => List("-Xsource:3", "-P:kind-projector:underscore-placeholders")
+  })
 )
 
 lazy val commonJsSettings = List(

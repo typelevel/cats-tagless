@@ -14,8 +14,7 @@ val homePage = "https://typelevel.org/cats-tagless"
 
 // GitHub actions configuration
 ThisBuild / organizationName := "cats-tagless maintainers"
-ThisBuild / tlBaseVersion := "0.14"
-
+ThisBuild / tlBaseVersion := "0.15"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala213, Scala3)
 ThisBuild / tlCiReleaseBranches := Seq("master")
 ThisBuild / mergifyStewardConfig := Some(

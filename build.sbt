@@ -111,7 +111,8 @@ lazy val macros = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     moduleName := "cats-tagless-macros",
     scalacOptions ~= (_.filterNot(opt => opt.startsWith("-Wunused") || opt.startsWith("-Ywarn-unused"))),
     libraryDependencies += "org.scalacheck" %%% "scalacheck" % scalaCheckVersion % Test,
-    publish / skip := scalaBinaryVersion.value.startsWith("3")
+    publish / skip := scalaBinaryVersion.value.startsWith("3"),
+    mimaPreviousArtifacts := when(scalaBinaryVersion.value.startsWith("2"))(mimaPreviousArtifacts.value.toSeq*).toSet
   )
 
 lazy val testsJVM = tests.jvm

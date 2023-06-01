@@ -6,7 +6,7 @@ addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 
 val Scala212 = "2.12.17"
 val Scala213 = "2.13.10"
-val Scala3 = "3.2.2"
+val Scala3 = "3.3.0"
 val Java8 = JavaSpec.temurin("8")
 
 val gitRepo = "git@github.com:typelevel/cats-tagless.git"
@@ -14,7 +14,7 @@ val homePage = "https://typelevel.org/cats-tagless"
 
 // GitHub actions configuration
 ThisBuild / organizationName := "cats-tagless maintainers"
-ThisBuild / tlBaseVersion := "0.14"
+ThisBuild / tlBaseVersion := "0.15"
 
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala213, Scala3)
 ThisBuild / tlCiReleaseBranches := Seq("master")
@@ -111,7 +111,8 @@ lazy val macros = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     moduleName := "cats-tagless-macros",
     scalacOptions ~= (_.filterNot(opt => opt.startsWith("-Wunused") || opt.startsWith("-Ywarn-unused"))),
     libraryDependencies += "org.scalacheck" %%% "scalacheck" % scalaCheckVersion % Test,
-    publish / skip := scalaBinaryVersion.value.startsWith("3")
+    publish / skip := scalaBinaryVersion.value.startsWith("3"),
+    mimaPreviousArtifacts := when(scalaBinaryVersion.value.startsWith("2"))(mimaPreviousArtifacts.value.toSeq*).toSet
   )
 
 lazy val testsJVM = tests.jvm

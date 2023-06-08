@@ -30,7 +30,7 @@ import scala.util.Try
 
 class autoApplyKTests extends CatsTaglessTestSuite {
   // Type inference limitation.
-  implicit val eqTuple3K = AutoApplyKTestAlg.eqForAutoApplyKTestAlg[Tuple3K[Try, Option, List]#λ]
+  implicit val eqTuple3K: Eq[AutoApplyKTestAlg[Tuple3K[Try, Option, List]#λ]] = AutoApplyKTestAlg.eqForAutoApplyKTestAlg
   checkAll("ApplyK[AutoApplyKTestAlg]", ApplyKTests[AutoApplyKTestAlg].applyK[Try, Option, List, Int])
   checkAll("ApplyK is Serializable", SerializableTests.serializable(ApplyK[AutoApplyKTestAlg]))
 }

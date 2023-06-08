@@ -22,10 +22,7 @@ trait Foo[F[_], T] {
   def a(i: Int): F[T]
 }
 
-implicit val tryFoo: Foo[Try, String] = new Foo[Try, String] {
-  def a(i: Int) = Try(i.toString)
-}
-
+implicit val tryFoo: Foo[Try, String] = i => Try(i.toString)
 implicit val fk: Try ~> Option = λ[Try ~> Option](_.toOption)
 ```
 
@@ -46,7 +43,11 @@ trait Bar[F[_]] {
   def a(i: Int): F[T]
 }
 
-implicit val tryBarString = new Bar[Try] {
+object Bar {
+  type Aux[F[_], A] = Bar[F] { type T = A }
+}
+
+implicit val tryBarString: Bar.Aux[Try, String] = new Bar[Try] {
    type T = String
    def a(i: Int): Try[String] = Try(i.toString)
 }

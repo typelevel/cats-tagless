@@ -421,14 +421,24 @@ class DeriveMacros(val c: blackbox.Context) {
       val Fa = singleType(NoPrefix, fa)
       val members = overridableMembersOf(Fa)
       val types = delegateAbstractTypes(Fa, members, Fa)
+      val transformType: PartialFunction[Type, Type] = {
+        case tpe if occursIn(tpe)(a) => tpe.map(t => if (t.typeSymbol == a) P else t)
+      }
+
       val methods = delegateMethods(Fa, members, fa) {
-        case method if method.occursOnlyInReturn(a) =>
-          val returnType = method.returnType.map(t => if (t.typeSymbol == a) P else t)
-          val Sg = method.summon[Semigroupal[Any]](polyType(a :: Nil, method.returnType))
-          val body = q"$Sg.product[$A, $B](${method.body}, ${method.delegate(Ident(fb))})"
-          method.copy(returnType = returnType, body = body)
         case method if method.occursInSignature(a) =>
-          abort(s"Type parameter $A occurs in contravariant position in method ${method.displayName}")
+          def transformParam(f: Tree, t: Type): PartialFunction[Parameter, Tree] = {
+            case Parameter(pn, pt, _) if occursIn(pt)(a) =>
+              val F = method.summon[Functor[Any]](polyType(a :: Nil, pt))
+              q"$F.map[$P, $t]($pn)($f)"
+          }
+
+          val ma = method.transform(q"$fa")(transformType)(transformParam(q"_._1", A))()
+          if (method.occursInReturn(a)) {
+            val mb = method.transform(q"$fb")(transformType)(transformParam(q"_._2", B))()
+            val S = method.summon[Semigroupal[Any]](polyType(a :: Nil, method.returnType))
+            ma.copy(body = q"$S.product[$A, $B](${ma.body}, ${mb.body})")
+          } else ma
       }
 
       implement(appliedType(algebra, P))()(types ++ methods)

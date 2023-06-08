@@ -19,11 +19,12 @@ package cats.tagless.example
 import cats.*
 import cats.data.Validated.{Invalid, Valid}
 import cats.data.{NonEmptyChain, ValidatedNec}
-import cats.tagless.autoInvariant
+import cats.tagless.{autoInvariant, autoSemigroupal}
 
 object ValidationExample extends App {
 
   @autoInvariant
+  @autoSemigroupal
   trait Validator[A] {
     def validate(entity: A): ValidatedNec[String, A]
   }
@@ -47,15 +48,9 @@ object ValidationExample extends App {
     else Invalid(NonEmptyChain.one(s"[$entity]: Value cannot be greater than $upperBound"))
   ////////////////////////////////////
 
-  // magic is here: Invariant[Validator] instance is auto generated
+  // magic is here: Invariant[Validator] / Semigroupal[Validator] instance is auto generated
   val invariant: Invariant[Validator] = Invariant[Validator]
-
-  val semigroupal: Semigroupal[Validator] = new Semigroupal[Validator] {
-    override def product[A, B](fa: Validator[A], fb: Validator[B]): Validator[(A, B)] = { entity =>
-      val (a, b) = entity
-      Semigroupal[ErrorOr].product(fa.validate(a), fb.validate(b))
-    }
-  }
+  val semigroupal: Semigroupal[Validator] = Semigroupal[Validator]
 
   val semigroupK: SemigroupK[Validator] = new SemigroupK[Validator] {
     override def combineK[A](x: Validator[A], y: Validator[A]): Validator[A] = entity =>

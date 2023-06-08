@@ -39,6 +39,14 @@ pull_request_rules:
       add:
       - docs
       remove: []
+- name: Label examples PRs
+  conditions:
+  - files~=^examples/
+  actions:
+    label:
+      add:
+      - examples
+      remove: []
 - name: Label laws PRs
   conditions:
   - files~=^laws/

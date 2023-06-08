@@ -4,9 +4,9 @@ addCommandAlias("validateNative", "all testsNative/test")
 addCommandAlias("fmt", "all scalafmtSbt scalafmtAll")
 addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 
-val Scala212 = "2.12.17"
+val Scala212 = "2.12.18"
 val Scala213 = "2.13.10"
-val Scala3 = "3.2.2"
+val Scala3 = "3.3.0"
 val Java8 = JavaSpec.temurin("8")
 
 val gitRepo = "git@github.com:typelevel/cats-tagless.git"
@@ -110,7 +110,8 @@ lazy val macros = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     moduleName := "cats-tagless-macros",
     scalacOptions ~= (_.filterNot(opt => opt.startsWith("-Wunused") || opt.startsWith("-Ywarn-unused"))),
     libraryDependencies += "org.scalacheck" %%% "scalacheck" % scalaCheckVersion % Test,
-    publish / skip := scalaBinaryVersion.value.startsWith("3")
+    publish / skip := scalaBinaryVersion.value.startsWith("3"),
+    mimaPreviousArtifacts := when(scalaBinaryVersion.value.startsWith("2"))(mimaPreviousArtifacts.value.toSeq*).toSet
   )
 
 lazy val testsJVM = tests.jvm
@@ -186,6 +187,7 @@ lazy val commonSettings = List(
   apiURL := Some(url("https://typelevel.org/cats-tagless/api/")),
   autoAPIMappings := true,
   tlVersionIntroduced := Map("3" -> "0.15.0"),
+  tlMimaPreviousVersions ++= when(scalaBinaryVersion.value.startsWith("2"))("0.14.0").toSet,
   // sbt-typelevel sets -source:3.0-migration, we'd like to replace it with -source:future
   scalacOptions ~= (_.filterNot(_ == "-source:3.0-migration")),
   scalacOptions ++= (scalaBinaryVersion.value match {

@@ -9,7 +9,7 @@ position: 4
 ## Type classes
 
 
-Currently there are five type classes defined in Cats-tagless: [FunctorK](#functorK), [ContravariantK](#contravariantK), [InvariantK](#invariantK), [SemigroupalK](#semigroupalK), and [ApplyK](#applyK). They can be deemed as somewhat higher kinded versions of the corresponding type classes in cats.
+Currently, there are five type classes defined in Cats-tagless: [FunctorK](#functorK), [ContravariantK](#contravariantK), [InvariantK](#invariantK), [SemigroupalK](#semigroupalK), and [ApplyK](#applyK). They can be deemed as somewhat higher kinded versions of the corresponding type classes in cats.
 
 
 

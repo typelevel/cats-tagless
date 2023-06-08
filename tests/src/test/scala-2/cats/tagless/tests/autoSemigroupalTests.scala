@@ -20,7 +20,7 @@ import cats.laws.discipline.eq.*
 import cats.laws.discipline.{SemigroupalTests, SerializableTests}
 import cats.tagless.{autoInvariant, autoSemigroupal}
 import cats.{Eq, Semigroupal}
-import org.scalacheck.Arbitrary
+import org.scalacheck.{Arbitrary, Cogen}
 
 class autoSemigroupalTests extends CatsTaglessTestSuite {
   import autoSemigroupalTests.*
@@ -41,6 +41,7 @@ object autoSemigroupalTests {
     def concreteOther(a: String): String = a + " concreteOther"
     def withoutParams: T
     def curried(a: String)(b: Int): T
+    def headOption(ts: List[T]): Option[T]
   }
 
   @autoSemigroupal
@@ -71,22 +72,22 @@ object autoSemigroupalTests {
       )
     }
 
-  implicit def arbitraryTestAlgebra[T: Arbitrary]: Arbitrary[TestAlgebra[T]] =
-    Arbitrary {
-      for {
-        absEff <- Arbitrary.arbitrary[String => T]
-        conEff <- Arbitrary.arbitrary[Option[String => T]]
-        absOther <- Arbitrary.arbitrary[String => String]
-        conOther <- Arbitrary.arbitrary[Option[String => String]]
-        withoutParameters <- Arbitrary.arbitrary[T]
-        curry <- Arbitrary.arbitrary[String => Int => T]
-      } yield new TestAlgebra[T] {
-        override def abstractEffect(i: String) = absEff(i)
-        override def concreteEffect(a: String) = conEff.getOrElse(super.concreteEffect(_))(a)
-        override def abstractOther(a: String) = absOther(a)
-        override def concreteOther(a: String) = conOther.getOrElse(super.concreteOther(_))(a)
-        override def withoutParams = withoutParameters
-        override def curried(a: String)(b: Int) = curry(a)(b)
-      }
-    }
+  implicit def arbitraryTestAlgebra[T: Arbitrary: Cogen]: Arbitrary[TestAlgebra[T]] =
+    Arbitrary(for {
+      absEff <- Arbitrary.arbitrary[String => T]
+      conEff <- Arbitrary.arbitrary[Option[String => T]]
+      absOther <- Arbitrary.arbitrary[String => String]
+      conOther <- Arbitrary.arbitrary[Option[String => String]]
+      withoutParameters <- Arbitrary.arbitrary[T]
+      curry <- Arbitrary.arbitrary[String => Int => T]
+      hOpt <- Arbitrary.arbitrary[List[T] => Option[T]]
+    } yield new TestAlgebra[T] {
+      override def abstractEffect(i: String) = absEff(i)
+      override def concreteEffect(a: String) = conEff.getOrElse(super.concreteEffect(_))(a)
+      override def abstractOther(a: String) = absOther(a)
+      override def concreteOther(a: String) = conOther.getOrElse(super.concreteOther(_))(a)
+      override def withoutParams = withoutParameters
+      override def curried(a: String)(b: Int) = curry(a)(b)
+      override def headOption(ts: List[T]): Option[T] = hOpt(ts)
+    })
 }

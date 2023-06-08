@@ -60,7 +60,7 @@ object autoSemigroupalTests {
     def product(xs: Int*): T
   }
 
-  implicit def eqForTestAlgebra[T: Eq]: Eq[TestAlgebra[T]] =
+  implicit def eqForTestAlgebra[T: Arbitrary: Eq]: Eq[TestAlgebra[T]] =
     Eq.by { algebra =>
       (
         algebra.abstractEffect _,
@@ -68,7 +68,8 @@ object autoSemigroupalTests {
         algebra.abstractOther _,
         algebra.concreteOther _,
         algebra.withoutParams,
-        Function.uncurried(algebra.curried _).tupled
+        Function.uncurried(algebra.curried _).tupled,
+        algebra.headOption _,
       )
     }
 

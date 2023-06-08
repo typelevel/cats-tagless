@@ -19,8 +19,8 @@ package cats.tagless.example
 import cats.*
 import cats.data.Validated.{Invalid, Valid}
 import cats.data.{NonEmptyChain, ValidatedNec}
-import cats.syntax.all.*
 import cats.tagless.autoInvariant
+
 object ValidationExample extends App {
 
   @autoInvariant
@@ -34,56 +34,32 @@ object ValidationExample extends App {
   case class Items(price: Money, quantity: Int)
 
   implicit class PrintHelper[A](x: => A) {
-    def showValidationResult(message: => String) = println(s"[$message] $x")
+    def showValidationResult(message: => String): Unit = println(s"[$message] $x")
   }
 
   //////////// BASIC VALIDATORS ///////
-  val positiveValidator: Validator[Int] = new Validator[Int] {
-    override def validate(entity: Int): ValidatedNec[String, Int] =
-      if (entity >= 0) Valid(entity)
-      else Invalid(NonEmptyChain.one(s"[$entity]: Value cannot be negative"))
-  }
+  val positiveValidator: Validator[Int] = entity =>
+    if (entity >= 0) Valid(entity)
+    else Invalid(NonEmptyChain.one(s"[$entity]: Value cannot be negative"))
 
-  def upperBoundValidator(upperBound: Int = 1000000000): Validator[Int] = new Validator[Int] {
-    override def validate(entity: Int): ValidatedNec[String, Int] =
-      if (entity <= upperBound) Valid(entity)
-      else Invalid(NonEmptyChain.one(s"[$entity]: Value cannot be greater than $upperBound"))
-  }
+  def upperBoundValidator(upperBound: Int = 1000000000): Validator[Int] = entity =>
+    if (entity <= upperBound) Valid(entity)
+    else Invalid(NonEmptyChain.one(s"[$entity]: Value cannot be greater than $upperBound"))
   ////////////////////////////////////
 
   // magic is here: Invariant[Validator] instance is auto generated
   val invariant: Invariant[Validator] = Invariant[Validator]
 
   val semigroupal: Semigroupal[Validator] = new Semigroupal[Validator] {
-    override def product[A, B](fa: Validator[A], fb: Validator[B]): Validator[(A, B)] = new Validator[(A, B)] {
-      override def validate(entity: (A, B)): ErrorOr[(A, B)] = {
-        val (a, b) = entity
-        Semigroupal[ErrorOr].product(fa.validate(a), fb.validate(b))
-      }
-    }
-  }
-
-  implicit val semigroupKValidated: SemigroupK[ErrorOr] = new SemigroupK[ErrorOr] {
-    override def combineK[A](x: ErrorOr[A], y: ErrorOr[A]): ErrorOr[A] = x match {
-      case errorA @ Invalid(eA) =>
-        y match {
-          case Valid(_) => errorA
-          case Invalid(eB) => Invalid(eA.combine(eB))
-        }
-      case valid @ Valid(_) =>
-        y match {
-          case Valid(_) => valid
-          case errorB @ Invalid(_) => errorB
-        }
+    override def product[A, B](fa: Validator[A], fb: Validator[B]): Validator[(A, B)] = { entity =>
+      val (a, b) = entity
+      Semigroupal[ErrorOr].product(fa.validate(a), fb.validate(b))
     }
   }
 
   val semigroupK: SemigroupK[Validator] = new SemigroupK[Validator] {
-    override def combineK[A](x: Validator[A], y: Validator[A]): Validator[A] = new Validator[A] {
-      override def validate(entity: A): ValidatedNec[String, A] =
-        SemigroupK[ErrorOr].combineK(x.validate(entity), y.validate(entity))
-    }
-
+    override def combineK[A](x: Validator[A], y: Validator[A]): Validator[A] = entity =>
+      SemigroupK[ErrorOr].combineK(x.validate(entity), y.validate(entity))
   }
 
   ////// DERIVED VALIDATORS //////////////

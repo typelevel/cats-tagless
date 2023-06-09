@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
-package cats.tagless.derived
+package cats.tagless.macros
 
-import cats.tagless.macros.Derive
+import cats.tagless.*
 
-trait DerivedSemigroupalK:
-  inline def derived[Alg[_[_]]] = Derive.semigroupalK[Alg]
+object Derive:
+  inline def functorK[Alg[_[_]]]: FunctorK[Alg] = macroFunctorK.derive[Alg]
+  inline def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = macroSemigroupalK.derive[Alg]
+  inline def applyK[Alg[_[_]]]: ApplyK[Alg] = macroApplyK.derive[Alg]
+
+  inline def invariantK[Alg[_[_]]]: InvariantK[Alg] = macroInvariantK.derive[Alg]
+  inline def contravariantK[Alg[_[_]]]: ContravariantK[Alg] = macroContravariantK.derive[Alg]

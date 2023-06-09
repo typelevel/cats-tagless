@@ -16,4 +16,7 @@
 
 package cats.tagless.derived
 
-trait DerivedContravariantK
+import cats.tagless.macros.Derive
+
+trait DerivedContravariantK:
+  inline def derived[Alg[_[_]]] = Derive.contravariantK[Alg]

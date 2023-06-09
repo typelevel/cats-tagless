@@ -45,6 +45,7 @@ val catsVersion = "2.9.0"
 val circeVersion = "0.14.5"
 val disciplineVersion = "1.5.1"
 val disciplineMunitVersion = "2.0.0-M3"
+val fs2Version = "3.7.0"
 val kindProjectorVersion = "0.13.2"
 val paradiseVersion = "2.1.1"
 val scalaCheckVersion = "1.17.0"
@@ -61,7 +62,7 @@ val macroSettings = List(
   )
 )
 
-lazy val root = tlCrossRootProject.aggregate(core, laws, tests, macros, examples)
+lazy val root = tlCrossRootProject.aggregate(core, fs2, laws, tests, macros, examples)
 
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
@@ -75,6 +76,21 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .settings(
     moduleName := "cats-tagless-core",
     libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion
+  )
+
+lazy val fs2JVM = fs2.jvm
+lazy val fs2JS = fs2.js
+lazy val fs2Native = fs2.native
+lazy val fs2 = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .dependsOn(core)
+  .enablePlugins(AutomateHeaderPlugin)
+  .jsSettings(commonJsSettings)
+  .nativeSettings(commonNativeSettings)
+  .settings(rootSettings)
+  .settings(
+    moduleName := "cats-tagless-fs2",
+    libraryDependencies += "co.fs2" %%% "fs2-core" % fs2Version
   )
 
 lazy val lawsJVM = laws.jvm

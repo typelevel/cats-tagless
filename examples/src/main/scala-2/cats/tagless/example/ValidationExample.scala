@@ -19,7 +19,7 @@ package cats.tagless.example
 import cats.*
 import cats.data.Validated.{Invalid, Valid}
 import cats.data.{NonEmptyChain, ValidatedNec}
-import cats.tagless.{autoInvariant, autoSemigroupal}
+import cats.tagless.{Derive, autoInvariant, autoSemigroupal}
 
 object ValidationExample extends App {
 
@@ -30,6 +30,12 @@ object ValidationExample extends App {
   }
 
   type ErrorOr[A] = ValidatedNec[String, A]
+  implicit val allValid: SemigroupK[ErrorOr] = new SemigroupK[ErrorOr] {
+    override def combineK[A](x: ErrorOr[A], y: ErrorOr[A]) = {
+      implicit val last: Semigroup[A] = Semigroup.last
+      x.combine(y)
+    }
+  }
 
   case class Money(amount: Int)
   case class Items(price: Money, quantity: Int)
@@ -48,25 +54,19 @@ object ValidationExample extends App {
     else Invalid(NonEmptyChain.one(s"[$entity]: Value cannot be greater than $upperBound"))
   ////////////////////////////////////
 
-  // magic is here: Invariant[Validator] / Semigroupal[Validator] instance is auto generated
+  // magic is here: the instances are auto generated
   val invariant: Invariant[Validator] = Invariant[Validator]
   val semigroupal: Semigroupal[Validator] = Semigroupal[Validator]
-
-  val semigroupK: SemigroupK[Validator] = new SemigroupK[Validator] {
-    override def combineK[A](x: Validator[A], y: Validator[A]): Validator[A] = entity =>
-      SemigroupK[ErrorOr].combineK(x.validate(entity), y.validate(entity))
-  }
+  val semigroupK: SemigroupK[Validator] = Derive.semigroupK
 
   ////// DERIVED VALIDATORS //////////////
   lazy val moneyValidator: Validator[Money] = invariant.imap[Int, Money](positiveValidator)(Money)(_.amount)
   lazy val rangeValidator: Validator[Int] = semigroupK.combineK(positiveValidator, upperBoundValidator(100))
   lazy val tupleValidator: Validator[(Money, Int)] = semigroupal.product(moneyValidator, rangeValidator)
-  lazy val itemsValidator: Validator[Items] =
-    invariant.imap(tupleValidator)(x => Items(x._1, x._2))(x => x.price -> x.quantity)
+  lazy val itemsValidator: Validator[Items] = invariant.imap(tupleValidator)(Items.tupled)(i => i.price -> i.quantity)
 
   moneyValidator.validate(Money(-1)).showValidationResult("money validator")
   rangeValidator.validate(101).showValidationResult("range validator")
   rangeValidator.validate(-10).showValidationResult("range validator")
   itemsValidator.validate(Items(Money(-100), 102)).showValidationResult("items validator")
-
 }

@@ -19,7 +19,7 @@ package cats.tagless
 import cats.arrow.Profunctor
 import cats.data.{ReaderT, Tuple2K}
 import cats.tagless.aop.{Aspect, Instrument, Instrumentation}
-import cats.{Bifunctor, Contravariant, FlatMap, Functor, Invariant, Semigroupal}
+import cats.{Bifunctor, Contravariant, FlatMap, Functor, Invariant, SemigroupK, Semigroupal}
 
 import scala.reflect.macros.blackbox
 
@@ -726,6 +726,24 @@ class DeriveMacros(val c: blackbox.Context) {
     implement(appliedType(algebra, typeArg))()(methods)
   }
 
+  // def combineK[A](x: F[A], y: F[A]): F[A]
+  def combineK(algebra: Type): MethodDef = MethodDef("combineK") { case PolyType(List(a), MethodType(List(x, y), _)) =>
+    val Fa = singleType(NoPrefix, x)
+    val members = overridableMembersOf(Fa)
+    val types = delegateAbstractTypes(Fa, members, Fa)
+    val methods = delegateMethods(Fa, members, x) {
+      case method if method.occursInSignature(a) =>
+        method.transform(q"$x")()() {
+          case delegate if method.occursInReturn(a) =>
+            val my = method.transform(q"$y")()()()
+            val Sk = method.summonF[SemigroupK](a, method.returnType)
+            q"$Sk.combineK[$a]($delegate, ${my.body})"
+        }
+    }
+
+    implement(algebra)(a)(types ++ methods)
+  }
+
   def functor[F[_]](implicit tag: WeakTypeTag[F[Any]]): Tree =
     instantiate[Functor[F]](tag)(map)
 
@@ -764,6 +782,9 @@ class DeriveMacros(val c: blackbox.Context) {
 
   def applyK[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
     instantiate[ApplyK[Alg]](tag)(mapK, productK)
+
+  def semigroupK[F[_]](implicit tag: WeakTypeTag[F[Any]]): Tree =
+    instantiate[SemigroupK[F]](tag)(combineK)
 
   def instrument[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
     instantiate[Instrument[Alg]](tag)(instrumentation, mapK)

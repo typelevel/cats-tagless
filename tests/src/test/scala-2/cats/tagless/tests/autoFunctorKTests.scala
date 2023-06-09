@@ -360,5 +360,6 @@ object autoFunctorKTests {
   @autoFunctorK
   trait AlgWithContravariantK[F[_]] {
     def app(f: Cokleisli[F, String, Int])(x: String): F[Int]
+    def unsafe(f: Cokleisli[F, Int, String])(x: Int): String
   }
 }

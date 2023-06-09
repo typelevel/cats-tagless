@@ -303,14 +303,15 @@ class DeriveMacros(val c: blackbox.Context) {
       val members = overridableMembersOf(Af)
       val types = delegateAbstractTypes(Af, members, Af)
       val methods = delegateMethods(Af, members, af) {
-        case method if method.occursInReturn(f) =>
+        case method if method.occursInSignature(f) =>
           method.transformSubst(af, f -> g) {
             case Parameter(pn, pt, _) if occursIn(pt)(f) =>
               val F = method.summonK[ContravariantK](f, pt)
               q"$F.contramapK[$g, $f]($pn)($fk)"
-          } { case delegate =>
-            val F = method.summonK[FunctorK](f, method.returnType)
-            q"$F.mapK[$f, $g]($delegate)($fk)"
+          } {
+            case delegate if method.occursInReturn(f) =>
+              val F = method.summonK[FunctorK](f, method.returnType)
+              q"$F.mapK[$f, $g]($delegate)($fk)"
           }
       }
 

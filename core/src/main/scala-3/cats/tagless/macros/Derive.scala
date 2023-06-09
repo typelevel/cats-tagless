@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package cats.tagless.derived
+package cats.tagless.macros
 
-import cats.tagless.macros.Derive
+import cats.tagless.*
 
-trait DerivedFunctorK:
-  inline def derived[Alg[_[_]]] = Derive.functorK[Alg]
+object Derive:
+  inline def functorK[Alg[_[_]]]: FunctorK[Alg] = macroFunctorK.derive[Alg]

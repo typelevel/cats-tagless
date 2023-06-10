@@ -19,12 +19,13 @@ package cats.tagless.example
 import cats.*
 import cats.data.Validated.{Invalid, Valid}
 import cats.data.{NonEmptyChain, ValidatedNec}
-import cats.tagless.{Derive, autoInvariant, autoSemigroupal}
+import cats.tagless.*
 
 object ValidationExample extends App {
 
   @autoInvariant
   @autoSemigroupal
+  @autoSemigroupK
   trait Validator[A] {
     def validate(entity: A): ValidatedNec[String, A]
   }
@@ -57,7 +58,7 @@ object ValidationExample extends App {
   // magic is here: the instances are auto generated
   val invariant: Invariant[Validator] = Invariant[Validator]
   val semigroupal: Semigroupal[Validator] = Semigroupal[Validator]
-  val semigroupK: SemigroupK[Validator] = Derive.semigroupK
+  val semigroupK: SemigroupK[Validator] = SemigroupK[Validator]
 
   ////// DERIVED VALIDATORS //////////////
   lazy val moneyValidator: Validator[Money] = invariant.imap[Int, Money](positiveValidator)(Money)(_.amount)

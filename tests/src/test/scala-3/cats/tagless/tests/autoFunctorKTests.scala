@@ -61,7 +61,7 @@ class autoFunctorKTests extends CatsTaglessTestSuite:
 
   test("simple instance summon with autoDeriveFromFunctorK on") {
     implicit val listParse: SafeAlg[List] = Interpreters.tryInterpreter.mapK(FunctionKLift[Try, List](_.toList))
-    // assertEquals(SafeAlg[List].parseInt("3"), List(3))
+    assertEquals(summon[SafeAlg[List]].parseInt("3"), List(3))
   }
 
   test("auto derive from functor k") {
@@ -92,8 +92,8 @@ class autoFunctorKTests extends CatsTaglessTestSuite:
   //     def a(i: Int) = Try(i.toString)
   //   }
 
-  //   import AlgWithExtraTP.autoDerive.*
-  //   assertEquals(AlgWithExtraTP[Option, String].a(5), Some("5"))
+  //   // import AlgWithExtraTP.autoDerive.*
+  //   // assertEquals(AlgWithExtraTP[Option, String].a(5), Some("5"))
   // }
 
   test("Alg with extra type parameters before effect type") {
@@ -117,15 +117,14 @@ class autoFunctorKTests extends CatsTaglessTestSuite:
 
   // test("Alg with type bound") {
   //   import AlgWithTypeBound.*
-  //   implicit val tryB: AlgWithTypeBound.Aux[Try, B.type] = new AlgWithTypeBound[Try] {
+  //   implicit val tryB: AlgWithTypeBound.Aux[Try, B.type] = new AlgWithTypeBound[Try]:
   //     type T = B.type
   //     override def t = Try(B)
-  //   }
 
   //   assertEquals[Option[A], Option[A]](tryB.mapK(fk).t, Option(B))
-  //   import AlgWithTypeBound.fullyRefined.autoDerive.*
-  //   val op: AlgWithTypeBound.Aux[Option, B.type] = implicitly
-  //   assertEquals(op.t, Option(B))
+  //   // import AlgWithTypeBound.fullyRefined.autoDerive.*
+  //   // val op: AlgWithTypeBound.Aux[Option, B.type] = implicitly
+  //   // assertEquals(op.t, Option(B))
   // }
 
   test("Stack safety with Free") {
@@ -163,13 +162,12 @@ class autoFunctorKTests extends CatsTaglessTestSuite:
     assertEquals(foo.mapK(fk).a, Some(1))
   }
 
-  // test("method with type params") {
-  //   implicit object foo extends AlgWithTParamInMethod[Try] {
-  //     def a[T](t: T): Try[String] = Try(t.toString)
-  //   }
+  test("method with type params") {
+    implicit object foo extends AlgWithTParamInMethod[Try]:
+      def a[T](t: T): Try[String] = Try(t.toString)
 
-  //   assertEquals(foo.mapK(fk).a(32), Some("32"))
-  // }
+    assertEquals(foo.mapK(fk).a(32), Some("32"))
+  }
 
   test("auto deriviation with existing derivation") {
     // should be just AlgWithOwnDerivation[Option]?
@@ -182,11 +180,11 @@ class autoFunctorKTests extends CatsTaglessTestSuite:
   //     def a[T: TC](t: T): Try[String] = Try(t.show)
   //   }
 
-  //   import AlgWithAbstractTypeClass.fullyRefined.*
+  //   // import AlgWithAbstractTypeClass.fullyRefined.*
   //   // Scalac needs help when abstract type is high order.
-  //   implicit val fShow: FunctorK[AlgWithAbstractTypeClass.Aux[*[_], Show]] =
-  //     functorKForFullyRefinedAlgWithAbstractTypeClass[Show]
-  //   assertEquals(fShow.mapK(foo)(fk).a(true), Some("true"))
+  //   // implicit val fShow: FunctorK[[F[_]] =>> AlgWithAbstractTypeClass.Aux[F, Show]] =
+  //   // functorKForFullyRefinedAlgWithAbstractTypeClass[Show]
+  //   // assertEquals(fShow.mapK(foo)(fk).a(true), Some("true"))
   // }
 
   // test("alg with abstract type class") {
@@ -195,7 +193,9 @@ class autoFunctorKTests extends CatsTaglessTestSuite:
   //     def a[T: TC](t: T): Try[String] = Try(t.show)
   //   }
 
-  //   assertEquals(AlgWithAbstractTypeClass.mapK(foo)(fk).a(true), Some("true"))
+  //   implicit val show: foo.TC[Boolean] = _.toString
+
+  //   assertEquals(foo.mapK(fk).a(true)(using show), Some("true"))
   // }
 
   test("alg with default parameter") {
@@ -248,17 +248,15 @@ object autoFunctorKTests:
   //   Derive.functorK[AlgWithTypeMember[_] { type T = Int }]
   // }
 
-  // trait AlgWithTypeBound[F[_]] derives FunctorK {
+  // trait AlgWithTypeBound[F[_]] derives FunctorK:
   //   type T <: AlgWithTypeBound.A
   //   def t: F[T]
-  // }
 
-  // object AlgWithTypeBound {
+  // object AlgWithTypeBound:
   //   sealed abstract class A
   //   case object B extends A
   //   case object C extends A
   //   type Aux[F[_], T0 <: A] = AlgWithTypeBound[F] { type T = T0 }
-  // }
 
   // TODO: @finalAlg
   // TODO: unsupported?
@@ -293,14 +291,13 @@ object autoFunctorKTests:
     def a[T: Show](t: Int): F[String]
 
   // TODO: @finalAlg
-  // trait AlgWithAbstractTypeClass[F[_]] derives FunctorK {
+  // trait AlgWithAbstractTypeClass[F[_]] derives FunctorK:
   //   type TC[T]
   //   def a[T: TC](t: T): F[String]
-  // }
 
   // object AlgWithAbstractTypeClass {
   //   type Aux[F[_], TC0[_]] = AlgWithAbstractTypeClass[F] { type TC[T] = TC0[T] }
-  //   Derive.functorK[AlgWithAbstractTypeClass { type TC[T] = List[T] }]
+  //   val functorK = Derive.functorK[[F[_]] =>> AlgWithAbstractTypeClass.Aux[F, List]]
   // }
 
   // TODO: @finalAlg

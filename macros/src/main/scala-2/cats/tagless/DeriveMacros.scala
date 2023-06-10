@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats
+package tagless
 
 import cats.arrow.Profunctor
 import cats.data.{ReaderT, Tuple2K}
 import cats.tagless.aop.{Aspect, Instrument, Instrumentation}
-import cats.{Bifunctor, Contravariant, FlatMap, Functor, Invariant, SemigroupK, Semigroupal}
 
 import scala.reflect.macros.blackbox
 
@@ -450,11 +450,14 @@ class DeriveMacros(val c: blackbox.Context) {
           }
 
           val ma = method.transform(q"$fa")(tuple)(map(q"_._1", A))()
+          val mb = method.transform(q"$fb")(tuple)(map(q"_._2", B))()
           if (method.occursInReturn(a)) {
-            val mb = method.transform(q"$fb")(tuple)(map(q"_._2", B))()
             val S = method.summonF[Semigroupal](a, method.returnType)
             ma.copy(body = q"$S.product[$A, $B](${ma.body}, ${mb.body})")
-          } else ma
+          } else {
+            val S = method.summon[Semigroup[Any]](method.returnType)
+            ma.copy(body = q"$S.combine(${ma.body}, ${mb.body})")
+          }
       }
 
       implement(appliedType(algebra, P))()(types ++ methods)
@@ -476,8 +479,6 @@ class DeriveMacros(val c: blackbox.Context) {
           tpe.map(t => if (t.typeSymbol == f) appliedType(t2k, t.typeArgs) else t)
       }
 
-      val firstK = q"$SemiK.firstK[$F, $G]"
-      val secondK = q"$SemiK.secondK[$F, $G]"
       val methods = delegateMethods(Af, members, af) {
         case method if method.occursInSignature(f) =>
           def mapK(fk: Tree): TransformParam = {
@@ -486,12 +487,15 @@ class DeriveMacros(val c: blackbox.Context) {
               q"$Fk.mapK($pn)($fk)"
           }
 
-          val mf = method.transform(q"$af")(tuple)(mapK(firstK))()
+          val mf = method.transform(q"$af")(tuple)(mapK(q"$SemiK.firstK[$F, $G]"))()
+          val mg = method.transform(q"$ag")(tuple)(mapK(q"$SemiK.secondK[$F, $G]"))()
           if (method.occursInReturn(f)) {
-            val mg = method.transform(q"$ag")(tuple)(mapK(secondK))()
             val Sk = method.summonK[SemigroupalK](f, method.returnType)
             mf.copy(body = q"$Sk.productK[$F, $G](${mf.body}, ${mg.body})")
-          } else mf
+          } else {
+            val S = method.summon[Semigroup[Any]](method.returnType)
+            mf.copy(body = q"$S.combine(${mf.body}, ${mg.body})")
+          }
       }
 
       val typeParams = Tuple2K.typeParams.drop(2)
@@ -733,11 +737,15 @@ class DeriveMacros(val c: blackbox.Context) {
     val types = delegateAbstractTypes(Fa, members, Fa)
     val methods = delegateMethods(Fa, members, x) {
       case method if method.occursInSignature(a) =>
-        method.transform(q"$x")()() {
-          case delegate if method.occursInReturn(a) =>
-            val my = method.transform(q"$y")()()()
+        method.transform(q"$x")()() { case delegate =>
+          val my = method.transform(q"$y")()()()
+          if (method.occursInReturn(a)) {
             val Sk = method.summonF[SemigroupK](a, method.returnType)
             q"$Sk.combineK[$a]($delegate, ${my.body})"
+          } else {
+            val S = method.summon[Semigroup[Any]](method.returnType)
+            q"$S.combine($delegate, ${my.body})"
+          }
         }
     }
 

@@ -47,6 +47,14 @@ pull_request_rules:
       add:
       - examples
       remove: []
+- name: Label fs2 PRs
+  conditions:
+  - files~=^fs2/
+  actions:
+    label:
+      add:
+      - fs2
+      remove: []
 - name: Label laws PRs
   conditions:
   - files~=^laws/

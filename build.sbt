@@ -90,7 +90,8 @@ lazy val fs2 = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .settings(rootSettings)
   .settings(
     moduleName := "cats-tagless-fs2",
-    libraryDependencies += "co.fs2" %%% "fs2-core" % fs2Version
+    libraryDependencies += "co.fs2" %%% "fs2-core" % fs2Version,
+    tlMimaPreviousVersions := Set()
   )
 
 lazy val lawsJVM = laws.jvm

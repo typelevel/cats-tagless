@@ -134,7 +134,7 @@ lazy val macros = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     publish / skip := scalaBinaryVersion.value.startsWith("3"),
     tlMimaPreviousVersions ++= when(scalaBinaryVersion.value.startsWith("2"))("0.14.0").toSet,
     mimaPreviousArtifacts := when(scalaBinaryVersion.value.startsWith("2"))(mimaPreviousArtifacts.value.toSeq*).toSet,
-    tlVersionIntroduced := Map ("3" -> "0.15.0")
+    tlVersionIntroduced := Map("3" -> "0.15.0")
   )
 
 lazy val testsJVM = tests.jvm

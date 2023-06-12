@@ -75,7 +75,9 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .settings(rootSettings)
   .settings(
     moduleName := "cats-tagless-core",
-    libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion
+    libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion,
+    tlVersionIntroduced := Map("3" -> "0.15.0"),
+    tlMimaPreviousVersions ++= when(scalaBinaryVersion.value.startsWith("2"))("0.14.0").toSet
   )
 
 lazy val fs2JVM = fs2.jvm
@@ -109,7 +111,9 @@ lazy val laws = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     libraryDependencies ++= List(
       "org.typelevel" %%% "cats-laws" % catsVersion,
       "org.typelevel" %%% "discipline-core" % disciplineVersion
-    )
+    ),
+    tlVersionIntroduced := Map("3" -> "0.15.0"),
+    tlMimaPreviousVersions ++= when(scalaBinaryVersion.value.startsWith("2"))("0.14.0").toSet
   )
 
 lazy val macrosJVM = macros.jvm
@@ -128,7 +132,9 @@ lazy val macros = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     scalacOptions ~= (_.filterNot(opt => opt.startsWith("-Wunused") || opt.startsWith("-Ywarn-unused"))),
     libraryDependencies += "org.scalacheck" %%% "scalacheck" % scalaCheckVersion % Test,
     publish / skip := scalaBinaryVersion.value.startsWith("3"),
-    mimaPreviousArtifacts := when(scalaBinaryVersion.value.startsWith("2"))(mimaPreviousArtifacts.value.toSeq*).toSet
+    tlMimaPreviousVersions ++= when(scalaBinaryVersion.value.startsWith("2"))("0.14.0").toSet,
+    mimaPreviousArtifacts := when(scalaBinaryVersion.value.startsWith("2"))(mimaPreviousArtifacts.value.toSeq*).toSet,
+    tlVersionIntroduced := Map ("3" -> "0.15.0")
   )
 
 lazy val testsJVM = tests.jvm
@@ -212,8 +218,6 @@ lazy val commonSettings = List(
   startYear := Some(2019),
   apiURL := Some(url("https://typelevel.org/cats-tagless/api/")),
   autoAPIMappings := true,
-  tlVersionIntroduced := Map("3" -> "0.15.0"),
-  tlMimaPreviousVersions ++= when(scalaBinaryVersion.value.startsWith("2"))("0.14.0").toSet,
   // sbt-typelevel sets -source:3.0-migration, we'd like to replace it with -source:future
   scalacOptions ~= (_.filterNot(_ == "-source:3.0-migration")),
   scalacOptions ++= (scalaBinaryVersion.value match {

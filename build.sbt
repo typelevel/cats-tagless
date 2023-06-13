@@ -45,6 +45,7 @@ val catsVersion = "2.9.0"
 val circeVersion = "0.14.5"
 val disciplineVersion = "1.5.1"
 val disciplineMunitVersion = "2.0.0-M3"
+val fs2Version = "3.7.0"
 val kindProjectorVersion = "0.13.2"
 val paradiseVersion = "2.1.1"
 val scalaCheckVersion = "1.17.0"
@@ -61,7 +62,7 @@ val macroSettings = List(
   )
 )
 
-lazy val root = tlCrossRootProject.aggregate(core, laws, tests, macros, examples)
+lazy val root = tlCrossRootProject.aggregate(core, fs2, laws, tests, macros, examples)
 
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
@@ -74,7 +75,25 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .settings(rootSettings)
   .settings(
     moduleName := "cats-tagless-core",
-    libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion
+    libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion,
+    tlVersionIntroduced := Map("3" -> "0.15.0"),
+    tlMimaPreviousVersions ++= when(scalaBinaryVersion.value.startsWith("2"))("0.14.0").toSet
+  )
+
+lazy val fs2JVM = fs2.jvm
+lazy val fs2JS = fs2.js
+lazy val fs2Native = fs2.native
+lazy val fs2 = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .dependsOn(core)
+  .enablePlugins(AutomateHeaderPlugin)
+  .jsSettings(commonJsSettings)
+  .nativeSettings(commonNativeSettings)
+  .settings(rootSettings)
+  .settings(
+    moduleName := "cats-tagless-fs2",
+    libraryDependencies += "co.fs2" %%% "fs2-core" % fs2Version,
+    tlVersionIntroduced := Map("2.12" -> "0.15.1", "2.13" -> "0.15.1", "3" -> "0.15.1")
   )
 
 lazy val lawsJVM = laws.jvm
@@ -92,7 +111,9 @@ lazy val laws = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     libraryDependencies ++= List(
       "org.typelevel" %%% "cats-laws" % catsVersion,
       "org.typelevel" %%% "discipline-core" % disciplineVersion
-    )
+    ),
+    tlVersionIntroduced := Map("3" -> "0.15.0"),
+    tlMimaPreviousVersions ++= when(scalaBinaryVersion.value.startsWith("2"))("0.14.0").toSet
   )
 
 lazy val macrosJVM = macros.jvm
@@ -111,7 +132,9 @@ lazy val macros = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     scalacOptions ~= (_.filterNot(opt => opt.startsWith("-Wunused") || opt.startsWith("-Ywarn-unused"))),
     libraryDependencies += "org.scalacheck" %%% "scalacheck" % scalaCheckVersion % Test,
     publish / skip := scalaBinaryVersion.value.startsWith("3"),
-    mimaPreviousArtifacts := when(scalaBinaryVersion.value.startsWith("2"))(mimaPreviousArtifacts.value.toSeq*).toSet
+    tlMimaPreviousVersions ++= when(scalaBinaryVersion.value.startsWith("2"))("0.14.0").toSet,
+    mimaPreviousArtifacts := when(scalaBinaryVersion.value.startsWith("2"))(mimaPreviousArtifacts.value.toSeq*).toSet,
+    tlVersionIntroduced := Map("3" -> "0.15.0")
   )
 
 lazy val testsJVM = tests.jvm
@@ -195,8 +218,6 @@ lazy val commonSettings = List(
   startYear := Some(2019),
   apiURL := Some(url("https://typelevel.org/cats-tagless/api/")),
   autoAPIMappings := true,
-  tlVersionIntroduced := Map("3" -> "0.15.0"),
-  tlMimaPreviousVersions ++= when(scalaBinaryVersion.value.startsWith("2"))("0.14.0").toSet,
   // sbt-typelevel sets -source:3.0-migration, we'd like to replace it with -source:future
   scalacOptions ~= (_.filterNot(_ == "-source:3.0-migration")),
   scalacOptions ++= (scalaBinaryVersion.value match {

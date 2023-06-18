@@ -20,7 +20,7 @@ import scala.annotation.{StaticAnnotation, compileTimeOnly}
 import scala.collection.immutable.Seq
 import scala.reflect.macros.whitebox
 
-/** Auto generates an instance of `cats.Semigroupal`. */
+/** Auto generates an instance of `cats.SemigroupK`. */
 @compileTimeOnly("Cannot expand @autoSemigroupK")
 class autoSemigroupK extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro autoSemigroupKMacros.semigroupKInst

@@ -60,6 +60,13 @@ object autoSemigroupalTests {
     def product(xs: Int*): T
   }
 
+  @autoSemigroupal
+  trait AlgWithConstantReturnTypes[T] {
+    def fromInt(i: Int): T
+    def toString(t: T): String
+    def toError(t: T): Exception
+  }
+
   implicit def eqForTestAlgebra[T: Arbitrary: Eq]: Eq[TestAlgebra[T]] =
     Eq.by { algebra =>
       (

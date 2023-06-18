@@ -102,11 +102,15 @@ class DeriveMacros(val c: blackbox.Context) {
     /** The definition of this method as a Scala tree. */
     def definition: Tree = q"override def $name[..$typeParams](...$paramLists): $returnType = $body"
 
-    /** Summon an implicit instance of `A`'s type constructor applied to `typeArgs` if one exists in scope. */
-    def summon[A: TypeTag](typeArgs: Type*): Tree = {
+    /** Summon an implicit instance of `A` applied to `typeArgs` if one exists in scope, otherwise `default`. */
+    def summonOr[A: TypeTag](typeArgs: Type*)(default: Type => Tree): Tree = {
       val tpe = appliedType(typeOf[A].typeConstructor, typeArgs*)
-      c.inferImplicitValue(tpe).orElse(abort(s"could not find implicit value of type $tpe in method $displayName"))
+      c.inferImplicitValue(tpe).orElse(default(tpe))
     }
+
+    /** Summon an implicit instance of `A` applied to `typeArgs` if one exists in scope, otherwise abort. */
+    def summon[A: TypeTag](typeArgs: Type*): Tree =
+      summonOr[A](typeArgs*)(tpe => abort(s"could not find implicit value of type $tpe in method $displayName"))
 
     /** Summon an implicit instance of `F[a =>> returnType]` if one exists in scope. */
     def summonF[F[_[_]]](a: Symbol, returnType: Type)(implicit tag: TypeTag[F[Any]]): Tree =
@@ -451,11 +455,12 @@ class DeriveMacros(val c: blackbox.Context) {
 
           val ma = method.transform(q"$fa")(tuple)(map(q"_._1", A))()
           val mb = method.transform(q"$fb")(tuple)(map(q"_._2", B))()
+          val rt = method.returnType
           if (method.occursInReturn(a)) {
-            val S = method.summonF[Semigroupal](a, method.returnType)
+            val S = method.summonF[Semigroupal](a, rt)
             ma.copy(body = q"$S.product[$A, $B](${ma.body}, ${mb.body})")
           } else {
-            val S = method.summon[Semigroup[Any]](method.returnType)
+            val S = method.summonOr[Semigroup[Any]](rt)(_ => q"${reify(Semigroup)}.first[$rt]")
             ma.copy(body = q"$S.combine(${ma.body}, ${mb.body})")
           }
       }
@@ -489,11 +494,12 @@ class DeriveMacros(val c: blackbox.Context) {
 
           val mf = method.transform(q"$af")(tuple)(mapK(q"$SemiK.firstK[$F, $G]"))()
           val mg = method.transform(q"$ag")(tuple)(mapK(q"$SemiK.secondK[$F, $G]"))()
+          val rt = method.returnType
           if (method.occursInReturn(f)) {
-            val Sk = method.summonK[SemigroupalK](f, method.returnType)
+            val Sk = method.summonK[SemigroupalK](f, rt)
             mf.copy(body = q"$Sk.productK[$F, $G](${mf.body}, ${mg.body})")
           } else {
-            val S = method.summon[Semigroup[Any]](method.returnType)
+            val S = method.summonOr[Semigroup[Any]](rt)(_ => q"${reify(Semigroup)}.first[$rt]")
             mf.copy(body = q"$S.combine(${mf.body}, ${mg.body})")
           }
       }
@@ -739,11 +745,12 @@ class DeriveMacros(val c: blackbox.Context) {
       case method if method.occursInSignature(a) =>
         method.transform(q"$x")()() { case delegate =>
           val my = method.transform(q"$y")()()()
+          val rt = method.returnType
           if (method.occursInReturn(a)) {
-            val Sk = method.summonF[SemigroupK](a, method.returnType)
+            val Sk = method.summonF[SemigroupK](a, rt)
             q"$Sk.combineK[$a]($delegate, ${my.body})"
           } else {
-            val S = method.summon[Semigroup[Any]](method.returnType)
+            val S = method.summonOr[Semigroup[Any]](rt)(_ => q"${reify(Semigroup)}.first[$rt]")
             q"$S.combine($delegate, ${my.body})"
           }
         }

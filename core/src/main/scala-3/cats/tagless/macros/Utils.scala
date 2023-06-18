@@ -29,27 +29,16 @@ object Utils:
   val classNameApplyK = classOf[ApplyK[?]].getName
   val λlit = "λ"
 
-  def methodApply[Alg[_[_]]: Type, F[_]: Type](e: Expr[Alg[F]])(using
-      Quotes
-  ): (quotes.reflect.Symbol, List[List[quotes.reflect.Tree]]) => quotes.reflect.Term =
-    (method, argss) =>
-      import quotes.reflect.*
-      // collect all terms
-      // empty args are allowable, carefully don't skip empty lists
-      val terms =
-        argss.map { list =>
-          if list.nonEmpty then (list.collect { case t: Term => t }, true) else (Nil, false)
-        }.collect { case (list, skippable) if skippable && list.nonEmpty || !skippable => list }
+  def methodApply[Alg[_[_]]: Type, F[_]: Type](e: Expr[Alg[F]])(using Quotes)(
+      method: quotes.reflect.Symbol,
+      argss: List[List[quotes.reflect.Tree]]
+  ): quotes.reflect.Term =
+    import quotes.reflect.*
 
-      // collect all targs
-      val targs = argss.map(_.collect { case t: TypeTree => t }).filter(_.nonEmpty)
-
-      // construct type args first
-      val methodT = targs.foldLeft(Select(e.asTerm, method): Term)((acc, args) => TypeApply(acc, args))
-      // construct arguments next
-      val methodC = terms.foldLeft(methodT)((acc, args) => Apply(acc, args))
-
-      methodC
+    argss.foldLeft[Term](Select(e.asTerm, method)): (term, args) =>
+      val typeArgs = args.collect { case t: TypeTree => t }
+      val termArgs = args.collect { case t: Term => t }
+      if typeArgs.nonEmpty then TypeApply(term, typeArgs) else Apply(term, termArgs)
 
   def memberSymbolsAsSeen[Alg[_[_]]: Type, F[_]: Type](using
       Quotes

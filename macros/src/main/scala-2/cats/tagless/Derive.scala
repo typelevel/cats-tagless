@@ -19,7 +19,7 @@ package cats.tagless
 import cats.arrow.Profunctor
 import cats.data.ReaderT
 import cats.tagless.aop.{Aspect, Instrument}
-import cats.{Apply, Bifunctor, Contravariant, FlatMap, Functor, Invariant, Semigroupal}
+import cats.{Apply, Bifunctor, Contravariant, FlatMap, Functor, Invariant, SemigroupK, Semigroupal}
 
 object Derive {
 
@@ -70,6 +70,7 @@ object Derive {
   def invariantK[Alg[_[_]]]: InvariantK[Alg] = macro DeriveMacros.invariantK[Alg]
   def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = macro DeriveMacros.semigroupalK[Alg]
   def applyK[Alg[_[_]]]: ApplyK[Alg] = macro DeriveMacros.applyK[Alg]
+  def semigroupK[F[_]]: SemigroupK[F] = macro DeriveMacros.semigroupK[F]
 
   /** Type class for instrumenting an algebra. Note: This feature is experimental, API is likely to change.
     */

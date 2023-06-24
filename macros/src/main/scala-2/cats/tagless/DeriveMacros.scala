@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats
+package tagless
 
 import cats.arrow.Profunctor
 import cats.data.{ReaderT, Tuple2K}
 import cats.tagless.aop.{Aspect, Instrument, Instrumentation}
-import cats.{Bifunctor, Contravariant, FlatMap, Functor, Invariant, Semigroupal}
 
 import scala.reflect.macros.blackbox
 
@@ -102,11 +102,15 @@ class DeriveMacros(val c: blackbox.Context) {
     /** The definition of this method as a Scala tree. */
     def definition: Tree = q"override def $name[..$typeParams](...$paramLists): $returnType = $body"
 
-    /** Summon an implicit instance of `A`'s type constructor applied to `typeArgs` if one exists in scope. */
-    def summon[A: TypeTag](typeArgs: Type*): Tree = {
+    /** Summon an implicit instance of `A` applied to `typeArgs` if one exists in scope, otherwise `default`. */
+    def summonOr[A: TypeTag](typeArgs: Type*)(default: Type => Tree): Tree = {
       val tpe = appliedType(typeOf[A].typeConstructor, typeArgs*)
-      c.inferImplicitValue(tpe).orElse(abort(s"could not find implicit value of type $tpe in method $displayName"))
+      c.inferImplicitValue(tpe).orElse(default(tpe))
     }
+
+    /** Summon an implicit instance of `A` applied to `typeArgs` if one exists in scope, otherwise abort. */
+    def summon[A: TypeTag](typeArgs: Type*): Tree =
+      summonOr[A](typeArgs*)(tpe => abort(s"could not find implicit value of type $tpe in method $displayName"))
 
     /** Summon an implicit instance of `F[a =>> returnType]` if one exists in scope. */
     def summonF[F[_[_]]](a: Symbol, returnType: Type)(implicit tag: TypeTag[F[Any]]): Tree =
@@ -450,11 +454,15 @@ class DeriveMacros(val c: blackbox.Context) {
           }
 
           val ma = method.transform(q"$fa")(tuple)(map(q"_._1", A))()
+          val mb = method.transform(q"$fb")(tuple)(map(q"_._2", B))()
+          val rt = method.returnType
           if (method.occursInReturn(a)) {
-            val mb = method.transform(q"$fb")(tuple)(map(q"_._2", B))()
-            val S = method.summonF[Semigroupal](a, method.returnType)
+            val S = method.summonF[Semigroupal](a, rt)
             ma.copy(body = q"$S.product[$A, $B](${ma.body}, ${mb.body})")
-          } else ma
+          } else {
+            val S = method.summonOr[Semigroup[Any]](rt)(_ => q"${reify(Semigroup)}.first[$rt]")
+            ma.copy(body = q"$S.combine(${ma.body}, ${mb.body})")
+          }
       }
 
       implement(appliedType(algebra, P))()(types ++ methods)
@@ -476,8 +484,6 @@ class DeriveMacros(val c: blackbox.Context) {
           tpe.map(t => if (t.typeSymbol == f) appliedType(t2k, t.typeArgs) else t)
       }
 
-      val firstK = q"$SemiK.firstK[$F, $G]"
-      val secondK = q"$SemiK.secondK[$F, $G]"
       val methods = delegateMethods(Af, members, af) {
         case method if method.occursInSignature(f) =>
           def mapK(fk: Tree): TransformParam = {
@@ -486,12 +492,16 @@ class DeriveMacros(val c: blackbox.Context) {
               q"$Fk.mapK($pn)($fk)"
           }
 
-          val mf = method.transform(q"$af")(tuple)(mapK(firstK))()
+          val mf = method.transform(q"$af")(tuple)(mapK(q"$SemiK.firstK[$F, $G]"))()
+          val mg = method.transform(q"$ag")(tuple)(mapK(q"$SemiK.secondK[$F, $G]"))()
+          val rt = method.returnType
           if (method.occursInReturn(f)) {
-            val mg = method.transform(q"$ag")(tuple)(mapK(secondK))()
-            val Sk = method.summonK[SemigroupalK](f, method.returnType)
+            val Sk = method.summonK[SemigroupalK](f, rt)
             mf.copy(body = q"$Sk.productK[$F, $G](${mf.body}, ${mg.body})")
-          } else mf
+          } else {
+            val S = method.summonOr[Semigroup[Any]](rt)(_ => q"${reify(Semigroup)}.first[$rt]")
+            mf.copy(body = q"$S.combine(${mf.body}, ${mg.body})")
+          }
       }
 
       val typeParams = Tuple2K.typeParams.drop(2)
@@ -726,6 +736,29 @@ class DeriveMacros(val c: blackbox.Context) {
     implement(appliedType(algebra, typeArg))()(methods)
   }
 
+  // def combineK[A](x: F[A], y: F[A]): F[A]
+  def combineK(algebra: Type): MethodDef = MethodDef("combineK") { case PolyType(List(a), MethodType(List(x, y), _)) =>
+    val Fa = singleType(NoPrefix, x)
+    val members = overridableMembersOf(Fa)
+    val types = delegateAbstractTypes(Fa, members, Fa)
+    val methods = delegateMethods(Fa, members, x) {
+      case method if method.occursInSignature(a) =>
+        method.transform(q"$x")()() { case delegate =>
+          val my = method.transform(q"$y")()()()
+          val rt = method.returnType
+          if (method.occursInReturn(a)) {
+            val Sk = method.summonF[SemigroupK](a, rt)
+            q"$Sk.combineK[$a]($delegate, ${my.body})"
+          } else {
+            val S = method.summonOr[Semigroup[Any]](rt)(_ => q"${reify(Semigroup)}.first[$rt]")
+            q"$S.combine($delegate, ${my.body})"
+          }
+        }
+    }
+
+    implement(algebra)(a)(types ++ methods)
+  }
+
   def functor[F[_]](implicit tag: WeakTypeTag[F[Any]]): Tree =
     instantiate[Functor[F]](tag)(map)
 
@@ -764,6 +797,9 @@ class DeriveMacros(val c: blackbox.Context) {
 
   def applyK[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
     instantiate[ApplyK[Alg]](tag)(mapK, productK)
+
+  def semigroupK[F[_]](implicit tag: WeakTypeTag[F[Any]]): Tree =
+    instantiate[SemigroupK[F]](tag)(combineK)
 
   def instrument[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
     instantiate[Instrument[Alg]](tag)(instrumentation, mapK)

@@ -62,4 +62,11 @@ object autoSemigroupalKTests {
     def sum(xs: Int*): Int
     def effectfulSum(xs: Int*): F[Int]
   }
+
+  @autoSemigroupalK
+  trait AlgWithConstantReturnTypes[F[_]] {
+    def pure[A](x: A): F[A]
+    def unsafeRun[A](t: F[A]): A
+    def toError(t: F[Int]): Exception
+  }
 }

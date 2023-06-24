@@ -16,55 +16,32 @@
 
 package cats.tagless.tests
 
+import cats.data.Validated
+import cats.laws.discipline.arbitrary.*
 import cats.laws.discipline.eq.*
-import cats.laws.discipline.{SemigroupalTests, SerializableTests}
-import cats.tagless.{autoInvariant, autoSemigroupal}
-import cats.{Eq, Semigroupal}
-import org.scalacheck.{Arbitrary, Cogen}
+import cats.laws.discipline.{SemigroupKTests, SerializableTests}
+import cats.tagless.autoSemigroupK
+import cats.{Comparison, Eq, SemigroupK}
+import org.scalacheck.{Arbitrary, Cogen, Gen}
 
-class autoSemigroupalTests extends CatsTaglessTestSuite {
-  import autoSemigroupalTests.*
+class autoSemigroupKTests extends CatsTaglessTestSuite {
+  import autoSemigroupKTests.*
 
-  checkAll("Semigroupal[TestAlgebra]", SemigroupalTests[TestAlgebra].semigroupal[Long, String, Int])
-  checkAll("Serializable Semigroupal[TestAlgebra]", SerializableTests.serializable(Semigroupal[TestAlgebra]))
+  checkAll("SemigroupK[TestAlgebra]", SemigroupKTests[TestAlgebra].semigroupK[Int])
+  checkAll("SemigroupK[TestAlgebra]", SerializableTests.serializable(SemigroupK[TestAlgebra]))
 }
 
-object autoSemigroupalTests {
+object autoSemigroupKTests {
   import TestInstances.*
 
-  @autoSemigroupal
-  @autoInvariant // Needed for Isomorphisms
+  @autoSemigroupK
   trait TestAlgebra[T] {
-    def abstractEffect(a: String): T
-    def concreteEffect(a: String): T = abstractEffect(a + " concreteEffect")
+    def abstractEffect(a: String): Validated[Int, T]
+    def concreteEffect(a: String): Validated[Int, T] = abstractEffect(a + " concreteEffect")
     def abstractOther(a: String): String
     def concreteOther(a: String): String = a + " concreteOther"
-    def withoutParams: T
-    def curried(a: String)(b: Int): T
+    def withoutParams: Comparison
     def headOption(ts: List[T]): Option[T]
-  }
-
-  @autoSemigroupal
-  trait AlgWithExtraTypeParam[T1, T] {
-    def foo(a: T1): T
-  }
-
-  @autoSemigroupal
-  trait AlgWithGenericMethod[T] {
-    def plusOne[A](i: A): T
-  }
-
-  @autoSemigroupal
-  trait AlgWithVarArgsParameter[T] {
-    def sum(xs: Int*): Int
-    def product(xs: Int*): T
-  }
-
-  @autoSemigroupal
-  trait AlgWithConstantReturnTypes[T] {
-    def fromInt(i: Int): T
-    def toString(t: T): String
-    def toError(t: T): Exception
   }
 
   implicit def eqForTestAlgebra[T: Arbitrary: Eq]: Eq[TestAlgebra[T]] =
@@ -75,19 +52,17 @@ object autoSemigroupalTests {
         algebra.abstractOther _,
         algebra.concreteOther _,
         algebra.withoutParams,
-        Function.uncurried(algebra.curried _).tupled,
         algebra.headOption _,
       )
     }
 
   implicit def arbitraryTestAlgebra[T: Arbitrary: Cogen]: Arbitrary[TestAlgebra[T]] =
     Arbitrary(for {
-      absEff <- Arbitrary.arbitrary[String => T]
-      conEff <- Arbitrary.arbitrary[Option[String => T]]
+      absEff <- Arbitrary.arbitrary[String => Validated[Int, T]]
+      conEff <- Arbitrary.arbitrary[Option[String => Validated[Int, T]]]
       absOther <- Arbitrary.arbitrary[String => String]
       conOther <- Arbitrary.arbitrary[Option[String => String]]
-      withoutParameters <- Arbitrary.arbitrary[T]
-      curry <- Arbitrary.arbitrary[String => Int => T]
+      withoutParameters <- Gen.oneOf(Comparison.EqualTo, Comparison.GreaterThan, Comparison.LessThan)
       hOpt <- Arbitrary.arbitrary[List[T] => Option[T]]
     } yield new TestAlgebra[T] {
       override def abstractEffect(i: String) = absEff(i)
@@ -95,7 +70,6 @@ object autoSemigroupalTests {
       override def abstractOther(a: String) = absOther(a)
       override def concreteOther(a: String) = conOther.getOrElse(super.concreteOther(_))(a)
       override def withoutParams = withoutParameters
-      override def curried(a: String)(b: Int) = curry(a)(b)
       override def headOption(ts: List[T]): Option[T] = hOpt(ts)
     })
 }

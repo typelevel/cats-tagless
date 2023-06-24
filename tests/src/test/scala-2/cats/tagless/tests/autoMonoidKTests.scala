@@ -16,31 +16,29 @@
 
 package cats.tagless.tests
 
-import cats.data.Validated
-import cats.laws.discipline.arbitrary.*
 import cats.laws.discipline.eq.*
-import cats.laws.discipline.{SemigroupKTests, SerializableTests}
-import cats.tagless.autoSemigroupK
-import cats.{Comparison, Eq, SemigroupK}
-import org.scalacheck.{Arbitrary, Cogen, Gen}
+import cats.laws.discipline.{MonoidKTests, SerializableTests}
+import cats.tagless.autoMonoidK
+import cats.{Eq, MonoidK}
+import org.scalacheck.{Arbitrary, Cogen}
 
-class autoSemigroupKTests extends CatsTaglessTestSuite {
-  import autoSemigroupKTests.*
+class autoMonoidKTests extends CatsTaglessTestSuite {
+  import autoMonoidKTests.*
 
-  checkAll("SemigroupK[TestAlgebra]", SemigroupKTests[TestAlgebra].semigroupK[Int])
-  checkAll("SemigroupK[TestAlgebra]", SerializableTests.serializable(SemigroupK[TestAlgebra]))
+  checkAll("MonoidK[TestAlgebra]", MonoidKTests[TestAlgebra].monoidK[Int])
+  checkAll("MonoidK[TestAlgebra]", SerializableTests.serializable(MonoidK[TestAlgebra]))
 }
 
-object autoSemigroupKTests {
+object autoMonoidKTests {
   import TestInstances.*
 
-  @autoSemigroupK
+  @autoMonoidK
   trait TestAlgebra[T] {
-    def abstractEffect(a: String): Validated[Int, T]
-    def concreteEffect(a: String): Validated[Int, T] = abstractEffect(a + " concreteEffect")
+    def abstractEffect(a: String): Map[String, T]
+    def concreteEffect(a: String): Map[String, T] = abstractEffect(a + " concreteEffect")
     def abstractOther(t: T): String
     def concreteOther(a: String): String = a + " concreteOther"
-    def withoutParams: Comparison
+    def withoutParams: Int
     def headOption(ts: List[T]): Option[T]
   }
 
@@ -58,11 +56,11 @@ object autoSemigroupKTests {
 
   implicit def arbitraryTestAlgebra[T: Arbitrary: Cogen]: Arbitrary[TestAlgebra[T]] =
     Arbitrary(for {
-      absEff <- Arbitrary.arbitrary[String => Validated[Int, T]]
-      conEff <- Arbitrary.arbitrary[Option[String => Validated[Int, T]]]
+      absEff <- Arbitrary.arbitrary[String => Map[String, T]]
+      conEff <- Arbitrary.arbitrary[Option[String => Map[String, T]]]
       absOther <- Arbitrary.arbitrary[T => String]
       conOther <- Arbitrary.arbitrary[Option[String => String]]
-      withoutParameters <- Gen.oneOf(Comparison.EqualTo, Comparison.GreaterThan, Comparison.LessThan)
+      withoutParameters <- Arbitrary.arbitrary[Int]
       hOpt <- Arbitrary.arbitrary[List[T] => Option[T]]
     } yield new TestAlgebra[T] {
       override def abstractEffect(i: String) = absEff(i)

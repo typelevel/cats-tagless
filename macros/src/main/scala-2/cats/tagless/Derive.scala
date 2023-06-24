@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats
+package tagless
 
 import cats.arrow.Profunctor
 import cats.data.ReaderT
 import cats.tagless.aop.{Aspect, Instrument}
-import cats.{Apply, Bifunctor, Contravariant, FlatMap, Functor, Invariant, SemigroupK, Semigroupal}
 
 object Derive {
 
@@ -71,6 +71,7 @@ object Derive {
   def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = macro DeriveMacros.semigroupalK[Alg]
   def applyK[Alg[_[_]]]: ApplyK[Alg] = macro DeriveMacros.applyK[Alg]
   def semigroupK[F[_]]: SemigroupK[F] = macro DeriveMacros.semigroupK[F]
+  def monoidK[F[_]]: MonoidK[F] = macro DeriveMacros.monoidK[F]
 
   /** Type class for instrumenting an algebra. Note: This feature is experimental, API is likely to change.
     */

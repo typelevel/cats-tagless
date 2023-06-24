@@ -741,22 +741,35 @@ class DeriveMacros(val c: blackbox.Context) {
     val Fa = singleType(NoPrefix, x)
     val members = overridableMembersOf(Fa)
     val types = delegateAbstractTypes(Fa, members, Fa)
-    val methods = delegateMethods(Fa, members, x) {
-      case method if method.occursInSignature(a) =>
-        method.transform(q"$x")()() { case delegate =>
-          val my = method.transform(q"$y")()()()
-          val rt = method.returnType
-          if (method.occursInReturn(a)) {
-            val Sk = method.summonF[SemigroupK](a, rt)
-            q"$Sk.combineK[$a]($delegate, ${my.body})"
-          } else {
-            val S = method.summonOr[Semigroup[Any]](rt)(_ => q"${reify(Semigroup)}.first[$rt]")
-            q"$S.combine($delegate, ${my.body})"
-          }
+    val methods = delegateMethods(Fa, members, x) { case method =>
+      method.transform(q"$x")()() { case delegate =>
+        val my = method.transform(q"$y")()()()
+        val rt = method.returnType
+        if (method.occursInReturn(a)) {
+          val Sk = method.summonF[SemigroupK](a, rt)
+          q"$Sk.combineK[$a]($delegate, ${my.body})"
+        } else {
+          val S = method.summonOr[Semigroup[Any]](rt)(_ => q"${reify(Semigroup)}.first[$rt]")
+          q"$S.combine($delegate, ${my.body})"
         }
+      }
     }
 
     implement(algebra)(a)(types ++ methods)
+  }
+
+  // def empty[A]: F[A]
+  def empty(algebra: Type): MethodDef = MethodDef("empty") { case PolyType(List(a), NullaryMethodType(fa)) =>
+    val members = overridableMembersOf(fa)
+    val methods = delegateMethods(fa, members, NoSymbol) { case method =>
+      val rt = method.returnType
+      method.copy(body =
+        if (method.occursInReturn(a)) q"${method.summonF[MonoidK](a, rt)}.empty[$a]"
+        else q"${method.summon[Monoid[Any]](rt)}.empty"
+      )
+    }
+
+    implement(algebra)(a)(methods)
   }
 
   def functor[F[_]](implicit tag: WeakTypeTag[F[Any]]): Tree =
@@ -800,6 +813,9 @@ class DeriveMacros(val c: blackbox.Context) {
 
   def semigroupK[F[_]](implicit tag: WeakTypeTag[F[Any]]): Tree =
     instantiate[SemigroupK[F]](tag)(combineK)
+
+  def monoidK[F[_]](implicit tag: WeakTypeTag[F[Any]]): Tree =
+    instantiate[MonoidK[F]](tag)(combineK, empty)
 
   def instrument[Alg[_[_]]](implicit tag: WeakTypeTag[Alg[Any]]): Tree =
     instantiate[Instrument[Alg]](tag)(instrumentation, mapK)

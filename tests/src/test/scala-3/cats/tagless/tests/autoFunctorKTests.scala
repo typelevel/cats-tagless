@@ -327,6 +327,10 @@ object autoFunctorKTests:
     def sum(xs: Int*): Int
     def fSum(xs: Int*): F[Int]
 
+  trait AlgWithValues[F[_]] derives FunctorK:
+    val int: F[Int]
+    lazy val str: F[String]
+
   trait BuilderAlgebra[F[_]]:
     def unit: F[Unit]
     def withFoo(foo: String): BuilderAlgebra[F]

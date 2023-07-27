@@ -23,60 +23,48 @@ import quoted.*
 import compiletime.asMatchable
 import scala.annotation.experimental
 
-object Utils:
-  val classNameCokleisli = classOf[Cokleisli[?, ?, ?]].getName
-  val classNameTuple2K = classOf[Tuple2K[?, ?, ?]].getName
-  val classNameApplyK = classOf[ApplyK[?]].getName
-  val λlit = "λ"
+private object Utils:
+  // Unfortunately there is no flag for default parameters.
+  val defaultRegex = ".*\\$default\\$\\d+".r
+  def make(using q: Quotes): Utils[q.type] = new Utils
 
-  def methodApply[Alg[_[_]]: Type, F[_]: Type](e: Expr[Alg[F]])(using Quotes)(
-      method: quotes.reflect.Symbol,
-      argss: List[List[quotes.reflect.Tree]]
-  ): quotes.reflect.Term =
-    import quotes.reflect.*
+private class Utils[Q <: Quotes](using val q: Q):
+  import quotes.reflect.*
 
-    argss.foldLeft[Term](Select(e.asTerm, method)): (term, args) =>
-      val typeArgs = args.collect { case t: TypeTree => t }
-      val termArgs = args.collect { case t: Term => t }
+  val nonOverridableOwners =
+    TypeRepr.of[(Object, Any, AnyRef, AnyVal)].typeArgs.map(_.typeSymbol).toSet
+
+  val nonOverridableFlags =
+    List(Flags.Final, Flags.Artifact, Flags.Synthetic, Flags.Mutable)
+
+  def overrideFlags(member: Symbol)(keep: Flags*): Flags =
+    keep.iterator.filter(member.flags.is).foldLeft(Flags.Override)(_ | _)
+
+  def call(alg: Term, method: Symbol, argss: List[List[Tree]]): Term =
+    argss.foldLeft[Term](Select(alg, method)): (term, args) =>
+      val typeArgs = for case t: TypeTree <- args yield t
+      val termArgs = for case t: Term <- args yield t
       if typeArgs.nonEmpty then TypeApply(term, typeArgs) else Apply(term, termArgs)
 
-  def memberSymbolsAsSeen[Alg[_[_]]: Type, F[_]: Type](using
-      Quotes
-  ): quotes.reflect.Symbol => List[quotes.reflect.Symbol] =
-    import quotes.reflect.*
-    clz =>
-      val algFApplied = TypeRepr.of[Alg[F]]
-      val methods = definedMethodsInTypeSym(using quotes)(clz)
-      methods.map { method =>
-        val asSeenApplied = algFApplied.memberType(method)
-        Symbol.newMethod(
-          clz,
-          method.name,
-          asSeenApplied,
-          flags =
-            Flags.Method, // method.flags is Flags.Deferred | Flags.Method, we'd like to unset the Deferred flag here // method.flags. &~ Flags.Deferred?
-          privateWithin = method.privateWithin.fold(Symbol.noSymbol)(_.typeSymbol)
-        )
-      }
+  // TODO: Include type members.
+  def membersAsSeenFrom(tpe: TypeRepr)(cls: Symbol): List[Symbol] =
+    for member <- overridableMembersOf(cls) yield
+      val privateWithin = member.privateWithin.fold(Symbol.noSymbol)(_.typeSymbol)
+      if member.flags.is(Flags.Method) then
+        val flags = overrideFlags(member)(keep = Flags.ExtensionMethod, Flags.Infix)
+        Symbol.newMethod(cls, member.name, tpe.memberType(member), flags, privateWithin)
+      else
+        val flags = overrideFlags(member)(keep = Flags.Lazy)
+        Symbol.newVal(cls, member.name, tpe.memberType(member), flags, privateWithin)
 
-  // https://github.com/lampepfl/dotty/issues/11685
-  def definedMethodsInTypeSym(using Quotes): quotes.reflect.Symbol => List[quotes.reflect.Symbol] =
-    import quotes.reflect.*
-    (cls: quotes.reflect.Symbol) =>
-      for
-        member <- cls.methodMembers
-        // is abstract method, not implemented
-        if member.flags.is(Flags.Deferred)
-
-        // TODO: is that public?
-        // TODO? if member.privateWithin
-        if !member.flags.is(Flags.Private)
-        if !member.flags.is(Flags.Protected)
-        if !member.flags.is(Flags.PrivateLocal)
-
-        if !member.isClassConstructor
-        if !member.flags.is(Flags.Synthetic)
-      yield member
+  // TODO: Include type members.
+  // TODO: Handle accessibility.
+  def overridableMembersOf(cls: Symbol): List[Symbol] =
+    (cls.methodMembers ++ cls.fieldMembers).filterNot: member =>
+      member.isClassConstructor
+        || nonOverridableFlags.exists(member.flags.is)
+        || nonOverridableOwners.contains(member.owner)
+        || Utils.defaultRegex.matches(member.name)
 
   // https://github.com/lampepfl/dotty/discussions/16305
   // IdK[Int] is encoded as
@@ -112,7 +100,7 @@ object Utils:
         case repr => None
 
   def refinedTypeFindλ(using Quotes): quotes.reflect.TypeRepr => Option[(String, quotes.reflect.TypeRepr)] =
-    refinedTypeFind(λlit)
+    refinedTypeFind("λ")
 
   def summon(using Quotes): quotes.reflect.TypeRepr => quotes.reflect.Term =
     import quotes.reflect.*

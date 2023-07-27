@@ -24,8 +24,6 @@ import scala.annotation.experimental
 import compiletime.asMatchable
 
 object macroFunctorK:
-  import Utils.*
-
   inline def derive[Alg[_[_]]] = ${ functorK[Alg] }
 
   @experimental def functorK[Alg[_[_]]: Type](using Quotes): Expr[FunctorK[Alg]] =
@@ -41,9 +39,11 @@ object macroFunctorK:
       Quotes
   ): Expr[Alg[G]] =
     import quotes.reflect.*
+    val utils = Utils.make
+
     val className = "$anon()"
     val parents = List(TypeTree.of[Object], TypeTree.of[Alg[G]])
-    val decls = memberSymbolsAsSeen[Alg, G]
+    val decls = utils.membersAsSeenFrom(TypeRepr.of[Alg[G]])
 
     val cls = Symbol.newClass(Symbol.spliceOwner, className, parents = parents.map(_.tpe), decls, selfType = None)
     val body =
@@ -53,10 +53,10 @@ object macroFunctorK:
           argss =>
             typedTree.tpe.simplified.asMatchable match
               case at @ AppliedType(o, inner) =>
-                val apply = methodApply(eaf)(method, argss)
+                val apply = utils.call(eaf.asTerm, method, argss)
                 Some(Select.overloaded(efk.asTerm, "apply", inner, List(apply)))
               case e =>
-                val apply = methodApply(eaf)(method, argss)
+                val apply = utils.call(eaf.asTerm, method, argss)
                 Some(apply)
         )
       }

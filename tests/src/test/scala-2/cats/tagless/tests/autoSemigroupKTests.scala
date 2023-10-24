@@ -52,7 +52,7 @@ object autoSemigroupKTests {
         algebra.abstractOther _,
         algebra.concreteOther _,
         algebra.withoutParams,
-        algebra.headOption _,
+        algebra.headOption _
       )
     }
 

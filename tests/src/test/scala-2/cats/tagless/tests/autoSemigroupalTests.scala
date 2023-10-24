@@ -76,7 +76,7 @@ object autoSemigroupalTests {
         algebra.concreteOther _,
         algebra.withoutParams,
         Function.uncurried(algebra.curried _).tupled,
-        algebra.headOption _,
+        algebra.headOption _
       )
     }
 

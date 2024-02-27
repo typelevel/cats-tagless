@@ -273,7 +273,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.13.13]
+        scala: [2.13]
         java: [temurin@8]
     runs-on: ${{ matrix.os }}
     steps:
@@ -298,11 +298,11 @@ jobs:
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.6
+          ruby-version: 3.3
           bundler-cache: true
 
       - name: Install Jekyll
-        run: gem install jekyll -v 2.5
+        run: gem install jekyll -v 4.3
 
       - name: Build microsite
         run: sbt '++ ${{ matrix.scala }}' docs/makeMicrosite

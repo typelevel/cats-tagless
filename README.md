@@ -16,8 +16,8 @@ Cats-tagless is currently available for Scala 2.12 and 2.13 and Scala.js.
 Add the following settings in `build.sbt`
 
 ```scala
-libraryDependencies += 
-  "org.typelevel" %% "cats-tagless-macros" % latestVersion  //latest version indicated in the badge above
+libraryDependencies +=
+  "org.typelevel" %% "cats-tagless-macros" % latestVersion // latest version indicated in the badge above
 
 Compile / scalacOptions ++= {
   CrossVersion.partialVersion(scalaVersion.value) match {
@@ -86,8 +86,8 @@ tryExpression.mapK(fk)
 Note that the `Try ~> Option` is implemented using [kind projector's polymorphic lambda syntax](https://github.com/non/kind-projector#polymorphic-lambda-values).   
 
 
-Obviously, [`FunctorK`](typeclasses.html#functorK) instance is only possible when the effect type `F[_]` appears only in the
-covariant position (i.e. the return types). For algebras with effect type also appearing in the contravariant position (i.e. argument types), Cats-tagless provides a [`InvariantK`](typeclasses.html#invariantK) type class and an `autoInvariantK` annotation to automatically generate instances.
+Obviously, [`FunctorK`](docs/docs/typeclasses.md#functork) instance is only possible when the effect type `F[_]` appears only in the
+covariant position (i.e. the return types). For algebras with effect type also appearing in the contravariant position (i.e. argument types), Cats-tagless provides a [`InvariantK`](docs/docs/typeclasses.md#invariantk) type class and an `autoInvariantK` annotation to automatically generate instances.
 
 `@autoFunctorK` also add an auto implicit derivation, so that if you have an implicit  `ExpressionAlg[F]` and an implicit
 `F ~> G`, you can automatically have a `ExpressionAlg[G]`.
@@ -99,7 +99,7 @@ implicitly[ExpressionAlg[Option]]  //implicitly derived from a `ExpressionAlg[Tr
 ```
 This auto derivation can be turned off using an annotation argument: `@autoFunctorK(autoDerivation = false)`.
 
-## <a id="stack-safe" href="#stack-safe"></a>Quick example: make stack safe with `Free`
+## <a id="stack-safe" href="#stack-safe"></a>Example: stack safety `Free`
 With Cats-tagless, you can lift your algebra interpreters to use `Free` to achieve stack safety.
 
  For example, say you have an interpreter using `Try`
@@ -143,7 +143,7 @@ Again, the magic here is that Cats-tagless auto derive an `Increment[Free[Try, *
 
 ## <a id="horizontal-comp" href="#horizontal-comp"></a>Horizontal composition with `@autoSemigroupalK`
 
-You can use the [`SemigroupalK`](typeclasses.html#semigroupalK) type class to create a new interpreter that runs both interpreters and return the result as a `cats.Tuple2K`. The `@autoSemigroupalK` attribute adds an instance of `SemigroupalK` to the companion object. Example:
+You can use the [`SemigroupalK`](docs/docs/typeclasses.md#semigroupalk) type class to create a new interpreter that runs both interpreters and return the result as a `cats.Tuple2K`. The `@autoSemigroupalK` attribute adds an instance of `SemigroupalK` to the companion object. Example:
 
 ```scala
 @autoSemigroupalK
@@ -168,14 +168,14 @@ Cats-tagless also provides three annotations that can generate `cats.Functor`, `
 #### For documentation/FAQ/guides, go to [typelevel.github.io/cats-tagless](https://typelevel.github.io/cats-tagless).
 
 ### Community
-Any contribution is more than welcome. Also feel free to report bugs, request features using github issues or gitter. 
+Any contribution is more than welcome. Also feel free to report bugs, request features using GitHub issues or gitter. 
 
 Discussion around Cats-tagless is encouraged in the
-[Gitter channel](https://gitter.im/typelevel/cats-tagless) as well as on Github issue and PR pages.
+[Gitter channel](https://gitter.im/typelevel/cats-tagless) as well as on GitHub issue and PR pages.
 
 We adopted the
 [Scala Code of Conduct](https://www.scala-lang.org/conduct/). People are expected to follow it when
-discussing Cats-tagless on the Github page, Gitter channel, or other venues.
+discussing Cats-tagless on the GitHub page, Gitter channel, or other venues.
 
 ### Maintainers
  

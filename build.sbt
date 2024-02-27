@@ -5,7 +5,7 @@ addCommandAlias("fmt", "all scalafmtSbt scalafmtAll")
 addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 
 val Scala212 = "2.12.19"
-val Scala213 = "2.13.12"
+val Scala213 = "2.13.13"
 val Scala3 = "3.3.1"
 val Java8 = JavaSpec.temurin("8")
 
@@ -222,6 +222,7 @@ lazy val commonSettings = List(
   scalacOptions ~= (_.filterNot(_ == "-source:3.0-migration")),
   scalacOptions ++= (scalaBinaryVersion.value match {
     case "3" => List("-language:adhocExtensions", "-source:future", "-explain")
+    case "2.13" => List("-Xsource:3", "-P:kind-projector:underscore-placeholders", "-Xlint:-pattern-shadow")
     case _ => List("-Xsource:3", "-P:kind-projector:underscore-placeholders")
   })
 )

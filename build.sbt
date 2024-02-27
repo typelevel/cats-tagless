@@ -222,6 +222,7 @@ lazy val commonSettings = List(
   scalacOptions ~= (_.filterNot(_ == "-source:3.0-migration")),
   scalacOptions ++= (scalaBinaryVersion.value match {
     case "3" => List("-language:adhocExtensions", "-source:future", "-explain")
+    case "2.13" => List("-Xsource:3", "-P:kind-projector:underscore-placeholders", "-Xlint:-pattern-shadow")
     case _ => List("-Xsource:3", "-P:kind-projector:underscore-placeholders")
   })
 )

@@ -4,9 +4,9 @@ addCommandAlias("validateNative", "all testsNative/test")
 addCommandAlias("fmt", "all scalafmtSbt scalafmtAll")
 addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 
-val Scala212 = "2.12.18"
-val Scala213 = "2.13.12"
-val Scala3 = "3.3.1"
+val Scala212 = "2.12.19"
+val Scala213 = "2.13.13"
+val Scala3 = "3.3.3"
 val Java8 = JavaSpec.temurin("8")
 
 val gitRepo = "git@github.com:typelevel/cats-tagless.git"
@@ -46,7 +46,7 @@ val circeVersion = "0.14.6"
 val disciplineVersion = "1.5.1"
 val disciplineMunitVersion = "2.0.0-M3"
 val fs2Version = "3.9.4"
-val kindProjectorVersion = "0.13.2"
+val kindProjectorVersion = "0.13.3"
 val paradiseVersion = "2.1.1"
 val scalaCheckVersion = "1.17.0"
 
@@ -222,6 +222,7 @@ lazy val commonSettings = List(
   scalacOptions ~= (_.filterNot(_ == "-source:3.0-migration")),
   scalacOptions ++= (scalaBinaryVersion.value match {
     case "3" => List("-language:adhocExtensions", "-source:future", "-explain")
+    case "2.13" => List("-Xsource:3", "-P:kind-projector:underscore-placeholders", "-Xlint:-pattern-shadow")
     case _ => List("-Xsource:3", "-P:kind-projector:underscore-placeholders")
   })
 )

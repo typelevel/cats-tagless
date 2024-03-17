@@ -61,7 +61,7 @@ object ValidationExample extends App {
   val semigroupK: SemigroupK[Validator] = SemigroupK[Validator]
 
   ////// DERIVED VALIDATORS //////////////
-  lazy val moneyValidator: Validator[Money] = invariant.imap[Int, Money](positiveValidator)(Money)(_.amount)
+  lazy val moneyValidator: Validator[Money] = invariant.imap[Int, Money](positiveValidator)(Money.apply)(_.amount)
   lazy val rangeValidator: Validator[Int] = semigroupK.combineK(positiveValidator, upperBoundValidator(100))
   lazy val tupleValidator: Validator[(Money, Int)] = semigroupal.product(moneyValidator, rangeValidator)
   lazy val itemsValidator: Validator[Items] = invariant.imap(tupleValidator)(Items.tupled)(i => i.price -> i.quantity)

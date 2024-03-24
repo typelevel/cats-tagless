@@ -7,7 +7,7 @@ addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 val Scala212 = "2.12.19"
 val Scala213 = "2.13.13"
 val Scala3 = "3.3.3"
-val Java8 = JavaSpec.temurin("8")
+val Java11 = JavaSpec.temurin("11")
 
 val gitRepo = "git@github.com:typelevel/cats-tagless.git"
 val homePage = "https://typelevel.org/cats-tagless"
@@ -31,13 +31,14 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
       WorkflowStep.Use(
         UseRef.Public("ruby", "setup-ruby", "v1"),
         name = Some("Setup Ruby"),
-        params = Map("ruby-version" -> "2.6", "bundler-cache" -> "true")
+        params = Map("ruby-version" -> "3.3", "bundler-cache" -> "true")
       ),
-      WorkflowStep.Run(List("gem install jekyll -v 2.5"), name = Some("Install Jekyll")),
+      WorkflowStep.Run(List("gem install jekyll -v 3.9.4"), name = Some("Install Jekyll")),
+      WorkflowStep.Run(List("gem install kramdown-parser-gfm -v 1.1.0"), name = Some("Install Kramdown")),
       WorkflowStep.Sbt(List("docs/makeMicrosite"), name = Some("Build microsite"))
     ),
-    scalas = List(Scala213),
-    javas = List(Java8)
+    scalas = List("2.13"),
+    javas = List(Java11)
   )
 )
 

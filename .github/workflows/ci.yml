@@ -273,8 +273,8 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.13.13]
-        java: [temurin@8]
+        scala: [2.13]
+        java: [temurin@11]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)
@@ -298,11 +298,14 @@ jobs:
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.6
+          ruby-version: 3.3
           bundler-cache: true
 
       - name: Install Jekyll
-        run: gem install jekyll -v 2.5
+        run: gem install jekyll -v 3.9.4
+
+      - name: Install Kramdown
+        run: gem install kramdown-parser-gfm -v 1.1.0
 
       - name: Build microsite
         run: sbt '++ ${{ matrix.scala }}' docs/makeMicrosite

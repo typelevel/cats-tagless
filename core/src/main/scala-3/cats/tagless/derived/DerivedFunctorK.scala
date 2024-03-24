@@ -16,4 +16,7 @@
 
 package cats.tagless.derived
 
-trait DerivedFunctorK
+import cats.tagless.macros.Derive
+
+trait DerivedFunctorK:
+  inline def derived[Alg[_[_]]] = Derive.functorK[Alg]

@@ -9,32 +9,32 @@ position: 4
 ## Type classes
 
 
-Currently, there are five type classes defined in Cats-tagless: [FunctorK](#functorK), [ContravariantK](#contravariantK), [InvariantK](#invariantK), [SemigroupalK](#semigroupalK), and [ApplyK](#applyK). They can be deemed as somewhat higher kinded versions of the corresponding type classes in cats.
+Currently, there are five type classes defined in Cats-tagless: [FunctorK](#functork), [ContravariantK](#contravariantk), [InvariantK](#invariantk), [SemigroupalK](#semigroupalk), and [ApplyK](#applyk). They can be deemed as somewhat higher kinded versions of the corresponding type classes in cats.
 
 
 
-### <a id="functorK" href="#functorK"></a>`FunctorK`
+### FunctorK
 ```
   def mapK[F[_], G[_]](af: A[F])(fk: F ~> G): A[G]
 ```
 
 For tagless final algebras whose effect `F` appears only in the covariant position, instance of `FunctorK` can be auto generated through the `autoFunctorK` annotation.
 
-### <a id="contravariantK" href="#contravariantK"></a>`ContravariantK`
+### ContravariantK
 ```
   def contramapK[F[_], G[_]](af: A[F])(fk: G ~> F): A[G]
 ```
 
 For tagless final algebras whose effect `F` appears only in the contravariant position, instance of `ContravariantK` can be auto generated through the `autoContravariantK` annotation.
 
-### <a id="invariantK" href="#invariantK"></a>`InvariantK`
+### InvariantK
 ```
   def imapK[F[_], G[_]](af: A[F])(fk: F ~> G)(gK: G ~> F): A[G]
 ```
 
 For tagless final algebras whose effect `F` appears in both the covariant positions and contravariant positions, instance of `InvariantK` can be auto generated through the `autoInvariantK` annotation.
 
-### <a id="semigroupalK" href="#semigroupalK"></a>`SemigroupalK`
+### SemigroupalK
 ```
  def productK[F[_], G[_]](af: A[F], ag: A[G]): A[Tuple2K[F, G, *]]
 ```
@@ -46,7 +46,7 @@ For tagless final algebras that
 instance of `SemigroupalK` can be auto generated through `autoSemigroupalK` annotation.
 
 
-### <a id="applyK" href="#applyK"></a>`ApplyK`
+### ApplyK
 ```
  def map2K[F[_], G[_], H[_]](af: A[F], ag: A[G])(f: Tuple2K[F, G, *] ~> H): A[H]
 ```

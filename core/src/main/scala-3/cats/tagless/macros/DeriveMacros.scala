@@ -16,8 +16,8 @@
 
 package cats.tagless.macros
 
-import scala.quoted.*
 import scala.annotation.experimental
+import scala.quoted.*
 
 private object DeriveMacros:
   // Unfortunately there is no flag for default parameters.
@@ -50,19 +50,19 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
       val cls = Symbol.newClass(Symbol.spliceOwner, name, parents.map(_.tpe), _.overridableMembers, None)
 
       def transformArg(param: ValDef | TypeDef, arg: Tree) = (param, arg) match
-        case (ValDef(_, tpt, _), arg: Term) => args.applyOrElse((tpt.tpe, arg), _ => arg)
-        case (_, _) => arg
+        case (param: ValDef, arg: Term) => args.applyOrElse((param.tpt.tpe, arg), _ => arg)
+        case (_, arg) => arg
 
-      def transformBody(defn: DefDef)(argss: List[List[Tree]]) = Some:
-        val delegate = term.call(defn.symbol):
-          for (params, args) <- defn.paramss.lazyZip(argss)
+      def transformBody(method: DefDef)(argss: List[List[Tree]]) =
+        val delegate = term.call(method.symbol):
+          for (params, args) <- method.paramss.lazyZip(argss)
           yield for (param, arg) <- params.params.lazyZip(args)
           yield transformArg(param, arg)
-        body.applyOrElse((defn.returnTpt.tpe, delegate), _ => delegate)
+        Some(body.applyOrElse((method.returnTpt.tpe, delegate), _ => delegate))
 
-      val methods = cls.declaredMethods.flatMap: method =>
-        PartialFunction.condOpt(method.tree):
-          case defn: DefDef => DefDef(method, transformBody(defn))
+      val methods = cls.declaredMethods.flatMap: sym =>
+        PartialFunction.condOpt(sym.tree):
+          case method: DefDef => DefDef(sym, transformBody(method))
 
       val newCls = New(TypeIdent(cls)).select(cls.primaryConstructor).appliedToNone
       Block(ClassDef(cls, parents, methods) :: Nil, newCls).asExprOf[A]
@@ -77,7 +77,7 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
     // TODO: Include type members.
     // TODO: Handle accessibility.
     def overridableMembers: List[Symbol] = for
-      ths <- This(sym).tpe :: Nil
+      cls <- This(sym).tpe :: Nil
       member <- sym.methodMembers.iterator ++ sym.fieldMembers
       if !member.isClassConstructor
       if !nonOverridableFlags.exists(member.flags.is)
@@ -86,10 +86,10 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
     yield
       if member.isDefDef then
         val flags = member.overrideKeeping(Flags.ExtensionMethod, Flags.Infix)
-        Symbol.newMethod(sym, member.name, ths.memberType(member), flags, sym.privateIn)
+        Symbol.newMethod(sym, member.name, cls.memberType(member), flags, sym.privateIn)
       else if member.isValDef then
         val flags = member.overrideKeeping(Flags.Lazy)
-        Symbol.newVal(sym, member.name, ths.memberType(member), flags, sym.privateIn)
+        Symbol.newVal(sym, member.name, cls.memberType(member), flags, sym.privateIn)
       else member
 
   extension (tpe: TypeRepr)

@@ -19,9 +19,8 @@ package cats.tagless.macros
 import cats.tagless.*
 import cats.~>
 
-import quoted.*
 import scala.annotation.experimental
-import compiletime.asMatchable
+import scala.quoted.*
 
 @experimental
 object MacroFunctorK:
@@ -46,19 +45,19 @@ object MacroFunctorK:
 
     alg.asTerm.transformTo[Alg[G]](
       args = {
-        case (tpe, tree) if tpe.contains(g) =>
+        case (tpe, arg) if tpe.contains(g) =>
           Select
             .unique(tpe.summonLambda[ContravariantK](g), "contramapK")
             .appliedToTypes(List(G, F))
-            .appliedTo(tree)
+            .appliedTo(arg)
             .appliedTo(fk.asTerm)
       },
       body = {
-        case (tpe, tree) if tpe.contains(g) =>
+        case (tpe, body) if tpe.contains(g) =>
           Select
             .unique(tpe.summonLambda[FunctorK](g), "mapK")
             .appliedToTypes(List(F, G))
-            .appliedTo(tree)
+            .appliedTo(body)
             .appliedTo(fk.asTerm)
       }
     )

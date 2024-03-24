@@ -298,7 +298,7 @@ object autoFunctorKTests:
 
   // TODO: @finalAlg
   trait AlgWithCurryMethod[F[_]] derives FunctorK:
-    def a(t: Int)(b: String): F[String]
+    def a(t: Int = 42)(b: String): F[String]
 
   // TODO: @finalAlg
   trait AlgWithOwnDerivation[F[_]] derives FunctorK:

@@ -17,6 +17,7 @@
 package cats.tagless.macros
 
 import cats.tagless.*
+import scala.annotation.experimental
 
 object Derive:
-  inline def functorK[Alg[_[_]]]: FunctorK[Alg] = macroFunctorK.derive[Alg]
+  @experimental inline def functorK[Alg[_[_]]]: FunctorK[Alg] = macroFunctorK.derive[Alg]

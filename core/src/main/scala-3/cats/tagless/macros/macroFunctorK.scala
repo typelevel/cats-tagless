@@ -24,16 +24,13 @@ import scala.annotation.experimental
 import compiletime.asMatchable
 
 object macroFunctorK:
-  inline def derive[Alg[_[_]]] = ${ functorK[Alg] }
+  @experimental inline def derive[Alg[_[_]]] = ${ functorK[Alg] }
 
-  @experimental def functorK[Alg[_[_]]: Type](using Quotes): Expr[FunctorK[Alg]] =
-    import quotes.reflect.*
-
-    '{
-      new FunctorK[Alg]:
-        def mapK[F[_], G[_]](af: Alg[F])(fk: F ~> G): Alg[G] =
-          ${ capture('af, 'fk) }
-    }
+  @experimental def functorK[Alg[_[_]]: Type](using Quotes): Expr[FunctorK[Alg]] = '{
+    new FunctorK[Alg]:
+      def mapK[F[_], G[_]](af: Alg[F])(fk: F ~> G): Alg[G] =
+        ${ capture('af, 'fk) }
+  }
 
   @experimental def capture[Alg[_[_]]: Type, F[_]: Type, G[_]: Type](eaf: Expr[Alg[F]], efk: Expr[F ~> G])(using
       Quotes

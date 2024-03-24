@@ -34,16 +34,13 @@ package cats.tagless
 package tests
 
 import cats.tagless.syntax.all.*
-import cats.tagless.FunctionKLift
 import cats.tagless.macros.Derive
 import cats.{Monad, Show, ~>}
 import cats.arrow.FunctionK
-import cats.data.Cokleisli
 import cats.free.Free
 import cats.laws.discipline.SerializableTests
 import cats.tagless.laws.discipline.FunctorKTests
 
-import scala.annotation.nowarn
 import scala.util.Try
 
 class autoFunctorKTests extends CatsTaglessTestSuite:

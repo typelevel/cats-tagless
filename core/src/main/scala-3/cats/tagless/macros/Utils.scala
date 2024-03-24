@@ -16,12 +16,10 @@
 
 package cats.tagless.macros
 
-import cats.data.{Cokleisli, Tuple2K}
-import cats.tagless.ApplyK
+import scala.annotation.experimental
 
 import quoted.*
 import compiletime.asMatchable
-import scala.annotation.experimental
 
 private object Utils:
   // Unfortunately there is no flag for default parameters.

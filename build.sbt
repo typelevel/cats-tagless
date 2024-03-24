@@ -1,12 +1,12 @@
-addCommandAlias("validateJVM", "all scalafmtCheckAll scalafmtSbtCheck testsJVM/test")
+addCommandAlias("validateJVM", "all scalafmtCheckAll testsJVM/test")
 addCommandAlias("validateJS", "all testsJS/test")
 addCommandAlias("validateNative", "all testsNative/test")
-addCommandAlias("fmt", "all scalafmtSbt scalafmtAll")
-addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
+addCommandAlias("fmt", "scalafmtAll")
+addCommandAlias("fmtCheck", "scalafmtCheckAll")
 
 val Scala212 = "2.12.19"
 val Scala213 = "2.13.13"
-val Scala3 = "3.3.3"
+val Scala3 = "3.4.0"
 val Java8 = JavaSpec.temurin("8")
 
 val gitRepo = "git@github.com:typelevel/cats-tagless.git"
@@ -156,7 +156,11 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform, NativePlatform)
       "org.typelevel" %%% "cats-testkit" % catsVersion,
       "org.typelevel" %%% "discipline-munit" % disciplineMunitVersion,
       "io.circe" %%% "circe-core" % circeVersion
-    ).map(_ % Test)
+    ).map(_ % Test),
+    scalacOptions ++= (scalaBinaryVersion.value match {
+      case "3" => Some("-experimental")
+      case _ => None
+    })
   )
 
 lazy val examples = project

@@ -18,7 +18,9 @@ package cats.tagless.simple
 
 import cats.tagless.*
 import cats.Id
+import scala.annotation.experimental
 
+@experimental
 trait Fixtures:
   /** Simple algebra definition */
   trait SimpleService[F[_]] derives FunctorK:

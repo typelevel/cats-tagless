@@ -49,23 +49,31 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
       val parents = List(TypeTree.of[Object], TypeTree.of[A])
       val cls = Symbol.newClass(Symbol.spliceOwner, name, parents.map(_.tpe), _.overridableMembers, None)
 
-      def transformArg(param: ValDef | TypeDef, arg: Tree) = (param, arg) match
+      def transformArg(paramAndArg: (Definition, Tree)) = paramAndArg match
         case (param: ValDef, arg: Term) => args.applyOrElse((param.tpt.tpe, arg), _ => arg)
         case (_, arg) => arg
 
-      def transformBody(method: DefDef)(argss: List[List[Tree]]) =
+      def transformDef(method: DefDef)(argss: List[List[Tree]]) =
         val delegate = term.call(method.symbol):
-          for (params, args) <- method.paramss.lazyZip(argss)
-          yield for (param, arg) <- params.params.lazyZip(args)
-          yield transformArg(param, arg)
+          for (params, args) <- method.paramss.zip(argss)
+          yield for paramAndArg <- params.params.zip(args)
+          yield transformArg(paramAndArg)
         Some(body.applyOrElse((method.returnTpt.tpe, delegate), _ => delegate))
 
-      val methods = cls.declaredMethods.flatMap: sym =>
-        PartialFunction.condOpt(sym.tree):
-          case method: DefDef => DefDef(sym, transformBody(method))
+      def transformVal(value: ValDef) =
+        val delegate = term.select(value.symbol)
+        Some(body.applyOrElse((value.tpt.tpe, delegate), _ => delegate))
+
+      val members = cls.declarations
+        .filterNot(_.isClassConstructor)
+        .map: sym =>
+          sym.tree match
+            case method: DefDef => DefDef(sym, transformDef(method))
+            case value: ValDef => ValDef(sym, transformVal(value))
+            case _ => report.errorAndAbort(s"Not supported: $sym in ${sym.owner}")
 
       val newCls = New(TypeIdent(cls)).select(cls.primaryConstructor).appliedToNone
-      Block(ClassDef(cls, parents, methods) :: Nil, newCls).asExprOf[A]
+      Block(ClassDef(cls, parents, members) :: Nil, newCls).asExprOf[A]
 
   extension (sym: Symbol)
     def privateIn: Symbol =
@@ -78,7 +86,8 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
     // TODO: Handle accessibility.
     def overridableMembers: List[Symbol] = for
       cls <- This(sym).tpe :: Nil
-      member <- sym.methodMembers.iterator ++ sym.fieldMembers
+      member <- Iterator.concat(sym.methodMembers, sym.fieldMembers, sym.typeMembers)
+      if !member.isNoSymbol
       if !member.isClassConstructor
       if !nonOverridableFlags.exists(member.flags.is)
       if !nonOverridableOwners.contains(member.owner)
@@ -103,7 +112,7 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
     def summon: Term = Implicits.search(tpe) match
       case success: ImplicitSearchSuccess => success.tree
       case failure: ImplicitSearchFailure => report.errorAndAbort(failure.explanation)
-      case _ => report.errorAndAbort(s"No given ${tpe.show} found")
+      case _ => report.errorAndAbort(s"Failed to summon: ${tpe.show}")
 
     def lambda(args: List[Symbol]): TypeLambda =
       val n = args.length

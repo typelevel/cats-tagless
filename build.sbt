@@ -6,7 +6,7 @@ addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 
 val Scala212 = "2.12.19"
 val Scala213 = "2.13.13"
-val Scala3 = "3.4.0"
+val Scala3 = "3.3.3"
 val Java11 = JavaSpec.temurin("11")
 
 val gitRepo = "git@github.com:typelevel/cats-tagless.git"
@@ -159,8 +159,8 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform, NativePlatform)
       "io.circe" %%% "circe-core" % circeVersion
     ).map(_ % Test),
     scalacOptions ++= (scalaBinaryVersion.value match {
-      case "3" => Some("-experimental")
-      case _ => None
+      case "3" => List("-Xcheck-macros")
+      case _ => Nil
     })
   )
 

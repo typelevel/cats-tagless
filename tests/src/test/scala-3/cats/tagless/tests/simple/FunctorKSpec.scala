@@ -24,7 +24,9 @@ import cats.Id
 import cats.arrow.FunctionK
 
 import scala.compiletime.testing.*
+import scala.annotation.experimental
 
+@experimental
 class FunctorKSpec extends munit.FunSuite with Fixtures:
 
   test("DeriveMacro should derive instance for a simple algebra") {

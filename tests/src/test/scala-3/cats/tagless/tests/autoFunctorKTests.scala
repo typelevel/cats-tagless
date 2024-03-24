@@ -43,7 +43,9 @@ import cats.tagless.laws.discipline.FunctorKTests
 
 import scala.util.Try
 import cats.data.Cokleisli
+import scala.annotation.experimental
 
+@experimental
 class autoFunctorKTests extends CatsTaglessTestSuite:
   import autoFunctorKTests.*
 
@@ -99,11 +101,15 @@ class autoFunctorKTests extends CatsTaglessTestSuite:
     assertEquals(algWithExtraTP.mapK(fk).a(5), Some("5"))
   }
 
-  // test("Alg with type member") {
-  //   implicit val tryInt: AlgWithTypeMember.Aux[Try, String] = new AlgWithTypeMember[Try] {
-  //     type T = String
-  //     def a(i: Int): Try[String] = Try(i.toString)
-  //   }
+  // TODO: This should work eventually
+  test("Alg with type member") {
+    // implicit val tryInt: AlgWithTypeMember.Aux[Try, String] = new AlgWithTypeMember[Try]:
+    //   type T = String
+    //   def a(i: Int): Try[String] = Try(i.toString)
+
+    val errors = compileErrors("FunctorK.derived[[F[_]] =>> AlgWithTypeMember.Aux[F, String]]")
+    assert(errors.startsWith("error: Not supported: type T in trait AlgWithTypeMember"))
+  }
 
   //   assertEquals[Option[Any], Option[Any]](tryInt.mapK(fk).a(3), Some("3"))
   //   import AlgWithTypeMember.fullyRefined.autoDerive.*
@@ -234,14 +240,12 @@ object autoFunctorKTests:
     def b(i: Int): Int
 
   // TODO: @finalAlg
-  // trait AlgWithTypeMember[F[_]] derives FunctorK:
-  //   type T
-  //   def a(i: Int): F[T]
+  trait AlgWithTypeMember[F[_]]:
+    type T
+    def a(i: Int): F[T]
 
-  // object AlgWithTypeMember {
-  //   type Aux[F[_], T0] = AlgWithTypeMember[F] { type T = T0 }
-  //   Derive.functorK[AlgWithTypeMember[_] { type T = Int }]
-  // }
+  object AlgWithTypeMember:
+    type Aux[F[_], T0] = AlgWithTypeMember[F] { type T = T0 }
 
   // trait AlgWithTypeBound[F[_]] derives FunctorK:
   //   type T <: AlgWithTypeBound.A
@@ -317,7 +321,7 @@ object autoFunctorKTests:
     final def warn(msg: String): F[String] = log(s"[warn] $msg")
 
   trait AlgWithByNameParameter[F[_]] derives FunctorK:
-    def log(msg: => String): F[String] ////////
+    def log(msg: => String): F[String]
 
   trait AlgWithVarArgsParameter[F[_]] derives FunctorK:
     def sum(xs: Int*): Int

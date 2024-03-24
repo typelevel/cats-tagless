@@ -23,43 +23,42 @@ import quoted.*
 import scala.annotation.experimental
 import compiletime.asMatchable
 
-object macroFunctorK:
-  @experimental inline def derive[Alg[_[_]]] = ${ functorK[Alg] }
+@experimental
+object MacroFunctorK:
+  inline def derive[Alg[_[_]]] = ${ functorK[Alg] }
 
-  @experimental def functorK[Alg[_[_]]: Type](using Quotes): Expr[FunctorK[Alg]] = '{
+  def functorK[Alg[_[_]]: Type](using Quotes): Expr[FunctorK[Alg]] = '{
     new FunctorK[Alg]:
-      def mapK[F[_], G[_]](af: Alg[F])(fk: F ~> G): Alg[G] =
-        ${ capture('af, 'fk) }
+      def mapK[F[_], G[_]](alg: Alg[F])(fk: F ~> G): Alg[G] =
+        ${ deriveMapK('alg, 'fk) }
   }
 
-  @experimental def capture[Alg[_[_]]: Type, F[_]: Type, G[_]: Type](eaf: Expr[Alg[F]], efk: Expr[F ~> G])(using
-      Quotes
-  ): Expr[Alg[G]] =
+  def deriveMapK[Alg[_[_]]: Type, F[_]: Type, G[_]: Type](
+      alg: Expr[Alg[F]],
+      fk: Expr[F ~> G]
+  )(using q: Quotes): Expr[Alg[G]] =
     import quotes.reflect.*
-    val utils = Utils.make
+    given DeriveMacros[q.type] = new DeriveMacros
 
-    val className = "$anon()"
-    val parents = List(TypeTree.of[Object], TypeTree.of[Alg[G]])
-    val decls = utils.membersAsSeenFrom(TypeRepr.of[Alg[G]])
+    val F = TypeRepr.of[F]
+    val G = TypeRepr.of[G]
+    val g = G.typeSymbol
 
-    val cls = Symbol.newClass(Symbol.spliceOwner, className, parents = parents.map(_.tpe), decls, selfType = None)
-    val body =
-      cls.declaredMethods.map(method => (method, method.tree)).collect { case (method, DefDef(_, _, typedTree, _)) =>
-        DefDef(
-          method,
-          argss =>
-            typedTree.tpe.simplified.asMatchable match
-              case at @ AppliedType(o, inner) =>
-                val apply = utils.call(eaf.asTerm, method, argss)
-                Some(Select.overloaded(efk.asTerm, "apply", inner, List(apply)))
-              case e =>
-                val apply = utils.call(eaf.asTerm, method, argss)
-                Some(apply)
-        )
+    alg.asTerm.transformTo[Alg[G]](
+      args = {
+        case (tpe, tree) if tpe.contains(g) =>
+          Select
+            .unique(tpe.summonLambda[ContravariantK](g), "contramapK")
+            .appliedToTypes(List(G, F))
+            .appliedTo(tree)
+            .appliedTo(fk.asTerm)
+      },
+      body = {
+        case (tpe, tree) if tpe.contains(g) =>
+          Select
+            .unique(tpe.summonLambda[FunctorK](g), "mapK")
+            .appliedToTypes(List(F, G))
+            .appliedTo(tree)
+            .appliedTo(fk.asTerm)
       }
-
-    val clsDef = ClassDef(cls, parents, body = body)
-    val newCls = Typed(Apply(Select(New(TypeIdent(cls)), cls.primaryConstructor), Nil), TypeTree.of[Alg[G]])
-    val expr = Block(List(clsDef), newCls).asExpr
-
-    expr.asExprOf[Alg[G]]
+    )

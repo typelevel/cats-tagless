@@ -1,8 +1,8 @@
-addCommandAlias("validateJVM", "all scalafmtCheckAll testsJVM/test")
+addCommandAlias("validateJVM", "all scalafmtCheckAll scalafmtSbtCheck testsJVM/test")
 addCommandAlias("validateJS", "all testsJS/test")
 addCommandAlias("validateNative", "all testsNative/test")
-addCommandAlias("fmt", "scalafmtAll")
-addCommandAlias("fmtCheck", "scalafmtCheckAll")
+addCommandAlias("fmt", "all scalafmtSbt scalafmtAll")
+addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 
 val Scala212 = "2.12.19"
 val Scala213 = "2.13.13"
@@ -226,7 +226,7 @@ lazy val commonSettings = List(
   // sbt-typelevel sets -source:3.0-migration, we'd like to replace it with -source:future
   scalacOptions ~= (_.filterNot(_ == "-source:3.0-migration")),
   scalacOptions ++= (scalaBinaryVersion.value match {
-    case "3" => List("-language:adhocExtensions", "-source:future", "-explain")
+    case "3" => List("-language:adhocExtensions", "-explain")
     case "2.13" => List("-Xsource:3", "-P:kind-projector:underscore-placeholders", "-Xlint:-pattern-shadow")
     case _ => List("-Xsource:3", "-P:kind-projector:underscore-placeholders")
   })

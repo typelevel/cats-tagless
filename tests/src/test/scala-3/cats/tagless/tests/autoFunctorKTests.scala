@@ -42,6 +42,7 @@ import cats.laws.discipline.SerializableTests
 import cats.tagless.laws.discipline.FunctorKTests
 
 import scala.util.Try
+import cats.data.Cokleisli
 
 class autoFunctorKTests extends CatsTaglessTestSuite:
   import autoFunctorKTests.*
@@ -57,15 +58,15 @@ class autoFunctorKTests extends CatsTaglessTestSuite:
   }
 
   test("simple instance summon with autoDeriveFromFunctorK on") {
-    implicit val listParse: SafeAlg[List] = Interpreters.tryInterpreter.mapK(FunctionKLift[Try, List](_.toList))
+    given SafeAlg[List] = Interpreters.tryInterpreter.mapK(FunctionKLift[Try, List](_.toList))
     assertEquals(summon[SafeAlg[List]].parseInt("3"), List(3))
   }
 
-  test("auto derive from functor k") {
-    // import SafeAlg.autoDerive.*
-    // import Interpreters.tryInterpreter
-    // SafeAlg[Option]
-  }
+  // test("auto derive from functor k") {
+  // import SafeAlg.autoDerive.*
+  // import Interpreters.tryInterpreter
+  // SafeAlg[Option]
+  // }
 
   test("Alg with non effect method") {
     val tryInt = new AlgWithNonEffectMethod[Try]:
@@ -84,17 +85,15 @@ class autoFunctorKTests extends CatsTaglessTestSuite:
     assertEquals(tryInt.mapK(fk).minusOne(2), 1)
   }
 
-  // test("Alg with extra type parameters") {
-  //   implicit val foo: AlgWithExtraTP[Try, String] = new AlgWithExtraTP[Try, String] {
-  //     def a(i: Int) = Try(i.toString)
-  //   }
+  test("Alg with extra type parameters") {
+    val alg = new AlgWithExtraTP[Try, String]:
+      def a(i: Int) = Try(i.toString)
 
-  //   // import AlgWithExtraTP.autoDerive.*
-  //   // assertEquals(AlgWithExtraTP[Option, String].a(5), Some("5"))
-  // }
+    assertEquals(AlgWithExtraTP.functorK.mapK(alg)(fk).a(5), Some("5"))
+  }
 
   test("Alg with extra type parameters before effect type") {
-    implicit val algWithExtraTP: AlgWithExtraTP2[String, Try] = new AlgWithExtraTP2[String, Try]:
+    val algWithExtraTP = new AlgWithExtraTP2[String, Try]:
       def a(i: Int) = Try(i.toString)
 
     assertEquals(algWithExtraTP.mapK(fk).a(5), Some("5"))
@@ -221,11 +220,11 @@ class autoFunctorKTests extends CatsTaglessTestSuite:
     assertEquals(bar.log("level".reverse), Some("level"))
   }
 
-  // test("builder-style algebra") {
-  //   val listBuilder: BuilderAlgebra[List] = BuilderAlgebra.Named("foo")
-  //   val optionBuilder = listBuilder.mapK[Option](FunctionKLift[List, Option](_.headOption))
-  //   assertEquals(optionBuilder.withFoo("bar").unit, Some(()))
-  // }
+  test("builder-style algebra") {
+    val listBuilder: BuilderAlgebra[List] = BuilderAlgebra.Named("foo")
+    val optionBuilder = listBuilder.mapK[Option](FunctionKLift[List, Option](_.headOption))
+    assertEquals(optionBuilder.withFoo("bar").unit, Some(()))
+  }
 
 object autoFunctorKTests:
   implicit val fk: Try ~> Option = FunctionKLift[Try, Option](_.toOption)
@@ -235,10 +234,9 @@ object autoFunctorKTests:
     def b(i: Int): Int
 
   // TODO: @finalAlg
-  // trait AlgWithTypeMember[F[_]] derives FunctorK {
+  // trait AlgWithTypeMember[F[_]] derives FunctorK:
   //   type T
   //   def a(i: Int): F[T]
-  // }
 
   // object AlgWithTypeMember {
   //   type Aux[F[_], T0] = AlgWithTypeMember[F] { type T = T0 }
@@ -256,10 +254,11 @@ object autoFunctorKTests:
   //   type Aux[F[_], T0 <: A] = AlgWithTypeBound[F] { type T = T0 }
 
   // TODO: @finalAlg
-  // TODO: unsupported?
-  // trait AlgWithExtraTP[F[_], T] derives FunctorK {
-  //   def a(i: Int): F[T]
-  // }
+  trait AlgWithExtraTP[F[_], T]:
+    def a(i: Int): F[T]
+
+  object AlgWithExtraTP:
+    given functorK[T]: FunctorK[[F[_]] =>> AlgWithExtraTP[F, T]] = FunctorK.derived
 
   // TODO: @finalAlg
   trait AlgWithExtraTP2[T, F[_]] derives FunctorK:
@@ -318,7 +317,7 @@ object autoFunctorKTests:
     final def warn(msg: String): F[String] = log(s"[warn] $msg")
 
   trait AlgWithByNameParameter[F[_]] derives FunctorK:
-    def log(msg: => String): F[String]
+    def log(msg: => String): F[String] ////////
 
   trait AlgWithVarArgsParameter[F[_]] derives FunctorK:
     def sum(xs: Int*): Int
@@ -328,19 +327,14 @@ object autoFunctorKTests:
     val int: F[Int]
     lazy val str: F[String]
 
-  trait BuilderAlgebra[F[_]]:
+  trait BuilderAlgebra[F[_]] derives FunctorK:
     def unit: F[Unit]
     def withFoo(foo: String): BuilderAlgebra[F]
 
-  // object BuilderAlgebra {
-  //   implicit val functorK: FunctorK[BuilderAlgebra] = Derive.functorK
+  object BuilderAlgebra:
+    final case class Named(name: String) extends BuilderAlgebra[List]:
+      val unit: List[Unit] = List.fill(5)(())
+      def withFoo(foo: String): BuilderAlgebra[List] = copy(name = foo)
 
-  //   final case class Named(name: String) extends BuilderAlgebra[List] {
-  //     val unit: List[Unit] = List.fill(5)(())
-  //     def withFoo(foo: String): BuilderAlgebra[List] = copy(name = foo)
-  //   }
-  // }
-
-  // trait AlgWithContravariantK[F[_]] derives FunctorK {
-  //   def app(f: Cokleisli[F, String, Int])(x: String): F[Int]
-  // }
+  trait AlgWithContravariantK[F[_]] derives FunctorK:
+    def app(f: Cokleisli[F, String, Int])(x: String): F[Int]

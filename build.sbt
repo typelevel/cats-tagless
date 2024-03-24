@@ -7,7 +7,7 @@ addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 val Scala212 = "2.12.19"
 val Scala213 = "2.13.13"
 val Scala3 = "3.3.3"
-val Java8 = JavaSpec.temurin("8")
+val Java11 = JavaSpec.temurin("11")
 
 val gitRepo = "git@github.com:typelevel/cats-tagless.git"
 val homePage = "https://typelevel.org/cats-tagless"
@@ -37,7 +37,7 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
       WorkflowStep.Sbt(List("docs/makeMicrosite"), name = Some("Build microsite"))
     ),
     scalas = List("2.13"),
-    javas = List(Java8)
+    javas = List(Java11)
   )
 )
 

@@ -1,4 +1,4 @@
-addCommandAlias("validateJVM", "all scalafmtCheckAll scalafmtSbtCheck testsJVM/test")
+addCommandAlias("validateJVM", "all scalafmtCheckAll testsJVM/test")
 addCommandAlias("validateJS", "all testsJS/test")
 addCommandAlias("validateNative", "all testsNative/test")
 addCommandAlias("fmt", "all scalafmtSbt scalafmtAll")

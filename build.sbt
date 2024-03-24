@@ -33,7 +33,8 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
         name = Some("Setup Ruby"),
         params = Map("ruby-version" -> "3.3", "bundler-cache" -> "true")
       ),
-      WorkflowStep.Run(List("gem install jekyll -v 4.3"), name = Some("Install Jekyll")),
+      WorkflowStep.Run(List("gem install jekyll -v 3.9.4"), name = Some("Install Jekyll")),
+      WorkflowStep.Run(List("gem install kramdown-parser-gfm -v 1.1.0"), name = Some("Install Kramdown")),
       WorkflowStep.Sbt(List("docs/makeMicrosite"), name = Some("Build microsite"))
     ),
     scalas = List("2.13"),

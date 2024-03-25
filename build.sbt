@@ -157,7 +157,11 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform, NativePlatform)
       "org.typelevel" %%% "cats-testkit" % catsVersion,
       "org.typelevel" %%% "discipline-munit" % disciplineMunitVersion,
       "io.circe" %%% "circe-core" % circeVersion
-    ).map(_ % Test)
+    ).map(_ % Test),
+    scalacOptions ++= (scalaBinaryVersion.value match {
+      case "3" => List("-Xcheck-macros")
+      case _ => Nil
+    })
   )
 
 lazy val examples = project
@@ -222,7 +226,7 @@ lazy val commonSettings = List(
   // sbt-typelevel sets -source:3.0-migration, we'd like to replace it with -source:future
   scalacOptions ~= (_.filterNot(_ == "-source:3.0-migration")),
   scalacOptions ++= (scalaBinaryVersion.value match {
-    case "3" => List("-language:adhocExtensions", "-source:future", "-explain")
+    case "3" => List("-language:adhocExtensions", "-explain")
     case "2.13" => List("-Xsource:3", "-P:kind-projector:underscore-placeholders", "-Xlint:-pattern-shadow")
     case _ => List("-Xsource:3", "-P:kind-projector:underscore-placeholders")
   })

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package cats.tagless.derived
+package cats.tagless.macros
 
-import cats.tagless.macros.Derive
+import cats.tagless.*
 import scala.annotation.experimental
 
-trait DerivedFunctorK:
-  @experimental inline def derived[Alg[_[_]]] = Derive.functorK[Alg]
+object Derive:
+  @experimental inline def functorK[Alg[_[_]]]: FunctorK[Alg] = MacroFunctorK.derive[Alg]

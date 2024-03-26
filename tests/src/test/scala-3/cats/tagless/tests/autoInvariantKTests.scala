@@ -23,7 +23,6 @@ import cats.laws.discipline.SerializableTests
 import cats.laws.discipline.arbitrary.*
 import cats.tagless.laws.discipline.InvariantKTests
 
-import scala.annotation.nowarn
 import scala.util.Try
 import scala.annotation.experimental
 

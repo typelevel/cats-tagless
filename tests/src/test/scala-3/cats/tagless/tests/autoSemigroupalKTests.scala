@@ -57,3 +57,8 @@ object autoSemigroupalKTests:
   trait AlgWithVarArgsParameter[F[_]] derives SemigroupalK:
     def sum(xs: Int*): Int
     def effectfulSum(xs: Int*): F[Int]
+
+  trait AlgWithConstantReturnTypes[F[_]] /*derives SemigroupalK*/:
+    def pure[A](x: A): F[A]
+    def unsafeRun[A](t: F[A]): A
+    def toError(t: F[Int]): Exception

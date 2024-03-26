@@ -27,10 +27,10 @@ object MacroInvariantK:
   inline def derive[Alg[_[_]]] = ${ invariantK[Alg] }
 
   def invariantK[Alg[_[_]]: Type](using Quotes): Expr[InvariantK[Alg]] = '{
-      new InvariantK[Alg]:
-        def imapK[F[_], G[_]](alg: Alg[F])(fk: F ~> G)(gk: G ~> F): Alg[G] =
-          ${ deriveIMapK('alg, 'fk, 'gk) }
-    }
+    new InvariantK[Alg]:
+      def imapK[F[_], G[_]](alg: Alg[F])(fk: F ~> G)(gk: G ~> F): Alg[G] =
+        ${ deriveIMapK('alg, 'fk, 'gk) }
+  }
 
   def deriveIMapK[Alg[_[_]]: Type, F[_]: Type, G[_]: Type](
       alg: Expr[Alg[F]],
@@ -54,7 +54,6 @@ object MacroInvariantK:
             .appliedTo(gk.asTerm)
             .appliedTo(fk.asTerm)
       },
-
       body = {
         case (tpe, body) if tpe.contains(g) =>
           Select

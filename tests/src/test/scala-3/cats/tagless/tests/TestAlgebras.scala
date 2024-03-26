@@ -30,7 +30,7 @@ import scala.annotation.experimental
 
 // TODO: @finalAlg @autoProductNK @autoInstrument
 @experimental
-trait SafeAlg[F[_]] derives FunctorK: // , SemigroupalK:
+trait SafeAlg[F[_]] derives FunctorK, SemigroupalK:
   def parseInt(str: String): F[Int]
   def divide(dividend: Float, divisor: Float): F[Float]
 
@@ -53,7 +53,8 @@ object SafeAlg:
 
 // TODO: Macro should support it
 // TODO: @finalAlg
-trait SafeInvAlg[F[_]]: // derives InvariantK, SemigroupalK:
+@experimental
+trait SafeInvAlg[F[_]] derives InvariantK, SemigroupalK:
   def parseInt(fs: String): F[Int]
   // def parseInt(fs: F[String]): F[Int]
   // def doubleParser(precision: Int): Kleisli[F, String, Double]
@@ -88,7 +89,8 @@ object SafeInvAlg:
       // def doubleParser(precision: Int) = doubleParserF(precision)
       // def parseIntOrError(fs: EitherT[F, String, String]) = parseIntOrErrorF(fs)
   )
-trait CalculatorAlg[F[_]]: // derives SemigroupalK, InvariantK:
+@experimental
+trait CalculatorAlg[F[_]] derives InvariantK, SemigroupalK:
   def lit(i: Int): F[Int]
   // def add(x: F[Int], y: F[Int]): F[Int]
   // def show[A](expr: F[A]): String

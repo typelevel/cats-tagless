@@ -16,4 +16,8 @@
 
 package cats.tagless.derived
 
-trait DerivedSemigroupalK
+import cats.tagless.macros.Derive
+import scala.annotation.experimental
+
+trait DerivedSemigroupalK:
+  @experimental inline def derived[Alg[_[_]]] = Derive.semigroupalK[Alg]

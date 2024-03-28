@@ -49,20 +49,50 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
       val parents = List(TypeTree.of[Object], TypeTree.of[A])
       val cls = Symbol.newClass(Symbol.spliceOwner, name, parents.map(_.tpe), _.overridableMembers, None)
 
-      def transformArg(paramAndArg: (Definition, Tree)) = paramAndArg match
+      def transformArg(paramAndArg: (Definition, Tree)): Tree = paramAndArg match
         case (param: ValDef, arg: Term) => args.applyOrElse((param.tpt.tpe, arg), _ => arg)
         case (_, arg) => arg
 
-      def transformDef(method: DefDef)(argss: List[List[Tree]]) =
+      def transformDef(method: DefDef)(argss: List[List[Tree]]): Option[Term] =
         val delegate = term.call(method.symbol):
           for (params, args) <- method.paramss.zip(argss)
           yield for paramAndArg <- params.params.zip(args)
           yield transformArg(paramAndArg)
         Some(body.applyOrElse((method.returnTpt.tpe, delegate), _ => delegate))
 
-      def transformVal(value: ValDef) =
+      def transformVal(value: ValDef): Option[Term] =
         val delegate = term.select(value.symbol)
         Some(body.applyOrElse((value.tpt.tpe, delegate), _ => delegate))
+
+      val members: List[Definition] = cls.declarations
+        .filterNot(_.isClassConstructor)
+        .map: sym =>
+          sym.tree match
+            case method: DefDef => DefDef(sym, transformDef(method))
+            case value: ValDef => ValDef(sym, transformVal(value))
+            case _ => report.errorAndAbort(s"Not supported: $sym in ${sym.owner}")
+
+      val newCls = New(TypeIdent(cls)).select(cls.primaryConstructor).appliedToNone
+      Block(ClassDef(cls, parents, members) :: Nil, newCls).asExprOf[A]
+
+  extension (terms: Seq[Term])
+    def call(method: Symbol)(argss: List[List[Tree]]): Seq[Term] =
+      terms.map(_.call(method)(argss))
+
+    def transform[A: Type](
+        body: PartialFunction[(TypeRepr, Seq[Term]), Term] = PartialFunction.empty
+    ): Expr[A] =
+      val name = Symbol.freshName("$anon")
+      val parents = List(TypeTree.of[Object], TypeTree.of[A])
+      val cls = Symbol.newClass(Symbol.spliceOwner, name, parents.map(_.tpe), _.overridableMembers, None)
+
+      def transformDef(method: DefDef)(argss: List[List[Tree]]): Option[Term] =
+        val delegates = terms.call(method.symbol)(argss)
+        Some(body.applyOrElse((method.returnTpt.tpe, delegates), _ => delegates.head))
+
+      def transformVal(value: ValDef): Option[Term] =
+        val delegates = terms.map(_.select(value.symbol))
+        Some(body.applyOrElse((value.tpt.tpe, delegates), _ => delegates.head))
 
       val members = cls.declarations
         .filterNot(_.isClassConstructor)

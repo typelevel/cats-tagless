@@ -45,10 +45,38 @@ object MacroSemigroupalK:
     val f = F.typeSymbol
     val h = H.typeSymbol
 
-    List(eaf.asTerm, eag.asTerm).transform[Alg[Tuple2K[F, G, *]]] {
-      case (tpe, argf :: argg :: Nil) if tpe.contains(h) =>
-        Select
-          .unique(tpe.typeArgs.head.appliedTo(tpe.typeArgs.last).summonLambda[SemigroupalK](f), "productK")
-          .appliedToTypes(List(F, G))
-          .appliedTo(argf, argg)
-    }
+    List(eaf.asTerm, eag.asTerm).transform[Alg[Tuple2K[F, G, *]]](
+      args = List(
+        {
+          case (tpe, arg) if tpe.contains(h) =>
+            Select
+              .unique(tpe.typeArgs.head.appliedTo(tpe.typeArgs.last).summonLambda[FunctorK](f), "mapK")
+              .appliedToTypes(List(H, F))
+              .appliedTo(arg)
+              .appliedTo(
+                Select
+                  .unique('{ SemigroupalK }.asTerm, "firstK")
+                  .appliedToTypes(List(F, G))
+              )
+        },
+        {
+          case (tpe, arg) if tpe.contains(h) =>
+            Select
+              .unique(tpe.typeArgs.head.appliedTo(tpe.typeArgs.last).summonLambda[FunctorK](f), "mapK")
+              .appliedToTypes(List(H, G))
+              .appliedTo(arg)
+              .appliedTo(
+                Select
+                  .unique('{ SemigroupalK }.asTerm, "secondK")
+                  .appliedToTypes(List(F, G))
+              )
+        }
+      ),
+      body = {
+        case (tpe, argf :: argg :: Nil) if tpe.contains(h) =>
+          Select
+            .unique(tpe.typeArgs.head.appliedTo(tpe.typeArgs.last).summonLambda[SemigroupalK](f), "productK")
+            .appliedToTypes(List(F, G))
+            .appliedTo(argf, argg)
+      }
+    )

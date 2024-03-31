@@ -39,6 +39,8 @@ object MacroSemigroupalK:
     import quotes.reflect.*
     given DeriveMacros[q.type] = new DeriveMacros
 
+    extension (tpe: TypeRepr) def fromTuple2K: TypeRepr = tpe.typeArgs.head.appliedTo(tpe.typeArgs.last)
+
     val F = TypeRepr.of[F]
     val G = TypeRepr.of[G]
     val H = TypeRepr.of[Tuple2K[F, G, *]]
@@ -50,7 +52,7 @@ object MacroSemigroupalK:
         {
           case (tpe, arg) if tpe.contains(h) =>
             Select
-              .unique(tpe.typeArgs.head.appliedTo(tpe.typeArgs.last).summonLambda[FunctorK](f), "mapK")
+              .unique(tpe.fromTuple2K.summonLambda[FunctorK](f), "mapK")
               .appliedToTypes(List(H, F))
               .appliedTo(arg)
               .appliedTo(
@@ -62,7 +64,7 @@ object MacroSemigroupalK:
         {
           case (tpe, arg) if tpe.contains(h) =>
             Select
-              .unique(tpe.typeArgs.head.appliedTo(tpe.typeArgs.last).summonLambda[FunctorK](f), "mapK")
+              .unique(tpe.fromTuple2K.summonLambda[FunctorK](f), "mapK")
               .appliedToTypes(List(H, G))
               .appliedTo(arg)
               .appliedTo(
@@ -75,7 +77,7 @@ object MacroSemigroupalK:
       body = {
         case (tpe, argf :: argg :: Nil) if tpe.contains(h) =>
           Select
-            .unique(tpe.typeArgs.head.appliedTo(tpe.typeArgs.last).summonLambda[SemigroupalK](f), "productK")
+            .unique(tpe.fromTuple2K.summonLambda[SemigroupalK](f), "productK")
             .appliedToTypes(List(F, G))
             .appliedTo(argf, argg)
       }

@@ -62,6 +62,5 @@ object autoContravariantKTests:
     def foldSpecialized(init: String)(f: (Int, String) => Int) = fs(init, f)
   )
 
-  // TODO: Macro should handle it
   trait TestAlgebraWithExtraTypeParam[A, F[_]] extends TestAlgebra[F] derives ContravariantK:
     def fold[B](init: B)(f: (B, A) => B): Cokleisli[F, A, B]

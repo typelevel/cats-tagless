@@ -45,7 +45,7 @@ trait Fixtures:
   trait SimpleServiceC[F[_]] derives ContravariantK:
     def id(id: F[Int]): Int
     def ids(id1: F[Int], id2: F[Int]): Int
-    // def foldSpecialized(init: String)(f: (Int, String) => Int): Cokleisli[F, String, Int]
+    def foldSpecialized(init: String)(f: (Int, String) => Int): Cokleisli[F, String, Int]
 
   def instancec = new SimpleServiceC[Id]:
     def id(id: Id[Int]): Int = id

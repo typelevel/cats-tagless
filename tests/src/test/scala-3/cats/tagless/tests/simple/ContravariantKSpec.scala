@@ -40,11 +40,11 @@ class ContravariantKSpec extends munit.FunSuite with Fixtures:
     val fk: Option ~> Id = FunctionK.lift[Option, Id]([X] => (id: Option[X]) => id.get)
     val optionalInstance = contravariantK.contramapK(instancec)(fk)
 
-    // val f: (Int, String) => Int = (i, s) => i + s.toInt
+    val f: (Int, String) => Int = (i, s) => i + s.toInt
 
     assertEquals(optionalInstance.id(Some(23)), instancec.id(23))
     assertEquals(optionalInstance.ids(Some(0), Some(1)), instancec.ids(0, 1))
-    // assertEquals(optionalInstance.foldSpecialized("0")(f).run(Some("1")), instancec.foldSpecialized("0")(f).run("1"))
+    assertEquals(optionalInstance.foldSpecialized("0")(f).run(Some("1")), instancec.foldSpecialized("0")(f).run("1"))
   }
 
   test("DeriveMacro should not derive instance for not a contravariant algebra") {
@@ -55,9 +55,9 @@ class ContravariantKSpec extends munit.FunSuite with Fixtures:
     val fk: Option ~> Id = FunctionK.lift[Option, Id]([X] => (id: Option[X]) => id.get)
     val optionalInstance = instancec.contramapK(fk)
 
-    // val f: (Int, String) => Int = (i, s) => i + s.toInt
+    val f: (Int, String) => Int = (i, s) => i + s.toInt
 
     assertEquals(optionalInstance.id(Some(23)), instancec.id(23))
     assertEquals(optionalInstance.ids(Some(0), Some(1)), instancec.ids(0, 1))
-    // assertEquals(optionalInstance.foldSpecialized("0")(f).run(Some("1")), instancec.foldSpecialized("0")(f).run("1"))
+    assertEquals(optionalInstance.foldSpecialized("0")(f).run(Some("1")), instancec.foldSpecialized("0")(f).run("1"))
   }

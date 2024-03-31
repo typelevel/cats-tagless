@@ -41,12 +41,12 @@ object autoContravariantKTests:
 
   trait TestAlgebra[F[_]] derives ContravariantK:
     def sum(xs: F[Int]): Int
-    // ef sumAll(xss: F[Int]*): Int
-    // def foldSpecialized(init: String)(f: (Int, String) => Int): Cokleisli[F, String, Int]
+    // def sumAll(xss: F[Int]*): Int
+    def foldSpecialized(init: String)(f: (Int, String) => Int): Cokleisli[F, String, Int]
 
   object TestAlgebra:
     implicit def eqv[F[_]](implicit arbFi: Arbitrary[F[Int]], arbFs: Arbitrary[F[String]]): Eq[TestAlgebra[F]] =
-      Eq.by(algebra => (algebra.sum /*, algebra.sumAll, algebra.foldSpecialized*/ ))
+      Eq.by(algebra => (algebra.sum /*, algebra.sumAll*/, algebra.foldSpecialized))
 
   implicit def arbitrary[F[_]](implicit
       arbFs: Arbitrary[F[String]],
@@ -63,6 +63,5 @@ object autoContravariantKTests:
   )
 
   // TODO: Macro should handle it
-  // trait TestAlgebraWithExtraTypeParam[F[_], A] extends TestAlgebra[F] derives ContravariantK {
-  //   def fold[B](init: B)(f: (B, A) => B): Cokleisli[F, A, B]
-  // }
+  trait TestAlgebraWithExtraTypeParam[A, F[_]] extends TestAlgebra[F] derives ContravariantK:
+    def fold[B](init: B)(f: (B, A) => B): Cokleisli[F, A, B]

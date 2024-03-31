@@ -53,6 +53,11 @@ object MacroContravariantK:
             .appliedTo(fk.asTerm)
       },
       body = {
-        case (tpe, body) if tpe.contains(g) => body
+        case (tpe, arg) if tpe.contains(g) =>
+          Select
+            .unique(tpe.summonLambda[ContravariantK](g), "contramapK")
+            .appliedToTypes(List(F, G))
+            .appliedTo(arg)
+            .appliedTo(fk.asTerm)
       }
     )

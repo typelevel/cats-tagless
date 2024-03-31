@@ -14,10 +14,23 @@
  * limitations under the License.
  */
 
-package cats.tagless.derived
+package cats.tagless.macros
 
-import cats.tagless.macros.Derive
+import cats.tagless.*
+import cats.~>
+import cats.data.Tuple2K
+
 import scala.annotation.experimental
+import scala.quoted.*
 
-trait DerivedApplyK:
-  @experimental inline def derived[Alg[_[_]]] = Derive.applyK[Alg]
+@experimental
+object MacroApplyK:
+  inline def derive[Alg[_[_]]] = ${ applyK[Alg] }
+
+  def applyK[Alg[_[_]]: Type](using Quotes): Expr[ApplyK[Alg]] = '{
+    new ApplyK[Alg]:
+      def mapK[F[_], G[_]](af: Alg[F])(fk: F ~> G): Alg[G] =
+        ${ MacroFunctorK.deriveMapK('af, 'fk) }
+      def productK[F[_], G[_]](af: Alg[F], ag: Alg[G]): Alg[Tuple2K[F, G, *]] =
+        ${ MacroSemigroupalK.deriveProductK('af, 'ag) }
+  }

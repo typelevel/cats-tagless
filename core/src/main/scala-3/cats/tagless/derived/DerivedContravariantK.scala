@@ -16,4 +16,8 @@
 
 package cats.tagless.derived
 
-trait DerivedContravariantK
+import cats.tagless.macros.Derive
+import scala.annotation.experimental
+
+trait DerivedContravariantK:
+  @experimental inline def derived[Alg[_[_]]] = Derive.contravariantK[Alg]

@@ -27,12 +27,6 @@ import scala.annotation.experimental
 
 @experimental
 class autoSemigroupalKTests extends CatsTaglessTestSuite:
-  type T3K[A] = Tuple3K[Try, Option, List]#λ[A]
-  // Type inference issues on Scala 2.12
-  implicit val eqForSafeAlg: Eq[SafeAlg[T3K]] = SafeAlg.eqForSafeAlg[T3K]
-  implicit val eqForSafeInvAlg: Eq[SafeInvAlg[T3K]] = SafeInvAlg.eqForSafeInvAlg[T3K]
-  implicit val eqForCalculatorAlg: Eq[CalculatorAlg[T3K]] = CalculatorAlg.eqForCalculatorAlg[T3K]
-
   checkAll("SemigroupalK[SafeAlg]", SemigroupalKTests[SafeAlg].semigroupalK[Try, Option, List])
   checkAll("SemigroupalK[SafeInvAlg]", SemigroupalKTests[SafeInvAlg].semigroupalK[Try, Option, List])
   checkAll("SemigroupalK[CalculatorAlg]", SemigroupalKTests[CalculatorAlg].semigroupalK[Try, Option, List])
@@ -59,6 +53,7 @@ object autoSemigroupalKTests:
     def effectfulSum(xs: Int*): F[Int]
 
   trait AlgWithConstantReturnTypes[F[_]] derives SemigroupalK:
-    def pure[A](x: A): F[A]
+    def defer[A](x: => A): F[A]
     def unsafeRun[A](t: F[A]): A
+    def unsafeRunAll[A](t: F[A]*): Seq[A]
     def toError(t: F[Int]): Exception

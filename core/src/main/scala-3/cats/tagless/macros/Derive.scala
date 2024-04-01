@@ -23,3 +23,4 @@ object Derive:
   @experimental inline def functorK[Alg[_[_]]]: FunctorK[Alg] = MacroFunctorK.derive[Alg]
   @experimental inline def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = MacroSemigroupalK.derive[Alg]
   @experimental inline def invariantK[Alg[_[_]]]: InvariantK[Alg] = MacroInvariantK.derive[Alg]
+  @experimental inline def contravariantK[Alg[_[_]]]: ContravariantK[Alg] = MacroContravariantK.derive[Alg]

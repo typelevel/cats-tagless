@@ -38,7 +38,6 @@ object MacroSemigroupalK:
   )(using q: Quotes): Expr[Alg[Tuple2K[F, G, *]]] =
     import quotes.reflect.*
     given DeriveMacros[q.type] = new DeriveMacros
-
     extension (tpe: TypeRepr) def fromTuple2K: TypeRepr = tpe.typeArgs.head.appliedTo(tpe.typeArgs.last)
 
     val F = TypeRepr.of[F]
@@ -46,6 +45,8 @@ object MacroSemigroupalK:
     val H = TypeRepr.of[Tuple2K[F, G, *]]
     val f = F.typeSymbol
     val h = H.typeSymbol
+
+    def tuple2K(name: String): Term = Select.unique('{ SemigroupalK }.asTerm, name).appliedToTypes(List(F, G))
 
     List(eaf.asTerm, eag.asTerm).transform[Alg[Tuple2K[F, G, *]]](
       args = List(
@@ -55,11 +56,7 @@ object MacroSemigroupalK:
               .unique(tpe.fromTuple2K.summonLambda[FunctorK](f), "mapK")
               .appliedToTypes(List(H, F))
               .appliedTo(arg)
-              .appliedTo(
-                Select
-                  .unique('{ SemigroupalK }.asTerm, "firstK")
-                  .appliedToTypes(List(F, G))
-              )
+              .appliedTo(tuple2K("firstK"))
         },
         {
           case (tpe, arg) if tpe.contains(h) =>
@@ -67,11 +64,7 @@ object MacroSemigroupalK:
               .unique(tpe.fromTuple2K.summonLambda[FunctorK](f), "mapK")
               .appliedToTypes(List(H, G))
               .appliedTo(arg)
-              .appliedTo(
-                Select
-                  .unique('{ SemigroupalK }.asTerm, "secondK")
-                  .appliedToTypes(List(F, G))
-              )
+              .appliedTo(tuple2K("secondK"))
         }
       ),
       body = {

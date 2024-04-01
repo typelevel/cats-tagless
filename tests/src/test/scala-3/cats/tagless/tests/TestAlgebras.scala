@@ -55,13 +55,12 @@ object SafeAlg:
 // TODO: @finalAlg
 @experimental
 trait SafeInvAlg[F[_]] derives InvariantK, SemigroupalK:
-  def parseInt(fs: String): F[Int]
-  // def parseInt(fs: F[String]): F[Int]
+  def parseInt(fs: F[String]): F[Int]
   // def doubleParser(precision: Int): Kleisli[F, String, Double]
   // def parseIntOrError(fs: EitherT[F, String, String]): F[Int]
 
 object SafeInvAlg:
-  import TestInstances.*
+  // import TestInstances.*
 
   implicit def eqForSafeInvAlg[F[_]](implicit
       eqFi: Eq[F[Int]],
@@ -79,21 +78,19 @@ object SafeInvAlg:
       arbFd: Arbitrary[F[Double]]
   ): Arbitrary[SafeInvAlg[F]] = Arbitrary(
     for
-      parseIntF <- Arbitrary.arbitrary[String => F[Int]]
-      // parseIntF <- Arbitrary.arbitrary[F[String] => F[Int]]
+      parseIntF <- Arbitrary.arbitrary[F[String] => F[Int]]
       doubleParserF <- Arbitrary.arbitrary[Int => Kleisli[F, String, Double]]
       parseIntOrErrorF <- Arbitrary.arbitrary[EitherT[F, String, String] => F[Int]]
     yield new SafeInvAlg[F]:
-      def parseInt(fs: String) = parseIntF(fs)
-      // def parseInt(fs: F[String]) = parseIntF(fs)
-      // def doubleParser(precision: Int) = doubleParserF(precision)
-      // def parseIntOrError(fs: EitherT[F, String, String]) = parseIntOrErrorF(fs)
+      def parseInt(fs: F[String]) = parseIntF(fs)
+      def doubleParser(precision: Int) = doubleParserF(precision)
+      def parseIntOrError(fs: EitherT[F, String, String]) = parseIntOrErrorF(fs)
   )
 @experimental
 trait CalculatorAlg[F[_]] derives InvariantK, SemigroupalK:
   def lit(i: Int): F[Int]
-  // def add(x: F[Int], y: F[Int]): F[Int]
-  // def show[A](expr: F[A]): String
+  def add(x: F[Int], y: F[Int]): F[Int]
+  def show[A](expr: F[A]): String
 
 object CalculatorAlg:
   import TestInstances.*
@@ -102,7 +99,7 @@ object CalculatorAlg:
       eqFi: Eq[F[Int]],
       exFi: ExhaustiveCheck[F[Int]]
   ): Eq[CalculatorAlg[F]] = Eq.by { algebra =>
-    (algebra.lit /*, algebra.add, algebra.show[Int]*/ )
+    (algebra.lit, algebra.add, algebra.show[Int])
   }
 
   implicit def arbitraryCalculatorAlg[F[_]](implicit

@@ -185,4 +185,3 @@ object autoInvariantKTests:
 
   // trait AlgWithByNameParameter[F[_]] derives InvariantK:
   //   def whenM(cond: F[Boolean])(action: => F[Unit]): F[Unit]
-  //

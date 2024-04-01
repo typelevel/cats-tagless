@@ -24,7 +24,7 @@ import scala.annotation.experimental
 @experimental
 trait Fixtures:
   /** Simple algebra definition */
-  trait SimpleService[F[_]] derives FunctorK, SemigroupalK:
+  trait SimpleService[F[_]] derives FunctorK, SemigroupalK, InvariantK, ApplyK:
     def id(): F[Int]
     def list(id: Int): F[List[Int]]
     def lists(id1: Int, id2: Int): F[List[Int]]

@@ -80,14 +80,27 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
       terms.map(_.call(method)(argss))
 
     def transform[A: Type](
+        args: Seq[PartialFunction[(TypeRepr, Term), Term]] = Nil,
         body: PartialFunction[(TypeRepr, Seq[Term]), Term] = PartialFunction.empty
     ): Expr[A] =
       val name = Symbol.freshName("$anon")
       val parents = List(TypeTree.of[Object], TypeTree.of[A])
       val cls = Symbol.newClass(Symbol.spliceOwner, name, parents.map(_.tpe), _.overridableMembers, None)
 
+      def transformArg(paramAndArg: (Definition, Tree), args: PartialFunction[(TypeRepr, Term), Term]): Tree =
+        paramAndArg match
+          case (param: ValDef, arg: Term) => args.applyOrElse((param.tpt.tpe, arg), _ => arg)
+          case (_, arg) => arg
+
       def transformDef(method: DefDef)(argss: List[List[Tree]]): Option[Term] =
-        val delegates = terms.call(method.symbol)(argss)
+        val delegates = terms
+          .zip(args)
+          .map: (term, argst) =>
+            term.call(method.symbol):
+              for (params, args) <- method.paramss.zip(argss)
+              yield for paramAndArg <- params.params.zip(args)
+              yield transformArg(paramAndArg, argst)
+
         Some(body.applyOrElse((method.returnTpt.tpe, delegates), _ => delegates.head))
 
       def transformVal(value: ValDef): Option[Term] =

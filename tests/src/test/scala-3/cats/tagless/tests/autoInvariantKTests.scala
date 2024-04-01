@@ -58,20 +58,20 @@ class autoInvariantKTests extends CatsTaglessTestSuite:
     assertEquals(tryInt.imapK(toFk)(otFk).a(Option(2), "ignored"), Some(2))
   }
 
-  // test("Alg with extra type parameters auto derivation") {
-  //   implicit object algWithExtraTP extends WithExtraTpeParam[Try, String] {
-  //     def a(i: Try[String]) = i
-  //     def b(i: Try[Int]) = i.map(_.toString)
-  //   }
-  //   import WithExtraTpeParam.autoDerive.*
-  //   assertEquals(WithExtraTpeParam[Option, String].a(Some("5")), Some("5"))
-  //   assertEquals(WithExtraTpeParam[Option, String].b(Some(5)), Some("5"))
-  // }
+  test("Alg with extra type parameters auto derivation") {
+    object algTry extends WithExtraTpeParam[Try, String]:
+      def a(i: Try[String]) = i
+      def b(i: Try[Int]) = i.map(_.toString)
+    val algOpt = WithExtraTpeParam.invariantK.imapK(algTry)(toFk)(otFk)
+    assertEquals(algOpt.a(Some("5")), Some("5"))
+    assertEquals(algOpt.b(Some(5)), Some("5"))
+  }
 
   test("Alg with extra type parameters before effect type") {
-    implicit val algWithExtraTP: AlgWithExtraTP2[String, Try] = new AlgWithExtraTP2[String, Try]:
+    given AlgWithExtraTP2[String, Try] with
       def a(i: Try[Int]) = i.map(_.toString)
-    assertEquals(algWithExtraTP.imapK(toFk)(otFk).a(Some(5)), Some("5"))
+    import AutoDerive.given
+    assertEquals(summon[AlgWithExtraTP2[String, Option]].a(Some(5)), Some("5"))
   }
 
   // test("Alg with type member") {
@@ -148,10 +148,12 @@ object autoInvariantKTests:
   //
 
   // TODO: @finalAlg
-  // trait WithExtraTpeParam[F[_], T] derives InvariantK:
-  //   def a(i: F[T]): F[T]
-  //   def b(i: F[Int]): F[T]
-  //
+  trait WithExtraTpeParam[F[_], T]:
+    def a(i: F[T]): F[T]
+    def b(i: F[Int]): F[T]
+
+  object WithExtraTpeParam:
+    given invariantK[T]: InvariantK[[F[_]] =>> WithExtraTpeParam[F, T]] = InvariantK.derived
 
   // TODO: @finalAlg
   trait AlgWithExtraTP2[T, F[_]] derives InvariantK:
@@ -160,7 +162,7 @@ object autoInvariantKTests:
   trait AlgWithoutAutoDerivation[F[_]] derives InvariantK:
     def a(i: F[Int]): F[Int]
 
-  // // @finalAlg
+  // @finalAlg
   trait AlgWithDef[F[_]] derives InvariantK:
     def a: F[Int]
     def b(c: F[Int]): F[String]
@@ -180,8 +182,8 @@ object autoInvariantKTests:
   trait AlgWithVarArgsParameter[F[_]] derives InvariantK:
     def sum(xs: Int*): Int
     def covariantSum(xs: Int*): F[Int]
-    // def contravariantSum(xs: F[Int]*): Int
-    // def invariantSum(xs: F[Int]*): F[Int]
+    def contravariantSum(xs: F[Int]*): Int
+    def invariantSum(xs: F[Int]*): F[Int]
 
-  // trait AlgWithByNameParameter[F[_]] derives InvariantK:
-  //   def whenM(cond: F[Boolean])(action: => F[Unit]): F[Unit]
+  trait AlgWithByNameParameter[F[_]] derives InvariantK:
+    def whenM(cond: F[Boolean])(action: => F[Unit]): F[Unit]

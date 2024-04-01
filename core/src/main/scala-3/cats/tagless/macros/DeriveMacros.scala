@@ -49,15 +49,28 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
       val parents = List(TypeTree.of[Object], TypeTree.of[A])
       val cls = Symbol.newClass(Symbol.spliceOwner, name, parents.map(_.tpe), _.overridableMembers, None)
 
-      def transformArg(paramAndArg: (Definition, Tree)): Tree = paramAndArg match
-        case (param: ValDef, arg: Term) => args.applyOrElse((param.tpt.tpe, arg), _ => arg)
+      def transformRepeated(method: Symbol, paramType: TypeRepr, arg: Term): Tree =
+        val x = Symbol.freshName("x")
+        val resultType = args(paramType, Select.unique(arg, "head")).tpe
+        val lambdaType = MethodType(x :: Nil)(_ => paramType :: Nil, _ => resultType)
+        val lambda = Lambda(method, lambdaType, (_, xs) => args(paramType, xs.head.asExpr.asTerm))
+        val result = Select.overloaded(arg, "map", resultType :: Nil, lambda :: Nil)
+        val repeatedType = AppliedType(defn.RepeatedParamClass.typeRef, resultType :: Nil)
+        Typed(result, TypeTree.of(using repeatedType.asType))
+
+      def transformArg(method: Symbol, paramAndArg: (Definition, Tree)): Tree = paramAndArg match
+        case (param: ValDef, arg: Term) =>
+          val paramType = param.tpt.tpe.widenParam
+          if !args.isDefinedAt(paramType, arg) then arg
+          else if !param.tpt.tpe.isRepeated then args(paramType, arg)
+          else transformRepeated(method, paramType, arg)
         case (_, arg) => arg
 
       def transformDef(method: DefDef)(argss: List[List[Tree]]): Option[Term] =
         val delegate = term.call(method.symbol):
           for (params, args) <- method.paramss.zip(argss)
           yield for paramAndArg <- params.params.zip(args)
-          yield transformArg(paramAndArg)
+          yield transformArg(method.symbol, paramAndArg)
         Some(body.applyOrElse((method.returnTpt.tpe, delegate), _ => delegate))
 
       def transformVal(value: ValDef): Option[Term] =
@@ -148,9 +161,15 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
     def contains(sym: Symbol): Boolean =
       tpe != tpe.substituteTypes(sym :: Nil, TypeRepr.of[Any] :: Nil)
 
+    def isRepeated: Boolean =
+      tpe.typeSymbol == defn.RepeatedParamClass
+
     def bounds: TypeBounds = tpe match
       case bounds: TypeBounds => bounds
       case tpe => TypeBounds(tpe, tpe)
+
+    def widenParam: TypeRepr =
+      if tpe.isRepeated then tpe.typeArgs.head else tpe.widenByName
 
     def summon: Term = Implicits.search(tpe) match
       case success: ImplicitSearchSuccess => success.tree

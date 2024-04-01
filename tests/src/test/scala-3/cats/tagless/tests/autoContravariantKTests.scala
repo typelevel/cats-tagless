@@ -42,7 +42,7 @@ object autoContravariantKTests:
 
   trait TestAlgebra[F[_]] derives ContravariantK:
     def sum(xs: F[Int]): Int
-    // def sumAll(xss: F[Int]*): Int
+    def sumAll(xss: F[Int]*): Int
     def foldSpecialized(init: String)(f: (Int, String) => Int): Cokleisli[F, String, Int]
 
   object TestAlgebra:

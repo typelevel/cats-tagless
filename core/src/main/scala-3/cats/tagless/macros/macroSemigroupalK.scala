@@ -48,7 +48,7 @@ object MacroSemigroupalK:
 
     def tuple2K(name: String): Term = Select.unique('{ SemigroupalK }.asTerm, name).appliedToTypes(List(F, G))
 
-    List(eaf.asTerm, eag.asTerm).transform[Alg[Tuple2K[F, G, *]]](
+    List(eaf.asTerm, eag.asTerm).combineTo[Alg[Tuple2K[F, G, *]]](
       args = List(
         {
           case (tpe, arg) if tpe.contains(h) =>

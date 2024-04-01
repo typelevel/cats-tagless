@@ -64,11 +64,11 @@ class autoFunctorKTests extends CatsTaglessTestSuite:
     assertEquals(summon[SafeAlg[List]].parseInt("3"), List(3))
   }
 
-  // test("auto derive from functor k") {
-  // import SafeAlg.autoDerive.*
-  // import Interpreters.tryInterpreter
-  // SafeAlg[Option]
-  // }
+  test("auto derive from functor k") {
+    import AutoDerive.given
+    import Interpreters.tryInterpreter
+    summon[SafeAlg[Option]]
+  }
 
   test("Alg with non effect method") {
     val tryInt = new AlgWithNonEffectMethod[Try]:

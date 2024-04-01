@@ -27,11 +27,33 @@ private object DeriveMacros:
 private class DeriveMacros[Q <: Quotes](using val q: Q):
   import quotes.reflect.*
 
+  type Transform = PartialFunction[(TypeRepr, Term), Term]
+  type Combine = PartialFunction[(TypeRepr, Seq[Term]), Term]
+
   private val nonOverridableOwners =
     TypeRepr.of[(Object, Any, AnyRef, AnyVal)].typeArgs.map(_.typeSymbol).toSet
 
   private val nonOverridableFlags =
     List(Flags.Final, Flags.Artifact, Flags.Synthetic, Flags.Mutable, Flags.Param)
+
+  extension (xf: Transform)
+    private def transformRepeated(method: Symbol, tpe: TypeRepr, arg: Term): Tree =
+      val x = Symbol.freshName("x")
+      val resultType = xf(tpe, Select.unique(arg, "head")).tpe
+      val lambdaType = MethodType(x :: Nil)(_ => tpe :: Nil, _ => resultType)
+      val lambda = Lambda(method, lambdaType, (_, xs) => xf(tpe, xs.head.asExpr.asTerm))
+      val result = Select.overloaded(arg, "map", resultType :: Nil, lambda :: Nil)
+      val repeatedType = AppliedType(defn.RepeatedParamClass.typeRef, resultType :: Nil)
+      Typed(result, TypeTree.of(using repeatedType.asType))
+
+    private def transformArg(method: Symbol, paramAndArg: (Definition, Tree)): Tree =
+      paramAndArg match
+        case (param: ValDef, arg: Term) =>
+          val paramType = param.tpt.tpe.widenParam
+          if !xf.isDefinedAt(paramType, arg) then arg
+          else if !param.tpt.tpe.isRepeated then xf(paramType, arg)
+          else xf.transformRepeated(method, paramType, arg)
+        case (_, arg) => arg
 
   extension (term: Term)
     def call(method: Symbol)(argss: List[List[Tree]]): Term =
@@ -42,22 +64,18 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
         else term.appliedToTypeTrees(typeArgs)
 
     def transformTo[A: Type](
-        args: PartialFunction[(TypeRepr, Term), Term] = PartialFunction.empty,
-        body: PartialFunction[(TypeRepr, Term), Term] = PartialFunction.empty
+        args: Transform = PartialFunction.empty,
+        body: Transform = PartialFunction.empty
     ): Expr[A] =
       val name = Symbol.freshName("$anon")
       val parents = List(TypeTree.of[Object], TypeTree.of[A])
       val cls = Symbol.newClass(Symbol.spliceOwner, name, parents.map(_.tpe), _.overridableMembers, None)
 
-      def transformArg(paramAndArg: (Definition, Tree)): Tree = paramAndArg match
-        case (param: ValDef, arg: Term) => args.applyOrElse((param.tpt.tpe, arg), _ => arg)
-        case (_, arg) => arg
-
       def transformDef(method: DefDef)(argss: List[List[Tree]]): Option[Term] =
         val delegate = term.call(method.symbol):
-          for (params, args) <- method.paramss.zip(argss)
-          yield for paramAndArg <- params.params.zip(args)
-          yield transformArg(paramAndArg)
+          for (params, xs) <- method.paramss.zip(argss)
+          yield for paramAndArg <- params.params.zip(xs)
+          yield args.transformArg(method.symbol, paramAndArg)
         Some(body.applyOrElse((method.returnTpt.tpe, delegate), _ => delegate))
 
       def transformVal(value: ValDef): Option[Term] =
@@ -79,31 +97,25 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
     def call(method: Symbol)(argss: List[List[Tree]]): Seq[Term] =
       terms.map(_.call(method)(argss))
 
-    def transform[A: Type](
-        args: Seq[PartialFunction[(TypeRepr, Term), Term]] = Nil,
-        body: PartialFunction[(TypeRepr, Seq[Term]), Term] = PartialFunction.empty
+    def combineTo[A: Type](
+        args: Seq[Transform] = Nil,
+        body: Combine = PartialFunction.empty
     ): Expr[A] =
       val name = Symbol.freshName("$anon")
       val parents = List(TypeTree.of[Object], TypeTree.of[A])
       val cls = Symbol.newClass(Symbol.spliceOwner, name, parents.map(_.tpe), _.overridableMembers, None)
 
-      def transformArg(paramAndArg: (Definition, Tree), args: PartialFunction[(TypeRepr, Term), Term]): Tree =
-        paramAndArg match
-          case (param: ValDef, arg: Term) => args.applyOrElse((param.tpt.tpe, arg), _ => arg)
-          case (_, arg) => arg
-
-      def transformDef(method: DefDef)(argss: List[List[Tree]]): Option[Term] =
+      def combineDef(method: DefDef)(argss: List[List[Tree]]): Option[Term] =
         val delegates = terms
-          .zip(args)
+          .lazyZip(args)
           .map: (term, argst) =>
             term.call(method.symbol):
               for (params, args) <- method.paramss.zip(argss)
               yield for paramAndArg <- params.params.zip(args)
-              yield transformArg(paramAndArg, argst)
-
+              yield argst.transformArg(method.symbol, paramAndArg)
         Some(body.applyOrElse((method.returnTpt.tpe, delegates), _ => delegates.head))
 
-      def transformVal(value: ValDef): Option[Term] =
+      def combineVal(value: ValDef): Option[Term] =
         val delegates = terms.map(_.select(value.symbol))
         Some(body.applyOrElse((value.tpt.tpe, delegates), _ => delegates.head))
 
@@ -111,8 +123,8 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
         .filterNot(_.isClassConstructor)
         .map: sym =>
           sym.tree match
-            case method: DefDef => DefDef(sym, transformDef(method))
-            case value: ValDef => ValDef(sym, transformVal(value))
+            case method: DefDef => DefDef(sym, combineDef(method))
+            case value: ValDef => ValDef(sym, combineVal(value))
             case _ => report.errorAndAbort(s"Not supported: $sym in ${sym.owner}")
 
       val newCls = New(TypeIdent(cls)).select(cls.primaryConstructor).appliedToNone
@@ -148,9 +160,15 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
     def contains(sym: Symbol): Boolean =
       tpe != tpe.substituteTypes(sym :: Nil, TypeRepr.of[Any] :: Nil)
 
+    def isRepeated: Boolean =
+      tpe.typeSymbol == defn.RepeatedParamClass
+
     def bounds: TypeBounds = tpe match
       case bounds: TypeBounds => bounds
       case tpe => TypeBounds(tpe, tpe)
+
+    def widenParam: TypeRepr =
+      if tpe.isRepeated then tpe.typeArgs.head else tpe.widenByName
 
     def summon: Term = Implicits.search(tpe) match
       case success: ImplicitSearchSuccess => success.tree

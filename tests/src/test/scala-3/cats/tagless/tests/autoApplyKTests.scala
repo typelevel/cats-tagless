@@ -32,9 +32,6 @@ import scala.annotation.experimental
 class autoApplyKTests extends CatsTaglessTestSuite:
   import cats.tagless.tests.autoApplyKTests.AutoApplyKTestAlg
 
-  // Type inference limitation.
-  implicit val eqTuple3K: Eq[AutoApplyKTestAlg[Tuple3K[Try, Option, List]#λ]] =
-    AutoApplyKTestAlg.eqForAutoApplyKTestAlg[Tuple3K[Try, Option, List]#λ]
   checkAll("ApplyK[AutoApplyKTestAlg]", ApplyKTests[AutoApplyKTestAlg].applyK[Try, Option, List, Int])
   checkAll("ApplyK is Serializable", SerializableTests.serializable(ApplyK[AutoApplyKTestAlg]))
 
@@ -42,8 +39,7 @@ object autoApplyKTests:
 
   trait AutoApplyKTestAlg[F[_]] derives ApplyK:
     def parseInt(str: String): F[Int]
-    // TODO: Macro should handle it
-    // def parseDouble(str: String): EitherT[F, String, Double]
+    def parseDouble(str: String): EitherT[F, String, Double]
     def divide(dividend: Float, divisor: Float): F[Float]
 
   object AutoApplyKTestAlg:
@@ -54,7 +50,7 @@ object autoApplyKTests:
         eqFf: Eq[F[Float]],
         eqEfd: Eq[EitherT[F, String, Double]]
     ): Eq[AutoApplyKTestAlg[F]] = Eq.by { algebra =>
-      (algebra.parseInt, /*algebra.parseDouble,*/ algebra.divide)
+      (algebra.parseInt, algebra.parseDouble, algebra.divide)
     }
 
     implicit def arbitraryAutoApplyKTestAlg[F[_]](implicit

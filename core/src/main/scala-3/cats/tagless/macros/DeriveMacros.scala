@@ -37,7 +37,7 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
     List(Flags.Final, Flags.Artifact, Flags.Synthetic, Flags.Mutable, Flags.Param)
 
   extension (xf: Transform)
-    private def transformRepeated(method: Symbol, tpe: TypeRepr, arg: Term): Tree =
+    def transformRepeated(method: Symbol, tpe: TypeRepr, arg: Term): Tree =
       val x = Symbol.freshName("x")
       val resultType = xf(tpe, Select.unique(arg, "head")).tpe
       val lambdaType = MethodType(x :: Nil)(_ => tpe :: Nil, _ => resultType)
@@ -46,7 +46,7 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
       val repeatedType = AppliedType(defn.RepeatedParamClass.typeRef, resultType :: Nil)
       Typed(result, TypeTree.of(using repeatedType.asType))
 
-    private def transformArg(method: Symbol, paramAndArg: (Definition, Tree)): Tree =
+    def transformArg(method: Symbol, paramAndArg: (Definition, Tree)): Tree =
       paramAndArg match
         case (param: ValDef, arg: Term) =>
           val paramType = param.tpt.tpe.widenParam

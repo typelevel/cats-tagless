@@ -38,39 +38,44 @@ object MacroSemigroupalK:
   )(using q: Quotes): Expr[Alg[Tuple2K[F, G, *]]] =
     import quotes.reflect.*
     given DeriveMacros[q.type] = new DeriveMacros
-    extension (tpe: TypeRepr) def fromTuple2K: TypeRepr = tpe.typeArgs.head.appliedTo(tpe.typeArgs.last)
 
     val F = TypeRepr.of[F]
     val G = TypeRepr.of[G]
-    val H = TypeRepr.of[Tuple2K[F, G, *]]
+    val T2K = TypeRepr.of[Tuple2K[F, G, *]]
     val f = F.typeSymbol
-    val h = H.typeSymbol
+    val t2k = T2K.typeSymbol
 
-    def tuple2K(name: String): Term = Select.unique('{ SemigroupalK }.asTerm, name).appliedToTypes(List(F, G))
+    type FirstK[F[_], G[_], A] = F[A]
+    extension (tpe: TypeRepr)
+      def firstK: TypeRepr =
+        tpe.substituteTypes(t2k :: Nil, TypeRepr.of[FirstK] :: Nil)
+
+    def tuple2K(name: String): Term =
+      Select.unique('{ SemigroupalK }.asTerm, name).appliedToTypes(List(F, G))
 
     List(eaf.asTerm, eag.asTerm).combineTo[Alg[Tuple2K[F, G, *]]](
       args = List(
         {
-          case (tpe, arg) if tpe.contains(h) =>
+          case (tpe, arg) if tpe.contains(t2k) =>
             Select
-              .unique(tpe.fromTuple2K.summonLambda[FunctorK](f), "mapK")
-              .appliedToTypes(List(H, F))
+              .unique(tpe.firstK.summonLambda[FunctorK](f), "mapK")
+              .appliedToTypes(List(T2K, F))
               .appliedTo(arg)
               .appliedTo(tuple2K("firstK"))
         },
         {
-          case (tpe, arg) if tpe.contains(h) =>
+          case (tpe, arg) if tpe.contains(t2k) =>
             Select
-              .unique(tpe.fromTuple2K.summonLambda[FunctorK](f), "mapK")
-              .appliedToTypes(List(H, G))
+              .unique(tpe.firstK.summonLambda[FunctorK](f), "mapK")
+              .appliedToTypes(List(T2K, G))
               .appliedTo(arg)
               .appliedTo(tuple2K("secondK"))
         }
       ),
       body = {
-        case (tpe, argf :: argg :: Nil) if tpe.contains(h) =>
+        case (tpe, argf :: argg :: Nil) if tpe.contains(t2k) =>
           Select
-            .unique(tpe.fromTuple2K.summonLambda[SemigroupalK](f), "productK")
+            .unique(tpe.firstK.summonLambda[SemigroupalK](f), "productK")
             .appliedToTypes(List(F, G))
             .appliedTo(argf, argg)
       }

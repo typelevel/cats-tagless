@@ -28,6 +28,7 @@ import org.scalacheck.{Arbitrary, Cogen}
 
 import scala.util.Try
 import scala.annotation.experimental
+import cats.tagless.macros.Derive.contravariantK
 
 @experimental
 class autoContravariantKTests extends CatsTaglessTestSuite:
@@ -62,5 +63,11 @@ object autoContravariantKTests:
     def foldSpecialized(init: String)(f: (Int, String) => Int) = fs(init, f)
   )
 
-  trait TestAlgebraWithExtraTypeParam[A, F[_]] extends TestAlgebra[F] derives ContravariantK:
+  trait TestAlgebraWithExtraTypeParam[F[_], A] extends TestAlgebra[F]:
+    def fold[B](init: B)(f: (B, A) => B): Cokleisli[F, A, B]
+
+  object TestAlgebraWithExtraTypeParam:
+    given contravariantK[T]: ContravariantK[[F[_]] =>> TestAlgebraWithExtraTypeParam[F, T]] = ContravariantK.derived
+
+  trait TestAlgebraWithExtraTypeParam2[A, F[_]] extends TestAlgebra[F] derives ContravariantK:
     def fold[B](init: B)(f: (B, A) => B): Cokleisli[F, A, B]

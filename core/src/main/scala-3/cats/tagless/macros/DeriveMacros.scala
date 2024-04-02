@@ -43,7 +43,7 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
       val lambdaType = MethodType(x :: Nil)(_ => tpe :: Nil, _ => resultType)
       val lambda = Lambda(method, lambdaType, (_, xs) => xf(tpe, xs.head.asExpr.asTerm))
       val result = Select.overloaded(arg, "map", resultType :: Nil, lambda :: Nil)
-      val repeatedType = AppliedType(defn.RepeatedParamClass.typeRef, resultType :: Nil)
+      val repeatedType = defn.RepeatedParamClass.typeRef.appliedTo(resultType)
       Typed(result, TypeTree.of(using repeatedType.asType))
 
     def transformArg(method: Symbol, paramAndArg: (Definition, Tree)): Tree =

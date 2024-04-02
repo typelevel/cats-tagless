@@ -50,7 +50,7 @@ class InvariantKSpec extends munit.FunSuite with Fixtures:
     assertEquals(invariantInstance.tuple, optionalInstance.tuple)
   }
 
-  test("DeriveMacro should not derive instance for a not simple algebra") {
+  test("DeriveMacro should derive instance for a not simple algebra") {
     assert(typeCheckErrors("Derive.invariantK[NotSimpleService]").isEmpty)
   }
 

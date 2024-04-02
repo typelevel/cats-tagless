@@ -51,7 +51,7 @@ class ApplyKSpec extends munit.FunSuite with Fixtures:
     assertEquals(tryInstance.tuple, Try(instance.tuple))
   }
 
-  test("DeriveMacro should not derive instance for a not simple algebra") {
+  test("DeriveMacro should derive instance for a not simple algebra") {
     assert(typeCheckErrors("Derive.applyK[NotSimpleService]").isEmpty)
   }
 

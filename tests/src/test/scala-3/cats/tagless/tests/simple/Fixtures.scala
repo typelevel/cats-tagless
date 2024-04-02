@@ -31,7 +31,7 @@ trait Fixtures:
     def paranthesless: F[Int]
     def tuple: F[(Int, Long)]
 
-  def instance = new SimpleService[Id]:
+  object instance extends SimpleService[Id]:
     def id(): Id[Int] = 42
     def list(id: Int): Id[List[Int]] = List(id)
     def lists(id1: Int, id2: Int): Id[List[Int]] = List(id1, id2)
@@ -42,12 +42,16 @@ trait Fixtures:
     def id(): Int
     def list(id: Int): F[List[Int]]
 
+  object instancens extends NotSimpleService[Id]:
+    def id(): Int = 42
+    def list(id: Int): Id[List[Int]] = List(1, 2, 3)
+
   trait SimpleServiceC[F[_]] derives ContravariantK:
     def id(id: F[Int]): Int
     def ids(id1: F[Int], id2: F[Int]): Int
     def foldSpecialized(init: String)(f: (Int, String) => Int): Cokleisli[F, String, Int]
 
-  def instancec = new SimpleServiceC[Id]:
+  object instancec extends SimpleServiceC[Id]:
     def id(id: Id[Int]): Int = id
     def ids(id1: Id[Int], id2: Id[Int]): Int = id1 + id2
     def foldSpecialized(init: String)(f: (Int, String) => Int): Cokleisli[Id, String, Int] =

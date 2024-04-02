@@ -16,6 +16,7 @@
 
 package cats.tagless.macros
 
+import cats.Semigroup
 import cats.tagless.*
 import cats.data.Tuple2K
 
@@ -78,5 +79,9 @@ object MacroSemigroupalK:
             .unique(tpe.firstK.summonLambda[SemigroupalK](f), "productK")
             .appliedToTypes(List(F, G))
             .appliedTo(argf, argg)
+        case (tpe, argf :: argg :: Nil) =>
+          Implicits.search(TypeRepr.of[Semigroup].appliedTo(tpe)) match
+            case success: ImplicitSearchSuccess => Select.unique(success.tree, "combine").appliedTo(argf, argg)
+            case _ => argf
       }
     )

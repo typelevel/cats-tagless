@@ -24,7 +24,6 @@ import cats.Id
 import cats.arrow.FunctionK
 import cats.data.Tuple2K
 
-import scala.compiletime.testing.*
 import scala.annotation.experimental
 
 @experimental
@@ -47,8 +46,11 @@ class SemigroupalKSpec extends munit.FunSuite with Fixtures:
     assertEquals(combinedInstance.tuple, Tuple2K(instance.tuple, optionalInstance.tuple))
   }
 
-  test("DeriveMacro should not derive instance for a not simple algebra") {
-    assert(typeCheckErrors("Derive.semigroupalK[NotSimpleService]").isEmpty)
+  test("DeriveMacro should derive instance for a not simple algebra") {
+    val semigroupalK = Derive.semigroupalK[NotSimpleService]
+    val combinedInstance = semigroupalK.productK(instancens, instancens)
+
+    assertEquals(combinedInstance.id(), 2 * instancens.id())
   }
 
   test("SemigroupalK derives syntax") {

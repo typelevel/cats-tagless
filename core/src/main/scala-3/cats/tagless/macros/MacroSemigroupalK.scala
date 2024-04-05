@@ -30,10 +30,10 @@ object MacroSemigroupalK:
   def semigroupalK[Alg[_[_]]: Type](using Quotes): Expr[SemigroupalK[Alg]] = '{
     new SemigroupalK[Alg]:
       def productK[F[_], G[_]](af: Alg[F], ag: Alg[G]): Alg[Tuple2K[F, G, *]] =
-        ${ deriveProductK('af, 'ag) }
+        ${ deriveProductK('{ af }, '{ ag }) }
   }
 
-  def deriveProductK[Alg[_[_]]: Type, F[_]: Type, G[_]: Type](
+  private[macros] def deriveProductK[Alg[_[_]]: Type, F[_]: Type, G[_]: Type](
       eaf: Expr[Alg[F]],
       eag: Expr[Alg[G]]
   )(using q: Quotes): Expr[Alg[Tuple2K[F, G, *]]] =
@@ -46,7 +46,7 @@ object MacroSemigroupalK:
     val f = F.typeSymbol
     val t2k = T2K.typeSymbol
 
-    type FirstK[F[_], G[_], A] = F[A]
+    type FirstK[H[_], I[_], A] = H[A]
     extension (tpe: TypeRepr)
       def firstK: TypeRepr =
         tpe.substituteTypes(t2k :: Nil, TypeRepr.of[FirstK] :: Nil)
@@ -74,14 +74,14 @@ object MacroSemigroupalK:
         }
       ),
       body = {
-        case (tpe, argf :: argg :: Nil) if tpe.contains(t2k) =>
+        case (tpe, af :: ag :: Nil) if tpe.contains(t2k) =>
           Select
             .unique(tpe.firstK.summonLambda[SemigroupalK](f), "productK")
             .appliedToTypes(List(F, G))
-            .appliedTo(argf, argg)
-        case (tpe, argf :: argg :: Nil) =>
+            .appliedTo(af, ag)
+        case (tpe, af :: ag :: Nil) =>
           Implicits.search(TypeRepr.of[Semigroup].appliedTo(tpe)) match
-            case success: ImplicitSearchSuccess => Select.unique(success.tree, "combine").appliedTo(argf, argg)
-            case _ => argf
+            case success: ImplicitSearchSuccess => Select.unique(success.tree, "combine").appliedTo(af, ag)
+            case _ => af
       }
     )

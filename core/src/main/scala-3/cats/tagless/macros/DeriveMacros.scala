@@ -108,11 +108,11 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
       def combineDef(method: DefDef)(argss: List[List[Tree]]): Option[Term] =
         val delegates = terms
           .lazyZip(args)
-          .map: (term, argst) =>
+          .map: (term, xf) =>
             term.call(method.symbol):
               for (params, args) <- method.paramss.zip(argss)
               yield for paramAndArg <- params.params.zip(args)
-              yield argst.transformArg(method.symbol, paramAndArg)
+              yield xf.transformArg(method.symbol, paramAndArg)
         Some(body.applyOrElse((method.returnTpt.tpe, delegates), _ => delegates.head))
 
       def combineVal(value: ValDef): Option[Term] =
@@ -188,3 +188,5 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
 
     def summonLambda[T <: AnyKind: Type](arg: Symbol, args: Symbol*): Term =
       TypeRepr.of[T].appliedTo(tpe.lambda(arg :: args.toList)).summon
+
+end DeriveMacros

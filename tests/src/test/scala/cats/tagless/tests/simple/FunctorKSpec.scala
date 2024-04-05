@@ -14,20 +14,15 @@
  * limitations under the License.
  */
 
-package cats.tagless.simple
-
-import cats.tagless.*
-import cats.tagless.syntax.all.*
-import cats.tagless.macros.*
+package cats.tagless
+package tests.simple
 
 import cats.Id
-import cats.arrow.FunctionK
-
-import scala.compiletime.testing.*
-import scala.annotation.experimental
+import cats.tagless.syntax.all.*
+import cats.tagless.tests.experimental
 
 @experimental
-class FunctorKSpec extends munit.FunSuite with Fixtures:
+class FunctorKSpec extends munit.FunSuite with Fixtures {
 
   test("DeriveMacro should derive instance for a simple algebra") {
     val functorK = Derive.functorK[SimpleService]
@@ -36,8 +31,7 @@ class FunctorKSpec extends munit.FunSuite with Fixtures:
 
   test("FunctorK should be a valid instance for a simple algebra") {
     val functorK = Derive.functorK[SimpleService]
-
-    val optionalInstance = functorK.mapK(instance)(FunctionK.lift([X] => (id: Id[X]) => Some(id)))
+    val optionalInstance = functorK.mapK(instance)(FunctionKLift[Id, Option](Option.apply))
 
     assertEquals(optionalInstance.id(), Some(instance.id()))
     assertEquals(optionalInstance.list(0), Some(instance.list(0)))
@@ -47,11 +41,11 @@ class FunctorKSpec extends munit.FunSuite with Fixtures:
   }
 
   test("DeriveMacro should derive instance for a not simple algebra") {
-    assert(typeCheckErrors("Derive.functorK[NotSimpleService]").isEmpty)
+    assert(compileErrors("Derive.functorK[NotSimpleService]").isEmpty)
   }
 
   test("FunctorK derives syntax") {
-    val optionalInstance = instance.mapK(FunctionK.lift([X] => (id: Id[X]) => Some(id)))
+    val optionalInstance = instance.mapK(FunctionKLift[Id, Option](Option.apply))
 
     assertEquals(optionalInstance.id(), Some(instance.id()))
     assertEquals(optionalInstance.list(0), Some(instance.list(0)))
@@ -59,3 +53,4 @@ class FunctorKSpec extends munit.FunSuite with Fixtures:
     assertEquals(optionalInstance.paranthesless, Some(instance.paranthesless))
     assertEquals(optionalInstance.tuple, Some(instance.tuple))
   }
+}

@@ -25,12 +25,12 @@ import cats.laws.discipline.eq.*
 import cats.tagless.laws.discipline.ApplyKTests
 import org.scalacheck.Arbitrary
 
-import scala.util.Try
 import scala.annotation.experimental
+import scala.util.Try
 
 @experimental
 class autoApplyKTests extends CatsTaglessTestSuite:
-  import cats.tagless.tests.autoApplyKTests.AutoApplyKTestAlg
+  import autoApplyKTests.AutoApplyKTestAlg
 
   checkAll("ApplyK[AutoApplyKTestAlg]", ApplyKTests[AutoApplyKTestAlg].applyK[Try, Option, List, Int])
   checkAll("ApplyK is Serializable", SerializableTests.serializable(ApplyK[AutoApplyKTestAlg]))
@@ -49,24 +49,22 @@ object autoApplyKTests:
         eqFi: Eq[F[Int]],
         eqFf: Eq[F[Float]],
         eqEfd: Eq[EitherT[F, String, Double]]
-    ): Eq[AutoApplyKTestAlg[F]] = Eq.by { algebra =>
+    ): Eq[AutoApplyKTestAlg[F]] = Eq.by: algebra =>
       (algebra.parseInt, algebra.parseDouble, algebra.divide)
-    }
 
     implicit def arbitraryAutoApplyKTestAlg[F[_]](implicit
         arbFi: Arbitrary[F[Int]],
         arbFf: Arbitrary[F[Float]],
         arbEfd: Arbitrary[EitherT[F, String, Double]]
-    ): Arbitrary[AutoApplyKTestAlg[F]] = Arbitrary {
-      for
-        pInt <- Arbitrary.arbitrary[String => F[Int]]
-        pDouble <- Arbitrary.arbitrary[String => EitherT[F, String, Double]]
-        div <- Arbitrary.arbitrary[(Float, Float) => F[Float]]
-      yield new AutoApplyKTestAlg[F]:
-        def parseInt(str: String) = pInt(str)
-        def parseDouble(str: String) = pDouble(str)
-        def divide(dividend: Float, divisor: Float) = div(dividend, divisor)
-    }
+    ): Arbitrary[AutoApplyKTestAlg[F]] = Arbitrary(for
+      pInt <- Arbitrary.arbitrary[String => F[Int]]
+      pDouble <- Arbitrary.arbitrary[String => EitherT[F, String, Double]]
+      div <- Arbitrary.arbitrary[(Float, Float) => F[Float]]
+    yield new AutoApplyKTestAlg[F]:
+      def parseInt(str: String) = pInt(str)
+      def parseDouble(str: String) = pDouble(str)
+      def divide(dividend: Float, divisor: Float) = div(dividend, divisor)
+    )
 
   trait AlgWithVarArgsParameter[F[_]] derives ApplyK:
     def sum(xs: Int*): Int

@@ -484,24 +484,23 @@ class DeriveMacros(val c: blackbox.Context) {
           tpe.map(t => if (t.typeSymbol == f) appliedType(t2k, t.typeArgs) else t)
       }
 
-      val methods = delegateMethods(Af, members, af) {
-        case method if method.occursInSignature(f) =>
-          def mapK(fk: Tree): TransformParam = {
-            case Parameter(pn, pt, _) if occursIn(pt)(f) =>
-              val Fk = method.summonK[FunctorK](f, pt)
-              q"$Fk.mapK($pn)($fk)"
-          }
+      val methods = delegateMethods(Af, members, af) { case method =>
+        def mapK(fk: Tree): TransformParam = {
+          case Parameter(pn, pt, _) if occursIn(pt)(f) =>
+            val Fk = method.summonK[FunctorK](f, pt)
+            q"$Fk.mapK($pn)($fk)"
+        }
 
-          val mf = method.transform(q"$af")(tuple)(mapK(q"$SemiK.firstK[$F, $G]"))()
-          val mg = method.transform(q"$ag")(tuple)(mapK(q"$SemiK.secondK[$F, $G]"))()
-          val rt = method.returnType
-          if (method.occursInReturn(f)) {
-            val Sk = method.summonK[SemigroupalK](f, rt)
-            mf.copy(body = q"$Sk.productK[$F, $G](${mf.body}, ${mg.body})")
-          } else {
-            val S = method.summonOr[Semigroup[Any]](rt)(_ => q"${reify(Semigroup)}.first[$rt]")
-            mf.copy(body = q"$S.combine(${mf.body}, ${mg.body})")
-          }
+        val mf = method.transform(q"$af")(tuple)(mapK(q"$SemiK.firstK[$F, $G]"))()
+        val mg = method.transform(q"$ag")(tuple)(mapK(q"$SemiK.secondK[$F, $G]"))()
+        val rt = method.returnType
+        if (method.occursInReturn(f)) {
+          val Sk = method.summonK[SemigroupalK](f, rt)
+          mf.copy(body = q"$Sk.productK[$F, $G](${mf.body}, ${mg.body})")
+        } else {
+          val S = method.summonOr[Semigroup[Any]](rt)(_ => q"${reify(Semigroup)}.first[$rt]")
+          mf.copy(body = q"$S.combine(${mf.body}, ${mg.body})")
+        }
       }
 
       val typeParams = Tuple2K.typeParams.drop(2)

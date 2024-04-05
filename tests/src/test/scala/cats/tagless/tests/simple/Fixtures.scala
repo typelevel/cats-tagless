@@ -14,47 +14,64 @@
  * limitations under the License.
  */
 
-package cats.tagless.simple
+package cats.tagless
+package tests.simple
 
-import cats.tagless.*
 import cats.Id
 import cats.data.Cokleisli
-import scala.annotation.experimental
+import cats.tagless.tests.experimental
 
-@experimental
-trait Fixtures:
+object Fixtures extends Fixtures
+@experimental trait Fixtures {
+
   /** Simple algebra definition */
-  trait SimpleService[F[_]] derives FunctorK, SemigroupalK, InvariantK, ApplyK:
+  trait SimpleService[F[_]] {
     def id(): F[Int]
     def list(id: Int): F[List[Int]]
     def lists(id1: Int, id2: Int): F[List[Int]]
     def paranthesless: F[Int]
     def tuple: F[(Int, Long)]
+  }
 
-  object instance extends SimpleService[Id]:
+  object SimpleService {
+    implicit val functorK: FunctorK[SimpleService] = Derive.functorK
+    implicit val invariantK: InvariantK[SimpleService] = Derive.invariantK
+    implicit val semigroupalK: SemigroupalK[SimpleService] = Derive.semigroupalK
+    implicit val applyK: ApplyK[SimpleService] = Derive.applyK
+  }
+
+  object instance extends SimpleService[Id] {
     def id(): Id[Int] = 42
     def list(id: Int): Id[List[Int]] = List(id)
     def lists(id1: Int, id2: Int): Id[List[Int]] = List(id1, id2)
     def paranthesless: Id[Int] = 23
     def tuple: Id[(Int, Long)] = (42, 23)
+  }
 
-  trait NotSimpleService[F[_]]:
+  trait NotSimpleService[F[_]] {
     def id(): Int
     def list(id: Int): F[List[Int]]
+  }
 
-  object instancens extends NotSimpleService[Id]:
+  object instancens extends NotSimpleService[Id] {
     def id(): Int = 42
     def list(id: Int): Id[List[Int]] = List(1, 2, 3)
+  }
 
-  trait SimpleServiceC[F[_]] derives ContravariantK:
+  trait SimpleServiceC[F[_]] {
     def id(id: F[Int]): Int
     def ids(id1: F[Int], id2: F[Int]): Int
     def foldSpecialized(init: String)(f: (Int, String) => Int): Cokleisli[F, String, Int]
+  }
 
-  object instancec extends SimpleServiceC[Id]:
+  object SimpleServiceC {
+    implicit val contravariantK: ContravariantK[SimpleServiceC] = Derive.contravariantK
+  }
+
+  object instancec extends SimpleServiceC[Id] {
     def id(id: Id[Int]): Int = id
     def ids(id1: Id[Int], id2: Id[Int]): Int = id1 + id2
     def foldSpecialized(init: String)(f: (Int, String) => Int): Cokleisli[Id, String, Int] =
       Cokleisli.apply((str: Id[String]) => f(init.toInt, str))
-
-object Fixtures extends Fixtures
+  }
+}

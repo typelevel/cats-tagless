@@ -17,14 +17,14 @@
 package cats.tagless
 package tests
 
-import cats.tagless.syntax.all.*
-import cats.~>
 import cats.laws.discipline.SerializableTests
 import cats.laws.discipline.arbitrary.*
 import cats.tagless.laws.discipline.InvariantKTests
+import cats.tagless.syntax.all.*
+import cats.~>
 
-import scala.util.Try
 import scala.annotation.experimental
+import scala.util.Try
 
 @experimental
 class autoInvariantKTests extends CatsTaglessTestSuite:

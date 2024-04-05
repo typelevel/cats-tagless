@@ -14,21 +14,15 @@
  * limitations under the License.
  */
 
-package cats.tagless.simple
-
-import cats.tagless.*
-import cats.tagless.syntax.all.*
-import cats.tagless.macros.*
+package cats.tagless
+package tests.simple
 
 import cats.Id
-import cats.arrow.FunctionK
-import cats.~>
-
-import scala.compiletime.testing.*
-import scala.annotation.experimental
+import cats.tagless.syntax.all.*
+import cats.tagless.tests.experimental
 
 @experimental
-class InvariantKSpec extends munit.FunSuite with Fixtures:
+class InvariantKSpec extends munit.FunSuite with Fixtures {
   test("DeriveMacro should derive instance for a simple algebra") {
     val invariantK = Derive.invariantK[SimpleService]
     assert(invariantK.isInstanceOf[InvariantK[SimpleService]])
@@ -37,9 +31,8 @@ class InvariantKSpec extends munit.FunSuite with Fixtures:
   test("InvariantK should be a valid instance for a simple algebra") {
     val invariantK = Derive.invariantK[SimpleService]
     val functorK = Derive.functorK[SimpleService]
-
-    val fk: Id ~> Option = FunctionK.lift([X] => (id: Id[X]) => Option(id))
-    val gk: Option ~> Id = FunctionK.lift([X] => (id: Option[X]) => id.get)
+    val fk = FunctionKLift[Id, Option](Option.apply)
+    val gk = FunctionKLift[Option, Id](_.get)
     val invariantInstance = invariantK.imapK(instance)(fk)(gk)
     val optionalInstance = functorK.mapK(instance)(fk)
 
@@ -51,12 +44,12 @@ class InvariantKSpec extends munit.FunSuite with Fixtures:
   }
 
   test("DeriveMacro should derive instance for a not simple algebra") {
-    assert(typeCheckErrors("Derive.invariantK[NotSimpleService]").isEmpty)
+    assert(compileErrors("Derive.invariantK[NotSimpleService]").isEmpty)
   }
 
   test("InvariantK derives syntax") {
-    val fk: Id ~> Option = FunctionK.lift([X] => (id: Id[X]) => Option(id))
-    val gk: Option ~> Id = FunctionK.lift([X] => (id: Option[X]) => id.get)
+    val fk = FunctionKLift[Id, Option](Option.apply)
+    val gk = FunctionKLift[Option, Id](_.get)
     val invariantInstance = instance.imapK(fk)(gk)
     val optionalInstance = instance.mapK(fk)
 
@@ -66,3 +59,4 @@ class InvariantKSpec extends munit.FunSuite with Fixtures:
     assertEquals(invariantInstance.paranthesless, optionalInstance.paranthesless)
     assertEquals(invariantInstance.tuple, optionalInstance.tuple)
   }
+}

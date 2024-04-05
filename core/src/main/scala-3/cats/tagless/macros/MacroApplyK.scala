@@ -17,11 +17,20 @@
 package cats.tagless.macros
 
 import cats.tagless.*
-import scala.annotation.experimental
+import cats.~>
+import cats.data.Tuple2K
 
-object Derive:
-  @experimental inline def functorK[Alg[_[_]]]: FunctorK[Alg] = MacroFunctorK.derive[Alg]
-  @experimental inline def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = MacroSemigroupalK.derive[Alg]
-  @experimental inline def invariantK[Alg[_[_]]]: InvariantK[Alg] = MacroInvariantK.derive[Alg]
-  @experimental inline def applyK[Alg[_[_]]]: ApplyK[Alg] = MacroApplyK.derive[Alg]
-  @experimental inline def contravariantK[Alg[_[_]]]: ContravariantK[Alg] = MacroContravariantK.derive[Alg]
+import scala.annotation.experimental
+import scala.quoted.*
+
+@experimental
+object MacroApplyK:
+  inline def derive[Alg[_[_]]] = ${ applyK[Alg] }
+
+  def applyK[Alg[_[_]]: Type](using Quotes): Expr[ApplyK[Alg]] = '{
+    new ApplyK[Alg]:
+      def mapK[F[_], G[_]](af: Alg[F])(fk: F ~> G): Alg[G] =
+        ${ MacroFunctorK.deriveMapK('{ af }, '{ fk }) }
+      def productK[F[_], G[_]](af: Alg[F], ag: Alg[G]): Alg[Tuple2K[F, G, *]] =
+        ${ MacroSemigroupalK.deriveProductK('{ af }, '{ ag }) }
+  }

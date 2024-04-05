@@ -14,11 +14,16 @@
  * limitations under the License.
  */
 
-package cats.tagless.derived
+package cats.tagless
 
-import cats.tagless.{ContravariantK, Derive}
+import cats.tagless.*
+import cats.tagless.macros.*
 
 import scala.annotation.experimental
 
-trait DerivedContravariantK:
-  @experimental inline def derived[Alg[_[_]]]: ContravariantK[Alg] = Derive.contravariantK[Alg]
+object Derive:
+  @experimental inline def functorK[Alg[_[_]]]: FunctorK[Alg] = MacroFunctorK.derive[Alg]
+  @experimental inline def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = MacroSemigroupalK.derive[Alg]
+  @experimental inline def invariantK[Alg[_[_]]]: InvariantK[Alg] = MacroInvariantK.derive[Alg]
+  @experimental inline def applyK[Alg[_[_]]]: ApplyK[Alg] = MacroApplyK.derive[Alg]
+  @experimental inline def contravariantK[Alg[_[_]]]: ContravariantK[Alg] = MacroContravariantK.derive[Alg]

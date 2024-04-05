@@ -29,10 +29,10 @@ object MacroContravariantK:
   def contramapK[Alg[_[_]]: Type](using Quotes): Expr[ContravariantK[Alg]] = '{
     new ContravariantK[Alg]:
       def contramapK[F[_], G[_]](af: Alg[F])(fk: G ~> F): Alg[G] =
-        ${ deriveContramapK('af, 'fk) }
+        ${ deriveContramapK('{ af }, '{ fk }) }
   }
 
-  def deriveContramapK[Alg[_[_]]: Type, F[_]: Type, G[_]: Type](
+  private[macros] def deriveContramapK[Alg[_[_]]: Type, F[_]: Type, G[_]: Type](
       alg: Expr[Alg[F]],
       fk: Expr[G ~> F]
   )(using q: Quotes): Expr[Alg[G]] =

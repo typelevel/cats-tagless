@@ -14,11 +14,7 @@
  * limitations under the License.
  */
 
-package cats.tagless.derived
+package cats.tagless.tests
 
-import cats.tagless.{ContravariantK, Derive}
-
-import scala.annotation.experimental
-
-trait DerivedContravariantK:
-  @experimental inline def derived[Alg[_[_]]]: ContravariantK[Alg] = Derive.contravariantK[Alg]
+/** Used to cross-compile with Scala 3. */
+class experimental extends scala.annotation.StaticAnnotation

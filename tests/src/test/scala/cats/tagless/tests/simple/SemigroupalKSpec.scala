@@ -14,29 +14,25 @@
  * limitations under the License.
  */
 
-package cats.tagless.simple
-
-import cats.tagless.*
-import cats.tagless.syntax.all.*
-import cats.tagless.macros.*
+package cats.tagless
+package tests.simple
 
 import cats.Id
-import cats.arrow.FunctionK
 import cats.data.Tuple2K
-
-import scala.annotation.experimental
+import cats.tagless.syntax.all.*
+import cats.tagless.tests.experimental
 
 @experimental
-class SemigroupalKSpec extends munit.FunSuite with Fixtures:
+class SemigroupalKSpec extends munit.FunSuite with Fixtures {
   test("DeriveMacro should derive instance for a simple algebra") {
     val semigroupalK = Derive.semigroupalK[SimpleService]
     assert(semigroupalK.isInstanceOf[SemigroupalK[SimpleService]])
   }
 
-  test("SemigorupalK should be a valid instance for a simple algebra") {
+  test("SemigroupalK should be a valid instance for a simple algebra") {
     val functorK = Derive.functorK[SimpleService]
     val semigroupalK = Derive.semigroupalK[SimpleService]
-    val optionalInstance = functorK.mapK(instance)(FunctionK.lift([X] => (id: Id[X]) => Some(id)))
+    val optionalInstance = functorK.mapK(instance)(FunctionKLift[Id, Option](Option.apply))
     val combinedInstance = semigroupalK.productK(instance, optionalInstance)
 
     assertEquals(combinedInstance.id(), Tuple2K(instance.id(), optionalInstance.id()))
@@ -54,7 +50,7 @@ class SemigroupalKSpec extends munit.FunSuite with Fixtures:
   }
 
   test("SemigroupalK derives syntax") {
-    val optionalInstance = instance.mapK(FunctionK.lift([X] => (id: Id[X]) => Some(id)))
+    val optionalInstance = instance.mapK(FunctionKLift[Id, Option](Option.apply))
     val combinedInstance = instance.productK(optionalInstance)
 
     assertEquals(combinedInstance.id(), Tuple2K(instance.id(), optionalInstance.id()))
@@ -63,3 +59,4 @@ class SemigroupalKSpec extends munit.FunSuite with Fixtures:
     assertEquals(combinedInstance.paranthesless, Tuple2K(instance.paranthesless, optionalInstance.paranthesless))
     assertEquals(combinedInstance.tuple, Tuple2K(instance.tuple, optionalInstance.tuple))
   }
+}

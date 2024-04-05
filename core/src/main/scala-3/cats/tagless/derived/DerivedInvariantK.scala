@@ -16,8 +16,9 @@
 
 package cats.tagless.derived
 
-import cats.tagless.macros.Derive
+import cats.tagless.{Derive, InvariantK}
+
 import scala.annotation.experimental
 
 trait DerivedInvariantK:
-  @experimental inline def derived[Alg[_[_]]] = Derive.invariantK[Alg]
+  @experimental inline def derived[Alg[_[_]]]: InvariantK[Alg] = Derive.invariantK[Alg]

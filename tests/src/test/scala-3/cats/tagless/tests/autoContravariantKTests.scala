@@ -16,19 +16,17 @@
 
 package cats.tagless.tests
 
-import cats.tagless.*
 import cats.Eq
 import cats.data.Cokleisli
 import cats.laws.discipline.SerializableTests
 import cats.laws.discipline.arbitrary.*
 import cats.laws.discipline.eq.*
-import cats.tagless.ContravariantK
+import cats.tagless.*
 import cats.tagless.laws.discipline.ContravariantKTests
 import org.scalacheck.{Arbitrary, Cogen}
 
-import scala.util.Try
 import scala.annotation.experimental
-import cats.tagless.macros.Derive.contravariantK
+import scala.util.Try
 
 @experimental
 class autoContravariantKTests extends CatsTaglessTestSuite:
@@ -47,7 +45,7 @@ object autoContravariantKTests:
 
   object TestAlgebra:
     implicit def eqv[F[_]](implicit arbFi: Arbitrary[F[Int]], arbFs: Arbitrary[F[String]]): Eq[TestAlgebra[F]] =
-      Eq.by(algebra => (algebra.sum /*, algebra.sumAll*/, algebra.foldSpecialized))
+      Eq.by(algebra => (algebra.sum, algebra.sumAll _, algebra.foldSpecialized))
 
   implicit def arbitrary[F[_]](implicit
       arbFs: Arbitrary[F[String]],

@@ -14,23 +14,7 @@
  * limitations under the License.
  */
 
-package cats.tagless.macros
+package cats.tagless.tests
 
-import cats.tagless.*
-import cats.~>
-import cats.data.Tuple2K
-
-import scala.annotation.experimental
-import scala.quoted.*
-
-@experimental
-object MacroApplyK:
-  inline def derive[Alg[_[_]]] = ${ applyK[Alg] }
-
-  def applyK[Alg[_[_]]: Type](using Quotes): Expr[ApplyK[Alg]] = '{
-    new ApplyK[Alg]:
-      def mapK[F[_], G[_]](af: Alg[F])(fk: F ~> G): Alg[G] =
-        ${ MacroFunctorK.deriveMapK('af, 'fk) }
-      def productK[F[_], G[_]](af: Alg[F], ag: Alg[G]): Alg[Tuple2K[F, G, *]] =
-        ${ MacroSemigroupalK.deriveProductK('af, 'ag) }
-  }
+/** Used to cross-compile with Scala 2. */
+class experimental extends scala.annotation.experimental

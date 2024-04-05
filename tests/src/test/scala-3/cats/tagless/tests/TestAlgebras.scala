@@ -25,8 +25,8 @@ import cats.syntax.all.*
 import cats.{Eq, Eval, Monoid, ~>}
 import org.scalacheck.{Arbitrary, Cogen}
 
-import scala.util.Try
 import scala.annotation.experimental
+import scala.util.Try
 
 // TODO: @finalAlg @autoProductNK @autoInstrument
 @experimental
@@ -56,36 +56,35 @@ object SafeAlg:
 @experimental
 trait SafeInvAlg[F[_]] derives InvariantK, SemigroupalK:
   def parseInt(fs: F[String]): F[Int]
-  // def doubleParser(precision: Int): Kleisli[F, String, Double]
-  // def parseIntOrError(fs: EitherT[F, String, String]): F[Int]
+  def doubleParser(precision: Int): Kleisli[F, String, Double]
+  def parseIntOrError(fs: EitherT[F, String, String]): F[Int]
 
 object SafeInvAlg:
-  // import TestInstances.*
+  import TestInstances.*
 
   implicit def eqForSafeInvAlg[F[_]](implicit
       eqFi: Eq[F[Int]],
       eqFd: Eq[F[Double]],
       exFs: ExhaustiveCheck[F[String]],
       exEfs: ExhaustiveCheck[EitherT[F, String, String]]
-  ): Eq[SafeInvAlg[F]] = Eq.by { algebra =>
-    (algebra.parseInt /*, algebra.doubleParser, algebra.parseIntOrError*/ )
-  }
+  ): Eq[SafeInvAlg[F]] = Eq.by: algebra =>
+    (algebra.parseInt, algebra.doubleParser, algebra.parseIntOrError)
 
   implicit def arbitrarySafeInvAlg[F[_]](implicit
       coFs: Cogen[F[String]],
       coEfs: Cogen[EitherT[F, String, String]],
       arbFi: Arbitrary[F[Int]],
       arbFd: Arbitrary[F[Double]]
-  ): Arbitrary[SafeInvAlg[F]] = Arbitrary(
-    for
-      parseIntF <- Arbitrary.arbitrary[F[String] => F[Int]]
-      doubleParserF <- Arbitrary.arbitrary[Int => Kleisli[F, String, Double]]
-      parseIntOrErrorF <- Arbitrary.arbitrary[EitherT[F, String, String] => F[Int]]
-    yield new SafeInvAlg[F]:
-      def parseInt(fs: F[String]) = parseIntF(fs)
-      def doubleParser(precision: Int) = doubleParserF(precision)
-      def parseIntOrError(fs: EitherT[F, String, String]) = parseIntOrErrorF(fs)
+  ): Arbitrary[SafeInvAlg[F]] = Arbitrary(for
+    parseIntF <- Arbitrary.arbitrary[F[String] => F[Int]]
+    doubleParserF <- Arbitrary.arbitrary[Int => Kleisli[F, String, Double]]
+    parseIntOrErrorF <- Arbitrary.arbitrary[EitherT[F, String, String] => F[Int]]
+  yield new SafeInvAlg[F]:
+    def parseInt(fs: F[String]) = parseIntF(fs)
+    def doubleParser(precision: Int) = doubleParserF(precision)
+    def parseIntOrError(fs: EitherT[F, String, String]) = parseIntOrErrorF(fs)
   )
+
 @experimental
 trait CalculatorAlg[F[_]] derives InvariantK, SemigroupalK:
   def lit(i: Int): F[Int]
@@ -98,9 +97,8 @@ object CalculatorAlg:
   implicit def eqForCalculatorAlg[F[_]](implicit
       eqFi: Eq[F[Int]],
       exFi: ExhaustiveCheck[F[Int]]
-  ): Eq[CalculatorAlg[F]] = Eq.by { algebra =>
+  ): Eq[CalculatorAlg[F]] = Eq.by: algebra =>
     (algebra.lit, algebra.add, algebra.show[Int])
-  }
 
   implicit def arbitraryCalculatorAlg[F[_]](implicit
       coFi: Cogen[F[Int]],

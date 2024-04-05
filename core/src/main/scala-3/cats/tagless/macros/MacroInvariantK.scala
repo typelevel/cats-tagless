@@ -23,18 +23,19 @@ import scala.annotation.experimental
 import scala.quoted.*
 
 @experimental
-object MacroFunctorK:
-  inline def derive[Alg[_[_]]] = ${ functorK[Alg] }
+object MacroInvariantK:
+  inline def derive[Alg[_[_]]] = ${ invariantK[Alg] }
 
-  def functorK[Alg[_[_]]: Type](using Quotes): Expr[FunctorK[Alg]] = '{
-    new FunctorK[Alg]:
-      def mapK[F[_], G[_]](alg: Alg[F])(fk: F ~> G): Alg[G] =
-        ${ deriveMapK('alg, 'fk) }
+  def invariantK[Alg[_[_]]: Type](using Quotes): Expr[InvariantK[Alg]] = '{
+    new InvariantK[Alg]:
+      def imapK[F[_], G[_]](alg: Alg[F])(fk: F ~> G)(gk: G ~> F): Alg[G] =
+        ${ deriveIMapK('{ alg }, '{ fk }, '{ gk }) }
   }
 
-  def deriveMapK[Alg[_[_]]: Type, F[_]: Type, G[_]: Type](
+  private[macros] def deriveIMapK[Alg[_[_]]: Type, F[_]: Type, G[_]: Type](
       alg: Expr[Alg[F]],
-      fk: Expr[F ~> G]
+      fk: Expr[F ~> G],
+      gk: Expr[G ~> F]
   )(using q: Quotes): Expr[Alg[G]] =
     import quotes.reflect.*
     given DeriveMacros[q.type] = new DeriveMacros
@@ -47,17 +48,19 @@ object MacroFunctorK:
       args = {
         case (tpe, arg) if tpe.contains(g) =>
           Select
-            .unique(tpe.summonLambda[ContravariantK](g), "contramapK")
+            .unique(tpe.summonLambda[InvariantK](g), "imapK")
             .appliedToTypes(List(G, F))
             .appliedTo(arg)
+            .appliedTo(gk.asTerm)
             .appliedTo(fk.asTerm)
       },
       body = {
         case (tpe, body) if tpe.contains(g) =>
           Select
-            .unique(tpe.summonLambda[FunctorK](g), "mapK")
+            .unique(tpe.summonLambda[InvariantK](g), "imapK")
             .appliedToTypes(List(F, G))
             .appliedTo(body)
             .appliedTo(fk.asTerm)
+            .appliedTo(gk.asTerm)
       }
     )

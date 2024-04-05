@@ -33,17 +33,16 @@
 package cats.tagless
 package tests
 
-import cats.tagless.syntax.all.*
-import cats.tagless.macros.Derive
-import cats.{Monad, Show, ~>}
 import cats.arrow.FunctionK
+import cats.data.Cokleisli
 import cats.free.Free
 import cats.laws.discipline.SerializableTests
 import cats.tagless.laws.discipline.FunctorKTests
+import cats.tagless.syntax.all.*
+import cats.{Monad, Show, ~>}
 
-import scala.util.Try
-import cats.data.Cokleisli
 import scala.annotation.experimental
+import scala.util.Try
 
 @experimental
 class autoFunctorKTests extends CatsTaglessTestSuite:

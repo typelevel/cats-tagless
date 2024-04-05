@@ -14,32 +14,27 @@
  * limitations under the License.
  */
 
-package cats.tagless.simple
-
-import cats.tagless.*
-import cats.tagless.syntax.all.*
-import cats.tagless.macros.*
+package cats.tagless
+package tests.simple
 
 import cats.Id
-import cats.arrow.FunctionK
-import cats.~>
-
-import scala.compiletime.testing.*
-import scala.annotation.experimental
+import cats.tagless.syntax.all.*
+import cats.tagless.tests.experimental
 
 @experimental
-class ContravariantKSpec extends munit.FunSuite with Fixtures:
+class ContravariantKSpec extends munit.FunSuite with Fixtures {
 
   test("DeriveMacro should derive instance for a simple algebra") {
     def contravariantK = Derive.contravariantK[SimpleServiceC]
+
     assert(contravariantK.isInstanceOf[ContravariantK[SimpleServiceC]])
   }
 
   test("DeriveMacro should derive instance for a simple algebra #2") {
     def contravariantK = Derive.contravariantK[SimpleServiceC]
-    val fk: Option ~> Id = FunctionK.lift[Option, Id]([X] => (id: Option[X]) => id.get)
-    val optionalInstance = contravariantK.contramapK(instancec)(fk)
 
+    val fk = FunctionKLift[Option, Id](_.get)
+    val optionalInstance = contravariantK.contramapK(instancec)(fk)
     val f: (Int, String) => Int = (i, s) => i + s.toInt
 
     assertEquals(optionalInstance.id(Some(23)), instancec.id(23))
@@ -48,16 +43,16 @@ class ContravariantKSpec extends munit.FunSuite with Fixtures:
   }
 
   test("DeriveMacro should not derive instance for not a contravariant algebra") {
-    assert(typeCheckErrors("Derive.contravariantK[SimpleService]").nonEmpty)
+    assert(compileErrors("Derive.contravariantK[SimpleService]").nonEmpty)
   }
 
   test("ContravariantK derives syntax") {
-    val fk: Option ~> Id = FunctionK.lift[Option, Id]([X] => (id: Option[X]) => id.get)
+    val fk = FunctionKLift[Option, Id](_.get)
     val optionalInstance = instancec.contramapK(fk)
-
     val f: (Int, String) => Int = (i, s) => i + s.toInt
 
     assertEquals(optionalInstance.id(Some(23)), instancec.id(23))
     assertEquals(optionalInstance.ids(Some(0), Some(1)), instancec.ids(0, 1))
     assertEquals(optionalInstance.foldSpecialized("0")(f).run(Some("1")), instancec.foldSpecialized("0")(f).run("1"))
   }
+}

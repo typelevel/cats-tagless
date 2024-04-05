@@ -22,8 +22,8 @@ import cats.laws.discipline.SerializableTests
 import cats.laws.discipline.arbitrary.*
 import cats.tagless.laws.discipline.SemigroupalKTests
 
-import scala.util.Try
 import scala.annotation.experimental
+import scala.util.Try
 
 @experimental
 class autoSemigroupalKTests extends CatsTaglessTestSuite:

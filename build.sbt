@@ -50,7 +50,7 @@ val disciplineMunitVersion = "2.0.0-M3"
 val fs2Version = "3.10.2"
 val kindProjectorVersion = "0.13.3"
 val paradiseVersion = "2.1.1"
-val scalaCheckVersion = "1.17.0"
+val scalaCheckVersion = "1.17.1"
 
 lazy val root = tlCrossRootProject.aggregate(core, fs2, laws, tests, macros, examples)
 

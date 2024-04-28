@@ -69,3 +69,9 @@ object autoApplyKTests:
   trait AlgWithVarArgsParameter[F[_]] derives ApplyK:
     def sum(xs: Int*): Int
     def fSum(xs: Int*): F[Int]
+
+  trait DepFn[A]:
+    type Out
+
+  trait AlgWithDependentType[F[_]] derives ApplyK:
+    def dependent[A](f: DepFn[A])(out: f.Out): F[A => f.Out]

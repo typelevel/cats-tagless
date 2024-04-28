@@ -14,7 +14,7 @@ val homePage = "https://typelevel.org/cats-tagless"
 // GitHub actions configuration
 ThisBuild / organizationName := "cats-tagless maintainers"
 // Note: we use early SemVer so the base version should be bumped only on binary-breaking changes.
-// Additions to the API are allowed in a minor version while the major version remains zero.
+// Additions to the API are allowed in a patch version while the major version remains zero.
 ThisBuild / tlBaseVersion := "0.16"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala213, Scala3)
 ThisBuild / tlCiReleaseBranches := Seq("master")

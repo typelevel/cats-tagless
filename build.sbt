@@ -245,6 +245,7 @@ def when[A](condition: Boolean)(values: A*): Seq[A] =
   if (condition) values else Nil
 
 ThisBuild / homepage := Some(url(homePage))
+ThisBuild / startYear := Some(2017)
 ThisBuild / developers := List(
   Developer(
     "Georgi Krastev",

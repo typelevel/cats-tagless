@@ -14,19 +14,11 @@
  * limitations under the License.
  */
 
-package cats.tagless
+package cats.tagless.derived
 
 import cats.Functor
-import cats.tagless.*
-import cats.tagless.macros.*
+import cats.tagless.Derive
 
 import scala.annotation.experimental
 
-@experimental
-object Derive:
-  inline def functor[F[_]]: Functor[F] = MacroFunctor.derive[F]
-  inline def functorK[Alg[_[_]]]: FunctorK[Alg] = MacroFunctorK.derive[Alg]
-  inline def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = MacroSemigroupalK.derive[Alg]
-  inline def invariantK[Alg[_[_]]]: InvariantK[Alg] = MacroInvariantK.derive[Alg]
-  inline def applyK[Alg[_[_]]]: ApplyK[Alg] = MacroApplyK.derive[Alg]
-  inline def contravariantK[Alg[_[_]]]: ContravariantK[Alg] = MacroContravariantK.derive[Alg]
+extension (x: Functor.type) @experimental inline def derived[F[_]]: Functor[F] = Derive.functor

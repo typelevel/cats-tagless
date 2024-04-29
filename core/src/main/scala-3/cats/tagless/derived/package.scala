@@ -16,9 +16,11 @@
 
 package cats.tagless.derived
 
-import cats.Functor
+import cats.*
 import cats.tagless.Derive
 
 import scala.annotation.experimental
 
 extension (x: Functor.type) @experimental inline def derived[F[_]]: Functor[F] = Derive.functor
+extension (x: Contravariant.type) @experimental inline def derived[F[_]]: Contravariant[F] = Derive.contravariant
+extension (x: Invariant.type) @experimental inline def derived[F[_]]: Invariant[F] = Derive.invariant

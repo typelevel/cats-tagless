@@ -25,7 +25,7 @@ import org.scalacheck.{Arbitrary, Cogen}
 
 @experimental
 class autoContravariantTests extends CatsTaglessTestSuite:
-  import autoContravariantTest.*
+  import autoContravariantTests.*
 
   checkAll("Contravariant[SimpleAlg]", ContravariantTests[SimpleAlg].contravariant[Float, String, Int])
   checkAll("Contravariant is Serializable", SerializableTests.serializable(Contravariant[SimpleAlg]))
@@ -46,9 +46,7 @@ class autoContravariantTests extends CatsTaglessTestSuite:
     assertEquals(intAlg.contramap[String](_.toInt).plusOne("3"), 4)
     assertEquals(intAlg.contramap[String](_.toInt).minusOne(2), 1)
 
-@experimental
-object autoContravariantTest:
-
+object autoContravariantTests:
   trait SimpleAlg[T] derives Contravariant:
     def foo(t: T): String
     def bar(opt: Option[T]): String
@@ -85,14 +83,13 @@ object autoContravariantTest:
     def foo(a: String, b: Float): Int = (a.length.toFloat + b).toInt
 
   given [T: ExhaustiveCheck]: Eq[SimpleAlg[T]] =
-    Eq.by(algebra => (algebra.foo _, algebra.bar _))
+    Eq.by(algebra => (algebra.foo, algebra.bar))
 
   given [T: Cogen]: Arbitrary[SimpleAlg[T]] =
-    Arbitrary(
-      for
-        f <- Arbitrary.arbitrary[T => String]
-        g <- Arbitrary.arbitrary[Option[T] => String]
-      yield new SimpleAlg[T]:
-        def foo(t: T) = f(t)
-        def bar(opt: Option[T]) = g(opt)
+    Arbitrary(for
+      f <- Arbitrary.arbitrary[T => String]
+      g <- Arbitrary.arbitrary[Option[T] => String]
+    yield new SimpleAlg[T]:
+      def foo(t: T) = f(t)
+      def bar(opt: Option[T]) = g(opt)
     )

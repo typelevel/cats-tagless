@@ -89,16 +89,15 @@ object autoInvariantTests:
     def foo(a: String, b: Float): Float = a.length.toFloat + b
 
   given [T: Arbitrary: Cogen: Eq]: Eq[SimpleAlg[T]] =
-    Eq.by(algebra => (algebra.foo _, algebra.headOption _, algebra.map[Int] _))
+    Eq.by(algebra => (algebra.foo, algebra.headOption, algebra.map[Int]))
 
   given [T: Arbitrary: Cogen]: Arbitrary[SimpleAlg[T]] =
-    Arbitrary(
-      for
-        f <- Arbitrary.arbitrary[T => T]
-        hOpt <- Arbitrary.arbitrary[List[T] => Option[T]]
-      yield new SimpleAlg[T]:
-        def foo(i: T): T = f(i)
-        def headOption(list: List[T]) = hOpt(list)
+    Arbitrary(for
+      f <- Arbitrary.arbitrary[T => T]
+      hOpt <- Arbitrary.arbitrary[List[T] => Option[T]]
+    yield new SimpleAlg[T]:
+      def foo(i: T): T = f(i)
+      def headOption(list: List[T]) = hOpt(list)
     )
 
   trait AlgWithVarArgsParameter[T] derives Invariant:

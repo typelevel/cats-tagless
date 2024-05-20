@@ -17,6 +17,7 @@
 package cats.tagless
 
 import cats.*
+import cats.arrow.Profunctor
 import cats.tagless.*
 import cats.tagless.macros.*
 
@@ -28,6 +29,7 @@ object Derive:
   inline def contravariant[F[_]]: Contravariant[F] = MacroContravariant.derive[F]
   inline def invariant[F[_]]: Invariant[F] = MacroInvariant.derive[F]
   inline def bifunctor[F[_, _]]: Bifunctor[F] = MacroBifunctor.derive[F]
+  inline def profunctor[F[_, _]]: Profunctor[F] = MacroProfunctor.derive[F]
   inline def functorK[Alg[_[_]]]: FunctorK[Alg] = MacroFunctorK.derive[Alg]
   inline def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = MacroSemigroupalK.derive[Alg]
   inline def invariantK[Alg[_[_]]]: InvariantK[Alg] = MacroInvariantK.derive[Alg]

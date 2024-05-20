@@ -44,6 +44,7 @@ object MacroSemigroupalK:
     val G = TypeRepr.of[G]
     val T2K = TypeRepr.of[Tuple2K[F, G, *]]
     val f = F.typeSymbol
+    val g = G.typeSymbol
     val t2k = T2K.typeSymbol
 
     type FirstK[H[_], I[_], A] = H[A]
@@ -57,7 +58,7 @@ object MacroSemigroupalK:
     List(eaf.asTerm, eag.asTerm).combineTo[Alg[Tuple2K[F, G, *]]](
       args = List(
         {
-          case (tpe, arg) if tpe.contains(t2k) =>
+          case (tpe, arg) if tpe.containsAll(t2k, f, g) =>
             Select
               .unique(tpe.firstK.summonLambda[FunctorK](f), "mapK")
               .appliedToTypes(List(T2K, F))
@@ -65,7 +66,7 @@ object MacroSemigroupalK:
               .appliedTo(tuple2K("firstK"))
         },
         {
-          case (tpe, arg) if tpe.contains(t2k) =>
+          case (tpe, arg) if tpe.containsAll(t2k, f, g) =>
             Select
               .unique(tpe.firstK.summonLambda[FunctorK](f), "mapK")
               .appliedToTypes(List(T2K, G))
@@ -74,7 +75,7 @@ object MacroSemigroupalK:
         }
       ),
       body = {
-        case (tpe, af :: ag :: Nil) if tpe.contains(t2k) =>
+        case (tpe, af :: ag :: Nil) if tpe.containsAll(t2k, f, g) =>
           Select
             .unique(tpe.firstK.summonLambda[SemigroupalK](f), "productK")
             .appliedToTypes(List(F, G))

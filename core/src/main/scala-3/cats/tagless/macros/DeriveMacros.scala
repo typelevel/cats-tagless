@@ -160,6 +160,9 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
     def contains(sym: Symbol): Boolean =
       tpe != tpe.substituteTypes(sym :: Nil, TypeRepr.of[Any] :: Nil)
 
+    def containsAll(syms: Symbol*): Boolean =
+      syms.forall(tpe.contains)
+
     def isRepeated: Boolean =
       tpe.typeSymbol == defn.RepeatedParamClass
 

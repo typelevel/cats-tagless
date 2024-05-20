@@ -49,7 +49,7 @@ object MacroBifunctor:
 
     fab.asTerm.transformTo[F[C, D]](
       args = {
-        case (tpe, arg) if tpe.contains(c) && tpe.contains(d) =>
+        case (tpe, arg) if tpe.containsAll(c, d) =>
           report.errorAndAbort(s"Both type parameters ${A.show} and ${B.show} appear in contravariant position")
         case (tpe, arg) if tpe.contains(c) =>
           Select
@@ -65,7 +65,7 @@ object MacroBifunctor:
             .appliedTo(g.asTerm)
       },
       body = {
-        case (tpe, body) if tpe.contains(c) && tpe.contains(d) =>
+        case (tpe, body) if tpe.containsAll(c, d) =>
           Select
             .unique(tpe.summonLambda[Bifunctor](c, d), "bimap")
             .appliedToTypes(List(A, B, C, D))

@@ -14,31 +14,29 @@
  * limitations under the License.
  */
 
-package cats.tagless
-package tests
+package cats.tagless.tests
 
 import cats.Eq
 import cats.arrow.Profunctor
 import cats.laws.discipline.{ProfunctorTests, SerializableTests}
 import cats.laws.discipline.eq.*
+import cats.tagless.derived.*
 import org.scalacheck.{Arbitrary, Cogen}
 
-class autoProfunctorTests extends CatsTaglessTestSuite {
+@experimental
+class autoProfunctorTests extends CatsTaglessTestSuite:
   import autoProfunctorTests.*
 
   checkAll("Profunctor[TestAlgebra]", ProfunctorTests[TestAlgebra].profunctor[Long, String, Int, Long, String, Int])
   checkAll("Serializable Profunctor[TestAlgebra]", SerializableTests.serializable(Profunctor[TestAlgebra]))
-  test("extra type param correctly handled") {
+  test("extra type param correctly handled"):
     val asStringAlg = AlgWithExtraTypeParamString.dimap((s: String) => s.length)(_ + 1)
     assertEquals(asStringAlg.foo("base", "x2"), 9d)
-  }
-}
 
-object autoProfunctorTests {
+object autoProfunctorTests:
   import TestInstances.*
 
-  @autoProfunctor
-  trait TestAlgebra[A, B] {
+  trait TestAlgebra[A, B] derives Profunctor:
     def abstractCovariant(str: String): B
     def concreteCovariant(str: String): B = abstractCovariant(str + " concreteCovariant")
     def abstractContravariant(a: A): String
@@ -49,28 +47,25 @@ object autoProfunctorTests {
     def concreteOther(str: String): String = str + " concreteOther"
     def withoutParams: B
     def fromList(as: List[A]): List[B]
-  }
 
-  object TestAlgebra {
-    implicit def eqv[A: Arbitrary, B: Eq]: Eq[TestAlgebra[A, B]] =
-      Eq.by { algebra =>
+  object TestAlgebra:
+    given [A: Arbitrary, B: Eq]: Eq[TestAlgebra[A, B]] =
+      Eq.by: algebra =>
         (
-          algebra.abstractCovariant _,
-          algebra.concreteCovariant _,
-          algebra.abstractContravariant _,
-          algebra.concreteContravariant _,
-          algebra.abstractMixed _,
-          algebra.concreteMixed _,
-          algebra.abstractOther _,
-          algebra.concreteOther _,
+          algebra.abstractCovariant,
+          algebra.concreteCovariant,
+          algebra.abstractContravariant,
+          algebra.concreteContravariant,
+          algebra.abstractMixed,
+          algebra.concreteMixed,
+          algebra.abstractOther,
+          algebra.concreteOther,
           algebra.withoutParams,
-          algebra.fromList _
+          algebra.fromList
         )
-      }
-  }
 
-  implicit def arbitrary[A: Cogen, B: Arbitrary]: Arbitrary[TestAlgebra[A, B]] =
-    Arbitrary(for {
+  given [A: Cogen, B: Arbitrary]: Arbitrary[TestAlgebra[A, B]] =
+    Arbitrary(for
       absCovariant <- Arbitrary.arbitrary[String => B]
       conCovariant <- Arbitrary.arbitrary[Option[String => B]]
       absContravariant <- Arbitrary.arbitrary[A => String]
@@ -81,7 +76,7 @@ object autoProfunctorTests {
       conOther <- Arbitrary.arbitrary[Option[String => String]]
       noParams <- Arbitrary.arbitrary[B]
       list <- Arbitrary.arbitrary[List[A] => List[B]]
-    } yield new TestAlgebra[A, B] {
+    yield new TestAlgebra[A, B]:
       override def abstractCovariant(str: String) = absCovariant(str)
       override def concreteCovariant(str: String) = conCovariant.getOrElse(super.concreteCovariant(_))(str)
       override def abstractContravariant(a: A) = absContravariant(a)
@@ -92,19 +87,13 @@ object autoProfunctorTests {
       override def concreteOther(str: String) = conOther.getOrElse(super.concreteOther(_))(str)
       override def withoutParams = noParams
       override def fromList(as: List[A]) = list(as)
-    })
+    )
 
-  @autoProfunctor
-  trait AlgWithExtraTypeParam[T, A, B] {
+  trait AlgWithExtraTypeParam[T, A, B] derives Profunctor:
     def foo(t: T, a: A): B
-  }
 
-  object AlgWithExtraTypeParamString extends AlgWithExtraTypeParam[String, Int, Double] {
+  object AlgWithExtraTypeParamString extends AlgWithExtraTypeParam[String, Int, Double]:
     override def foo(t: String, a: Int) = t.length * a.toDouble
-  }
 
-  @autoProfunctor
-  trait InvertAlgebra[A, B] {
+  trait InvertAlgebra[A, B] derives Profunctor:
     def invert(f: B => A): A => B
-  }
-}

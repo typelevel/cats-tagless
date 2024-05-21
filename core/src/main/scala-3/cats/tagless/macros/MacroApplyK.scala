@@ -25,7 +25,7 @@ import scala.quoted.*
 
 @experimental
 object MacroApplyK:
-  inline def derive[Alg[_[_]]] = ${ applyK[Alg] }
+  inline def derive[Alg[_[_]]]: ApplyK[Alg] = ${ applyK }
 
   def applyK[Alg[_[_]]: Type](using Quotes): Expr[ApplyK[Alg]] = '{
     new ApplyK[Alg]:

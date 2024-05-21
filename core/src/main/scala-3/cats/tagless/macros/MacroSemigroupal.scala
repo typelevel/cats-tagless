@@ -24,7 +24,7 @@ import scala.quoted.*
 
 @experimental
 object MacroSemigroupal:
-  inline def derive[F[_]] = ${ semigroupal[F] }
+  inline def derive[F[_]]: Semigroupal[F] = ${ semigroupal }
 
   def semigroupal[F[_]: Type](using Quotes): Expr[Semigroupal[F]] = '{
     new Semigroupal[F]:
@@ -83,8 +83,6 @@ object MacroSemigroupal:
             .appliedToTypes(List(A, B))
             .appliedTo(af, ag)
         case (tpe, af :: ag :: Nil) =>
-          Implicits.search(TypeRepr.of[Semigroup].appliedTo(tpe)) match
-            case success: ImplicitSearchSuccess => Select.unique(success.tree, "combine").appliedTo(af, ag)
-            case _ => af
+          tpe.summonOpt[Semigroup].fold(af)(Select.unique(_, "combine").appliedTo(af, ag))
       }
     )

@@ -24,7 +24,7 @@ import scala.quoted.*
 
 @experimental
 object MacroBifunctor:
-  inline def derive[F[_, _]] = ${ bifunctor[F] }
+  inline def derive[F[_, _]]: Bifunctor[F] = ${ bifunctor }
 
   def bifunctor[F[_, _]: Type](using Quotes): Expr[Bifunctor[F]] = '{
     new Bifunctor[F]:

@@ -16,26 +16,27 @@
 
 package cats.tagless.macros
 
-import cats.Invariant
 import cats.tagless.*
+import cats.{Apply, Semigroup}
 
 import scala.annotation.experimental
 import scala.quoted.*
 
 @experimental
-object MacroInvariant:
-  inline def derive[F[_]]: Invariant[F] = ${ invariant }
+object MacroApply:
+  inline def derive[F[_]]: Apply[F] = ${ apply }
 
-  def invariant[F[_]: Type](using Quotes): Expr[Invariant[F]] = '{
-    new Invariant[F]:
-      def imap[A, B](fa: F[A])(f: A => B)(g: B => A): F[B] =
-        ${ deriveIMap('{ fa }, '{ f }, '{ g }) }
+  def apply[F[_]: Type](using Quotes): Expr[Apply[F]] = '{
+    new Apply[F]:
+      def map[A, B](fa: F[A])(f: A => B): F[B] =
+        ${ MacroFunctor.deriveMap('{ fa }, '{ f }) }
+      def ap[A, B](ff: F[A => B])(fa: F[A]): F[B] =
+        ${ deriveAp('{ ff }, '{ fa }) }
   }
 
-  private[macros] def deriveIMap[F[_]: Type, A: Type, B: Type](
-      fa: Expr[F[A]],
-      f: Expr[A => B],
-      g: Expr[B => A]
+  private[macros] def deriveAp[F[_]: Type, A: Type, B: Type](
+      ff: Expr[F[A => B]],
+      fa: Expr[F[A]]
   )(using q: Quotes): Expr[F[B]] =
     import quotes.reflect.*
     given DeriveMacros[q.type] = new DeriveMacros
@@ -44,23 +45,18 @@ object MacroInvariant:
     val B = TypeRepr.of[B]
     val b = B.typeSymbol
 
-    fa.asTerm.transformTo[F[B]](
-      args = {
-        case (tpe, arg) if tpe.contains(b) =>
-          Select
-            .unique(tpe.summonLambda[Invariant](b), "imap")
-            .appliedToTypes(List(B, A))
-            .appliedTo(arg)
-            .appliedTo(g.asTerm)
-            .appliedTo(f.asTerm)
-      },
+    List(ff.asTerm, fa.asTerm).combineTo[F[B]](
+      args = List.fill(2):
+        case (tpe, _) if tpe.contains(b) =>
+          report.errorAndAbort(s"Type parameter ${A.show} appears in contravariant position"),
       body = {
-        case (tpe, body) if tpe.contains(b) =>
+        case (tpe, ff :: fa :: Nil) if tpe.contains(b) =>
           Select
-            .unique(tpe.summonLambda[Invariant](b), "imap")
+            .unique(tpe.summonLambda[cats.Apply](b), "ap")
             .appliedToTypes(List(A, B))
-            .appliedTo(body)
-            .appliedTo(f.asTerm)
-            .appliedTo(g.asTerm)
+            .appliedTo(ff)
+            .appliedTo(fa)
+        case (tpe, ff :: fa :: Nil) =>
+          tpe.summonOpt[Semigroup].fold(ff)(Select.unique(_, "combine").appliedTo(ff, fa))
       }
     )

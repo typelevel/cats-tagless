@@ -25,14 +25,15 @@ import scala.annotation.experimental
 
 @experimental
 object Derive:
-  inline def functor[F[_]]: Functor[F] = MacroFunctor.derive[F]
-  inline def contravariant[F[_]]: Contravariant[F] = MacroContravariant.derive[F]
-  inline def invariant[F[_]]: Invariant[F] = MacroInvariant.derive[F]
-  inline def semigroupal[F[_]]: Semigroupal[F] = MacroSemigroupal.derive[F]
-  inline def bifunctor[F[_, _]]: Bifunctor[F] = MacroBifunctor.derive[F]
-  inline def profunctor[F[_, _]]: Profunctor[F] = MacroProfunctor.derive[F]
-  inline def functorK[Alg[_[_]]]: FunctorK[Alg] = MacroFunctorK.derive[Alg]
-  inline def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = MacroSemigroupalK.derive[Alg]
-  inline def invariantK[Alg[_[_]]]: InvariantK[Alg] = MacroInvariantK.derive[Alg]
-  inline def applyK[Alg[_[_]]]: ApplyK[Alg] = MacroApplyK.derive[Alg]
-  inline def contravariantK[Alg[_[_]]]: ContravariantK[Alg] = MacroContravariantK.derive[Alg]
+  inline def functor[F[_]]: Functor[F] = MacroFunctor.derive
+  inline def contravariant[F[_]]: Contravariant[F] = MacroContravariant.derive
+  inline def invariant[F[_]]: Invariant[F] = MacroInvariant.derive
+  inline def semigroupal[F[_]]: Semigroupal[F] = MacroSemigroupal.derive
+  inline def apply[F[_]]: Apply[F] = MacroApply.derive
+  inline def bifunctor[F[_, _]]: Bifunctor[F] = MacroBifunctor.derive
+  inline def profunctor[F[_, _]]: Profunctor[F] = MacroProfunctor.derive
+  inline def functorK[Alg[_[_]]]: FunctorK[Alg] = MacroFunctorK.derive
+  inline def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = MacroSemigroupalK.derive
+  inline def invariantK[Alg[_[_]]]: InvariantK[Alg] = MacroInvariantK.derive
+  inline def applyK[Alg[_[_]]]: ApplyK[Alg] = MacroApplyK.derive
+  inline def contravariantK[Alg[_[_]]]: ContravariantK[Alg] = MacroContravariantK.derive

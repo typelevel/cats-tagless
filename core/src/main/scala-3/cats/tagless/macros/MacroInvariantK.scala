@@ -24,7 +24,7 @@ import scala.quoted.*
 
 @experimental
 object MacroInvariantK:
-  inline def derive[Alg[_[_]]] = ${ invariantK[Alg] }
+  inline def derive[Alg[_[_]]]: InvariantK[Alg] = ${ invariantK }
 
   def invariantK[Alg[_[_]]: Type](using Quotes): Expr[InvariantK[Alg]] = '{
     new InvariantK[Alg]:

@@ -50,7 +50,7 @@ object MacroProfunctor:
 
     fab.asTerm.transformTo[F[C, D]](
       args = {
-        case (tpe, arg) if tpe.contains(c) && tpe.contains(d) =>
+        case (tpe, arg) if tpe.containsAll(c, d) =>
           Select
             .unique(tpe.summonLambda[Profunctor](d, c), "dimap")
             .appliedToTypes(List(D, C, B, A))
@@ -71,7 +71,7 @@ object MacroProfunctor:
             .appliedTo(g.asTerm)
       },
       body = {
-        case (tpe, body) if tpe.contains(c) && tpe.contains(d) =>
+        case (tpe, body) if tpe.containsAll(c, d) =>
           Select
             .unique(tpe.summonLambda[Profunctor](c, d), "dimap")
             .appliedToTypes(List(A, B, C, D))

@@ -28,6 +28,7 @@ object Derive:
   inline def functor[F[_]]: Functor[F] = MacroFunctor.derive[F]
   inline def contravariant[F[_]]: Contravariant[F] = MacroContravariant.derive[F]
   inline def invariant[F[_]]: Invariant[F] = MacroInvariant.derive[F]
+  inline def semigroupal[F[_]]: Semigroupal[F] = MacroSemigroupal.derive[F]
   inline def bifunctor[F[_, _]]: Bifunctor[F] = MacroBifunctor.derive[F]
   inline def profunctor[F[_, _]]: Profunctor[F] = MacroProfunctor.derive[F]
   inline def functorK[Alg[_[_]]]: FunctorK[Alg] = MacroFunctorK.derive[Alg]

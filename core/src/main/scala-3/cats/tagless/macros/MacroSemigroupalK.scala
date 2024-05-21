@@ -33,6 +33,10 @@ object MacroSemigroupalK:
         ${ deriveProductK('{ af }, '{ ag }) }
   }
 
+  private type FirstK[F[_], G[_]] = [H[_], I[_], A] =>> (H[A], I[A]) match
+    case (F[A], G[A]) => F[A]
+    case _ => Tuple2K[H, I, A]
+
   private[macros] def deriveProductK[Alg[_[_]]: Type, F[_]: Type, G[_]: Type](
       eaf: Expr[Alg[F]],
       eag: Expr[Alg[G]]
@@ -42,15 +46,13 @@ object MacroSemigroupalK:
 
     val F = TypeRepr.of[F]
     val G = TypeRepr.of[G]
-    val T2K = TypeRepr.of[Tuple2K[F, G, *]]
+    val T = TypeRepr.of[Tuple2K[F, G, *]]
     val f = F.typeSymbol
-    val g = G.typeSymbol
-    val t2k = T2K.typeSymbol
+    val t = T.typeSymbol
 
-    type FirstK[H[_], I[_], A] = H[A]
     extension (tpe: TypeRepr)
       def firstK: TypeRepr =
-        tpe.substituteTypes(t2k :: Nil, TypeRepr.of[FirstK] :: Nil)
+        tpe.substituteTypes(t :: Nil, TypeRepr.of[FirstK[F, G]] :: Nil)
 
     def tuple2K(name: String): Term =
       Select.unique('{ SemigroupalK }.asTerm, name).appliedToTypes(List(F, G))
@@ -58,24 +60,24 @@ object MacroSemigroupalK:
     List(eaf.asTerm, eag.asTerm).combineTo[Alg[Tuple2K[F, G, *]]](
       args = List(
         {
-          case (tpe, arg) if tpe.containsAll(t2k, f, g) =>
+          case (tpe, arg) if tpe.contains(f) =>
             Select
               .unique(tpe.firstK.summonLambda[FunctorK](f), "mapK")
-              .appliedToTypes(List(T2K, F))
+              .appliedToTypes(List(T, F))
               .appliedTo(arg)
               .appliedTo(tuple2K("firstK"))
         },
         {
-          case (tpe, arg) if tpe.containsAll(t2k, f, g) =>
+          case (tpe, arg) if tpe.contains(f) =>
             Select
               .unique(tpe.firstK.summonLambda[FunctorK](f), "mapK")
-              .appliedToTypes(List(T2K, G))
+              .appliedToTypes(List(T, G))
               .appliedTo(arg)
               .appliedTo(tuple2K("secondK"))
         }
       ),
       body = {
-        case (tpe, af :: ag :: Nil) if tpe.containsAll(t2k, f, g) =>
+        case (tpe, af :: ag :: Nil) if tpe.contains(f) =>
           Select
             .unique(tpe.firstK.summonLambda[SemigroupalK](f), "productK")
             .appliedToTypes(List(F, G))

@@ -32,6 +32,10 @@ object MacroSemigroupal:
         ${ deriveProduct('{ fa }, '{ fb }) }
   }
 
+  private type First[A, B] = [X, Y] =>> (X, Y) match
+    case (A, B) => A
+    case _ => (X, Y)
+
   private[macros] def deriveProduct[F[_]: Type, A: Type, B: Type](
       fa: Expr[F[A]],
       fb: Expr[F[B]]
@@ -43,13 +47,11 @@ object MacroSemigroupal:
     val B = TypeRepr.of[B]
     val T = TypeRepr.of[(A, B)]
     val a = A.typeSymbol
-    val b = B.typeSymbol
     val t = T.typeSymbol
 
-    type First[X, Y] = X
     extension (tpe: TypeRepr)
       def first: TypeRepr =
-        tpe.substituteTypes(t :: Nil, TypeRepr.of[First] :: Nil)
+        tpe.substituteTypes(t :: Nil, TypeRepr.of[First[A, B]] :: Nil)
 
     def tuple(name: String, result: TypeRepr): Term =
       val tpe = MethodType("t" :: Nil)(_ => T :: Nil, _ => result)
@@ -58,7 +60,7 @@ object MacroSemigroupal:
     List(fa.asTerm, fb.asTerm).combineTo[F[(A, B)]](
       args = List(
         {
-          case (tpe, arg) if tpe.containsAll(t, a, b) =>
+          case (tpe, arg) if tpe.contains(a) =>
             Select
               .unique(tpe.first.summonLambda[Functor](a), "map")
               .appliedToTypes(List(T, A))
@@ -66,7 +68,7 @@ object MacroSemigroupal:
               .appliedTo(tuple("_1", A))
         },
         {
-          case (tpe, arg) if tpe.containsAll(t, a, b) =>
+          case (tpe, arg) if tpe.contains(a) =>
             Select
               .unique(tpe.first.summonLambda[Functor](a), "map")
               .appliedToTypes(List(T, B))
@@ -75,7 +77,7 @@ object MacroSemigroupal:
         }
       ),
       body = {
-        case (tpe, af :: ag :: Nil) if tpe.containsAll(t, a, b) =>
+        case (tpe, af :: ag :: Nil) if tpe.contains(a) =>
           Select
             .unique(tpe.first.summonLambda[Semigroupal](a), "product")
             .appliedToTypes(List(A, B))

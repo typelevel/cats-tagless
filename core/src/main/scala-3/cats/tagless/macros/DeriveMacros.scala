@@ -203,4 +203,9 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
     def summonLambda[T <: AnyKind: Type](arg: Symbol, args: Symbol*): Term =
       TypeRepr.of[T].appliedTo(tpe.lambda(arg :: args.toList)).summon
 
+    def summonOpt[T <: AnyKind: Type]: Option[Term] =
+      Implicits.search(TypeRepr.of[T].appliedTo(tpe)) match
+        case success: ImplicitSearchSuccess => Some(success.tree)
+        case _ => None
+
 end DeriveMacros

@@ -24,7 +24,7 @@ import scala.quoted.*
 
 @experimental
 object MacroContravariantK:
-  inline def derive[Alg[_[_]]] = ${ contramapK[Alg] }
+  inline def derive[Alg[_[_]]]: ContravariantK[Alg] = ${ contramapK }
 
   def contramapK[Alg[_[_]]: Type](using Quotes): Expr[ContravariantK[Alg]] = '{
     new ContravariantK[Alg]:

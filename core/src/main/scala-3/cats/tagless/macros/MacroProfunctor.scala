@@ -25,7 +25,7 @@ import cats.arrow.Profunctor
 
 @experimental
 object MacroProfunctor:
-  inline def derive[F[_, _]] = ${ profunctor[F] }
+  inline def derive[F[_, _]]: Profunctor[F] = ${ profunctor }
 
   def profunctor[F[_, _]: Type](using Quotes): Expr[Profunctor[F]] = '{
     new Profunctor[F]:

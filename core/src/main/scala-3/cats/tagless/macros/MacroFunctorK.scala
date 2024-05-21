@@ -24,7 +24,7 @@ import scala.quoted.*
 
 @experimental
 object MacroFunctorK:
-  inline def derive[Alg[_[_]]] = ${ functorK[Alg] }
+  inline def derive[Alg[_[_]]]: FunctorK[Alg] = ${ functorK }
 
   def functorK[Alg[_[_]]: Type](using Quotes): Expr[FunctorK[Alg]] = '{
     new FunctorK[Alg]:

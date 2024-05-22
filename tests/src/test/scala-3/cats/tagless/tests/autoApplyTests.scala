@@ -71,9 +71,9 @@ object autoApplyTests:
       curry <- Arbitrary.arbitrary[String => Int => T]
     yield new TestAlgebra[T]:
       override def abstractEffect(i: String) = absEff(i)
-      override def concreteEffect(a: String) = conEff.getOrElse(super.concreteEffect(_))(a)
+      override def concreteEffect(a: String) = conEff.getOrElse(super.concreteEffect)(a)
       override def abstractOther(a: String) = absOther(a)
-      override def concreteOther(a: String) = conOther.getOrElse(super.concreteOther(_))(a)
+      override def concreteOther(a: String) = conOther.getOrElse(super.concreteOther)(a)
       override def withoutParams = withoutParameters
       override def curried(a: String)(b: Int) = curry(a)(b)
     )

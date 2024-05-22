@@ -32,13 +32,12 @@ class autoSemigroupalKTests extends CatsTaglessTestSuite:
   checkAll("SemigroupalK[CalculatorAlg]", SemigroupalKTests[CalculatorAlg].semigroupalK[Try, Option, List])
   checkAll("SemigroupalK is Serializable", SerializableTests.serializable(SemigroupalK[SafeAlg]))
 
-  test("simple product") {
+  test("simple product"):
     val prodInterpreter = Interpreters.tryInterpreter.productK(Interpreters.lazyInterpreter)
     assertEquals(prodInterpreter.parseInt("3").first, Try(3))
     assertEquals(prodInterpreter.parseInt("3").second.value, 3)
     assertEquals(prodInterpreter.parseInt("sd").first.isSuccess, false)
     assertEquals(prodInterpreter.divide(3f, 3f).second.value, 1f)
-  }
 
 object autoSemigroupalKTests:
 

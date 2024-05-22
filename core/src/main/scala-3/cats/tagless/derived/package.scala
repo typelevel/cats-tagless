@@ -27,5 +27,6 @@ extension (x: Contravariant.type) @experimental inline def derived[F[_]]: Contra
 extension (x: Invariant.type) @experimental inline def derived[F[_]]: Invariant[F] = Derive.invariant
 extension (x: Semigroupal.type) @experimental inline def derived[F[_]]: Semigroupal[F] = Derive.semigroupal
 extension (x: Apply.type) @experimental inline def derived[F[_]]: Apply[F] = Derive.apply
+extension (x: SemigroupK.type) @experimental inline def derived[F[_]]: SemigroupK[F] = Derive.semigroupK
 extension (x: Bifunctor.type) @experimental inline def derived[F[_, _]]: Bifunctor[F] = Derive.bifunctor
 extension (x: Profunctor.type) @experimental inline def derived[F[_, _]]: Profunctor[F] = Derive.profunctor

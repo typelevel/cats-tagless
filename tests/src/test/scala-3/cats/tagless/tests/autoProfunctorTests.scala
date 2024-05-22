@@ -29,6 +29,7 @@ class autoProfunctorTests extends CatsTaglessTestSuite:
 
   checkAll("Profunctor[TestAlgebra]", ProfunctorTests[TestAlgebra].profunctor[Long, String, Int, Long, String, Int])
   checkAll("Serializable Profunctor[TestAlgebra]", SerializableTests.serializable(Profunctor[TestAlgebra]))
+
   test("extra type param correctly handled"):
     val asStringAlg = AlgWithExtraTypeParamString.dimap((s: String) => s.length)(_ + 1)
     assertEquals(asStringAlg.foo("base", "x2"), 9d)
@@ -78,13 +79,13 @@ object autoProfunctorTests:
       list <- Arbitrary.arbitrary[List[A] => List[B]]
     yield new TestAlgebra[A, B]:
       override def abstractCovariant(str: String) = absCovariant(str)
-      override def concreteCovariant(str: String) = conCovariant.getOrElse(super.concreteCovariant(_))(str)
+      override def concreteCovariant(str: String) = conCovariant.getOrElse(super.concreteCovariant)(str)
       override def abstractContravariant(a: A) = absContravariant(a)
-      override def concreteContravariant(a: A) = conContravariant.getOrElse(super.concreteContravariant(_))(a)
+      override def concreteContravariant(a: A) = conContravariant.getOrElse(super.concreteContravariant)(a)
       override def abstractMixed(a: A) = absMixed(a)
-      override def concreteMixed(a: A) = conMixed.getOrElse(super.concreteMixed(_))(a)
+      override def concreteMixed(a: A) = conMixed.getOrElse(super.concreteMixed)(a)
       override def abstractOther(str: String) = absOther(str)
-      override def concreteOther(str: String) = conOther.getOrElse(super.concreteOther(_))(str)
+      override def concreteOther(str: String) = conOther.getOrElse(super.concreteOther)(str)
       override def withoutParams = noParams
       override def fromList(as: List[A]) = list(as)
     )

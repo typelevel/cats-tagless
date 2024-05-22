@@ -44,13 +44,13 @@ object autoContravariantKTests:
     def foldSpecialized(init: String)(f: (Int, String) => Int): Cokleisli[F, String, Int]
 
   object TestAlgebra:
-    implicit def eqv[F[_]](implicit arbFi: Arbitrary[F[Int]], arbFs: Arbitrary[F[String]]): Eq[TestAlgebra[F]] =
+    given [F[_]](using Arbitrary[F[Int]], Arbitrary[F[String]]): Eq[TestAlgebra[F]] =
       Eq.by(algebra => (algebra.sum, algebra.sumAll _, algebra.foldSpecialized))
 
-  implicit def arbitrary[F[_]](implicit
-      arbFs: Arbitrary[F[String]],
-      coFi: Cogen[F[Int]],
-      coFs: Cogen[F[String]]
+  given [F[_]](using
+      Arbitrary[F[String]],
+      Cogen[F[Int]],
+      Cogen[F[String]]
   ): Arbitrary[TestAlgebra[F]] = Arbitrary(for
     s <- Arbitrary.arbitrary[F[Int] => Int]
     sa <- Arbitrary.arbitrary[Seq[F[Int]] => Int]

@@ -45,17 +45,17 @@ object autoApplyKTests:
   object AutoApplyKTestAlg:
     import TestInstances.*
 
-    implicit def eqForAutoApplyKTestAlg[F[_]](implicit
-        eqFi: Eq[F[Int]],
-        eqFf: Eq[F[Float]],
-        eqEfd: Eq[EitherT[F, String, Double]]
+    given [F[_]](using
+        Eq[F[Int]],
+        Eq[F[Float]],
+        Eq[EitherT[F, String, Double]]
     ): Eq[AutoApplyKTestAlg[F]] = Eq.by: algebra =>
       (algebra.parseInt, algebra.parseDouble, algebra.divide)
 
-    implicit def arbitraryAutoApplyKTestAlg[F[_]](implicit
-        arbFi: Arbitrary[F[Int]],
-        arbFf: Arbitrary[F[Float]],
-        arbEfd: Arbitrary[EitherT[F, String, Double]]
+    given [F[_]](using
+        Arbitrary[F[Int]],
+        Arbitrary[F[Float]],
+        Arbitrary[EitherT[F, String, Double]]
     ): Arbitrary[AutoApplyKTestAlg[F]] = Arbitrary(for
       pInt <- Arbitrary.arbitrary[String => F[Int]]
       pDouble <- Arbitrary.arbitrary[String => EitherT[F, String, Double]]

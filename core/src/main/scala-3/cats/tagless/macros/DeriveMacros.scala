@@ -109,7 +109,7 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
 
   extension (terms: Seq[Term])
     def combineTo[A: Type](
-        args: Seq[Transform] = Nil,
+        args: Seq[Transform] = terms.map(_ => PartialFunction.empty),
         body: Combine = PartialFunction.empty
     ): Expr[A] =
       val name = Symbol.freshName("$anon")

@@ -31,6 +31,7 @@ object Derive:
   inline def semigroupal[F[_]]: Semigroupal[F] = MacroSemigroupal.derive
   inline def apply[F[_]]: Apply[F] = MacroApply.derive
   inline def semigroupK[F[_]]: SemigroupK[F] = MacroSemigroupK.derive
+  inline def monoidK[F[_]]: MonoidK[F] = MacroMonoidK.derive
   inline def bifunctor[F[_, _]]: Bifunctor[F] = MacroBifunctor.derive
   inline def profunctor[F[_, _]]: Profunctor[F] = MacroProfunctor.derive
   inline def functorK[Alg[_[_]]]: FunctorK[Alg] = MacroFunctorK.derive

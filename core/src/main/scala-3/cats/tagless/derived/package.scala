@@ -28,5 +28,6 @@ extension (x: Invariant.type) @experimental inline def derived[F[_]]: Invariant[
 extension (x: Semigroupal.type) @experimental inline def derived[F[_]]: Semigroupal[F] = Derive.semigroupal
 extension (x: Apply.type) @experimental inline def derived[F[_]]: Apply[F] = Derive.apply
 extension (x: SemigroupK.type) @experimental inline def derived[F[_]]: SemigroupK[F] = Derive.semigroupK
+extension (x: MonoidK.type) @experimental inline def derived[F[_]]: MonoidK[F] = Derive.monoidK
 extension (x: Bifunctor.type) @experimental inline def derived[F[_, _]]: Bifunctor[F] = Derive.bifunctor
 extension (x: Profunctor.type) @experimental inline def derived[F[_, _]]: Profunctor[F] = Derive.profunctor

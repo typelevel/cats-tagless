@@ -17,37 +17,34 @@
 package cats.tagless.macros
 
 import cats.tagless.*
-import cats.{Semigroup, SemigroupK}
+import cats.{MonoidK, Monoid}
 
 import scala.annotation.experimental
 import scala.quoted.*
 
 @experimental
-object MacroSemigroupK:
-  inline def derive[F[_]]: SemigroupK[F] = ${ semigroupK }
+object MacroMonoidK:
+  inline def derive[F[_]]: MonoidK[F] = ${ monoidK }
 
-  def semigroupK[F[_]: Type](using Quotes): Expr[SemigroupK[F]] = '{
-    new SemigroupK[F]:
+  def monoidK[F[_]: Type](using Quotes): Expr[MonoidK[F]] = '{
+    new MonoidK[F]:
+      def empty[A]: F[A] = ${ deriveEmpty }
       def combineK[A](x: F[A], y: F[A]): F[A] =
-        ${ deriveCombineK('{ x }, '{ y }) }
+        ${ MacroSemigroupK.deriveCombineK('{ x }, '{ y }) }
   }
 
-  private[macros] def deriveCombineK[F[_]: Type, A: Type](
-      x: Expr[F[A]],
-      y: Expr[F[A]]
-  )(using q: Quotes): Expr[F[A]] =
+  private[macros] def deriveEmpty[F[_]: Type, A: Type](using q: Quotes): Expr[F[A]] =
     import quotes.reflect.*
     given DeriveMacros[q.type] = new DeriveMacros
 
     val A = TypeRepr.of[A]
     val a = A.typeSymbol
 
-    List(x.asTerm, y.asTerm).combineTo[F[A]](body = {
-      case (tpe, x :: y :: Nil) if tpe.contains(a) =>
+    '{ null.asInstanceOf[F[A]] }.asTerm.transformTo[F[A]](body = {
+      case (tpe, _) if tpe.contains(a) =>
         Select
-          .unique(tpe.summonLambda[SemigroupK](a), "combineK")
+          .unique(tpe.summonLambda[MonoidK](a), "empty")
           .appliedToTypes(List(A))
-          .appliedTo(x, y)
-      case (tpe, x :: y :: Nil) =>
-        tpe.summonOpt[Semigroup].fold(x)(Select.unique(_, "combine").appliedTo(x, y))
+      case (tpe, _) =>
+        Select.unique(TypeRepr.of[Monoid].appliedTo(tpe).summon, "empty")
     })

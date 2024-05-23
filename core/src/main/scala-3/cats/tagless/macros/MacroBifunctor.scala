@@ -49,10 +49,9 @@ object MacroBifunctor:
 
     fab.asTerm.transformTo[F[C, D]](
       args = {
-        case (sym, tpe, _) if tpe.containsAll(c, d) =>
-          val message =
-            s"Both type parameters ${A.show} and ${B.show} appear in contravariant position in parameter ${sym.name}"
-          report.errorAndAbort(message)
+        case (method, tpe, _) if tpe.containsAll(c, d) =>
+          val msg = s"Both type parameters ${A.show} and ${B.show} appear in contravariant position in $method"
+          report.errorAndAbort(msg)
         case (_, tpe, arg) if tpe.contains(c) =>
           Select
             .unique(tpe.summonLambda[Contravariant](c), "contramap")

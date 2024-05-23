@@ -30,6 +30,10 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
   type Transform = PartialFunction[(Symbol, TypeRepr, Term), Term]
   type Combine = PartialFunction[(Symbol, TypeRepr, Seq[Term]), Term]
 
+  final class ReplaceTerm(from: Term, to: Term) extends TreeMap:
+    override def transformTerm(tree: Term)(owner: Symbol): Term =
+      if tree == from then to else super.transformTerm(tree)(owner)
+
   private val nonOverridableOwners =
     TypeRepr.of[(Object, Any, AnyRef, AnyVal)].typeArgs.map(_.typeSymbol).toSet
 
@@ -37,23 +41,22 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
     List(Flags.Final, Flags.Artifact, Flags.Synthetic, Flags.Mutable, Flags.Param)
 
   extension (xf: Transform)
-    def transformRepeated(sym: Symbol, tpe: TypeRepr, arg: Term): Tree =
+    def transformRepeated(method: Symbol, tpe: TypeRepr, arg: Term): Tree =
       val x = Symbol.freshName("x")
-      val resultType = xf(sym, tpe, Select.unique(arg, "head")).tpe
+      val resultType = xf(method, tpe, Select.unique(arg, "head")).tpe
       val lambdaType = MethodType(x :: Nil)(_ => tpe :: Nil, _ => resultType)
-      val lambda = Lambda(Symbol.spliceOwner, lambdaType, (_, xs) => xf(sym, tpe, xs.head.asExpr.asTerm))
+      val lambda = Lambda(method, lambdaType, (_, xs) => xf(method, tpe, xs.head.asExpr.asTerm))
       val result = Select.overloaded(arg, "map", resultType :: Nil, lambda :: Nil)
       val repeatedType = defn.RepeatedParamClass.typeRef.appliedTo(resultType)
       Typed(result, TypeTree.of(using repeatedType.asType))
 
-    def transformArg(paramAndArg: (Definition, Tree)): Tree =
+    def transformArg(method: Symbol, paramAndArg: (Definition, Tree)): Tree =
       paramAndArg match
         case (param: ValDef, arg: Term) =>
-          val sym = param.symbol
           val paramType = param.tpt.tpe.widenParam
-          if !xf.isDefinedAt(sym, paramType, arg) then arg
-          else if !param.tpt.tpe.isRepeated then xf(sym, paramType, arg)
-          else xf.transformRepeated(sym, paramType, arg)
+          if !xf.isDefinedAt(method, paramType, arg) then arg
+          else if !param.tpt.tpe.isRepeated then xf(method, paramType, arg)
+          else xf.transformRepeated(method, paramType, arg)
         case (_, arg) => arg
 
   extension (term: Term)
@@ -78,6 +81,9 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
       case argss =>
         term.select(method).appliedToAll(argss)
 
+    def replace(from: Term, to: Term): Term =
+      ReplaceTerm(from, to).transformTerm(term)(Symbol.spliceOwner)
+
     def transformTo[A: Type](
         args: Transform = PartialFunction.empty,
         body: Transform = PartialFunction.empty
@@ -91,7 +97,7 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
         val delegate = term.call(sym):
           for (params, xs) <- method.paramss.zip(argss)
           yield for paramAndArg <- params.params.zip(xs)
-          yield args.transformArg(paramAndArg).changeOwner(sym)
+          yield args.transformArg(sym, paramAndArg)
         Some(body.applyOrElse((sym, method.returnTpt.tpe, delegate), _ => delegate))
 
       def transformVal(value: ValDef): Option[Term] =
@@ -99,7 +105,7 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
         val delegate = term.select(sym)
         Some(body.applyOrElse((sym, value.tpt.tpe, delegate), _ => delegate))
 
-      val members: List[Definition] = cls.declarations
+      val members = cls.declarations
         .filterNot(_.isClassConstructor)
         .map: sym =>
           sym.tree match
@@ -127,7 +133,7 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
             term.call(sym):
               for (params, args) <- method.paramss.zip(argss)
               yield for paramAndArg <- params.params.zip(args)
-              yield xf.transformArg(paramAndArg).changeOwner(sym)
+              yield xf.transformArg(sym, paramAndArg)
         Some(body.applyOrElse((sym, method.returnTpt.tpe, delegates), _ => delegates.head))
 
       def combineVal(value: ValDef): Option[Term] =

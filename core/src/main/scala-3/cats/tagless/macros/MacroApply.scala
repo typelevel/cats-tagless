@@ -47,8 +47,8 @@ object MacroApply:
 
     List(ff.asTerm, fa.asTerm).combineTo[F[B]](
       args = List.fill(2):
-        case (sym, tpe, _) if tpe.contains(b) =>
-          report.errorAndAbort(s"Type parameter ${A.show} appears in contravariant position in parameter ${sym.name}"),
+        case (method, tpe, _) if tpe.contains(b) =>
+          report.errorAndAbort(s"Type parameter ${A.show} appears in contravariant position in $method"),
       body = {
         case (_, tpe, ff :: fa :: Nil) if tpe.contains(b) =>
           Select

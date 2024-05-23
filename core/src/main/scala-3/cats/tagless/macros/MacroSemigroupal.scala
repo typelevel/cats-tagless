@@ -53,27 +53,27 @@ object MacroSemigroupal:
       def first: TypeRepr =
         tpe.substituteTypes(t :: Nil, TypeRepr.of[First[A, B]] :: Nil)
 
-    def tuple(name: String, result: TypeRepr): Term =
+    def tuple(method: Symbol, name: String, result: TypeRepr): Term =
       val tpe = MethodType("t" :: Nil)(_ => T :: Nil, _ => result)
-      Lambda(Symbol.spliceOwner, tpe, (_, args) => Select.unique(args.head.asExpr.asTerm, name))
+      Lambda(method, tpe, (_, args) => Select.unique(args.head.asExpr.asTerm, name))
 
     List(fa.asTerm, fb.asTerm).combineTo[F[(A, B)]](
       args = List(
         {
-          case (_, tpe, arg) if tpe.contains(a) =>
+          case (method, tpe, arg) if tpe.contains(a) =>
             Select
               .unique(tpe.first.summonLambda[Functor](a), "map")
               .appliedToTypes(List(T, A))
               .appliedTo(arg)
-              .appliedTo(tuple("_1", A))
+              .appliedTo(tuple(method, "_1", A))
         },
         {
-          case (_, tpe, arg) if tpe.contains(a) =>
+          case (method, tpe, arg) if tpe.contains(a) =>
             Select
               .unique(tpe.first.summonLambda[Functor](a), "map")
               .appliedToTypes(List(T, B))
               .appliedTo(arg)
-              .appliedTo(tuple("_2", B))
+              .appliedTo(tuple(method, "_2", B))
         }
       ),
       body = {

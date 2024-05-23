@@ -43,11 +43,11 @@ object MacroSemigroupK:
     val a = A.typeSymbol
 
     List(x.asTerm, y.asTerm).combineTo[F[A]](body = {
-      case (tpe, x :: y :: Nil) if tpe.contains(a) =>
+      case (_, tpe, x :: y :: Nil) if tpe.contains(a) =>
         Select
           .unique(tpe.summonLambda[SemigroupK](a), "combineK")
           .appliedToTypes(List(A))
           .appliedTo(x, y)
-      case (tpe, x :: y :: Nil) =>
+      case (_, tpe, x :: y :: Nil) =>
         tpe.summonOpt[Semigroup].fold(x)(Select.unique(_, "combine").appliedTo(x, y))
     })

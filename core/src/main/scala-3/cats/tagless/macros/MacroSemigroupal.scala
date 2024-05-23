@@ -60,7 +60,7 @@ object MacroSemigroupal:
     List(fa.asTerm, fb.asTerm).combineTo[F[(A, B)]](
       args = List(
         {
-          case (tpe, arg) if tpe.contains(a) =>
+          case (_, tpe, arg) if tpe.contains(a) =>
             Select
               .unique(tpe.first.summonLambda[Functor](a), "map")
               .appliedToTypes(List(T, A))
@@ -68,7 +68,7 @@ object MacroSemigroupal:
               .appliedTo(tuple("_1", A))
         },
         {
-          case (tpe, arg) if tpe.contains(a) =>
+          case (_, tpe, arg) if tpe.contains(a) =>
             Select
               .unique(tpe.first.summonLambda[Functor](a), "map")
               .appliedToTypes(List(T, B))
@@ -77,12 +77,12 @@ object MacroSemigroupal:
         }
       ),
       body = {
-        case (tpe, af :: ag :: Nil) if tpe.contains(a) =>
+        case (_, tpe, af :: ag :: Nil) if tpe.contains(a) =>
           Select
             .unique(tpe.first.summonLambda[Semigroupal](a), "product")
             .appliedToTypes(List(A, B))
             .appliedTo(af, ag)
-        case (tpe, af :: ag :: Nil) =>
+        case (_, tpe, af :: ag :: Nil) =>
           tpe.summonOpt[Semigroup].fold(af)(Select.unique(_, "combine").appliedTo(af, ag))
       }
     )

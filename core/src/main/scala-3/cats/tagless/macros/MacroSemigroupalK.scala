@@ -60,7 +60,7 @@ object MacroSemigroupalK:
     List(eaf.asTerm, eag.asTerm).combineTo[Alg[Tuple2K[F, G, *]]](
       args = List(
         {
-          case (tpe, arg) if tpe.contains(f) =>
+          case (_, tpe, arg) if tpe.contains(f) =>
             Select
               .unique(tpe.firstK.summonLambda[FunctorK](f), "mapK")
               .appliedToTypes(List(T, F))
@@ -68,7 +68,7 @@ object MacroSemigroupalK:
               .appliedTo(tuple2K("firstK"))
         },
         {
-          case (tpe, arg) if tpe.contains(f) =>
+          case (_, tpe, arg) if tpe.contains(f) =>
             Select
               .unique(tpe.firstK.summonLambda[FunctorK](f), "mapK")
               .appliedToTypes(List(T, G))
@@ -77,12 +77,12 @@ object MacroSemigroupalK:
         }
       ),
       body = {
-        case (tpe, af :: ag :: Nil) if tpe.contains(f) =>
+        case (_, tpe, af :: ag :: Nil) if tpe.contains(f) =>
           Select
             .unique(tpe.firstK.summonLambda[SemigroupalK](f), "productK")
             .appliedToTypes(List(F, G))
             .appliedTo(af, ag)
-        case (tpe, af :: ag :: Nil) =>
+        case (_, tpe, af :: ag :: Nil) =>
           tpe.summonOpt[Semigroup].fold(af)(Select.unique(_, "combine").appliedTo(af, ag))
       }
     )

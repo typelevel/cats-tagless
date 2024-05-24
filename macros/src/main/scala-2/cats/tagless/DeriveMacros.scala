@@ -426,6 +426,10 @@ class DeriveMacros(val c: blackbox.Context) {
           method.copy(returnType = returnType, body = body)
         case method if method.occursInSignature(a) =>
           abort(s"Type parameter $A occurs in contravariant position in method ${method.displayName}")
+        case method =>
+          val rt = method.returnType
+          val S = method.summonOr[Semigroup[Any]](rt)(_ => q"${reify(Semigroup)}.first[$rt]")
+          method.copy(body = q"$S.combine(${method.delegate(Ident(ff))}, ${method.body})")
       }
 
       implement(algebra)(b)(types ++ methods)

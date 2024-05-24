@@ -41,21 +41,20 @@ object MacroFunctorK:
 
     val F = TypeRepr.of[F]
     val G = TypeRepr.of[G]
-    val g = G.typeSymbol
 
-    alg.asTerm.transformTo[Alg[G]](
+    alg.transformTo[Alg[G]](
       args = {
-        case (_, tpe, arg) if tpe.contains(g) =>
+        case (_, tpe, arg) if tpe.contains(G) =>
           Select
-            .unique(tpe.summonLambda[ContravariantK](g), "contramapK")
+            .unique(tpe.summonLambda[ContravariantK](G), "contramapK")
             .appliedToTypes(List(G, F))
             .appliedTo(arg)
             .appliedTo(fk.asTerm)
       },
       body = {
-        case (_, tpe, body) if tpe.contains(g) =>
+        case (_, tpe, body) if tpe.contains(G) =>
           Select
-            .unique(tpe.summonLambda[FunctorK](g), "mapK")
+            .unique(tpe.summonLambda[FunctorK](G), "mapK")
             .appliedToTypes(List(F, G))
             .appliedTo(body)
             .appliedTo(fk.asTerm)

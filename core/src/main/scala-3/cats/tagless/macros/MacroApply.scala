@@ -43,16 +43,15 @@ object MacroApply:
 
     val A = TypeRepr.of[A]
     val B = TypeRepr.of[B]
-    val b = B.typeSymbol
 
-    List(ff.asTerm, fa.asTerm).combineTo[F[B]](
+    List(ff, fa).combineTo[F[B]](
       args = List.fill(2):
-        case (method, tpe, _) if tpe.contains(b) =>
+        case (method, tpe, _) if tpe.contains(B) =>
           report.errorAndAbort(s"Type parameter ${A.show} appears in contravariant position in $method"),
       body = {
-        case (_, tpe, ff :: fa :: Nil) if tpe.contains(b) =>
+        case (_, tpe, ff :: fa :: Nil) if tpe.contains(B) =>
           Select
-            .unique(tpe.summonLambda[cats.Apply](b), "ap")
+            .unique(tpe.summonLambda[cats.Apply](B), "ap")
             .appliedToTypes(List(A, B))
             .appliedTo(ff)
             .appliedTo(fa)

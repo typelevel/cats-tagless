@@ -45,48 +45,46 @@ object MacroProfunctor:
     val B = TypeRepr.of[B]
     val C = TypeRepr.of[C]
     val D = TypeRepr.of[D]
-    val c = C.typeSymbol
-    val d = D.typeSymbol
 
-    fab.asTerm.transformTo[F[C, D]](
+    fab.transformTo[F[C, D]](
       args = {
-        case (_, tpe, arg) if tpe.containsAll(c, d) =>
+        case (_, tpe, arg) if tpe.containsAll(C, D) =>
           Select
-            .unique(tpe.summonLambda[Profunctor](d, c), "dimap")
+            .unique(tpe.summonLambda[Profunctor](D, C), "dimap")
             .appliedToTypes(List(D, C, B, A))
             .appliedTo(arg)
             .appliedTo(g.asTerm)
             .appliedTo(f.asTerm)
-        case (_, tpe, arg) if tpe.contains(c) =>
+        case (_, tpe, arg) if tpe.contains(C) =>
           Select
-            .unique(tpe.summonLambda[Functor](c), "map")
+            .unique(tpe.summonLambda[Functor](C), "map")
             .appliedToTypes(List(C, A))
             .appliedTo(arg)
             .appliedTo(f.asTerm)
-        case (_, tpe, arg) if tpe.contains(d) =>
+        case (_, tpe, arg) if tpe.contains(D) =>
           Select
-            .unique(tpe.summonLambda[Contravariant](d), "contramap")
+            .unique(tpe.summonLambda[Contravariant](D), "contramap")
             .appliedToTypes(List(D, B))
             .appliedTo(arg)
             .appliedTo(g.asTerm)
       },
       body = {
-        case (_, tpe, body) if tpe.containsAll(c, d) =>
+        case (_, tpe, body) if tpe.containsAll(C, D) =>
           Select
-            .unique(tpe.summonLambda[Profunctor](c, d), "dimap")
+            .unique(tpe.summonLambda[Profunctor](C, D), "dimap")
             .appliedToTypes(List(A, B, C, D))
             .appliedTo(body)
             .appliedTo(f.asTerm)
             .appliedTo(g.asTerm)
-        case (_, tpe, body) if tpe.contains(c) =>
+        case (_, tpe, body) if tpe.contains(C) =>
           Select
-            .unique(tpe.summonLambda[Contravariant](c), "contramap")
+            .unique(tpe.summonLambda[Contravariant](C), "contramap")
             .appliedToTypes(List(A, C))
             .appliedTo(body)
             .appliedTo(f.asTerm)
-        case (_, tpe, body) if tpe.contains(d) =>
+        case (_, tpe, body) if tpe.contains(D) =>
           Select
-            .unique(tpe.summonLambda[Functor](d), "map")
+            .unique(tpe.summonLambda[Functor](D), "map")
             .appliedToTypes(List(B, D))
             .appliedTo(body)
             .appliedTo(g.asTerm)

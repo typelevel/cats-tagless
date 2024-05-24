@@ -41,21 +41,20 @@ object MacroContravariant:
 
     val A = TypeRepr.of[A]
     val B = TypeRepr.of[B]
-    val b = B.typeSymbol
 
-    fa.asTerm.transformTo[F[B]](
+    fa.transformTo[F[B]](
       args = {
-        case (_, tpe, arg) if tpe.contains(b) =>
+        case (_, tpe, arg) if tpe.contains(B) =>
           Select
-            .unique(tpe.summonLambda[Functor](b), "map")
+            .unique(tpe.summonLambda[Functor](B), "map")
             .appliedToTypes(List(B, A))
             .appliedTo(arg)
             .appliedTo(f.asTerm)
       },
       body = {
-        case (_, tpe, body) if tpe.contains(b) =>
+        case (_, tpe, body) if tpe.contains(B) =>
           Select
-            .unique(tpe.summonLambda[Contravariant](b), "contramap")
+            .unique(tpe.summonLambda[Contravariant](B), "contramap")
             .appliedToTypes(List(A, B))
             .appliedTo(body)
             .appliedTo(f.asTerm)

@@ -42,22 +42,21 @@ object MacroInvariantK:
 
     val F = TypeRepr.of[F]
     val G = TypeRepr.of[G]
-    val g = G.typeSymbol
 
-    alg.asTerm.transformTo[Alg[G]](
+    alg.transformTo[Alg[G]](
       args = {
-        case (_, tpe, arg) if tpe.contains(g) =>
+        case (_, tpe, arg) if tpe.contains(G) =>
           Select
-            .unique(tpe.summonLambda[InvariantK](g), "imapK")
+            .unique(tpe.summonLambda[InvariantK](G), "imapK")
             .appliedToTypes(List(G, F))
             .appliedTo(arg)
             .appliedTo(gk.asTerm)
             .appliedTo(fk.asTerm)
       },
       body = {
-        case (_, tpe, body) if tpe.contains(g) =>
+        case (_, tpe, body) if tpe.contains(G) =>
           Select
-            .unique(tpe.summonLambda[InvariantK](g), "imapK")
+            .unique(tpe.summonLambda[InvariantK](G), "imapK")
             .appliedToTypes(List(F, G))
             .appliedTo(body)
             .appliedTo(fk.asTerm)

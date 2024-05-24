@@ -44,43 +44,41 @@ object MacroBifunctor:
     val B = TypeRepr.of[B]
     val C = TypeRepr.of[C]
     val D = TypeRepr.of[D]
-    val c = C.typeSymbol
-    val d = D.typeSymbol
 
-    fab.asTerm.transformTo[F[C, D]](
+    fab.transformTo[F[C, D]](
       args = {
-        case (method, tpe, _) if tpe.containsAll(c, d) =>
+        case (method, tpe, _) if tpe.containsAll(C, D) =>
           val msg = s"Both type parameters ${A.show} and ${B.show} appear in contravariant position in $method"
           report.errorAndAbort(msg)
-        case (_, tpe, arg) if tpe.contains(c) =>
+        case (_, tpe, arg) if tpe.contains(C) =>
           Select
-            .unique(tpe.summonLambda[Contravariant](c), "contramap")
+            .unique(tpe.summonLambda[Contravariant](C), "contramap")
             .appliedToTypes(List(C, A))
             .appliedTo(arg)
             .appliedTo(f.asTerm)
-        case (_, tpe, arg) if tpe.contains(d) =>
+        case (_, tpe, arg) if tpe.contains(D) =>
           Select
-            .unique(tpe.summonLambda[Contravariant](d), "contramap")
+            .unique(tpe.summonLambda[Contravariant](D), "contramap")
             .appliedToTypes(List(D, B))
             .appliedTo(arg)
             .appliedTo(g.asTerm)
       },
       body = {
-        case (_, tpe, body) if tpe.containsAll(c, d) =>
+        case (_, tpe, body) if tpe.containsAll(C, D) =>
           Select
-            .unique(tpe.summonLambda[Bifunctor](c, d), "bimap")
+            .unique(tpe.summonLambda[Bifunctor](C, D), "bimap")
             .appliedToTypes(List(A, B, C, D))
             .appliedTo(body)
             .appliedTo(f.asTerm, g.asTerm)
-        case (_, tpe, body) if tpe.contains(c) =>
+        case (_, tpe, body) if tpe.contains(C) =>
           Select
-            .unique(tpe.summonLambda[Functor](c), "map")
+            .unique(tpe.summonLambda[Functor](C), "map")
             .appliedToTypes(List(A, C))
             .appliedTo(body)
             .appliedTo(f.asTerm)
-        case (_, tpe, body) if tpe.contains(d) =>
+        case (_, tpe, body) if tpe.contains(D) =>
           Select
-            .unique(tpe.summonLambda[Functor](d), "map")
+            .unique(tpe.summonLambda[Functor](D), "map")
             .appliedToTypes(List(B, D))
             .appliedTo(body)
             .appliedTo(g.asTerm)

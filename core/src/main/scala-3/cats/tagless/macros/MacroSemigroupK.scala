@@ -40,12 +40,11 @@ object MacroSemigroupK:
     given DeriveMacros[q.type] = new DeriveMacros
 
     val A = TypeRepr.of[A]
-    val a = A.typeSymbol
 
-    List(x.asTerm, y.asTerm).combineTo[F[A]](body = {
-      case (_, tpe, x :: y :: Nil) if tpe.contains(a) =>
+    List(x, y).combineTo[F[A]](body = {
+      case (_, tpe, x :: y :: Nil) if tpe.contains(A) =>
         Select
-          .unique(tpe.summonLambda[SemigroupK](a), "combineK")
+          .unique(tpe.summonLambda[SemigroupK](A), "combineK")
           .appliedToTypes(List(A))
           .appliedTo(x, y)
       case (_, tpe, x :: y :: Nil) =>

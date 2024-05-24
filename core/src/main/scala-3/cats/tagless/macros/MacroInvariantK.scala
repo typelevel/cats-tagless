@@ -46,7 +46,7 @@ object MacroInvariantK:
 
     alg.asTerm.transformTo[Alg[G]](
       args = {
-        case (tpe, arg) if tpe.contains(g) =>
+        case (_, tpe, arg) if tpe.contains(g) =>
           Select
             .unique(tpe.summonLambda[InvariantK](g), "imapK")
             .appliedToTypes(List(G, F))
@@ -55,7 +55,7 @@ object MacroInvariantK:
             .appliedTo(fk.asTerm)
       },
       body = {
-        case (tpe, body) if tpe.contains(g) =>
+        case (_, tpe, body) if tpe.contains(g) =>
           Select
             .unique(tpe.summonLambda[InvariantK](g), "imapK")
             .appliedToTypes(List(F, G))

@@ -30,6 +30,7 @@ object Derive:
   inline def invariant[F[_]]: Invariant[F] = MacroInvariant.derive
   inline def semigroupal[F[_]]: Semigroupal[F] = MacroSemigroupal.derive
   inline def apply[F[_]]: Apply[F] = MacroApply.derive
+  inline def flatMap[F[_]]: FlatMap[F] = MacroFlatMap.derive
   inline def semigroupK[F[_]]: SemigroupK[F] = MacroSemigroupK.derive
   inline def monoidK[F[_]]: MonoidK[F] = MacroMonoidK.derive
   inline def bifunctor[F[_, _]]: Bifunctor[F] = MacroBifunctor.derive

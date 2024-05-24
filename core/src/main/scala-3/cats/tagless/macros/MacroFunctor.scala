@@ -45,7 +45,7 @@ object MacroFunctor:
 
     fa.asTerm.transformTo[F[B]](
       args = {
-        case (tpe, arg) if tpe.contains(b) =>
+        case (_, tpe, arg) if tpe.contains(b) =>
           Select
             .unique(tpe.summonLambda[Contravariant](b), "contramap")
             .appliedToTypes(List(B, A))
@@ -53,7 +53,7 @@ object MacroFunctor:
             .appliedTo(f.asTerm)
       },
       body = {
-        case (tpe, body) if tpe.contains(b) =>
+        case (_, tpe, body) if tpe.contains(b) =>
           Select
             .unique(tpe.summonLambda[Functor](b), "map")
             .appliedToTypes(List(A, B))

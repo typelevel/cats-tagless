@@ -50,20 +50,20 @@ object MacroProfunctor:
 
     fab.asTerm.transformTo[F[C, D]](
       args = {
-        case (tpe, arg) if tpe.containsAll(c, d) =>
+        case (_, tpe, arg) if tpe.containsAll(c, d) =>
           Select
             .unique(tpe.summonLambda[Profunctor](d, c), "dimap")
             .appliedToTypes(List(D, C, B, A))
             .appliedTo(arg)
             .appliedTo(g.asTerm)
             .appliedTo(f.asTerm)
-        case (tpe, arg) if tpe.contains(c) =>
+        case (_, tpe, arg) if tpe.contains(c) =>
           Select
             .unique(tpe.summonLambda[Functor](c), "map")
             .appliedToTypes(List(C, A))
             .appliedTo(arg)
             .appliedTo(f.asTerm)
-        case (tpe, arg) if tpe.contains(d) =>
+        case (_, tpe, arg) if tpe.contains(d) =>
           Select
             .unique(tpe.summonLambda[Contravariant](d), "contramap")
             .appliedToTypes(List(D, B))
@@ -71,20 +71,20 @@ object MacroProfunctor:
             .appliedTo(g.asTerm)
       },
       body = {
-        case (tpe, body) if tpe.containsAll(c, d) =>
+        case (_, tpe, body) if tpe.containsAll(c, d) =>
           Select
             .unique(tpe.summonLambda[Profunctor](c, d), "dimap")
             .appliedToTypes(List(A, B, C, D))
             .appliedTo(body)
             .appliedTo(f.asTerm)
             .appliedTo(g.asTerm)
-        case (tpe, body) if tpe.contains(c) =>
+        case (_, tpe, body) if tpe.contains(c) =>
           Select
             .unique(tpe.summonLambda[Contravariant](c), "contramap")
             .appliedToTypes(List(A, C))
             .appliedTo(body)
             .appliedTo(f.asTerm)
-        case (tpe, body) if tpe.contains(d) =>
+        case (_, tpe, body) if tpe.contains(d) =>
           Select
             .unique(tpe.summonLambda[Functor](d), "map")
             .appliedToTypes(List(B, D))

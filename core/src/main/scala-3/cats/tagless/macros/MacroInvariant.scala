@@ -46,7 +46,7 @@ object MacroInvariant:
 
     fa.asTerm.transformTo[F[B]](
       args = {
-        case (tpe, arg) if tpe.contains(b) =>
+        case (_, tpe, arg) if tpe.contains(b) =>
           Select
             .unique(tpe.summonLambda[Invariant](b), "imap")
             .appliedToTypes(List(B, A))
@@ -55,7 +55,7 @@ object MacroInvariant:
             .appliedTo(f.asTerm)
       },
       body = {
-        case (tpe, body) if tpe.contains(b) =>
+        case (_, tpe, body) if tpe.contains(b) =>
           Select
             .unique(tpe.summonLambda[Invariant](b), "imap")
             .appliedToTypes(List(A, B))

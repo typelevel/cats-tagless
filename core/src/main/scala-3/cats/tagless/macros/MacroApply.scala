@@ -47,16 +47,16 @@ object MacroApply:
 
     List(ff.asTerm, fa.asTerm).combineTo[F[B]](
       args = List.fill(2):
-        case (tpe, _) if tpe.contains(b) =>
-          report.errorAndAbort(s"Type parameter ${A.show} appears in contravariant position"),
+        case (method, tpe, _) if tpe.contains(b) =>
+          report.errorAndAbort(s"Type parameter ${A.show} appears in contravariant position in $method"),
       body = {
-        case (tpe, ff :: fa :: Nil) if tpe.contains(b) =>
+        case (_, tpe, ff :: fa :: Nil) if tpe.contains(b) =>
           Select
             .unique(tpe.summonLambda[cats.Apply](b), "ap")
             .appliedToTypes(List(A, B))
             .appliedTo(ff)
             .appliedTo(fa)
-        case (tpe, ff :: fa :: Nil) =>
+        case (_, tpe, ff :: fa :: Nil) =>
           tpe.summonOpt[Semigroup].fold(ff)(Select.unique(_, "combine").appliedTo(ff, fa))
       }
     )

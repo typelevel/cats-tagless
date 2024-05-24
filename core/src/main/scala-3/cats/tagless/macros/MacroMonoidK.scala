@@ -41,10 +41,10 @@ object MacroMonoidK:
     val a = A.typeSymbol
 
     '{ null.asInstanceOf[F[A]] }.asTerm.transformTo[F[A]](body = {
-      case (tpe, _) if tpe.contains(a) =>
+      case (_, tpe, _) if tpe.contains(a) =>
         Select
           .unique(tpe.summonLambda[MonoidK](a), "empty")
           .appliedToTypes(List(A))
-      case (tpe, _) =>
+      case (_, tpe, _) =>
         Select.unique(TypeRepr.of[Monoid].appliedTo(tpe).summon, "empty")
     })

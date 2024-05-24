@@ -50,7 +50,7 @@ object MacroFlatMap:
     fa.transformTo[F[B]](
       args = {
         case (method, tpe, _) if tpe.contains(B) =>
-          report.errorAndAbort(s"Type parameter ${A.show} appears in contravariant position in $method")
+          report.errorAndAbort(s"Type parameter ${A.show} occurs in contravariant position in $method")
       },
       body = {
         case (_, tpe, body) if tpe =:= B =>
@@ -73,7 +73,7 @@ object MacroFlatMap:
     '{ $f($a) }.transformTo[F[B]](
       args = {
         case (method, tpe, _) if tpe.contains(B) =>
-          report.errorAndAbort(s"Type parameter ${A.show} appears in contravariant position in $method")
+          report.errorAndAbort(s"Type parameter ${A.show} occurs in contravariant position in $method")
       },
       body = {
         case (method, tpe, body) if tpe =:= B =>

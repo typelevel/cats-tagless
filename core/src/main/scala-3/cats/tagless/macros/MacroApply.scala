@@ -47,7 +47,7 @@ object MacroApply:
     List(ff, fa).combineTo[F[B]](
       args = List.fill(2):
         case (method, tpe, _) if tpe.contains(B) =>
-          report.errorAndAbort(s"Type parameter ${A.show} appears in contravariant position in $method"),
+          report.errorAndAbort(s"Type parameter ${A.show} occurs in contravariant position in $method"),
       body = {
         case (_, tpe, ff :: fa :: Nil) if tpe.contains(B) =>
           Select

@@ -48,7 +48,7 @@ object MacroBifunctor:
     fab.transformTo[F[C, D]](
       args = {
         case (method, tpe, _) if tpe.containsAll(C, D) =>
-          val msg = s"Both type parameters ${A.show} and ${B.show} appear in contravariant position in $method"
+          val msg = s"Both type parameters ${A.show} and ${B.show} occur in contravariant position in $method"
           report.errorAndAbort(msg)
         case (_, tpe, arg) if tpe.contains(C) =>
           Select

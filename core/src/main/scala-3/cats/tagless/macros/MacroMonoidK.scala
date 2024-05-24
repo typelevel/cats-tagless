@@ -38,12 +38,11 @@ object MacroMonoidK:
     given DeriveMacros[q.type] = new DeriveMacros
 
     val A = TypeRepr.of[A]
-    val a = A.typeSymbol
 
-    '{ null.asInstanceOf[F[A]] }.asTerm.transformTo[F[A]](body = {
-      case (_, tpe, _) if tpe.contains(a) =>
+    '{ null.asInstanceOf[F[A]] }.transformTo[F[A]](body = {
+      case (_, tpe, _) if tpe.contains(A) =>
         Select
-          .unique(tpe.summonLambda[MonoidK](a), "empty")
+          .unique(tpe.summonLambda[MonoidK](A), "empty")
           .appliedToTypes(List(A))
       case (_, tpe, _) =>
         Select.unique(TypeRepr.of[Monoid].appliedTo(tpe).summon, "empty")

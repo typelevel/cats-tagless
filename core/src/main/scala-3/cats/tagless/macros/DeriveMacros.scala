@@ -81,13 +81,15 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
       case argss =>
         term.select(method).appliedToAll(argss)
 
-    def replace(from: Term, to: Term): Term =
-      ReplaceTerm(from, to).transformTerm(term)(Symbol.spliceOwner)
+    def replace(from: Expr[?], to: Expr[?]): Term =
+      ReplaceTerm(from.asTerm, to.asTerm).transformTerm(term)(Symbol.spliceOwner)
 
+  extension (expr: Expr[?])
     def transformTo[A: Type](
         args: Transform = PartialFunction.empty,
         body: Transform = PartialFunction.empty
     ): Expr[A] =
+      val term = expr.asTerm
       val name = Symbol.freshName("$anon")
       val parents = List(TypeTree.of[Object], TypeTree.of[A])
       val cls = Symbol.newClass(Symbol.spliceOwner, name, parents.map(_.tpe), _.overridableMembers, None)
@@ -116,11 +118,12 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
       val newCls = New(TypeIdent(cls)).select(cls.primaryConstructor).appliedToNone
       Block(ClassDef(cls, parents, members) :: Nil, newCls).asExprOf[A]
 
-  extension (terms: Seq[Term])
+  extension (exprs: Seq[Expr[?]])
     def combineTo[A: Type](
-        args: Seq[Transform] = terms.map(_ => PartialFunction.empty),
+        args: Seq[Transform] = exprs.map(_ => PartialFunction.empty),
         body: Combine = PartialFunction.empty
     ): Expr[A] =
+      val terms = exprs.map(_.asTerm)
       val name = Symbol.freshName("$anon")
       val parents = List(TypeTree.of[Object], TypeTree.of[A])
       val cls = Symbol.newClass(Symbol.spliceOwner, name, parents.map(_.tpe), _.overridableMembers, None)
@@ -179,11 +182,11 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
       else member
 
   extension (tpe: TypeRepr)
-    def contains(sym: Symbol): Boolean =
-      tpe != tpe.substituteTypes(sym :: Nil, TypeRepr.of[Any] :: Nil)
+    def contains(that: TypeRepr): Boolean =
+      tpe != tpe.substituteTypes(that.typeSymbol :: Nil, TypeRepr.of[Any] :: Nil)
 
-    def containsAll(syms: Symbol*): Boolean =
-      syms.forall(tpe.contains)
+    def containsAll(types: TypeRepr*): Boolean =
+      types.forall(tpe.contains)
 
     def isRepeated: Boolean =
       tpe.typeSymbol == defn.RepeatedParamClass
@@ -211,8 +214,8 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
         tpe.substituteTypes(args, params)
       TypeLambda(names, bounds, result)
 
-    def summonLambda[T <: AnyKind: Type](arg: Symbol, args: Symbol*): Term =
-      TypeRepr.of[T].appliedTo(tpe.lambda(arg :: args.toList)).summon
+    def summonLambda[T <: AnyKind: Type](arg: TypeRepr, args: TypeRepr*): Term =
+      TypeRepr.of[T].appliedTo(tpe.lambda((arg :: args.toList).map(_.typeSymbol))).summon
 
     def summonOpt[T <: AnyKind: Type]: Option[Term] =
       Implicits.search(TypeRepr.of[T].appliedTo(tpe)) match

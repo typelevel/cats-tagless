@@ -47,39 +47,37 @@ object MacroSemigroupalK:
     val F = TypeRepr.of[F]
     val G = TypeRepr.of[G]
     val T = TypeRepr.of[Tuple2K[F, G, *]]
-    val f = F.typeSymbol
-    val t = T.typeSymbol
 
     extension (tpe: TypeRepr)
       def firstK: TypeRepr =
-        tpe.substituteTypes(t :: Nil, TypeRepr.of[FirstK[F, G]] :: Nil)
+        tpe.substituteTypes(T.typeSymbol :: Nil, TypeRepr.of[FirstK[F, G]] :: Nil)
 
     def tuple2K(name: String): Term =
       Select.unique('{ SemigroupalK }.asTerm, name).appliedToTypes(List(F, G))
 
-    List(eaf.asTerm, eag.asTerm).combineTo[Alg[Tuple2K[F, G, *]]](
+    List(eaf, eag).combineTo[Alg[Tuple2K[F, G, *]]](
       args = List(
         {
-          case (_, tpe, arg) if tpe.contains(f) =>
+          case (_, tpe, arg) if tpe.contains(F) =>
             Select
-              .unique(tpe.firstK.summonLambda[FunctorK](f), "mapK")
+              .unique(tpe.firstK.summonLambda[FunctorK](F), "mapK")
               .appliedToTypes(List(T, F))
               .appliedTo(arg)
               .appliedTo(tuple2K("firstK"))
         },
         {
-          case (_, tpe, arg) if tpe.contains(f) =>
+          case (_, tpe, arg) if tpe.contains(F) =>
             Select
-              .unique(tpe.firstK.summonLambda[FunctorK](f), "mapK")
+              .unique(tpe.firstK.summonLambda[FunctorK](F), "mapK")
               .appliedToTypes(List(T, G))
               .appliedTo(arg)
               .appliedTo(tuple2K("secondK"))
         }
       ),
       body = {
-        case (_, tpe, af :: ag :: Nil) if tpe.contains(f) =>
+        case (_, tpe, af :: ag :: Nil) if tpe.contains(F) =>
           Select
-            .unique(tpe.firstK.summonLambda[SemigroupalK](f), "productK")
+            .unique(tpe.firstK.summonLambda[SemigroupalK](F), "productK")
             .appliedToTypes(List(F, G))
             .appliedTo(af, ag)
         case (_, tpe, af :: ag :: Nil) =>

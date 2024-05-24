@@ -46,40 +46,38 @@ object MacroSemigroupal:
     val A = TypeRepr.of[A]
     val B = TypeRepr.of[B]
     val T = TypeRepr.of[(A, B)]
-    val a = A.typeSymbol
-    val t = T.typeSymbol
 
     extension (tpe: TypeRepr)
       def first: TypeRepr =
-        tpe.substituteTypes(t :: Nil, TypeRepr.of[First[A, B]] :: Nil)
+        tpe.substituteTypes(T.typeSymbol :: Nil, TypeRepr.of[First[A, B]] :: Nil)
 
     def tuple(method: Symbol, name: String, result: TypeRepr): Term =
       val tpe = MethodType("t" :: Nil)(_ => T :: Nil, _ => result)
       Lambda(method, tpe, (_, args) => Select.unique(args.head.asExpr.asTerm, name))
 
-    List(fa.asTerm, fb.asTerm).combineTo[F[(A, B)]](
+    List(fa, fb).combineTo[F[(A, B)]](
       args = List(
         {
-          case (method, tpe, arg) if tpe.contains(a) =>
+          case (method, tpe, arg) if tpe.contains(A) =>
             Select
-              .unique(tpe.first.summonLambda[Functor](a), "map")
+              .unique(tpe.first.summonLambda[Functor](A), "map")
               .appliedToTypes(List(T, A))
               .appliedTo(arg)
               .appliedTo(tuple(method, "_1", A))
         },
         {
-          case (method, tpe, arg) if tpe.contains(a) =>
+          case (method, tpe, arg) if tpe.contains(A) =>
             Select
-              .unique(tpe.first.summonLambda[Functor](a), "map")
+              .unique(tpe.first.summonLambda[Functor](A), "map")
               .appliedToTypes(List(T, B))
               .appliedTo(arg)
               .appliedTo(tuple(method, "_2", B))
         }
       ),
       body = {
-        case (_, tpe, af :: ag :: Nil) if tpe.contains(a) =>
+        case (_, tpe, af :: ag :: Nil) if tpe.contains(A) =>
           Select
-            .unique(tpe.first.summonLambda[Semigroupal](a), "product")
+            .unique(tpe.first.summonLambda[Semigroupal](A), "product")
             .appliedToTypes(List(A, B))
             .appliedTo(af, ag)
         case (_, tpe, af :: ag :: Nil) =>

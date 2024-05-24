@@ -46,18 +46,16 @@ object MacroFlatMap:
 
     val A = TypeRepr.of[A]
     val B = TypeRepr.of[B]
-    val b = B.typeSymbol
-    val callee = fa.asTerm
 
-    callee.transformTo[F[B]](
+    fa.transformTo[F[B]](
       args = {
-        case (method, tpe, _) if tpe.contains(b) =>
+        case (method, tpe, _) if tpe.contains(B) =>
           report.errorAndAbort(s"Type parameter ${A.show} appears in contravariant position in $method")
       },
       body = {
-        case (_, tpe, body) if tpe.typeSymbol == b =>
-          body.replace(callee, '{ $f(${ body.asExprOf[A] }) }.asTerm)
-        case (method, tpe, _) if tpe.contains(b) =>
+        case (_, tpe, body) if tpe =:= B =>
+          body.replace(fa, '{ $f(${ body.asExprOf[A] }) })
+        case (method, tpe, _) if tpe.contains(B) =>
           report.errorAndAbort(s"Expected $method to return ${A.show} but found ${tpe.show}")
       }
     )
@@ -71,24 +69,22 @@ object MacroFlatMap:
 
     val A = TypeRepr.of[A]
     val B = TypeRepr.of[B]
-    val b = B.typeSymbol
-    val callee = '{ $f($a) }.asTerm
 
-    callee.transformTo[F[B]](
+    '{ $f($a) }.transformTo[F[B]](
       args = {
-        case (method, tpe, _) if tpe.contains(b) =>
+        case (method, tpe, _) if tpe.contains(B) =>
           report.errorAndAbort(s"Type parameter ${A.show} appears in contravariant position in $method")
       },
       body = {
-        case (method, tpe, body) if tpe.typeSymbol == b =>
+        case (method, tpe, body) if tpe =:= B =>
           '{
-            @tailrec def step(a: A): B =
-              ${ body.replace(callee, '{ $f(a) }.asTerm).asExprOf[Either[A, B]] } match
+            @tailrec def step(x: A): B =
+              ${ body.replace(a, '{ x }).asExprOf[Either[A, B]] } match
                 case Left(a) => step(a)
                 case Right(b) => b
             step($a)
           }.asTerm.changeOwner(method)
-        case (method, tpe, _) if tpe.contains(b) =>
+        case (method, tpe, _) if tpe.contains(B) =>
           report.errorAndAbort(s"Expected $method to return ${A.show} but found ${tpe.show}")
       }
     )

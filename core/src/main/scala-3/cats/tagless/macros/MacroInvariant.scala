@@ -42,22 +42,21 @@ object MacroInvariant:
 
     val A = TypeRepr.of[A]
     val B = TypeRepr.of[B]
-    val b = B.typeSymbol
 
-    fa.asTerm.transformTo[F[B]](
+    fa.transformTo[F[B]](
       args = {
-        case (_, tpe, arg) if tpe.contains(b) =>
+        case (_, tpe, arg) if tpe.contains(B) =>
           Select
-            .unique(tpe.summonLambda[Invariant](b), "imap")
+            .unique(tpe.summonLambda[Invariant](B), "imap")
             .appliedToTypes(List(B, A))
             .appliedTo(arg)
             .appliedTo(g.asTerm)
             .appliedTo(f.asTerm)
       },
       body = {
-        case (_, tpe, body) if tpe.contains(b) =>
+        case (_, tpe, body) if tpe.contains(B) =>
           Select
-            .unique(tpe.summonLambda[Invariant](b), "imap")
+            .unique(tpe.summonLambda[Invariant](B), "imap")
             .appliedToTypes(List(A, B))
             .appliedTo(body)
             .appliedTo(f.asTerm)

@@ -201,7 +201,7 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
     def summon: Term = Implicits.search(tpe) match
       case success: ImplicitSearchSuccess => success.tree
       case failure: ImplicitSearchFailure => report.errorAndAbort(failure.explanation)
-      case _ => report.errorAndAbort(s"Failed to summon: ${tpe.show}")
+      case _ => report.errorAndAbort(s"Not found: given ${tpe.show}")
 
     def lambda(args: List[Symbol]): TypeLambda =
       val n = args.length

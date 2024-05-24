@@ -110,7 +110,7 @@ class DeriveMacros(val c: blackbox.Context) {
 
     /** Summon an implicit instance of `A` applied to `typeArgs` if one exists in scope, otherwise abort. */
     def summon[A: TypeTag](typeArgs: Type*): Tree =
-      summonOr[A](typeArgs*)(tpe => abort(s"could not find implicit value of type $tpe in method $displayName"))
+      summonOr[A](typeArgs*)(tpe => abort(s"Not found: implicit $tpe in method $displayName"))
 
     /** Summon an implicit instance of `F[a =>> returnType]` if one exists in scope. */
     def summonF[F[_[_]]](a: Symbol, returnType: Type)(implicit tag: TypeTag[F[Any]]): Tree =
@@ -523,9 +523,12 @@ class DeriveMacros(val c: blackbox.Context) {
         case method if method.returnType.typeSymbol == a =>
           val body = method.delegate(q"$f(${method.body})")
           method.copy(returnType = b.asType.toType, body = body)
+        case method if method.occursOnlyInReturn(a) =>
+          val A = a.asType.toType
+          abort(s"Expected method ${method.displayName} to return $A but found ${method.returnType}")
         case method if method.occursInSignature(a) =>
           val A = a.asType.toType
-          abort(s"Type parameter $A can only occur as a top level return type in method ${method.displayName}")
+          abort(s"Type parameter $A occurs in contravariant position in method ${method.returnType}")
       }
 
       implement(algebra)(b)(types ++ methods)
@@ -550,9 +553,12 @@ class DeriveMacros(val c: blackbox.Context) {
           }"""
 
           method.copy(returnType = b.asType.toType, body = body)
+        case method if method.occursOnlyInReturn(a) =>
+          val A = a.asType.toType
+          abort(s"Expected method ${method.displayName} to return $A but found ${method.returnType}")
         case method if method.occursInSignature(a) =>
           val A = a.asType.toType
-          abort(s"Type parameter $A can only occur as a top level return type in method ${method.displayName}")
+          abort(s"Type parameter $A occurs in contravariant position in method ${method.displayName}")
         case method =>
           method.copy(body = method.delegate(q"$f($x)"))
       }
@@ -644,8 +650,10 @@ class DeriveMacros(val c: blackbox.Context) {
           val body = q"${reify(aop.Instrumentation)}(${method.body}, $algebraName, ${method.displayName})"
           val returnType = appliedType(Instrumentation, F :: method.returnType.typeArgs)
           method.copy(body = body, returnType = returnType)
+        case method if method.occursOnlyInReturn(f) =>
+          abort(s"Expected method ${method.displayName} to return $F[?] but found ${method.returnType}")
         case method if method.occursInSignature(f) =>
-          abort(s"Type parameter $F can only occur as a top level return type in method ${method.displayName}")
+          abort(s"Type parameter $F occurs in contravariant position in method ${method.displayName}")
       }
 
       val InstrumentationType = appliedType(Instrumentation, F :: F.typeParams.map(_.asType.toType))
@@ -678,8 +686,10 @@ class DeriveMacros(val c: blackbox.Context) {
           val body = q"${reify(Aspect.Weave)}[$F, $Dom, $Cod, ..$typeArgs]($algebraName, $domain, $codomain)"
           val returnType = appliedType(AspectWeave, F :: Dom :: Cod :: typeArgs)
           method.copy(body = body, returnType = returnType)
+        case method if method.occursOnlyInReturn(f) =>
+          abort(s"Expected method ${method.displayName} to return $F[?] but found ${method.returnType}")
         case method if method.occursInSignature(f) =>
-          abort(s"Type parameter $F can only occur as a top level return type in method ${method.displayName}")
+          abort(s"Type parameter $F occurs in contravariant position in method ${method.displayName}")
       }
 
       val WeaveType = appliedType(AspectWeave, F :: Dom :: Cod :: F.typeParams.map(_.asType.toType))
@@ -697,10 +707,10 @@ class DeriveMacros(val c: blackbox.Context) {
     val methods = delegateMethods(Af, abstractMembers, NoSymbol) {
       case method if method.returnType.typeSymbol == f =>
         method.copy(returnType = weakTypeOf[A], body = q"$tmp")
-      case method if method.occursInSignature(f) =>
-        abort(s"Type parameter $F can only occur as a top level return type in method ${method.displayName}")
+      case method if method.occursInSignature(f) && !method.occursOnlyInReturn(f) =>
+        abort(s"Type parameter $F occurs in contravariant position in method ${method.displayName}")
       case method =>
-        abort(s"Abstract method ${method.displayName} cannot be derived because it does not return in $F")
+        abort(s"Expected method ${method.displayName} to return $F[?] but found ${method.returnType}")
     }
 
     val Const = weakTypeOf[Const[A]].member(TypeName("λ")).typeSignature
@@ -730,8 +740,10 @@ class DeriveMacros(val c: blackbox.Context) {
           val typeArgs = F :: Af :: method.returnType.typeArgs
           q"${reify(cats.data.ReaderT)}[..$typeArgs](($af: $Af) => $delegate)"
         }
+      case method if method.occursInSignature(f) && !method.occursOnlyInReturn(f) =>
+        abort(s"Type parameter $F occurs in contravariant position in method ${method.displayName}")
       case method =>
-        abort(s"Abstract method ${method.displayName} cannot be derived because it does not return in $F")
+        abort(s"Expected method ${method.displayName} to return $F[?] but found ${method.returnType}")
     }
 
     val b = ReaderT.typeParams.last.asType

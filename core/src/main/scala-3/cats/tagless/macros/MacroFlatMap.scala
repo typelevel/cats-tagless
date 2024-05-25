@@ -77,13 +77,14 @@ object MacroFlatMap:
       },
       body = {
         case (method, tpe, body) if tpe =:= B =>
+          given Quotes = method.asQuotes
           '{
             @tailrec def step(x: A): B =
               ${ body.replace(a, '{ x }).asExprOf[Either[A, B]] } match
                 case Left(a) => step(a)
                 case Right(b) => b
             step($a)
-          }.asTerm.changeOwner(method)
+          }.asTerm
         case (method, tpe, _) if tpe.contains(B) =>
           report.errorAndAbort(s"Expected $method to return ${A.show} but found ${tpe.show}")
       }

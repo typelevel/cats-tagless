@@ -42,11 +42,12 @@ object MacroInstrument:
     given DeriveMacros[q.type] = new DeriveMacros
 
     val F = TypeRepr.of[F]
+    val InstrumentationF = TypeRepr.of[Instrumentation[F, ?]]
     val Alg = TypeRepr.of[Alg]
 
     alg.transformTo[Alg[[X] =>> Instrumentation[F, X]]](
       body = {
-        case (sym, tpe, body) if tpe.contains(F) =>
+        case (sym, tpe, body) if tpe <:< InstrumentationF =>
           val resultType = tpe.typeArgs.tail
 
           val newBody = resultType.map(_.asType) match

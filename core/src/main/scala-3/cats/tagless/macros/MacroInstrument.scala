@@ -51,11 +51,7 @@ object MacroInstrument:
 
           val newBody = resultType.asType match
             case '[t] =>
-              '{ Instrumentation[F, t](
-                ${ body.asExprOf[F[t]] },
-                ${ Expr(Alg.typeSymbol.name) },
-                ${ Expr(sym.name) }) 
-              }
+              '{ Instrumentation[F, t](${ body.asExprOf[F[t]] }, ${ Expr(Alg.typeSymbol.name) }, ${ Expr(sym.name) }) }
           newBody.asTerm
       }
     )

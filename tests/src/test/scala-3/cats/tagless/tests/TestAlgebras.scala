@@ -17,6 +17,7 @@
 package cats.tagless
 package tests
 
+import cats.tagless.aop.Instrument
 import cats.data.{EitherT, Kleisli, State, Tuple2K}
 import cats.laws.discipline.ExhaustiveCheck
 import cats.laws.discipline.arbitrary.*
@@ -30,7 +31,7 @@ import scala.util.Try
 
 // TODO: @finalAlg @autoProductNK @autoInstrument
 @experimental
-trait SafeAlg[F[_]] derives FunctorK, SemigroupalK:
+trait SafeAlg[F[_]] derives FunctorK, SemigroupalK, Instrument:
   def parseInt(str: String): F[Int]
   def divide(dividend: Float, divisor: Float): F[Float]
 

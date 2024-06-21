@@ -19,6 +19,7 @@ package cats.tagless
 import cats.*
 import cats.arrow.Profunctor
 import cats.tagless.*
+import cats.tagless.aop.*
 import cats.tagless.macros.*
 
 import scala.annotation.experimental
@@ -40,3 +41,4 @@ object Derive:
   inline def invariantK[Alg[_[_]]]: InvariantK[Alg] = MacroInvariantK.derive
   inline def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = MacroSemigroupalK.derive
   inline def applyK[Alg[_[_]]]: ApplyK[Alg] = MacroApplyK.derive
+  inline def instrument[Alg[_[_]]]: Instrument[Alg] = MacroInstrument.derive

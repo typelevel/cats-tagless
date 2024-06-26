@@ -91,8 +91,8 @@ object MacroAspect:
           val domain = Expr.ofList(paramss.map(clause => Expr.ofList(clause.params.map(paramAdvice))))
 
           val resultType = tpe.typeArgs.lastOption
-          val newBody = resultType.map(tpe => tpe.widenParam -> tpe.asType) match
-            case Some((tpe, '[t])) =>
+          val newBody = resultType.map(_.asType) match
+            case Some('[t]) =>
               val codomain = '{
                 Aspect.Advice[F, Cod, t](
                   adviceName = ${ Expr(methodName) },

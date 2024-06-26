@@ -42,3 +42,4 @@ object Derive:
   inline def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = MacroSemigroupalK.derive
   inline def applyK[Alg[_[_]]]: ApplyK[Alg] = MacroApplyK.derive
   inline def instrument[Alg[_[_]]]: Instrument[Alg] = MacroInstrument.derive
+  inline def aspect[Alg[_[_]], Dom[_], Cod[_]]: Aspect[Alg, Dom, Cod] = MacroAspect.derive

@@ -222,4 +222,12 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
         case success: ImplicitSearchSuccess => Some(success.tree)
         case _ => None
 
+  extension (valDef: ValDef)
+    def isByName: Boolean =
+      (valDef.tpt, valDef.tpt.tpe) match
+        case (ByName(_), ByNameType(_)) => true
+        case (ByName(_), _) => true
+        case (_, ByNameType(_)) => true
+        case _ => false
+
 end DeriveMacros

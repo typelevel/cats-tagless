@@ -47,8 +47,7 @@ object MacroReaderT:
         owner,
         methodType,
         {
-          case (sym, (af: Term) :: Nil) =>
-            body(af).changeOwner(sym)
+          case (sym, (af: Term) :: Nil) => body(af)
           case (_, List(tree)) => tree
           case (sym, args) =>
             report.errorAndAbort(s"Unexpected: $sym with args ${args.map(_.show)}")

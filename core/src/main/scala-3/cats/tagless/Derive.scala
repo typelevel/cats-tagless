@@ -17,6 +17,7 @@
 package cats.tagless
 
 import cats.*
+import cats.data.ReaderT
 import cats.arrow.Profunctor
 import cats.tagless.*
 import cats.tagless.aop.*
@@ -41,4 +42,9 @@ object Derive:
   inline def invariantK[Alg[_[_]]]: InvariantK[Alg] = MacroInvariantK.derive
   inline def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = MacroSemigroupalK.derive
   inline def applyK[Alg[_[_]]]: ApplyK[Alg] = MacroApplyK.derive
+
+  /** Derives an implementation of `Alg` that forwards all calls to another one supplied via `ReaderT`. This enables a
+    * form of dependency injection.
+    */
+  inline def readerT[Alg[_[_]], F[_]]: Alg[[X] =>> ReaderT[F, Alg[F], X]] = MacroReaderT.derive
   inline def instrument[Alg[_[_]]]: Instrument[Alg] = MacroInstrument.derive

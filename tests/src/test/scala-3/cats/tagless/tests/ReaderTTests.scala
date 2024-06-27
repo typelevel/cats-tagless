@@ -20,11 +20,9 @@ package tests
 import cats.arrow.FunctionK
 import cats.data.ReaderT
 import cats.FlatMap
-import cats.tagless.derived.*
 
 import scala.util.{Failure, Success, Try}
 import scala.annotation.experimental
-import cats.data.Reader
 
 @experimental
 class ReaderTTests extends CatsTaglessTestSuite:

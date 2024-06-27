@@ -107,4 +107,3 @@ object ReaderTTests:
     def blackHole[A](anything: F[A]): F[Unit]
     def distance(x: Galaxy, y: Galaxy): F[Double]
     def collision(x: F[Galaxy], y: F[Galaxy]): F[Galaxy]
-  

@@ -33,63 +33,43 @@ object MacroReaderT:
     import quotes.reflect.*
     given dm: DeriveMacros[q.type] = new DeriveMacros
 
-    val F = TypeRepr.of[F]
-    val ReaderT = TypeRepr.of[ReaderT]
-    val AlgF = TypeRepr.of[Alg[F]]
-
+    val RT = TypeRepr.of[ReaderT[F, Alg[F], ?]]
     val name = Symbol.freshName("$anon")
     val parents = List(TypeTree.of[Object], TypeTree.of[Alg[[X] =>> ReaderT[F, Alg[F], X]]])
     val cls = Symbol.newClass(Symbol.spliceOwner, name, parents.map(_.tpe), _.overridableMembers, None)
 
-    def readerT(owner: Symbol, resultTpe: TypeRepr)(body: Term => Term): Term =
-      val methodType = MethodType(List("af"))(_ => List(AlgF), _ => F.appliedTo(resultTpe))
-      val lambda = Lambda(
-        owner,
-        methodType,
-        {
-          case (sym, (af: Term) :: Nil) => body(af)
-          case (_, List(tree)) => tree
-          case (sym, args) =>
-            report.errorAndAbort(s"Unexpected: $sym with args ${args.map(_.show)}")
-        }
-      )
-      Select
-        .unique(Ident(ReaderT.typeSymbol.companionModule.termRef), "apply")
-        .appliedToTypes(F :: AlgF :: resultTpe :: Nil)
-        .appliedTo(lambda)
+    def readerT[T: Type](owner: Symbol)(body: Term => Term): Term =
+      '{ ReaderT((af: Alg[F]) => ${ body('af.asTerm).asExprOf[F[T]] }) }.asTerm.changeOwner(owner)
 
-    def argTransformer(af: Term): dm.Transform = {
-      case (_, tpe, arg) if tpe <:< TypeRepr.of[ReaderT[F, Alg[F], ?]] =>
-        val newArg = tpe.typeArgs.last.asType match
-          case '[t] =>
-            '{ ${ arg.asExprOf[ReaderT[F, Alg[F], t]] }.run(${ af.asExprOf[Alg[F]] }) }
-        newArg.asTerm
-    }
+    def argTransformer(af: Term): dm.Transform =
+      case (_, tpe, arg) if tpe <:< RT => Select.unique(arg, "apply").appliedTo(af)
 
     def transformDef(method: DefDef)(argss: List[List[Tree]]): Option[Term] =
-      val methodReturnTpe = method.returnTpt.tpe.typeArgs.drop(2).head
-
-      Some(readerT(method.symbol, methodReturnTpe) { af =>
-        val transformedArgss =
-          for (clause, xs) <- method.paramss.zip(argss)
-          yield for paramAndArg <- clause.params.zip(xs)
-          yield argTransformer(af).transformArg(method.symbol, paramAndArg)
-
-        af.call(method.symbol)(transformedArgss)
-      })
+      method.returnTpt.tpe.asType match
+        case '[ReaderT[F, Alg[F], t]] =>
+          Some(readerT[t](method.symbol): af =>
+            af.call(method.symbol):
+              for (clause, args) <- method.paramss.zip(argss)
+              yield for paramAndArg <- clause.params.zip(args)
+              yield argTransformer(af).transformArg(method.symbol, paramAndArg)
+          )
+        case _ =>
+          method.rhs
 
     def transformVal(value: ValDef): Option[Term] =
-      val valType = value.tpt.tpe.typeArgs.drop(2).head
-      Some(readerT(value.symbol, valType) { af =>
-        af.select(value.symbol)
-      })
+      value.tpt.tpe.asType match
+        case '[ReaderT[F, Alg[F], t]] =>
+          Some(readerT[t](value.symbol)(_.select(value.symbol)))
+        case _ =>
+          value.rhs
 
-    val members = cls.declarations.filterNot(_.isClassConstructor).map { member =>
-      member.tree match
-        case method: DefDef => DefDef(member, transformDef(method))
-        case value: ValDef => ValDef(member, transformVal(value))
-        case _ => report.errorAndAbort(s"Not supported: $member in ${member.owner}")
-    }
+    val members = cls.declarations
+      .filterNot(_.isClassConstructor)
+      .map: member =>
+        member.tree match
+          case method: DefDef => DefDef(member, transformDef(method))
+          case value: ValDef => ValDef(member, transformVal(value))
+          case _ => report.errorAndAbort(s"Not supported: $member in ${member.owner}")
 
     val newCls = New(TypeIdent(cls)).select(cls.primaryConstructor).appliedToNone
     Block(ClassDef(cls, parents, members) :: Nil, newCls).asExprOf[Alg[[X] =>> ReaderT[F, Alg[F], X]]]

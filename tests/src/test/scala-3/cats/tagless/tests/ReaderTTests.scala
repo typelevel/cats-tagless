@@ -39,26 +39,25 @@ class ReaderTTests extends CatsTaglessTestSuite:
       y <- y.map(_.name)
     yield Galaxy(x.zip(y).map { case (x, y) => s"$x$y" }.mkString(""))
 
-  test("Dependency injection") {
+  test("Dependency injection"):
     assertEquals(spaceAlg.blackHole(ReaderT(_ => eventHorizon)).run(dependency), eventHorizon)
     assertEquals(spaceAlg.distance(milkyWay, andromeda).run(dependency), Success(881.0))
     assertEquals(
       spaceAlg.collision(milkyWay.pure[F], andromeda.pure[F]).run(dependency),
       Success(Galaxy("MAinldkryo mWeadya"))
     )
-  }
 
   // The same approach could be used for Future ~> IO
-  test("Try ~> SyncIO") {
+  test("Try ~> SyncIO"):
     def provide[R](service: R) = FunctionKLift[[X] =>> ReaderT[Try, R, X], SyncIO](r => () => r(service))
     def require[R] = FunctionKLift[SyncIO, [X] =>> ReaderT[Try, R, X]](io => ReaderT(_ => io()))
 
     var successful, failed = 0
     // Make the dependency side-effecting
-    val sideEffecting = dependency.imapK(FunctionKLift[Try, Try] {
+    val sideEffecting = dependency.imapK(FunctionKLift[Try, Try]:
       case success @ Success(_) => successful += 1; success
       case failure @ Failure(_) => failed += 1; failure
-    })(FunctionK.id)
+    )(FunctionK.id)
 
     val alg = spaceAlg.imapK(provide(sideEffecting))(require)
     val blackHole = alg.blackHole(() => eventHorizon)
@@ -73,10 +72,9 @@ class ReaderTTests extends CatsTaglessTestSuite:
     assertEquals(successful, 1)
     assertEquals(collision(), Success(Galaxy("MAinldkryo mWeadya")))
     assertEquals(successful, 2)
-  }
 
   // The same approach could be used for accessing a service in a Ref
-  test("Try ~> Try") {
+  test("Try ~> Try"):
     def provide[G[_]: FlatMap, A](service: G[A]) =
       FunctionKLift[([X] =>> ReaderT[G, A, X]), G](r => service.flatMap(r.run))
 
@@ -89,7 +87,6 @@ class ReaderTTests extends CatsTaglessTestSuite:
     assertEquals(failingAlg.blackHole(eventHorizon), eventHorizon)
     assertEquals(failingAlg.distance(milkyWay, andromeda), eventHorizon)
     assertEquals(failingAlg.collision(Success(milkyWay), Success(andromeda)), eventHorizon)
-  }
 
 @experimental
 object ReaderTTests:
@@ -97,13 +94,11 @@ object ReaderTTests:
   final case class Error(message: String) extends RuntimeException(message)
 
   val spaceAlg = Derive.readerT[SpaceAlg, Try]
-  implicit val invariantK: InvariantK[SpaceAlg] = Derive.invariantK
-
   val milkyWay = Galaxy("Milky Way")
   val andromeda = Galaxy("Andromeda")
   val eventHorizon = Failure(Error("past event horizon"))
 
-  trait SpaceAlg[F[_]]:
+  trait SpaceAlg[F[_]] derives InvariantK:
     def blackHole[A](anything: F[A]): F[Unit]
     def distance(x: Galaxy, y: Galaxy): F[Double]
     def collision(x: F[Galaxy], y: F[Galaxy]): F[Galaxy]

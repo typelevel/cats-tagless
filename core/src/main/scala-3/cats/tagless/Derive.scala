@@ -42,6 +42,8 @@ object Derive:
   inline def invariantK[Alg[_[_]]]: InvariantK[Alg] = MacroInvariantK.derive
   inline def semigroupalK[Alg[_[_]]]: SemigroupalK[Alg] = MacroSemigroupalK.derive
   inline def applyK[Alg[_[_]]]: ApplyK[Alg] = MacroApplyK.derive
+  inline def const[Alg[_[_]], A](value: A): Alg[Const[A]#λ] = MacroConst.derive[Alg, A](value)
+  inline def void[Alg[_[_]]]: Alg[Const[Unit]#λ] = MacroConst.derive[Alg, Unit](())
 
   /** Derives an implementation of `Alg` that forwards all calls to another one supplied via `ReaderT`. This enables a
     * form of dependency injection.

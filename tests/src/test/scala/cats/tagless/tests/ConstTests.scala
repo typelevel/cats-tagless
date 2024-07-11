@@ -18,6 +18,7 @@ package cats.tagless.tests
 
 import cats.tagless.Derive
 
+@experimental
 class ConstTests extends CatsTaglessTestSuite {
 
   test("const(42)") {

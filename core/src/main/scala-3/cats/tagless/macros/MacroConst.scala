@@ -27,9 +27,9 @@ object MacroConst:
 
   private[macros] def deriveConst[Alg[_[_]]: Type, A: Type](const: Expr[A])(using q: Quotes): Expr[Alg[Const[A]#λ]] =
     import quotes.reflect.*
-    given dm: DeriveMacros[q.type] = new DeriveMacros
+    given DeriveMacros[q.type] = new DeriveMacros
 
-    dm.newClassOf[Alg[Const[A]#λ]](
+    Symbol.newClassOf[Alg[Const[A]#λ]](
       transformDef = _ => _ => Some(const.asTerm),
       transformVal = _ => Some(const.asTerm)
     )

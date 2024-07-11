@@ -60,4 +60,4 @@ object MacroReaderT:
         case _ =>
           value.rhs
 
-    dm.newClassOf[Alg[[X] =>> ReaderT[F, Alg[F], X]]](transformDef, transformVal)
+    Symbol.newClassOf[Alg[[X] =>> ReaderT[F, Alg[F], X]]](transformDef, transformVal)

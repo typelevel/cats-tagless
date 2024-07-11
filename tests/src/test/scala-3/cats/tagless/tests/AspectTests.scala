@@ -36,6 +36,7 @@ class AspectTests extends CatsTaglessTestSuite:
   checkAll("Aspect[SafeAlg]", discipline.AspectTests[SafeAlg, Show, Show].aspect[Try, Option, List, Int])
   checkAll("Aspect is Serializable", SerializableTests.serializable(Aspect.function[SafeAlg, Show]))
 
+  // TODO Uncomment once we are able to derive aspects for algebras with polymorphic methods
   // test("Show aspect") {
   //   val algebra: ShowFAlgebra[List] = new ShowFAlgebra[List]:
   //     def showF[A: Show](a: A) = List(a.show)
@@ -71,6 +72,7 @@ class AspectTests extends CatsTaglessTestSuite:
   //   testWeave(logF)("ShowFAlgebra", List(Map("message" -> "3")), "logF", Nil)
   // }
 
+  // TODO Requires auto-derivation for Alg[Const[A]#λ]
   // test("Json aspect") {
   //   val void = Derive.void[GeoAlgebra]
   //   val toRequest = λ[Aspect.Weave[Void, Encoder, Decoder, *] ~> HttpRequest] { weave =>
@@ -124,7 +126,7 @@ object AspectTests:
     def logF[A: Show](message: => A): F[Unit]
 
   object ShowFAlgebra:
-    given Aspect.Function[ShowFAlgebra, Show] = Derive.aspect
+    // given Aspect.Function[ShowFAlgebra, Show] = Derive.aspect
     given Aspect.Function[ShowFAlgebra, Trivial] = Derive.aspect
 
   // trait GeoAlgebra[F[_]] {

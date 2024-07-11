@@ -20,11 +20,10 @@ package tests
 import cats.kernel.laws.discipline.SerializableTests
 import cats.tagless.aop.Aspect
 import cats.tagless.laws.discipline
-import cats.tagless.{Derive, Trivial, Void}
-import cats.{Show, ~>}
-import cats.syntax.all.*
-import io.circe.syntax.*
-import io.circe.{Decoder, Encoder, Json, JsonObject}
+import cats.Show
+// import cats.syntax.all.*
+// import io.circe.syntax.*
+// import io.circe.{Decoder, Encoder, Json, JsonObject}
 
 import scala.annotation.experimental
 import scala.util.Try

@@ -23,7 +23,6 @@ import cats.{~>, Eval}
 import scala.annotation.experimental
 import scala.quoted.*
 import scala.compiletime.*
-import cats.tagless.aop.Aspect.codomain
 
 @experimental
 object MacroAspect:

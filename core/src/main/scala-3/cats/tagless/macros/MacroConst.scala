@@ -27,19 +27,9 @@ object MacroConst:
 
   private[macros] def deriveConst[Alg[_[_]]: Type, A: Type](const: Expr[A])(using q: Quotes): Expr[Alg[Const[A]#λ]] =
     import quotes.reflect.*
-    given DeriveMacros[q.type] = new DeriveMacros
+    given dm: DeriveMacros[q.type] = new DeriveMacros
 
-    val name = Symbol.freshName("$anon")
-    val parents = List(TypeTree.of[Object], TypeTree.of[Alg[Const[A]#λ]])
-    val cls = Symbol.newClass(Symbol.spliceOwner, name, parents.map(_.tpe), _.overridableMembers, None)
-
-    val members = cls.declarations
-      .filterNot(_.isClassConstructor)
-      .map: member =>
-        member.tree match
-          case method: DefDef => DefDef(member, _ => Some(const.asTerm))
-          case value: ValDef => ValDef(member, Some(const.asTerm))
-          case _ => report.errorAndAbort(s"Not supported: $member in ${member.owner}")
-
-    val newCls = New(TypeIdent(cls)).select(cls.primaryConstructor).appliedToNone
-    Block(ClassDef(cls, parents, members) :: Nil, newCls).asExprOf[Alg[Const[A]#λ]]
+    dm.newClassOf[Alg[Const[A]#λ]](
+      transformDef = _ => _ => Some(const.asTerm),
+      transformVal = _ => Some(const.asTerm)
+    )

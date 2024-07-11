@@ -34,9 +34,6 @@ object MacroReaderT:
     given dm: DeriveMacros[q.type] = new DeriveMacros
 
     val RT = TypeRepr.of[ReaderT[F, Alg[F], ?]]
-    val name = Symbol.freshName("$anon")
-    val parents = List(TypeTree.of[Object], TypeTree.of[Alg[[X] =>> ReaderT[F, Alg[F], X]]])
-    val cls = Symbol.newClass(Symbol.spliceOwner, name, parents.map(_.tpe), _.overridableMembers, None)
 
     def readerT[T: Type](owner: Symbol)(body: Term => Term): Term =
       '{ ReaderT((af: Alg[F]) => ${ body('af.asTerm).asExprOf[F[T]] }) }.asTerm.changeOwner(owner)
@@ -63,13 +60,4 @@ object MacroReaderT:
         case _ =>
           value.rhs
 
-    val members = cls.declarations
-      .filterNot(_.isClassConstructor)
-      .map: member =>
-        member.tree match
-          case method: DefDef => DefDef(member, transformDef(method))
-          case value: ValDef => ValDef(member, transformVal(value))
-          case _ => report.errorAndAbort(s"Not supported: $member in ${member.owner}")
-
-    val newCls = New(TypeIdent(cls)).select(cls.primaryConstructor).appliedToNone
-    Block(ClassDef(cls, parents, members) :: Nil, newCls).asExprOf[Alg[[X] =>> ReaderT[F, Alg[F], X]]]
+    dm.newClassOf[Alg[[X] =>> ReaderT[F, Alg[F], X]]](transformDef, transformVal)

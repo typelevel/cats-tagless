@@ -18,6 +18,7 @@ package cats.tagless
 package tests.simple
 
 import cats.Id
+import cats.arrow.FunctionK
 import cats.data.Tuple2K
 import cats.tagless.syntax.all.*
 import cats.tagless.tests.experimental
@@ -32,7 +33,7 @@ class SemigroupalKSpec extends munit.FunSuite with Fixtures {
   test("SemigroupalK should be a valid instance for a simple algebra") {
     val functorK = Derive.functorK[SimpleService]
     val semigroupalK = Derive.semigroupalK[SimpleService]
-    val optionalInstance = functorK.mapK(instance)(FunctionKLift[Id, Option](Option.apply))
+    val optionalInstance = functorK.mapK(instance)(FunctionK.liftFunction[Id, Option](Option.apply))
     val combinedInstance = semigroupalK.productK(instance, optionalInstance)
 
     assertEquals(combinedInstance.id(), Tuple2K(instance.id(), optionalInstance.id()))
@@ -50,7 +51,7 @@ class SemigroupalKSpec extends munit.FunSuite with Fixtures {
   }
 
   test("SemigroupalK derives syntax") {
-    val optionalInstance = instance.mapK(FunctionKLift[Id, Option](Option.apply))
+    val optionalInstance = instance.mapK(FunctionK.liftFunction[Id, Option](Option.apply))
     val combinedInstance = instance.productK(optionalInstance)
 
     assertEquals(combinedInstance.id(), Tuple2K(instance.id(), optionalInstance.id()))

@@ -18,6 +18,7 @@ package cats.tagless
 package tests.simple
 
 import cats.Id
+import cats.arrow.FunctionK
 import cats.tagless.syntax.all.*
 import cats.tagless.tests.experimental
 
@@ -31,8 +32,8 @@ class InvariantKSpec extends munit.FunSuite with Fixtures {
   test("InvariantK should be a valid instance for a simple algebra") {
     val invariantK = Derive.invariantK[SimpleService]
     val functorK = Derive.functorK[SimpleService]
-    val fk = FunctionKLift[Id, Option](Option.apply)
-    val gk = FunctionKLift[Option, Id](_.get)
+    val fk = FunctionK.liftFunction[Id, Option](Option.apply)
+    val gk = FunctionK.liftFunction[Option, Id](_.get)
     val invariantInstance = invariantK.imapK(instance)(fk)(gk)
     val optionalInstance = functorK.mapK(instance)(fk)
 
@@ -48,8 +49,8 @@ class InvariantKSpec extends munit.FunSuite with Fixtures {
   }
 
   test("InvariantK derives syntax") {
-    val fk = FunctionKLift[Id, Option](Option.apply)
-    val gk = FunctionKLift[Option, Id](_.get)
+    val fk = FunctionK.liftFunction[Id, Option](Option.apply)
+    val gk = FunctionK.liftFunction[Option, Id](_.get)
     val invariantInstance = instance.imapK(fk)(gk)
     val optionalInstance = instance.mapK(fk)
 

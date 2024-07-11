@@ -16,7 +16,6 @@
 
 package cats.tagless.tests
 
-import cats.tagless.FunctionKLift
 import cats.Eq
 import cats.arrow.FunctionK
 import cats.data.*
@@ -34,22 +33,22 @@ object TestInstances extends TestInstances
 trait TestInstances {
 
   implicit val catsDataArbitraryOptionList: Arbitrary[FunctionK[Option, List]] =
-    Arbitrary(Gen.const(FunctionKLift[Option, List](_.toList)))
+    Arbitrary(Gen.const(FunctionK.liftFunction[Option, List](_.toList)))
 
   implicit val catsDataArbitraryListOption: Arbitrary[FunctionK[List, Option]] =
-    Arbitrary(Gen.const(FunctionKLift[List, Option](_.headOption)))
+    Arbitrary(Gen.const(FunctionK.liftFunction[List, Option](_.headOption)))
 
   implicit val catsDataArbitraryTryOption: Arbitrary[FunctionK[Try, Option]] =
-    Arbitrary(Gen.const(FunctionKLift[Try, Option](_.toOption)))
+    Arbitrary(Gen.const(FunctionK.liftFunction[Try, Option](_.toOption)))
 
   implicit val catsDataArbitraryOptionTry: Arbitrary[FunctionK[Option, Try]] =
-    Arbitrary(Gen.const(FunctionKLift[Option, Try](o => Try(o.get))))
+    Arbitrary(Gen.const(FunctionK.liftFunction[Option, Try](o => Try(o.get))))
 
   implicit val catsDataArbitraryListVector: Arbitrary[FunctionK[List, Vector]] =
-    Arbitrary(Gen.const(FunctionKLift[List, Vector](_.toVector)))
+    Arbitrary(Gen.const(FunctionK.liftFunction[List, Vector](_.toVector)))
 
   implicit val catsDataArbitraryVectorList: Arbitrary[FunctionK[Vector, List]] =
-    Arbitrary(Gen.const(FunctionKLift[Vector, List](_.toList)))
+    Arbitrary(Gen.const(FunctionK.liftFunction[Vector, List](_.toList)))
 
   implicit val catsTaglessLawsEqForThrowable: Eq[Throwable] = Eq.allEqual
 

@@ -18,6 +18,7 @@ package cats.tagless
 package tests.simple
 
 import cats.Id
+import cats.arrow.FunctionK
 import cats.data.Tuple2K
 import cats.tagless.syntax.all.*
 import cats.tagless.tests.experimental
@@ -34,8 +35,8 @@ class ApplyKSpec extends munit.FunSuite with Fixtures {
   test("ApplyK should be a valid instance for a simple algebra") {
     val functorK = Derive.functorK[SimpleService]
     val applyK = Derive.applyK[SimpleService]
-    val optionalInstance = functorK.mapK(instance)(FunctionKLift[Id, Option](Option.apply))
-    val fk = FunctionKLift[Tuple2K[Id, Option, *], Try](tup => Try(tup.second.map(_ => tup.first).get))
+    val optionalInstance = functorK.mapK(instance)(FunctionK.liftFunction[Id, Option](Option.apply))
+    val fk = FunctionK.liftFunction[Tuple2K[Id, Option, *], Try](tup => Try(tup.second.map(_ => tup.first).get))
     val tryInstance = applyK.map2K[Id, Option, Try](instance, optionalInstance)(fk)
 
     assertEquals(tryInstance.id(), Try(instance.id()))
@@ -49,8 +50,8 @@ class ApplyKSpec extends munit.FunSuite with Fixtures {
   }
 
   test("ApplyK derives syntax") {
-    val optionalInstance = instance.mapK(FunctionKLift[Id, Option](Option.apply))
-    val fk = FunctionKLift[Tuple2K[Id, Option, *], Try](tup => Try(tup.second.map(_ => tup.first).get))
+    val optionalInstance = instance.mapK(FunctionK.liftFunction[Id, Option](Option.apply))
+    val fk = FunctionK.liftFunction[Tuple2K[Id, Option, *], Try](tup => Try(tup.second.map(_ => tup.first).get))
     val tryInstance = instance.map2K(optionalInstance)(fk)
 
     assertEquals(tryInstance.id(), Try(instance.id()))

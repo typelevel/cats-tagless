@@ -23,7 +23,7 @@ import cats.tagless.laws.discipline
 import cats.Show
 // import cats.syntax.all.*
 // import io.circe.syntax.*
-// import io.circe.{Decoder, Encoder, Json, JsonObject}
+import io.circe.{Decoder, Encoder, Json}
 
 import scala.annotation.experimental
 import scala.util.Try
@@ -128,18 +128,16 @@ object AspectTests:
     // given Aspect.Function[ShowFAlgebra, Show] = Derive.aspect
     given Aspect.Function[ShowFAlgebra, Trivial] = Derive.aspect
 
-  // trait GeoAlgebra[F[_]] {
-  //   def currentLocation: F[Location]
-  //   def area(center: Location, radius: Double): F[Double]
-  //   def nearestCity(to: Location): F[String]
-  // }
+  trait GeoAlgebra[F[_]]:
+    def currentLocation: F[Location]
+    def area(center: Location, radius: Double): F[Double]
+    def nearestCity(to: Location): F[String]
 
-  // object GeoAlgebra {
-  //   implicit val jsonAspect: Aspect[GeoAlgebra, Encoder, Decoder] = Derive.aspect
-  // }
+  object GeoAlgebra:
+    implicit val jsonAspect: Aspect[GeoAlgebra, Encoder, Decoder] = Derive.aspect
 
-  // final case class HttpRequest[A](
-  //     method: String,
-  //     url: String,
-  //     body: Option[Json] = None
-  // )(implicit val decoder: Decoder[A])
+  final case class HttpRequest[A](
+      method: String,
+      url: String,
+      body: Option[Json] = None
+  )(implicit val decoder: Decoder[A])

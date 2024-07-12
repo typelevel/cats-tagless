@@ -29,7 +29,24 @@ object MacroConst:
     import quotes.reflect.*
     given DeriveMacros[q.type] = new DeriveMacros
 
-    Symbol.newClassOf[Alg[Const[A]#λ]](
-      transformDef = _ => _ => Some(const.asTerm),
-      transformVal = _ => Some(const.asTerm)
-    )
+    val A = TypeRepr.of[A]
+
+    def transformDef(method: DefDef)(argss: List[List[Tree]]): Option[Term] =
+      method.returnTpt.tpe.asType match
+        case '[A] =>
+          Some(const.asTerm)
+        case _ =>
+          report.errorAndAbort(
+            s"Expected method ${method.name} to return ${A.show} but found ${method.returnTpt.tpe.show}"
+          )
+
+    def transformVal(value: ValDef): Option[Term] =
+      value.tpt.tpe.asType match
+        case '[A] =>
+          Some(const.asTerm)
+        case _ =>
+          report.errorAndAbort(
+            s"Expected value ${value.name} to be of type ${A.show} but found ${value.tpt.tpe.show}"
+          )
+
+    Symbol.newClassOf[Alg[Const[A]#λ]](transformDef, transformVal)

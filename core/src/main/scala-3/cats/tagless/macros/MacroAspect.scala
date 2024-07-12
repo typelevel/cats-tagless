@@ -87,11 +87,9 @@ object MacroAspect:
       }
 
     def weave[T: Type](
-        methodName: String,
         domain: Expr[List[List[Aspect.Advice[Eval, Dom]]]],
-        body: Term
+        codomain: Expr[Aspect.Advice.Aux[F, Cod, T]]
     ): Expr[Aspect.Weave[F, Dom, Cod, T]] =
-      val codomain = codomainAdvice[T](methodName, body)
       '{
         Aspect.Weave[F, Dom, Cod, T](
           algebraName = ${ Expr(algebraName) },
@@ -114,11 +112,13 @@ object MacroAspect:
           val domain = Expr.ofList(paramss.map(clause => Expr.ofList(clause.params.map(paramAdvice))))
 
           val resultType = tpe.typeArgs.lastOption
-          resultType.map(_.asType) match
+          val newBody = resultType.map(_.asType) match
             case Some('[t]) =>
-              weave[t](methodName, domain, body).asTerm.changeOwner(sym)
+              weave[t](domain, codomainAdvice[t](methodName, body))
 
             case _ =>
               report.errorAndAbort(s"Expected method ${sym.name} to return $F[?] but found ${tpe.show}")
+
+          newBody.asTerm.changeOwner(sym)
       }
     )

@@ -50,3 +50,4 @@ object Derive:
     */
   inline def readerT[Alg[_[_]], F[_]]: Alg[[X] =>> ReaderT[F, Alg[F], X]] = MacroReaderT.derive
   inline def instrument[Alg[_[_]]]: Instrument[Alg] = MacroInstrument.derive
+  inline def aspect[Alg[_[_]], Dom[_], Cod[_]]: Aspect[Alg, Dom, Cod] = MacroAspect.derive

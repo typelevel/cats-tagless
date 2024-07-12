@@ -167,12 +167,19 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
     def isRepeated: Boolean =
       tpe.typeSymbol == defn.RepeatedParamClass
 
+    def isByName: Boolean = tpe match
+      case ByNameType(_) => true
+      case _ => false
+
     def bounds: TypeBounds = tpe match
       case bounds: TypeBounds => bounds
       case tpe => TypeBounds(tpe, tpe)
 
     def widenParam: TypeRepr =
       if tpe.isRepeated then tpe.typeArgs.head else tpe.widenByName
+
+    def widenParamSeq: TypeRepr =
+      if tpe.isRepeated then TypeRepr.of[Seq].appliedTo(tpe.typeArgs.head) else tpe.widenByName
 
     def summon: Term = Implicits.search(tpe) match
       case success: ImplicitSearchSuccess => success.tree
@@ -217,13 +224,5 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
 
       val newCls = New(TypeIdent(cls)).select(cls.primaryConstructor).appliedToNone
       Block(ClassDef(cls, parents, members) :: Nil, newCls).asExprOf[T]
-
-  extension (valDef: ValDef)
-    def isByName: Boolean =
-      (valDef.tpt, valDef.tpt.tpe) match
-        case (ByName(_), ByNameType(_)) => true
-        case (ByName(_), _) => true
-        case (_, ByNameType(_)) => true
-        case _ => false
 
 end DeriveMacros

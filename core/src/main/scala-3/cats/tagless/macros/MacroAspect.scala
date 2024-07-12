@@ -35,7 +35,6 @@ object MacroAspect:
 
       def mapK[F[_], G[_]](alg: Alg[F])(fk: F ~> G): Alg[G] =
         ${ MacroFunctorK.deriveMapK('{ alg }, '{ fk }) }
-
   }
 
   private[macros] def deriveWeave[Alg[_[_]]: Type, Dom[_]: Type, Cod[_]: Type, F[_]: Type](alg: Expr[Alg[F]])(using
@@ -44,81 +43,32 @@ object MacroAspect:
     import quotes.reflect.*
     given DeriveMacros[q.type] = new DeriveMacros
 
-    val Alg = TypeRepr.of[Alg]
-    val F = TypeRepr.of[F]
     val WeaveF = TypeRepr.of[Aspect.Weave[F, Dom, Cod, ?]]
-
-    val algebraName = Alg.typeSymbol.name
+    val algebraName = Expr(TypeRepr.of[Alg].typeSymbol.name)
 
     def paramAdvice(param: ValDef): Expr[Aspect.Advice[Eval, Dom]] =
-      val isRepeated = param.tpt.tpe.isRepeated
-      val isByName = param.isByName
-      val paramValue = Ref(param.symbol)
-
-      param.tpt.tpe.widenParam.asType match
-        case '[t] if isByName =>
-          '{
-            Aspect.Advice.byName[Dom, t](
-              name = ${ Expr(param.name) },
-              thunk = ${ paramValue.asExprOf[t] }
-            )(using summonInline)
-          }
-        case '[t] if isRepeated =>
-          '{
-            Aspect.Advice.byValue[Dom, List[t]](
-              name = ${ Expr(param.name) },
-              value = ${ paramValue.asExprOf[Seq[t]] }.toList
-            )(using summonInline)
-          }
+      val tpe = param.tpt.tpe
+      tpe.widenParamSeq.asType match
         case '[t] =>
-          '{
-            Aspect.Advice.byValue[Dom, t](
-              name = ${ Expr(param.name) },
-              value = ${ paramValue.asExprOf[t] }
-            )(using summonInline)
-          }
-
-    def codomainAdvice[T: Type](methodName: String, body: Term): Expr[Aspect.Advice.Aux[F, Cod, T]] =
-      '{
-        Aspect.Advice[F, Cod, T](
-          adviceName = ${ Expr(methodName) },
-          adviceTarget = ${ body.asExprOf[F[T]] }
-        )(using summonInline)
-      }
-
-    def weave[T: Type](
-        domain: Expr[List[List[Aspect.Advice[Eval, Dom]]]],
-        codomain: Expr[Aspect.Advice.Aux[F, Cod, T]]
-    ): Expr[Aspect.Weave[F, Dom, Cod, T]] =
-      '{
-        Aspect.Weave[F, Dom, Cod, T](
-          algebraName = ${ Expr(algebraName) },
-          domain = $domain,
-          codomain = $codomain
-        )
-      }
+          val name = Expr(param.name)
+          val value = Ref(param.symbol).asExprOf[t]
+          if tpe.isByName then '{ Aspect.Advice.byName[Dom, t]($name, $value)(summonInline) }
+          else '{ Aspect.Advice.byValue[Dom, t]($name, $value)(summonInline) }
 
     alg.transformTo[Alg[[X] =>> Aspect.Weave[F, Dom, Cod, X]]](
       body = {
         case (sym, tpe, body) if tpe <:< WeaveF =>
-          val methodName = sym.name
-
           val paramss = sym.tree match
             case method: DefDef =>
-              // TODO should erased clauses be ignored here as well?
-              method.termParamss.filter(clause => !(clause.isImplicit || clause.isGiven || clause.isErased))
-            case _ => List.empty
-
-          val domain = Expr.ofList(paramss.map(clause => Expr.ofList(clause.params.map(paramAdvice))))
-
-          val resultType = tpe.typeArgs.lastOption
-          val newBody = resultType.map(_.asType) match
-            case Some('[t]) =>
-              weave[t](domain, codomainAdvice[t](methodName, body))
-
+              method.termParamss.filterNot(clause => clause.isImplicit || clause.isGiven || clause.isErased)
             case _ =>
-              report.errorAndAbort(s"Expected method ${sym.name} to return $F[?] but found ${tpe.show}")
+              Nil
 
-          newBody.asTerm.changeOwner(sym)
+          tpe.typeArgs.last.asType match
+            case '[t] =>
+              val methodName = Expr(sym.name)
+              val domain = Expr.ofList(paramss.map(clause => Expr.ofList(clause.params.map(paramAdvice))))
+              val codomain = '{ Aspect.Advice[F, Cod, t]($methodName, ${ body.asExprOf[F[t]] })(summonInline) }
+              '{ Aspect.Weave[F, Dom, Cod, t]($algebraName, $domain, $codomain) }.asTerm
       }
     )

@@ -1,3 +1,5 @@
+import com.typesafe.tools.mima.core._
+
 addCommandAlias("validateJVM", "all scalafmtCheckAll scalafmtSbtCheck testsJVM/test")
 addCommandAlias("validateJS", "all testsJS/test")
 addCommandAlias("validateNative", "all testsNative/test")
@@ -238,7 +240,11 @@ lazy val macroSettings = List[Def.Setting[?]](
 lazy val mimaSettings = List[Def.Setting[?]](
   tlVersionIntroduced := Map("3" -> "0.15.0"),
   tlMimaPreviousVersions += "0.15.0",
-  tlMimaPreviousVersions ++= when(scalaBinaryVersion.value.startsWith("2"))("0.14.0", "0.13.0").toSet
+  tlMimaPreviousVersions ++= when(scalaBinaryVersion.value.startsWith("2"))("0.14.0", "0.13.0").toSet,
+  mimaBinaryIssueFilters ++= Seq(
+    ProblemFilters.exclude[MissingClassProblem]("cats.tagless.FunctionKLift"),
+    ProblemFilters.exclude[MissingClassProblem]("cats.tagless.FunctionKLift$")
+  )
 )
 
 def when[A](condition: Boolean)(values: A*): Seq[A] =

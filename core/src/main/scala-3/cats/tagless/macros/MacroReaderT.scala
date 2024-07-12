@@ -51,13 +51,17 @@ object MacroReaderT:
               yield argTransformer(af).transformArg(method.symbol, paramAndArg)
           )
         case _ =>
-          method.rhs
+          report.errorAndAbort(
+            s"Expected method ${method.name} to return ${RT.show} but found ${method.returnTpt.tpe.show}"
+          )
 
     def transformVal(value: ValDef): Option[Term] =
       value.tpt.tpe.asType match
         case '[ReaderT[F, Alg[F], t]] =>
           Some(readerT[t](value.symbol)(_.select(value.symbol)))
         case _ =>
-          value.rhs
+          report.errorAndAbort(
+            s"Expected value ${value.name} to be of type ${RT.show} but found ${value.tpt.tpe.show}"
+          )
 
     Symbol.newClassOf[Alg[[X] =>> ReaderT[F, Alg[F], X]]](transformDef, transformVal)

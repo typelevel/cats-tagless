@@ -59,7 +59,7 @@ class autoFunctorKTests extends CatsTaglessTestSuite:
   }
 
   test("simple instance summon with autoDeriveFromFunctorK on") {
-    given SafeAlg[List] = Interpreters.tryInterpreter.mapK(FunctionKLift[Try, List](_.toList))
+    given SafeAlg[List] = Interpreters.tryInterpreter.mapK(FunctionK.liftFunction[Try, List](_.toList))
     assertEquals(summon[SafeAlg[List]].parseInt("3"), List(3))
   }
 
@@ -132,7 +132,7 @@ class autoFunctorKTests extends CatsTaglessTestSuite:
     val incTry: Increment[Try] = new Increment[Try]:
       def plusOne(i: Int) = Try(i + 1)
 
-    val incFree = incTry.mapK(FunctionKLift[Try, Free[Try, *]](t => Free.liftF(t)))
+    val incFree = incTry.mapK(FunctionK.liftFunction[Try, Free[Try, *]](t => Free.liftF(t)))
 
     def a(i: Int): Free[Try, Int] = for
       j <- incFree.plusOne(i)
@@ -227,12 +227,12 @@ class autoFunctorKTests extends CatsTaglessTestSuite:
 
   test("builder-style algebra") {
     val listBuilder: BuilderAlgebra[List] = BuilderAlgebra.Named("foo")
-    val optionBuilder = listBuilder.mapK[Option](FunctionKLift[List, Option](_.headOption))
+    val optionBuilder = listBuilder.mapK[Option](FunctionK.liftFunction[List, Option](_.headOption))
     assertEquals(optionBuilder.withFoo("bar").unit, Some(()))
   }
 
 object autoFunctorKTests:
-  implicit val fk: Try ~> Option = FunctionKLift[Try, Option](_.toOption)
+  implicit val fk: Try ~> Option = FunctionK.liftFunction[Try, Option](_.toOption)
 
   trait AlgWithNonEffectMethod[F[_]] derives FunctorK:
     def a(i: Int): F[Int]

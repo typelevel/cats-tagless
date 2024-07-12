@@ -19,6 +19,7 @@ package laws
 package discipline
 
 import cats.Eq
+import cats.arrow.FunctionK
 import cats.data.Tuple2K
 import cats.tagless.laws.discipline.SemigroupalKTests.IsomorphismsK
 import org.scalacheck.Prop.*
@@ -67,16 +68,18 @@ object SemigroupalKTests {
             fs: (F[ProdA_BC[A, B, C]#λ], F[ProdAB_C[A, B, C]#λ])
         )(implicit EqFGH: Eq[F[Tuple3K[A, B, C]#λ]]): Prop = {
 
-          val fkA_BC_T3 = FunctionKLift[ProdA_BC[A, B, C]#λ, Tuple3K[A, B, C]#λ] { case Tuple2K(a, Tuple2K(b, c)) =>
-            (a, b, c)
+          val fkA_BC_T3 = FunctionK.liftFunction[ProdA_BC[A, B, C]#λ, Tuple3K[A, B, C]#λ] {
+            case Tuple2K(a, Tuple2K(b, c)) =>
+              (a, b, c)
           }
-          val fkAB_C_T3 = FunctionKLift[ProdAB_C[A, B, C]#λ, Tuple3K[A, B, C]#λ] { case Tuple2K(Tuple2K(a, b), c) =>
-            (a, b, c)
+          val fkAB_C_T3 = FunctionK.liftFunction[ProdAB_C[A, B, C]#λ, Tuple3K[A, B, C]#λ] {
+            case Tuple2K(Tuple2K(a, b), c) =>
+              (a, b, c)
           }
-          val fkT3_AB_C = FunctionKLift[Tuple3K[A, B, C]#λ, ProdAB_C[A, B, C]#λ] { case (a, b, c) =>
+          val fkT3_AB_C = FunctionK.liftFunction[Tuple3K[A, B, C]#λ, ProdAB_C[A, B, C]#λ] { case (a, b, c) =>
             Tuple2K(Tuple2K(a, b), c)
           }
-          val fkT3_A_BC = FunctionKLift[Tuple3K[A, B, C]#λ, ProdA_BC[A, B, C]#λ] { case (a, b, c) =>
+          val fkT3_A_BC = FunctionK.liftFunction[Tuple3K[A, B, C]#λ, ProdA_BC[A, B, C]#λ] { case (a, b, c) =>
             Tuple2K(a, Tuple2K(b, c))
           }
 

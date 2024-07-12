@@ -18,6 +18,7 @@ package cats.tagless
 package tests.simple
 
 import cats.Id
+import cats.arrow.FunctionK
 import cats.tagless.syntax.all.*
 import cats.tagless.tests.experimental
 
@@ -31,7 +32,7 @@ class FunctorKSpec extends munit.FunSuite with Fixtures {
 
   test("FunctorK should be a valid instance for a simple algebra") {
     val functorK = Derive.functorK[SimpleService]
-    val optionalInstance = functorK.mapK(instance)(FunctionKLift[Id, Option](Option.apply))
+    val optionalInstance = functorK.mapK(instance)(FunctionK.liftFunction[Id, Option](Option.apply))
 
     assertEquals(optionalInstance.id(), Some(instance.id()))
     assertEquals(optionalInstance.list(0), Some(instance.list(0)))
@@ -45,7 +46,7 @@ class FunctorKSpec extends munit.FunSuite with Fixtures {
   }
 
   test("FunctorK derives syntax") {
-    val optionalInstance = instance.mapK(FunctionKLift[Id, Option](Option.apply))
+    val optionalInstance = instance.mapK(FunctionK.liftFunction[Id, Option](Option.apply))
 
     assertEquals(optionalInstance.id(), Some(instance.id()))
     assertEquals(optionalInstance.list(0), Some(instance.list(0)))

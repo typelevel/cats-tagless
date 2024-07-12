@@ -18,6 +18,7 @@ package cats.tagless
 package tests.simple
 
 import cats.Id
+import cats.arrow.FunctionK
 import cats.tagless.syntax.all.*
 import cats.tagless.tests.experimental
 
@@ -33,7 +34,7 @@ class ContravariantKSpec extends munit.FunSuite with Fixtures {
   test("DeriveMacro should derive instance for a simple algebra #2") {
     def contravariantK = Derive.contravariantK[SimpleServiceC]
 
-    val fk = FunctionKLift[Option, Id](_.get)
+    val fk = FunctionK.liftFunction[Option, Id](_.get)
     val optionalInstance = contravariantK.contramapK(instancec)(fk)
     val f: (Int, String) => Int = (i, s) => i + s.toInt
 
@@ -47,7 +48,7 @@ class ContravariantKSpec extends munit.FunSuite with Fixtures {
   }
 
   test("ContravariantK derives syntax") {
-    val fk = FunctionKLift[Option, Id](_.get)
+    val fk = FunctionK.liftFunction[Option, Id](_.get)
     val optionalInstance = instancec.contramapK(fk)
     val f: (Int, String) => Int = (i, s) => i + s.toInt
 

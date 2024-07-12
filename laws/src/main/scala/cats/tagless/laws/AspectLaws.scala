@@ -16,7 +16,7 @@
 
 package cats.tagless.laws
 
-import cats.tagless.FunctionKLift
+import cats.arrow.FunctionK
 import cats.laws.*
 import cats.tagless.aop.{Aspect, Instrumentation}
 
@@ -24,7 +24,7 @@ trait AspectLaws[F[_[_]], Dom[_], Cod[_]] extends InstrumentLaws[F] {
   implicit def F: Aspect[F, Dom, Cod]
 
   def weavePreservingSemantics[A[_]](fa: F[A]): IsEq[F[A]] =
-    F.mapK(F.weave(fa))(FunctionKLift[Aspect.Weave[A, Dom, Cod, *], A](_.codomain.target)) <-> fa
+    F.mapK(F.weave(fa))(FunctionK.liftFunction[Aspect.Weave[A, Dom, Cod, *], A](_.codomain.target)) <-> fa
 
   def weaveInstrumentConsistency[A[_]](fa: F[A]): IsEq[F[Instrumentation[A, *]]] =
     F.mapK(F.weave(fa))(Aspect.Weave.instrumentationK) <-> F.instrument(fa)

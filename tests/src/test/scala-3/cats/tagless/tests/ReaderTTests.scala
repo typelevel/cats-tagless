@@ -49,12 +49,12 @@ class ReaderTTests extends CatsTaglessTestSuite:
 
   // The same approach could be used for Future ~> IO
   test("Try ~> SyncIO"):
-    def provide[R](service: R) = FunctionKLift[[X] =>> ReaderT[Try, R, X], SyncIO](r => () => r(service))
-    def require[R] = FunctionKLift[SyncIO, [X] =>> ReaderT[Try, R, X]](io => ReaderT(_ => io()))
+    def provide[R](service: R) = FunctionK.liftFunction[[X] =>> ReaderT[Try, R, X], SyncIO](r => () => r(service))
+    def require[R] = FunctionK.liftFunction[SyncIO, [X] =>> ReaderT[Try, R, X]](io => ReaderT(_ => io()))
 
     var successful, failed = 0
     // Make the dependency side-effecting
-    val sideEffecting = dependency.imapK(FunctionKLift[Try, Try]:
+    val sideEffecting = dependency.imapK(FunctionK.liftFunction[Try, Try]:
       case success @ Success(_) => successful += 1; success
       case failure @ Failure(_) => failed += 1; failure
     )(FunctionK.id)
@@ -76,7 +76,7 @@ class ReaderTTests extends CatsTaglessTestSuite:
   // The same approach could be used for accessing a service in a Ref
   test("Try ~> Try"):
     def provide[G[_]: FlatMap, A](service: G[A]) =
-      FunctionKLift[([X] =>> ReaderT[G, A, X]), G](r => service.flatMap(r.run))
+      FunctionK.liftFunction[([X] =>> ReaderT[G, A, X]), G](r => service.flatMap(r.run))
 
     val alg = spaceAlg.imapK(provide(Success(dependency)))(ReaderT.liftK)
     assertEquals(alg.blackHole(eventHorizon), eventHorizon)

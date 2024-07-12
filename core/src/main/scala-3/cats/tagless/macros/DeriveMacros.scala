@@ -90,9 +90,6 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
         body: Transform = PartialFunction.empty
     ): Expr[A] =
       val term = expr.asTerm
-      val name = Symbol.freshName("$anon")
-      val parents = List(TypeTree.of[Object], TypeTree.of[A])
-      val cls = Symbol.newClass(Symbol.spliceOwner, name, parents.map(_.tpe), _.overridableMembers, None)
 
       def transformDef(method: DefDef)(argss: List[List[Tree]]): Option[Term] =
         val sym = method.symbol
@@ -107,16 +104,7 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
         val delegate = term.select(sym)
         Some(body.applyOrElse((sym, value.tpt.tpe, delegate), _ => delegate))
 
-      val members = cls.declarations
-        .filterNot(_.isClassConstructor)
-        .map: sym =>
-          sym.tree match
-            case method: DefDef => DefDef(sym, transformDef(method))
-            case value: ValDef => ValDef(sym, transformVal(value))
-            case _ => report.errorAndAbort(s"Not supported: $sym in ${sym.owner}")
-
-      val newCls = New(TypeIdent(cls)).select(cls.primaryConstructor).appliedToNone
-      Block(ClassDef(cls, parents, members) :: Nil, newCls).asExprOf[A]
+      Symbol.newClassOf[A](transformDef, transformVal)
 
   extension (exprs: Seq[Expr[?]])
     def combineTo[A: Type](
@@ -124,9 +112,6 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
         body: Combine = PartialFunction.empty
     ): Expr[A] =
       val terms = exprs.map(_.asTerm)
-      val name = Symbol.freshName("$anon")
-      val parents = List(TypeTree.of[Object], TypeTree.of[A])
-      val cls = Symbol.newClass(Symbol.spliceOwner, name, parents.map(_.tpe), _.overridableMembers, None)
 
       def combineDef(method: DefDef)(argss: List[List[Tree]]): Option[Term] =
         val sym = method.symbol
@@ -144,16 +129,7 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
         val delegates = terms.map(_.select(sym))
         Some(body.applyOrElse((sym, value.tpt.tpe, delegates), _ => delegates.head))
 
-      val members = cls.declarations
-        .filterNot(_.isClassConstructor)
-        .map: sym =>
-          sym.tree match
-            case method: DefDef => DefDef(sym, combineDef(method))
-            case value: ValDef => ValDef(sym, combineVal(value))
-            case _ => report.errorAndAbort(s"Not supported: $sym in ${sym.owner}")
-
-      val newCls = New(TypeIdent(cls)).select(cls.primaryConstructor).appliedToNone
-      Block(ClassDef(cls, parents, members) :: Nil, newCls).asExprOf[A]
+      Symbol.newClassOf[A](combineDef, combineVal)
 
   extension (sym: Symbol)
     def privateIn: Symbol =
@@ -221,5 +197,25 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
       Implicits.search(TypeRepr.of[T].appliedTo(tpe)) match
         case success: ImplicitSearchSuccess => Some(success.tree)
         case _ => None
+
+  extension (symbol: SymbolModule)
+    def newClassOf[T: Type](
+        transformDef: DefDef => List[List[Tree]] => Option[Term],
+        transformVal: ValDef => Option[Term]
+    ): Expr[T] =
+      val name = symbol.freshName("$anon")
+      val parents = List(TypeTree.of[Object], TypeTree.of[T])
+      val cls = symbol.newClass(symbol.spliceOwner, name, parents.map(_.tpe), _.overridableMembers, None)
+
+      val members = cls.declarations
+        .filterNot(_.isClassConstructor)
+        .map: member =>
+          member.tree match
+            case method: DefDef => DefDef(member, transformDef(method))
+            case value: ValDef => ValDef(member, transformVal(value))
+            case _ => report.errorAndAbort(s"Not supported: $member in ${member.owner}")
+
+      val newCls = New(TypeIdent(cls)).select(cls.primaryConstructor).appliedToNone
+      Block(ClassDef(cls, parents, members) :: Nil, newCls).asExprOf[T]
 
 end DeriveMacros

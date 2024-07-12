@@ -14,28 +14,22 @@
  * limitations under the License.
  */
 
-package cats.tagless.tests
+package cats.tagless.macros
 
-import cats.tagless.Derive
+import cats.tagless.*
 
-class ConstTests extends CatsTaglessTestSuite {
+import scala.annotation.experimental
+import scala.quoted.*
 
-  test("const(42)") {
-    val safe = Derive.const[SafeAlg, Int](42)
-    assertEquals(safe.divide(1, 2), 42)
-    assertEquals(safe.parseInt("NaN"), 42)
-  }
+@experimental
+object MacroConst:
+  inline def derive[Alg[_[_]], A](const: A): Alg[Const[A]#λ] = ${ deriveConst[Alg, A]('const) }
 
-  test("void") {
-    val store = Derive.void[KVStore]
-    assertEquals(store.get("tea"), ())
-    assertEquals(store.put("tea", "mint"), ())
-  }
+  private[macros] def deriveConst[Alg[_[_]]: Type, A: Type](const: Expr[A])(using q: Quotes): Expr[Alg[Const[A]#λ]] =
+    import quotes.reflect.*
+    given DeriveMacros[q.type] = new DeriveMacros
 
-  test("side effects") {
-    val it = (1 to 5).iterator
-    val safe = Derive.const[SafeAlg, Int](it.next())
-    assertEquals(safe.divide(1, 2), 1)
-    assertEquals(safe.parseInt("NaN"), 1)
-  }
-}
+    Symbol.newClassOf[Alg[Const[A]#λ]](
+      transformDef = _ => _ => Some(const.asTerm),
+      transformVal = _ => Some(const.asTerm)
+    )

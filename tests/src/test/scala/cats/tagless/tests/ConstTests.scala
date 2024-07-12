@@ -39,4 +39,12 @@ class ConstTests extends CatsTaglessTestSuite {
     assertEquals(safe.divide(1, 2), 1)
     assertEquals(safe.parseInt("NaN"), 1)
   }
+
+  test("readable macro error") {
+    assert(compileErrors("Derive.const[UnSafeAlg, Int](42)").contains("Expected method str to return"))
+  }
+
+  trait UnSafeAlg[F[_]] extends SafeAlg[F] {
+    def str(s: String): String
+  }
 }

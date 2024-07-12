@@ -88,6 +88,13 @@ class ReaderTTests extends CatsTaglessTestSuite:
     assertEquals(failingAlg.distance(milkyWay, andromeda), eventHorizon)
     assertEquals(failingAlg.collision(Success(milkyWay), Success(andromeda)), eventHorizon)
 
+  test("readable macro error"):
+    assert(
+      compileErrors("Derive.readerT[BrokenSpaceAlg, Try]").contains(
+        "Expected method deathStar to return cats.data.Kleisli"
+      )
+    )
+
 @experimental
 object ReaderTTests:
   final case class Galaxy(name: String)
@@ -102,3 +109,6 @@ object ReaderTTests:
     def blackHole[A](anything: F[A]): F[Unit]
     def distance(x: Galaxy, y: Galaxy): F[Double]
     def collision(x: F[Galaxy], y: F[Galaxy]): F[Galaxy]
+
+  trait BrokenSpaceAlg[F[_]] extends SpaceAlg[F]:
+    def deathStar: String

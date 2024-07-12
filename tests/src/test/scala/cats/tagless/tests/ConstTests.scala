@@ -41,10 +41,10 @@ class ConstTests extends CatsTaglessTestSuite {
   }
 
   test("readable macro error") {
-    assert(compileErrors("Derive.const[NotSimpleAlg, Int](42)").contains("Expected method str to return"))
+    assert(compileErrors("Derive.const[UnSafeAlg, Int](42)").contains("Expected method str to return"))
   }
 
-  trait NotSimpleAlg[F[_]] extends SafeAlg[F] {
+  trait UnSafeAlg[F[_]] extends SafeAlg[F] {
     def str(s: String): String
   }
 }

@@ -217,7 +217,7 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
 
       val newCls = New(TypeIdent(cls)).select(cls.primaryConstructor).appliedToNone
       Block(ClassDef(cls, parents, members) :: Nil, newCls).asExprOf[T]
-  
+
   extension (valDef: ValDef)
     def isByName: Boolean =
       (valDef.tpt, valDef.tpt.tpe) match

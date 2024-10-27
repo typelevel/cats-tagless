@@ -52,15 +52,15 @@ object MacroAspect:
         case '[t] =>
           val name = Expr(param.name)
           val value = Ref(param.symbol).asExprOf[t]
-          if tpe.isByName then '{ Aspect.Advice.byName[Dom, t]($name, $value)(summonInline) }
-          else '{ Aspect.Advice.byValue[Dom, t]($name, $value)(summonInline) }
+          if tpe.isByName then '{ Aspect.Advice.byName[Dom, t]($name, $value)(using summonInline) }
+          else '{ Aspect.Advice.byValue[Dom, t]($name, $value)(using summonInline) }
 
     alg.transformTo[Alg[[X] =>> Aspect.Weave[F, Dom, Cod, X]]](
       body = {
         case (sym, tpe, body) if tpe <:< WeaveF =>
           val paramss = sym.tree match
             case method: DefDef =>
-              method.termParamss.filterNot(clause => clause.isImplicit || clause.isGiven || clause.isErased)
+              method.termParamss.filterNot(clause => clause.isImplicit || clause.isGiven)
             case _ =>
               Nil
 
@@ -68,7 +68,7 @@ object MacroAspect:
             case '[t] =>
               val methodName = Expr(sym.name)
               val domain = Expr.ofList(paramss.map(clause => Expr.ofList(clause.params.map(paramAdvice))))
-              val codomain = '{ Aspect.Advice[F, Cod, t]($methodName, ${ body.asExprOf[F[t]] })(summonInline) }
+              val codomain = '{ Aspect.Advice[F, Cod, t]($methodName, ${ body.asExprOf[F[t]] })(using summonInline) }
               '{ Aspect.Weave[F, Dom, Cod, t]($algebraName, $domain, $codomain) }.asTerm
       }
     )

@@ -26,10 +26,8 @@ import cats.syntax.all.*
 import io.circe.syntax.*
 import io.circe.{Decoder, Encoder, Json, JsonObject}
 
-import scala.annotation.experimental
 import scala.util.Try
 
-@experimental
 class AspectTests extends CatsTaglessTestSuite:
   import AspectTests.*
 
@@ -113,7 +111,6 @@ class AspectTests extends CatsTaglessTestSuite:
     )
   }
 
-@experimental
 object AspectTests:
   type Location = (Double, Double)
   implicit val showSafeAlg: Aspect.Function[SafeAlg, Show] = Derive.aspect

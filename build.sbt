@@ -8,7 +8,7 @@ addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 
 val Scala212 = "2.12.21"
 val Scala213 = "2.13.18"
-val Scala3 = "3.3.7"
+val Scala3 = "3.6.3"
 
 val gitRepo = "git@github.com:typelevel/cats-tagless.git"
 val homePage = "https://typelevel.org/cats-tagless"
@@ -160,7 +160,7 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .settings(rootSettings, macroSettings)
   .settings(
     moduleName := "cats-tagless-tests",
-    scalacOptions ++= when(tlIsScala3.value)("-Xcheck-macros"),
+    scalacOptions ++= when(tlIsScala3.value)("-experimental", "-Xcheck-macros"),
     libraryDependencies ++= List(
       "org.typelevel" %%% "cats-free" % catsVersion,
       "org.typelevel" %%% "cats-testkit" % catsVersion,

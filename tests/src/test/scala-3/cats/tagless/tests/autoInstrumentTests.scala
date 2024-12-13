@@ -24,9 +24,6 @@ import cats.laws.discipline.SerializableTests
 import cats.tagless.syntax.all.*
 import scala.util.Try
 
-import scala.annotation.experimental
-
-@experimental
 class autoInstrumentTests extends CatsTaglessTestSuite:
   import autoInstrumentTests.*
 

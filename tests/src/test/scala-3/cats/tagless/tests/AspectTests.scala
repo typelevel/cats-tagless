@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package cats.tagless
-package tests
+package cats.tagless.tests
 
 import cats.arrow.FunctionK
 import cats.kernel.laws.discipline.SerializableTests
+import cats.tagless.{Derive, Void, Trivial}
 import cats.tagless.aop.Aspect
 import cats.tagless.laws.discipline
 import cats.Show

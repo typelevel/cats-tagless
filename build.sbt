@@ -243,7 +243,9 @@ lazy val mimaSettings = List[Def.Setting[?]](
   tlMimaPreviousVersions ++= when(scalaBinaryVersion.value.startsWith("2"))("0.14.0", "0.13.0").toSet,
   mimaBinaryIssueFilters ++= Seq(
     ProblemFilters.exclude[MissingClassProblem]("cats.tagless.FunctionKLift"),
-    ProblemFilters.exclude[MissingClassProblem]("cats.tagless.FunctionKLift$")
+    ProblemFilters.exclude[MissingClassProblem]("cats.tagless.FunctionKLift$"),
+    // This private val, not sure why MiMa complains.
+    ProblemFilters.exclude[DirectMissingMethodProblem]("cats.tagless.package.idKInstance")
   )
 )
 

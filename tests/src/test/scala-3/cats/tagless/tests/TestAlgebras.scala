@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-package cats.tagless
-package tests
+package cats.tagless.tests
 
 import cats.tagless.aop.Instrument
 import cats.data.{EitherT, Kleisli, State, Tuple2K}
@@ -24,6 +23,7 @@ import cats.laws.discipline.arbitrary.*
 import cats.laws.discipline.eq.*
 import cats.syntax.all.*
 import cats.{Eq, Eval, Monoid, ~>}
+import cats.tagless.{ApplyK, FunctorK, InvariantK, SemigroupalK}
 import org.scalacheck.{Arbitrary, Cogen}
 
 import scala.annotation.experimental

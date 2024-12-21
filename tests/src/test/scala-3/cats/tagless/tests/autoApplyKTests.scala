@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package cats.tagless
-package tests
+package cats.tagless.tests
 
 import cats.Eq
 import cats.data.EitherT
 import cats.laws.discipline.SerializableTests
 import cats.laws.discipline.arbitrary.*
 import cats.laws.discipline.eq.*
+import cats.tagless.ApplyK
 import cats.tagless.laws.discipline.ApplyKTests
 import org.scalacheck.Arbitrary
 

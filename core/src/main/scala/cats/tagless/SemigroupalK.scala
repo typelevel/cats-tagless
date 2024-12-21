@@ -37,6 +37,9 @@ object SemigroupalK extends SemigroupalKInstances with DerivedSemigroupalK {
   def firstK[F[_], G[_]]: Tuple2K[F, G, *] ~> F = _1k.asInstanceOf[Tuple2K[F, G, *] ~> F]
   def secondK[F[_], G[_]]: Tuple2K[F, G, *] ~> G = _2k.asInstanceOf[Tuple2K[F, G, *] ~> G]
 
+  implicit def catsTaglessSemigroupalKForIdK[A]: SemigroupalK[IdK[A]#λ] =
+    InvariantK.catsTaglessApplyKForIdK[A]
+
   implicit def catsTaglessSemigroupalKForEitherK[F[_], A]: SemigroupalK[Curried.EitherKRight[F, A]#λ] =
     InvariantK.catsTaglessApplyKForEitherK[F, A]
 

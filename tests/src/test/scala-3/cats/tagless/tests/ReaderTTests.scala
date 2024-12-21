@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package cats.tagless
-package tests
+package cats.tagless.tests
 
 import cats.arrow.FunctionK
 import cats.data.ReaderT
 import cats.FlatMap
+import cats.tagless.{Derive, InvariantK}
 
 import scala.util.{Failure, Success, Try}
 import scala.annotation.experimental

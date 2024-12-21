@@ -29,6 +29,9 @@ trait InvariantK[Alg[_[_]]] extends Serializable {
 }
 
 object InvariantK extends InvariantKInstances01 with DerivedInvariantK {
+  implicit def catsTaglessApplyKForIdK[A]: ApplyK[IdK[A]#λ] =
+    idKInstance.asInstanceOf[ApplyK[IdK[A]#λ]]
+
   implicit def catsTaglessApplyKForEitherK[F[_], A]: ApplyK[Curried.EitherKRight[F, A]#λ] =
     eitherKInstance.asInstanceOf[ApplyK[Curried.EitherKRight[F, A]#λ]]
 
@@ -97,6 +100,11 @@ object InvariantK extends InvariantKInstances01 with DerivedInvariantK {
       override def contramapK[F[_], G[_]](af: UnorderedFoldable[F])(gf: G ~> F): UnorderedFoldable[G] =
         new ContraUnorderedFoldable[F, G] { val F = af; val from = gf }
     }
+
+  private val idKInstance: ApplyK[IdK[Any]#λ] = new ApplyK[IdK[Any]#λ] {
+    def mapK[F[_], G[_]](af: F[Any])(fk: F ~> G) = fk(af)
+    def productK[F[_], G[_]](af: F[Any], ag: G[Any]) = Tuple2K(af, ag)
+  }
 
   private val eitherKInstance: ApplyK[Curried.EitherKRight[AnyK, Any]#λ] =
     new ApplyK[Curried.EitherKRight[AnyK, Any]#λ] {

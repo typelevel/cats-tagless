@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package cats.tagless
-package tests
+package cats.tagless.tests
 
 import cats.laws.discipline.SerializableTests
 import cats.laws.discipline.arbitrary.*
+import cats.tagless.SemigroupalK
 import cats.tagless.laws.discipline.SemigroupalKTests
 
 import scala.annotation.experimental

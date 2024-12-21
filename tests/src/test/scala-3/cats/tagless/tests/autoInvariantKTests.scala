@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package cats.tagless
-package tests
+package cats.tagless.tests
 
 import cats.arrow.FunctionK
 import cats.laws.discipline.SerializableTests
 import cats.laws.discipline.arbitrary.*
+import cats.tagless.{AutoDerive, InvariantK}
 import cats.tagless.laws.discipline.InvariantKTests
-import cats.tagless.syntax.all.*
 import cats.~>
 
 import scala.annotation.experimental

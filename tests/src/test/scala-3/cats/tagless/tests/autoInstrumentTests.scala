@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package cats.tagless
-package tests
+package cats.tagless.tests
 
 import cats.Id
+import cats.tagless.Derive
 import cats.tagless.aop.Instrument
 import cats.tagless.laws.discipline.InstrumentTests
 import cats.laws.discipline.SerializableTests
-import cats.tagless.syntax.all.*
 import scala.util.Try
 
 import scala.annotation.experimental

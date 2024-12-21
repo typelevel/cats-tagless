@@ -21,7 +21,7 @@ import cats.data.Cokleisli
 import cats.laws.discipline.SerializableTests
 import cats.laws.discipline.arbitrary.*
 import cats.laws.discipline.eq.*
-import cats.tagless.*
+import cats.tagless.ContravariantK
 import cats.tagless.laws.discipline.ContravariantKTests
 import org.scalacheck.{Arbitrary, Cogen}
 

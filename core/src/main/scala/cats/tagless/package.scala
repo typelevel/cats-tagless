@@ -16,8 +16,6 @@
 
 package cats
 
-import cats.data.Tuple2K
-
 package object tagless {
   type AnyK[A] = Any
   type Void[A] = Unit
@@ -35,11 +33,7 @@ package object tagless {
     type λ[T] = (F[T], G[T], H[T], I[T], J[T], K[T], L[T], M[T], N[T])
   }
 
-  implicit def catsTaglessApplyKForIdK[A]: ApplyK[IdK[A]#λ] =
-    idKInstance.asInstanceOf[ApplyK[IdK[A]#λ]]
-
-  private val idKInstance: ApplyK[IdK[Any]#λ] = new ApplyK[IdK[Any]#λ] {
-    def mapK[F[_], G[_]](af: F[Any])(fk: F ~> G) = fk(af)
-    def productK[F[_], G[_]](af: F[Any], ag: G[Any]) = Tuple2K(af, ag)
-  }
+  @deprecated("Moved to implicit scope", "0.16.3")
+  def catsTaglessApplyKForIdK[A]: ApplyK[IdK[A]#λ] =
+    InvariantK.catsTaglessApplyKForIdK[A]
 }

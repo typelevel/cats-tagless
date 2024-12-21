@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-package cats.tagless
-package tests
+package cats.tagless.tests
 
 import cats.{Contravariant, Eq}
 import cats.laws.discipline.{ContravariantTests, ExhaustiveCheck, SerializableTests}

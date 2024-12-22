@@ -36,17 +36,15 @@ object MacroConst:
         case '[A] =>
           Some(const.asTerm)
         case _ =>
-          report.errorAndAbort(
+          report.errorAndAbort:
             s"Expected method ${method.name} to return ${A.show} but found ${method.returnTpt.tpe.show}"
-          )
 
     def transformVal(value: ValDef): Option[Term] =
       value.tpt.tpe.asType match
         case '[A] =>
           Some(const.asTerm)
         case _ =>
-          report.errorAndAbort(
+          report.errorAndAbort:
             s"Expected value ${value.name} to be of type ${A.show} but found ${value.tpt.tpe.show}"
-          )
 
-    Symbol.newClassOf[Alg[Const[A]#λ]](transformDef, transformVal)
+    None.newClassOf[Alg[Const[A]#λ]](transformDef, transformVal)

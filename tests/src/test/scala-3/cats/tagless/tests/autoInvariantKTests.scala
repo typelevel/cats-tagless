@@ -19,7 +19,7 @@ package cats.tagless.tests
 import cats.arrow.FunctionK
 import cats.laws.discipline.SerializableTests
 import cats.laws.discipline.arbitrary.*
-import cats.tagless.{AutoDerive, InvariantK}
+import cats.tagless.{AutoDerive, Derive, InvariantK}
 import cats.tagless.laws.discipline.InvariantKTests
 import cats.~>
 
@@ -29,103 +29,71 @@ import scala.util.Try
 @experimental
 class autoInvariantKTests extends CatsTaglessTestSuite:
   import autoInvariantKTests.*
+  import autoInvariantKTests.given
 
   checkAll("InvariantK[SafeInvAlg]", InvariantKTests[SafeInvAlg].invariantK[Try, Option, List])
   checkAll("InvariantK[CalculatorAlg]", InvariantKTests[CalculatorAlg].invariantK[Try, Option, List])
   checkAll("InvariantK is Serializable", SerializableTests.serializable(InvariantK[SafeInvAlg]))
 
-  test("Alg with non effect method") {
-    val tryInt = new NoEffectMethod[Try]:
+  test("Alg with non effect method"):
+    object tryAlg extends NoEffectMethod[Try]:
       def a(i: Int): Int = i
 
-    assertEquals(tryInt.imapK(toFk)(otFk).a(2), 2)
-  }
+    assertEquals(tryAlg.imapK(toFk)(otFk).a(2), 2)
 
-  test("Alg with contravariant Eff method") {
-    val tryInt = new ContravariantEff[Try]:
+  test("Alg with contravariant Eff method"):
+    object tryAlg extends ContravariantEff[Try]:
       def a(i: Try[Int], j: String): Int = i.get
       def b(i: Try[Int]): Int = i.get
 
-    val oInt = tryInt.imapK(toFk)(otFk)
-    assertEquals(oInt.a(Option(2), "ignored"), 2)
-    assertEquals(oInt.b(Option(3)), 3)
-  }
+    val optAlg = tryAlg.imapK(toFk)(otFk)
+    assertEquals(optAlg.a(Option(2), "ignored"), 2)
+    assertEquals(optAlg.b(Option(3)), 3)
 
-  test("Alg with Invariant effect method") {
-    val tryInt = new InvariantEff[Try]:
+  test("Alg with Invariant effect method"):
+    object tryAlg extends InvariantEff[Try]:
       def a(i: Try[Int], j: String): Try[Int] = i
 
-    assertEquals(tryInt.imapK(toFk)(otFk).a(Option(2), "ignored"), Some(2))
-  }
+    assertEquals(tryAlg.imapK(toFk)(otFk).a(Option(2), "ignored"), Some(2))
 
-  test("Alg with extra type parameters auto derivation") {
-    object algTry extends WithExtraTpeParam[Try, String]:
+  test("Alg with extra type parameters auto derivation"):
+    object tryAlg extends WithExtraTpeParam[Try, String]:
       def a(i: Try[String]) = i
       def b(i: Try[Int]) = i.map(_.toString)
-    val algOpt = WithExtraTpeParam.invariantK.imapK(algTry)(toFk)(otFk)
-    assertEquals(algOpt.a(Some("5")), Some("5"))
-    assertEquals(algOpt.b(Some(5)), Some("5"))
-  }
 
-  test("Alg with extra type parameters before effect type") {
+    val optAlg = WithExtraTpeParam.invariantK.imapK(tryAlg)(toFk)(otFk)
+    assertEquals(optAlg.a(Some("5")), Some("5"))
+    assertEquals(optAlg.b(Some(5)), Some("5"))
+
+  test("Alg with extra type parameters before effect type"):
     given AlgWithExtraTP2[String, Try] with
       def a(i: Try[Int]) = i.map(_.toString)
+
     import AutoDerive.given
     assertEquals(summon[AlgWithExtraTP2[String, Option]].a(Some(5)), Some("5"))
-  }
 
-  // test("Alg with type member") {
-  //   implicit val tryInt = new AlgWithTypeMember[Try] {
-  //     type T = String
-  //     def a(i: Try[String]): Try[String] = i.map(_ + "a")
-  //   }
+  test("Alg with type member"):
+    object tryAlg extends AlgWithTypeMember[Try]:
+      type T = String
+      def a(i: Try[String]): Try[String] = i.map(_ + "a")
 
-  //   assertEquals(AlgWithTypeMember.imapK(tryInt)(toFk)(otFk).a(Some("4")), Some("4a"))
-  // }
+    val optAlg = AlgWithTypeMember.invariantK.imapK(tryAlg)(toFk)(otFk)
+    assertEquals(optAlg.a(Some("4")), Some("4a"))
 
-  // test("Alg with type member fully refined") {
-  //   implicit val tryInt = new AlgWithTypeMember[Try] {
-  //     type T = String
-  //     def a(i: Try[String]): Try[String] = i.map(_ + "a")
-  //   }
+  test("with default impl"):
+    object tryAlg extends AlgWithDefaultImpl[Try]
+    assertEquals(tryAlg.imapK(toFk)(otFk).const(Option(1)), Some(1))
 
-  //   import AlgWithTypeMember.fullyRefined.*
-  //   import AlgWithTypeMember.fullyRefined.autoDerive.*
-
-  //   val algAux: AlgWithTypeMember.Aux[Option, String] = implicitly
-  //   assertEquals(algAux.a(Some("4")), Some("4a"))
-  // }
-
-  // test("turn off auto derivation") {
-  //   @nowarn("cat=unused")
-  //   implicit object foo extends AlgWithoutAutoDerivation[Try] {
-  //     def a(i: Try[Int]): Try[Int] = i
-  //   }
-
-  //   assertNoDiff(
-  //     compileErrors("AlgWithoutAutoDerivation.autoDerive"),
-  //     """|error: value autoDerive is not a member of object cats.tagless.tests.autoInvariantKTests.AlgWithoutAutoDerivation
-  //        |AlgWithoutAutoDerivation.autoDerive
-  //        |                         ^
-  //        |""".stripMargin
-  //   )
-  // }
-
-  test("with default impl") {
-    implicit object foo extends AlgWithDefaultImpl[Try]
-    assertEquals(foo.imapK(toFk)(otFk).const(Option(1)), Some(1))
-  }
-
-  test("with methods with type param") {
-    implicit object foo extends AlgWithTypeParam[Try]:
+  test("with methods with type param"):
+    object tryAlg extends AlgWithTypeParam[Try]:
       def a[T](i: Try[T]): Try[String] = i.map(_.toString)
-    assertEquals(foo.imapK(toFk)(otFk).a(Option(1)), Some("1"))
-  }
+
+    assertEquals(tryAlg.imapK(toFk)(otFk).a(Option(1)), Some("1"))
 
 @experimental
 object autoInvariantKTests:
-  implicit val toFk: Try ~> Option = FunctionK.liftFunction[Try, Option](_.toOption)
-  implicit val otFk: Option ~> Try = FunctionK.liftFunction[Option, Try](o => Try(o.get))
+  given toFk: (Try ~> Option) = FunctionK.liftFunction[Try, Option](_.toOption)
+  given otFk: (Option ~> Try) = FunctionK.liftFunction[Option, Try](o => Try(o.get))
 
   trait NoEffectMethod[F[_]] derives InvariantK:
     def a(i: Int): Int
@@ -137,17 +105,14 @@ object autoInvariantKTests:
   trait InvariantEff[F[_]] derives InvariantK:
     def a(i: F[Int], j: String): F[Int]
 
-  // TODO: @finalAlg
-  // trait AlgWithTypeMember[F[_]] derives InvariantK:
-  //   type T
-  //   def a(i: F[T]): F[T]
-  //
+  trait AlgWithTypeMember[F[_]]:
+    type T
+    def a(i: F[T]): F[T]
 
-  // object AlgWithTypeMember:
-  //   type Aux[F[_], T0] = AlgWithTypeMember[F] { type T = T0 }
-  //
+  object AlgWithTypeMember:
+    type Aux[F[_], T0] = AlgWithTypeMember[F] { type T = T0 }
+    given invariantK[A]: InvariantK[[F[_]] =>> Aux[F, A]] = Derive.invariantK
 
-  // TODO: @finalAlg
   trait WithExtraTpeParam[F[_], T]:
     def a(i: F[T]): F[T]
     def b(i: F[Int]): F[T]
@@ -155,27 +120,22 @@ object autoInvariantKTests:
   object WithExtraTpeParam:
     given invariantK[T]: InvariantK[[F[_]] =>> WithExtraTpeParam[F, T]] = InvariantK.derived
 
-  // TODO: @finalAlg
   trait AlgWithExtraTP2[T, F[_]] derives InvariantK:
     def a(i: F[Int]): F[T]
 
   trait AlgWithoutAutoDerivation[F[_]] derives InvariantK:
     def a(i: F[Int]): F[Int]
 
-  // @finalAlg
   trait AlgWithDef[F[_]] derives InvariantK:
     def a: F[Int]
     def b(c: F[Int]): F[String]
 
-  // @finalAlg
   trait AlgWithDefaultImpl[F[_]] derives InvariantK:
     def const(i: F[Int]): F[Int] = i
 
-  // @finalAlg
   trait AlgWithTypeParam[F[_]] derives InvariantK:
     def a[T](i: F[T]): F[String]
 
-  // @finalAlg
   trait AlgWithCurryMethod[F[_]] derives InvariantK:
     def a(t: F[Int])(b: String): F[String]
 

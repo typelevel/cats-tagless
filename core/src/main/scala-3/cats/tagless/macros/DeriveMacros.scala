@@ -40,6 +40,26 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
   private val nonOverridableFlags =
     List(Flags.Final, Flags.Artifact, Flags.Synthetic, Flags.Mutable, Flags.Param)
 
+  // TODO: This is a hack - replace with `Symbol.newTypeAlias` on Scala 3.6+
+  private def newTypeAlias(owner: Symbol, name: String, flags: Flags, tpe: TypeRepr, privateIn: Symbol): Symbol =
+    try
+      val ctx = q.getClass.getMethod("ctx").invoke(q)
+      val aliasClass = Class.forName("dotty.tools.dotc.core.Types$TypeAlias")
+      val symbolsClass = Class.forName("dotty.tools.dotc.core.Symbols$")
+      val decoratorsClass = Class.forName("dotty.tools.dotc.core.Decorators$")
+      val alias = aliasClass.getConstructors.head.newInstance(tpe)
+      val symbols = symbolsClass.getDeclaredField("MODULE$").get(null)
+      val decorators = decoratorsClass.getDeclaredField("MODULE$").get(null)
+      val toTypeName = decorators.getClass.getMethods.find(_.getName == "toTypeName").get
+      val newSymbol = symbols.getClass.getMethods.find(_.getName == "newSymbol").get
+      val typeName = toTypeName.invoke(decorators, name)
+      val nestingLevel = ctx.getClass.getMethod("nestingLevel").invoke(ctx)
+      val sym = newSymbol.invoke(symbols, ctx, owner, typeName, flags, alias, privateIn, 0, nestingLevel)
+      sym.asInstanceOf[Symbol]
+    catch
+      case _: Exception =>
+        report.errorAndAbort(s"Not supported: type $name in $owner")
+
   extension (xf: Transform)
     def transformRepeated(method: Symbol, tpe: TypeRepr, arg: Term): Tree =
       val x = Symbol.freshName("x")
@@ -104,7 +124,7 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
         val delegate = term.select(sym)
         Some(body.applyOrElse((sym, value.tpt.tpe, delegate), _ => delegate))
 
-      Symbol.newClassOf[A](transformDef, transformVal)
+      Some(term).newClassOf[A](transformDef, transformVal)
 
   extension (exprs: Seq[Expr[?]])
     def combineTo[A: Type](
@@ -129,7 +149,7 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
         val delegates = terms.map(_.select(sym))
         Some(body.applyOrElse((sym, value.tpt.tpe, delegates), _ => delegates.head))
 
-      Symbol.newClassOf[A](combineDef, combineVal)
+      terms.headOption.newClassOf[A](combineDef, combineVal)
 
   extension (sym: Symbol)
     def privateIn: Symbol =
@@ -138,24 +158,40 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
     def overrideKeeping(flags: Flags*): Flags =
       flags.iterator.filter(sym.flags.is).foldLeft(Flags.Override)(_ | _)
 
-    // TODO: Include type members.
     // TODO: Handle accessibility.
-    def overridableMembers: List[Symbol] = for
-      cls <- This(sym).tpe :: Nil
-      member <- Iterator.concat(sym.methodMembers, sym.fieldMembers, sym.typeMembers)
-      if !member.isNoSymbol
-      if !member.isClassConstructor
-      if !nonOverridableFlags.exists(member.flags.is)
-      if !nonOverridableOwners.contains(member.owner)
-      if !DeriveMacros.defaultRegex.matches(member.name)
-    yield
-      if member.isDefDef then
-        val flags = member.overrideKeeping(Flags.ExtensionMethod, Flags.Infix)
-        Symbol.newMethod(sym, member.name, cls.memberType(member), flags, sym.privateIn)
-      else if member.isValDef then
-        val flags = member.overrideKeeping(Flags.Lazy)
-        Symbol.newVal(sym, member.name, cls.memberType(member), flags, sym.privateIn)
-      else member
+    def overridableMembers(delegate: Option[Term]): List[Symbol] =
+      val typeAliases = for
+        member <- sym.typeMembers
+        if member.isTypeDef
+        tpe = delegate match
+          case Some(delegate) => TypeSelect(delegate, member.name).tpe
+          case None => report.errorAndAbort(s"Not supported: $member in $sym")
+      yield member -> tpe
+
+      val cls = This(sym).tpe
+      val aliases = typeAliases.toMap
+      val (from, to) = typeAliases.unzip
+
+      for
+        member <- List.concat(sym.typeMembers, sym.fieldMembers, sym.methodMembers)
+        if !member.isNoSymbol
+        if !member.isClassConstructor
+        if !nonOverridableFlags.exists(member.flags.is)
+        if !nonOverridableOwners.contains(member.owner)
+        if !DeriveMacros.defaultRegex.matches(member.name)
+      yield
+        if member.isTypeDef then
+          val flags = member.overrideKeeping(Flags.Infix)
+          newTypeAlias(sym, member.name, flags, aliases(member), member.privateIn)
+        else if member.isValDef then
+          val tpe = cls.memberType(member).substituteTypes(from, to)
+          val flags = member.overrideKeeping(Flags.Lazy)
+          Symbol.newVal(sym, member.name, tpe, flags, member.privateIn)
+        else if member.isDefDef then
+          val tpe = cls.memberType(member).substituteTypes(from, to)
+          val flags = member.overrideKeeping(Flags.ExtensionMethod, Flags.Infix)
+          Symbol.newMethod(sym, member.name, tpe, flags, member.privateIn)
+        else member
 
   extension (tpe: TypeRepr)
     def contains(that: TypeRepr): Boolean =
@@ -202,14 +238,14 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
         case success: ImplicitSearchSuccess => Some(success.tree)
         case _ => None
 
-  extension (symbol: SymbolModule)
+  extension (delegate: Option[Term])
     def newClassOf[T: Type](
         transformDef: DefDef => List[List[Tree]] => Option[Term],
         transformVal: ValDef => Option[Term]
     ): Expr[T] =
-      val name = symbol.freshName("$anon")
+      val name = Symbol.freshName("$anon")
       val parents = List(TypeTree.of[Object], TypeTree.of[T])
-      val cls = symbol.newClass(symbol.spliceOwner, name, parents.map(_.tpe), _.overridableMembers, None)
+      val cls = Symbol.newClass(Symbol.spliceOwner, name, parents.map(_.tpe), _.overridableMembers(delegate), None)
 
       val members = cls.declarations
         .filterNot(_.isClassConstructor)
@@ -217,6 +253,7 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
           member.tree match
             case method: DefDef => DefDef(member, transformDef(method))
             case value: ValDef => ValDef(member, transformVal(value))
+            case tpe: TypeDef => tpe
             case _ => report.errorAndAbort(s"Not supported: $member in ${member.owner}")
 
       val newCls = New(TypeIdent(cls)).select(cls.primaryConstructor).appliedToNone

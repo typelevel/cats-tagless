@@ -53,8 +53,9 @@ val fs2Version = "3.11.0"
 val kindProjectorVersion = "0.13.3"
 val paradiseVersion = "2.1.1"
 val scalaCheckVersion = "1.17.1"
+val shapelessVersion = "3.4.2"
 
-lazy val root = tlCrossRootProject.aggregate(core, fs2, laws, tests, macros, examples)
+lazy val root = tlCrossRootProject.aggregate(core, data, fs2, laws, tests, macros, examples)
 
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
@@ -68,6 +69,24 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .settings(
     moduleName := "cats-tagless-core",
     libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion
+  )
+
+lazy val dataJVM = data.jvm
+lazy val dataJS = data.js
+lazy val dataNative = data.native
+lazy val data = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .dependsOn(core)
+  .enablePlugins(AutomateHeaderPlugin)
+  .jsSettings(commonJsSettings)
+  .nativeSettings(commonNativeSettings)
+  .settings(rootSettings)
+  .settings(
+    moduleName := "cats-tagless-data",
+    crossScalaVersions := Seq(Scala3),
+    scalacOptions += "-language:implicitConversions",
+    libraryDependencies += "org.typelevel" %%% "shapeless3-deriving" % shapelessVersion,
+    tlVersionIntroduced := Map("3" -> "0.16.3")
   )
 
 lazy val fs2JVM = fs2.jvm

@@ -31,6 +31,14 @@ pull_request_rules:
       add:
       - core
       remove: []
+- name: Label data PRs
+  conditions:
+  - files~=^data/
+  actions:
+    label:
+      add:
+      - data
+      remove: []
 - name: Label docs PRs
   conditions:
   - files~=^docs/

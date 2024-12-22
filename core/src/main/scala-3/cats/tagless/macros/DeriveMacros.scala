@@ -178,9 +178,6 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
     def widenParam: TypeRepr =
       if tpe.isRepeated then tpe.typeArgs.head else tpe.widenByName
 
-    def widenParamSeq: TypeRepr =
-      if tpe.isRepeated then TypeRepr.of[Seq].appliedTo(tpe.typeArgs.head) else tpe.widenByName
-
     def summon: Term = Implicits.search(tpe) match
       case success: ImplicitSearchSuccess => success.tree
       case failure: ImplicitSearchFailure => report.errorAndAbort(failure.explanation)

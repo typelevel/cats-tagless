@@ -22,7 +22,6 @@ import cats.{~>, Eval}
 
 import scala.annotation.experimental
 import scala.quoted.*
-import scala.compiletime.*
 
 @experimental
 object MacroAspect:
@@ -46,29 +45,51 @@ object MacroAspect:
     val WeaveF = TypeRepr.of[Aspect.Weave[F, Dom, Cod, ?]]
     val algebraName = Expr(TypeRepr.of[Alg].typeSymbol.name)
 
-    def paramAdvice(param: ValDef): Expr[Aspect.Advice[Eval, Dom]] =
+    def summon[T: Type](using Quotes): Expr[T] =
+      Expr.summon[T].getOrElse(report.errorAndAbort(s"Not found: given ${Type.show[T]}"))
+
+    def paramAdvice(param: ValDef)(using Quotes): Expr[Seq[Aspect.Advice[Eval, Dom]]] =
       val tpe = param.tpt.tpe
-      tpe.widenParamSeq.asType match
+      tpe.widenParam.asType match
         case '[t] =>
           val name = Expr(param.name)
-          val value = Ref(param.symbol).asExprOf[t]
-          if tpe.isByName then '{ Aspect.Advice.byName[Dom, t]($name, $value)(summonInline) }
-          else '{ Aspect.Advice.byValue[Dom, t]($name, $value)(summonInline) }
+          val value = Ref(param.symbol)
+          val dom = summon[Dom[t]]
+          if tpe.isByName then '{ Aspect.Advice.byName($name, ${ value.asExprOf[t] })(using $dom) :: Nil }
+          else if tpe.isRepeated then '{ ${ value.asExprOf[Seq[t]] }.map(Aspect.Advice.byValue($name, _)(using $dom)) }
+          else '{ Aspect.Advice.byValue($name, ${ value.asExprOf[t] })(using $dom) :: Nil }
+
+    // This is a hack.
+    def addToGivenScope(refs: List[TermRef])(using q: Quotes) =
+      if refs.nonEmpty then
+        try
+          Expr.summon[Nothing] // fill implicit cache
+          val ctxMethod = q.getClass.getMethod("ctx")
+          val ctx = ctxMethod.invoke(q)
+          val cache = ctxMethod.getReturnType.getDeclaredField("implicitsCache")
+          cache.setAccessible(true)
+          val contextual = Class.forName("dotty.tools.dotc.typer.Implicits$ContextualImplicits")
+          val modified = contextual.getConstructors.head.newInstance(refs, cache.get(ctx), false, ctx)
+          cache.set(ctx, modified)
+        catch case _: ReflectiveOperationException => ()
 
     alg.transformTo[Alg[[X] =>> Aspect.Weave[F, Dom, Cod, X]]](
       body = {
         case (sym, tpe, body) if tpe <:< WeaveF =>
-          val paramss = sym.tree match
+          val (givens, clauses) = sym.tree match
             case method: DefDef =>
-              method.termParamss.filterNot(clause => clause.isImplicit || clause.isGiven || clause.isErased)
+              method.termParamss.partition(c => c.isGiven || c.isImplicit)
             case _ =>
-              Nil
+              (Nil, Nil)
 
           tpe.typeArgs.last.asType match
             case '[t] =>
+              given Quotes = sym.asQuotes
+              addToGivenScope(givens.flatMap(_.params).map(_.symbol.termRef))
               val methodName = Expr(sym.name)
-              val domain = Expr.ofList(paramss.map(clause => Expr.ofList(clause.params.map(paramAdvice))))
-              val codomain = '{ Aspect.Advice[F, Cod, t]($methodName, ${ body.asExprOf[F[t]] })(summonInline) }
-              '{ Aspect.Weave[F, Dom, Cod, t]($algebraName, $domain, $codomain) }.asTerm
+              val cod = summon[Cod[t]]
+              val domain = Expr.ofList(clauses.map(c => '{ List.concat(${ Varargs(c.params.map(paramAdvice)) }*) }))
+              val codomain = '{ Aspect.Advice($methodName, ${ body.asExprOf[F[t]] })(using $cod) }
+              '{ Aspect.Weave($algebraName, $domain, $codomain) }.asTerm
       }
     )

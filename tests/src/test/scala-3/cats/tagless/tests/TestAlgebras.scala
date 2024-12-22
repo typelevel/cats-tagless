@@ -23,37 +23,31 @@ import cats.laws.discipline.arbitrary.*
 import cats.laws.discipline.eq.*
 import cats.syntax.all.*
 import cats.{Eq, Eval, Monoid, ~>}
-import cats.tagless.{ApplyK, FunctorK, InvariantK, SemigroupalK}
+import cats.tagless.{ApplyK, InvariantK, SemigroupalK}
 import org.scalacheck.{Arbitrary, Cogen}
 
 import scala.annotation.experimental
 import scala.util.Try
 
-// TODO: @finalAlg @autoProductNK @autoInstrument
 @experimental
-trait SafeAlg[F[_]] derives FunctorK, SemigroupalK, Instrument:
+trait SafeAlg[F[_]] derives SemigroupalK, Instrument:
   def parseInt(str: String): F[Int]
   def divide(dividend: Float, divisor: Float): F[Float]
 
 object SafeAlg:
   import TestInstances.*
 
-  implicit def eqForSafeAlg[F[_]](implicit eqFi: Eq[F[Int]], eqFf: Eq[F[Float]]): Eq[SafeAlg[F]] =
+  given [F[_]](using Eq[F[Int]], Eq[F[Float]]): Eq[SafeAlg[F]] =
     Eq.by(algebra => (algebra.parseInt, algebra.divide))
 
-  implicit def arbitrarySafeAlg[F[_]](implicit
-      arbFi: Arbitrary[F[Int]],
-      arbFs: Arbitrary[F[Float]]
-  ): Arbitrary[SafeAlg[F]] = Arbitrary(for
-    parseIntF <- Arbitrary.arbitrary[String => F[Int]]
-    divideF <- Arbitrary.arbitrary[(Float, Float) => F[Float]]
-  yield new SafeAlg[F]:
-    def parseInt(str: String) = parseIntF(str)
-    def divide(dividend: Float, divisor: Float) = divideF(dividend, divisor)
-  )
+  given [F[_]](using Arbitrary[F[Int]], Arbitrary[F[Float]]): Arbitrary[SafeAlg[F]] = Arbitrary:
+    for
+      parseIntF <- Arbitrary.arbitrary[String => F[Int]]
+      divideF <- Arbitrary.arbitrary[(Float, Float) => F[Float]]
+    yield new SafeAlg[F]:
+      def parseInt(str: String) = parseIntF(str)
+      def divide(dividend: Float, divisor: Float) = divideF(dividend, divisor)
 
-// TODO: Macro should support it
-// TODO: @finalAlg
 @experimental
 trait SafeInvAlg[F[_]] derives InvariantK, SemigroupalK:
   def parseInt(fs: F[String]): F[Int]
@@ -63,28 +57,28 @@ trait SafeInvAlg[F[_]] derives InvariantK, SemigroupalK:
 object SafeInvAlg:
   import TestInstances.*
 
-  implicit def eqForSafeInvAlg[F[_]](implicit
-      eqFi: Eq[F[Int]],
-      eqFd: Eq[F[Double]],
-      exFs: ExhaustiveCheck[F[String]],
-      exEfs: ExhaustiveCheck[EitherT[F, String, String]]
+  given [F[_]](using
+      Eq[F[Int]],
+      Eq[F[Double]],
+      ExhaustiveCheck[F[String]],
+      ExhaustiveCheck[EitherT[F, String, String]]
   ): Eq[SafeInvAlg[F]] = Eq.by: algebra =>
     (algebra.parseInt, algebra.doubleParser, algebra.parseIntOrError)
 
-  implicit def arbitrarySafeInvAlg[F[_]](implicit
-      coFs: Cogen[F[String]],
-      coEfs: Cogen[EitherT[F, String, String]],
-      arbFi: Arbitrary[F[Int]],
-      arbFd: Arbitrary[F[Double]]
-  ): Arbitrary[SafeInvAlg[F]] = Arbitrary(for
-    parseIntF <- Arbitrary.arbitrary[F[String] => F[Int]]
-    doubleParserF <- Arbitrary.arbitrary[Int => Kleisli[F, String, Double]]
-    parseIntOrErrorF <- Arbitrary.arbitrary[EitherT[F, String, String] => F[Int]]
-  yield new SafeInvAlg[F]:
-    def parseInt(fs: F[String]) = parseIntF(fs)
-    def doubleParser(precision: Int) = doubleParserF(precision)
-    def parseIntOrError(fs: EitherT[F, String, String]) = parseIntOrErrorF(fs)
-  )
+  given [F[_]](using
+      Cogen[F[String]],
+      Cogen[EitherT[F, String, String]],
+      Arbitrary[F[Int]],
+      Arbitrary[F[Double]]
+  ): Arbitrary[SafeInvAlg[F]] = Arbitrary:
+    for
+      parseIntF <- Arbitrary.arbitrary[F[String] => F[Int]]
+      doubleParserF <- Arbitrary.arbitrary[Int => Kleisli[F, String, Double]]
+      parseIntOrErrorF <- Arbitrary.arbitrary[EitherT[F, String, String] => F[Int]]
+    yield new SafeInvAlg[F]:
+      def parseInt(fs: F[String]) = parseIntF(fs)
+      def doubleParser(precision: Int) = doubleParserF(precision)
+      def parseIntOrError(fs: EitherT[F, String, String]) = parseIntOrErrorF(fs)
 
 @experimental
 trait CalculatorAlg[F[_]] derives InvariantK, SemigroupalK:
@@ -95,30 +89,24 @@ trait CalculatorAlg[F[_]] derives InvariantK, SemigroupalK:
 object CalculatorAlg:
   import TestInstances.*
 
-  implicit def eqForCalculatorAlg[F[_]](implicit
-      eqFi: Eq[F[Int]],
-      exFi: ExhaustiveCheck[F[Int]]
-  ): Eq[CalculatorAlg[F]] = Eq.by: algebra =>
-    (algebra.lit, algebra.add, algebra.show[Int])
+  given [F[_]](using Eq[F[Int]], ExhaustiveCheck[F[Int]]): Eq[CalculatorAlg[F]] =
+    Eq.by(algebra => (algebra.lit, algebra.add, algebra.show[Int]))
 
-  implicit def arbitraryCalculatorAlg[F[_]](implicit
-      coFi: Cogen[F[Int]],
-      arbFi: Arbitrary[F[Int]]
-  ): Arbitrary[CalculatorAlg[F]] = Arbitrary(for
-    litF <- Arbitrary.arbitrary[Int => F[Int]]
-    addF <- Arbitrary.arbitrary[(F[Int], F[Int]) => F[Int]]
-  yield new CalculatorAlg[F]:
-    def lit(i: Int) = litF(i)
-    def add(x: F[Int], y: F[Int]) = addF(x, y)
-    def show[A](expr: F[A]) = expr.toString
-  )
+  given [F[_]](using Cogen[F[Int]], Arbitrary[F[Int]]): Arbitrary[CalculatorAlg[F]] = Arbitrary:
+    for
+      litF <- Arbitrary.arbitrary[Int => F[Int]]
+      addF <- Arbitrary.arbitrary[(F[Int], F[Int]) => F[Int]]
+    yield new CalculatorAlg[F]:
+      def lit(i: Int) = litF(i)
+      def add(x: F[Int], y: F[Int]) = addF(x, y)
+      def show[A](expr: F[A]) = expr.toString
 
 trait KVStore[F[_]]:
   def get(key: String): F[Option[String]]
   def put(key: String, a: String): F[Unit]
 
 object KVStore:
-  implicit val applyKForKVStore: ApplyK[KVStore] = new ApplyK[KVStore]:
+  given ApplyK[KVStore] with
     def mapK[F[_], G[_]](af: KVStore[F])(f: F ~> G): KVStore[G] = new KVStore[G]:
       def get(key: String): G[Option[String]] = f(af.get(key))
       def put(key: String, a: String): G[Unit] = f(af.put(key, a))
@@ -130,19 +118,19 @@ object KVStore:
 
 final case class KVStoreInfo(queries: Set[String], cache: Map[String, String])
 object KVStoreInfo:
-  implicit val infoMonoid: Monoid[KVStoreInfo] = Monoid.instance(
+  given Monoid[KVStoreInfo] = Monoid.instance(
     KVStoreInfo(Set.empty, Map.empty),
     (a, b) => KVStoreInfo(a.queries |+| b.queries, a.cache |+| b.cache)
   )
 
 object Interpreters:
   @experimental
-  implicit object tryInterpreter extends SafeAlg[Try]:
+  given tryInterpreter: SafeAlg[Try] with
     def parseInt(str: String): Try[Int] = Try(str.toInt)
     def divide(dividend: Float, divisor: Float): Try[Float] = Try(dividend / divisor)
 
   @experimental
-  implicit object lazyInterpreter extends SafeAlg[Eval]:
+  given lazyInterpreter: SafeAlg[Eval] with
     def parseInt(str: String): Eval[Int] = Eval.later(str.toInt)
     def divide(dividend: Float, divisor: Float): Eval[Float] = Eval.later(dividend / divisor)
 

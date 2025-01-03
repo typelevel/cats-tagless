@@ -17,7 +17,8 @@
 package cats.tagless
 package data
 
-import _root_.cats.~>
+import cats.~>
+import cats.tagless.derived.Derived
 import shapeless3.deriving.K11.*
 
 import scala.annotation.*

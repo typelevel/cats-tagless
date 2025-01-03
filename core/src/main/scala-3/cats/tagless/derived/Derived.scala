@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-package cats.tagless.data
-
-import shapeless3.deriving.*
+package cats.tagless.derived
 
 import scala.annotation.*
 import scala.compiletime.summonFrom
@@ -38,14 +36,18 @@ object Derived:
   object Or:
     def apply[A](instance: A): Or[A] = instance
     extension [A](derived: Or[A]) def unify: A = derived
-    extension [I[f[_], t] <: K0.Instances[f, t], F[_], T](inst: I[Or0[F], T])
-      @targetName("unifyK0") def unify: I[F, T] = inst
-    extension [I[f[_[_]], t[_]] <: K1.Instances[f, t], F[_[_]], T[_]](inst: I[Or1[F], T])
-      @targetName("unifyK1") def unify: I[F, T] = inst
-    extension [I[f[_[_[_]]], t[_[_]]] <: K11.Instances[f, t], F[_[_[_]]], T[_[_]]](inst: I[Or11[F], T])
-      @targetName("unifyK11") def unify: I[F, T] = inst
-    extension [I[f[_[_, _]], t[_, _]] <: K2.Instances[f, t], F[_[_, _]], T[_, _]](inst: I[Or2[F], T])
-      @targetName("unifyK2") def unify: I[F, T] = inst
+    extension [I[f[_], t], F[_], T](inst: I[Or0[F], T])
+      @targetName("unifyK0")
+      def unify: I[F, T] = inst
+    extension [I[f[_[_]], t[_]], F[_[_]], T[_]](inst: I[Or1[F], T])
+      @targetName("unifyK1")
+      def unify: I[F, T] = inst
+    extension [I[f[_[_[_]]], t[_[_]]], F[_[_[_]]], T[_[_]]](inst: I[Or11[F], T])
+      @targetName("unifyK11")
+      def unify: I[F, T] = inst
+    extension [I[f[_[_, _]], t[_, _]], F[_[_, _]], T[_, _]](inst: I[Or2[F], T])
+      @targetName("unifyK2")
+      def unify: I[F, T] = inst
 
     inline given [A]: Derived.Or[A] = summonFrom:
       case instance: A => Derived.Or(instance)

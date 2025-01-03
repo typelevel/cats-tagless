@@ -14,15 +14,11 @@
  * limitations under the License.
  */
 
-package cats.tagless.derived
+package cats.tagless
 
-import cats.tagless.Derive
-import cats.tagless.aop.Instrument
-
-import scala.annotation.experimental
-import scala.compiletime.summonFrom
-
-trait DerivedInstrument:
-  @experimental inline def derived[Alg[_[_]]]: Instrument[Alg] = summonFrom:
-    case derived: Derived[Instrument[Alg]] => derived.instance
-    case _ => Derive.instrument[Alg]
+package object data:
+  inline given functorK[F[_[_]]]: DerivedFunctorK[F] = DerivedFunctorK[F]
+  inline given contravariantK[F[_[_]]]: DerivedContravariantK[F] = DerivedContravariantK[F]
+  inline given invariantK[F[_[_]]]: DerivedInvariantK[F] = DerivedInvariantK[F]
+  inline given semigroupalK[F[_[_]]]: DerivedSemigroupalK[F] = DerivedSemigroupalK[F]
+  inline given applyK[F[_[_]]]: DerivedApplyK[F] = DerivedApplyK[F]

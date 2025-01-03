@@ -83,10 +83,12 @@ lazy val data = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .settings(rootSettings)
   .settings(
     moduleName := "cats-tagless-data",
-    crossScalaVersions := Seq(Scala3),
-    scalacOptions += "-language:implicitConversions",
-    libraryDependencies += "org.typelevel" %%% "shapeless3-deriving" % shapelessVersion,
-    tlVersionIntroduced := Map("3" -> "0.16.3")
+    publish / skip := scalaBinaryVersion.value != "3",
+    tlVersionIntroduced := Map("3" -> "0.16.3"),
+    tlMimaPreviousVersions := (if (scalaBinaryVersion.value == "3") tlMimaPreviousVersions.value else Set.empty),
+    libraryDependencies ++= when(scalaBinaryVersion.value == "3")(
+      "org.typelevel" %%% "shapeless3-deriving" % shapelessVersion
+    )
   )
 
 lazy val fs2JVM = fs2.jvm
@@ -138,7 +140,7 @@ lazy val macros = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     moduleName := "cats-tagless-macros",
     scalacOptions ~= (_.filterNot(opt => opt.startsWith("-Wunused") || opt.startsWith("-Ywarn-unused"))),
     libraryDependencies += "org.scalacheck" %%% "scalacheck" % scalaCheckVersion % Test,
-    publish / skip := scalaBinaryVersion.value.startsWith("3"),
+    publish / skip := scalaBinaryVersion.value == "3",
     tlMimaPreviousVersions := when(scalaBinaryVersion.value.startsWith("2"))(
       "0.16.0",
       "0.15.0",
@@ -152,7 +154,7 @@ lazy val testsJS = tests.js
 lazy val testsNative = tests.native
 lazy val tests = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
-  .dependsOn(macros, laws)
+  .dependsOn(data, macros, laws)
   .enablePlugins(AutomateHeaderPlugin, NoPublishPlugin)
   .jsSettings(commonJsSettings)
   .jsSettings(scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule)))

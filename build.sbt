@@ -53,7 +53,7 @@ val fs2Version = "3.11.0"
 val kindProjectorVersion = "0.13.3"
 val paradiseVersion = "2.1.1"
 val scalaCheckVersion = "1.17.1"
-val shapelessVersion = "3.4.2"
+val shapelessVersion = "3.5.0"
 
 lazy val root = tlCrossRootProject.aggregate(core, data, fs2, laws, tests, macros, examples)
 
@@ -85,10 +85,8 @@ lazy val data = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     moduleName := "cats-tagless-data",
     publish / skip := scalaBinaryVersion.value != "3",
     tlVersionIntroduced := Map("3" -> "0.16.3"),
-    tlMimaPreviousVersions := (if (scalaBinaryVersion.value == "3") tlMimaPreviousVersions.value else Set.empty),
-    libraryDependencies ++= when(scalaBinaryVersion.value == "3")(
-      "org.typelevel" %%% "shapeless3-deriving" % shapelessVersion
-    )
+    tlMimaPreviousVersions := (if (tlIsScala3.value) tlMimaPreviousVersions.value else Set.empty),
+    libraryDependencies ++= when(tlIsScala3.value)("org.typelevel" %%% "shapeless3-deriving" % shapelessVersion)
   )
 
 lazy val fs2JVM = fs2.jvm
@@ -140,7 +138,7 @@ lazy val macros = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     moduleName := "cats-tagless-macros",
     scalacOptions ~= (_.filterNot(opt => opt.startsWith("-Wunused") || opt.startsWith("-Ywarn-unused"))),
     libraryDependencies += "org.scalacheck" %%% "scalacheck" % scalaCheckVersion % Test,
-    publish / skip := scalaBinaryVersion.value == "3",
+    publish / skip := tlIsScala3.value,
     tlMimaPreviousVersions := when(scalaBinaryVersion.value.startsWith("2"))(
       "0.16.0",
       "0.15.0",
@@ -162,7 +160,7 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .settings(rootSettings, macroSettings)
   .settings(
     moduleName := "cats-tagless-tests",
-    scalacOptions ++= when(scalaBinaryVersion.value == "3")("-Xcheck-macros"),
+    scalacOptions ++= when(tlIsScala3.value)("-Xcheck-macros"),
     libraryDependencies ++= List(
       "org.typelevel" %%% "cats-free" % catsVersion,
       "org.typelevel" %%% "cats-testkit" % catsVersion,

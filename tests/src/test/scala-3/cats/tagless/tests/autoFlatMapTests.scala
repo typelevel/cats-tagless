@@ -76,5 +76,4 @@ object autoFlatMapTests:
     override def concreteEffect(a: String): T = conEff.getOrElse(super.concreteEffect)(a)
     override def abstractOther(a: String): String = absOther(a)
     override def concreteOther(a: String): String = conOther.getOrElse(super.concreteOther)(a)
-    override def withoutParams: T = noParams
-  )
+    override def withoutParams: T = noParams)

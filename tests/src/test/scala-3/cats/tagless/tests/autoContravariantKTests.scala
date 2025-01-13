@@ -58,8 +58,7 @@ object autoContravariantKTests:
   yield new TestAlgebra[F]:
     def sum(xs: F[Int]) = s(xs)
     def sumAll(xss: F[Int]*) = sa(xss)
-    def foldSpecialized(init: String)(f: (Int, String) => Int) = fs(init, f)
-  )
+    def foldSpecialized(init: String)(f: (Int, String) => Int) = fs(init, f))
 
   trait TestAlgebraWithExtraTypeParam[F[_], A] extends TestAlgebra[F]:
     def fold[B](init: B)(f: (B, A) => B): Cokleisli[F, A, B]

@@ -87,8 +87,7 @@ object autoProfunctorTests:
       override def abstractOther(str: String) = absOther(str)
       override def concreteOther(str: String) = conOther.getOrElse(super.concreteOther)(str)
       override def withoutParams = noParams
-      override def fromList(as: List[A]) = list(as)
-    )
+      override def fromList(as: List[A]) = list(as))
 
   trait AlgWithExtraTypeParam[T, A, B] derives Profunctor:
     def foo(t: T, a: A): B

@@ -89,5 +89,4 @@ object autoFunctorTests:
       override def concreteOther(a: String) = conOther.getOrElse(super.concreteOther)(a)
       override def withoutParams = withoutParameters
       override def toList(xs: List[Int]) = list(xs)
-      override def fromFunction(f: T => String) = fromFn(f)
-    )
+      override def fromFunction(f: T => String) = fromFn(f))

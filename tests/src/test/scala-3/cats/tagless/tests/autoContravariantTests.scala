@@ -90,5 +90,4 @@ object autoContravariantTests:
       g <- Arbitrary.arbitrary[Option[T] => String]
     yield new SimpleAlg[T]:
       def foo(t: T) = f(t)
-      def bar(opt: Option[T]) = g(opt)
-    )
+      def bar(opt: Option[T]) = g(opt))

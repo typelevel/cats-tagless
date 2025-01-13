@@ -76,8 +76,7 @@ object autoBifunctorTests extends TestInstances:
       override def concreteMethod = int
       override def fromInt(i: Int) = if i > 0 then left else a2
       override def fromString(s: String) = b
-      override def toTuple = tuple.getOrElse(super.toTuple)
-    )
+      override def toTuple = tuple.getOrElse(super.toTuple))
 
   trait AlgWithExtraTypeParam[T, A, B] derives Bifunctor:
     def foo(t: T): A

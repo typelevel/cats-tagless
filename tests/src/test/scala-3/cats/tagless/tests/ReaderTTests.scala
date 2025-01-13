@@ -56,8 +56,7 @@ class ReaderTTests extends CatsTaglessTestSuite:
     // Make the dependency side-effecting
     val sideEffecting = dependency.imapK(FunctionK.liftFunction[Try, Try]:
       case success @ Success(_) => successful += 1; success
-      case failure @ Failure(_) => failed += 1; failure
-    )(FunctionK.id)
+      case failure @ Failure(_) => failed += 1; failure)(FunctionK.id)
 
     val alg = spaceAlg.imapK(provide(sideEffecting))(require)
     val blackHole = alg.blackHole(() => eventHorizon)

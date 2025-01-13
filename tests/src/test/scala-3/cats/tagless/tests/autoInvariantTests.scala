@@ -96,8 +96,7 @@ object autoInvariantTests:
       hOpt <- Arbitrary.arbitrary[List[T] => Option[T]]
     yield new SimpleAlg[T]:
       def foo(i: T): T = f(i)
-      def headOption(list: List[T]) = hOpt(list)
-    )
+      def headOption(list: List[T]) = hOpt(list))
 
   trait AlgWithVarArgsParameter[T] derives Invariant:
     def sum(xs: Int*): Int

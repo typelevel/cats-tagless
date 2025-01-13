@@ -85,5 +85,4 @@ object autoSemigroupalTests:
       override def concreteOther(a: String) = conOther.getOrElse(super.concreteOther)(a)
       override def withoutParams = withoutParameters
       override def curried(a: String)(b: Int) = curry(a)(b)
-      override def headOption(ts: List[T]): Option[T] = hOpt(ts)
-    )
+      override def headOption(ts: List[T]): Option[T] = hOpt(ts))

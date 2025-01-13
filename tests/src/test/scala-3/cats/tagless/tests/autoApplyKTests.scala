@@ -63,8 +63,7 @@ object autoApplyKTests:
     yield new AutoApplyKTestAlg[F]:
       def parseInt(str: String) = pInt(str)
       def parseDouble(str: String) = pDouble(str)
-      def divide(dividend: Float, divisor: Float) = div(dividend, divisor)
-    )
+      def divide(dividend: Float, divisor: Float) = div(dividend, divisor))
 
   trait AlgWithVarArgsParameter[F[_]] derives ApplyK:
     def sum(xs: Int*): Int

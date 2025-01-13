@@ -48,8 +48,7 @@ object MacroReaderT:
             af.call(method.symbol):
               for (clause, args) <- method.paramss.zip(argss)
               yield for paramAndArg <- clause.params.zip(args)
-              yield argTransformer(af).transformArg(method.symbol, paramAndArg)
-          )
+              yield argTransformer(af).transformArg(method.symbol, paramAndArg))
         case _ =>
           report.errorAndAbort:
             s"Expected method ${method.name} to return ${RT.show} but found ${method.returnTpt.tpe.show}"

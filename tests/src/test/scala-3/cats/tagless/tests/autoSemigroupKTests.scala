@@ -67,5 +67,4 @@ object autoSemigroupKTests:
       override def abstractOther(t: T) = absOther(t)
       override def concreteOther(a: String) = conOther.getOrElse(super.concreteOther)(a)
       override def withoutParams = withoutParameters
-      override def headOption(ts: List[T]): Option[T] = hOpt(ts)
-    )
+      override def headOption(ts: List[T]): Option[T] = hOpt(ts))

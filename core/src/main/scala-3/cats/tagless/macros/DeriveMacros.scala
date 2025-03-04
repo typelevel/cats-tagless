@@ -40,26 +40,6 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
   private val nonOverridableFlags =
     List(Flags.Final, Flags.Artifact, Flags.Synthetic, Flags.Mutable, Flags.Param)
 
-  // TODO: This is a hack - replace with `Symbol.newTypeAlias` on Scala 3.6+
-  private def newTypeAlias(owner: Symbol, name: String, flags: Flags, tpe: TypeRepr, privateIn: Symbol): Symbol =
-    try
-      val ctx = q.getClass.getMethod("ctx").invoke(q)
-      val aliasClass = Class.forName("dotty.tools.dotc.core.Types$TypeAlias")
-      val symbolsClass = Class.forName("dotty.tools.dotc.core.Symbols$")
-      val decoratorsClass = Class.forName("dotty.tools.dotc.core.Decorators$")
-      val alias = aliasClass.getConstructors.head.newInstance(tpe)
-      val symbols = symbolsClass.getDeclaredField("MODULE$").get(null)
-      val decorators = decoratorsClass.getDeclaredField("MODULE$").get(null)
-      val toTypeName = decorators.getClass.getMethods.find(_.getName == "toTypeName").get
-      val newSymbol = symbols.getClass.getMethods.find(_.getName == "newSymbol").get
-      val typeName = toTypeName.invoke(decorators, name)
-      val nestingLevel = ctx.getClass.getMethod("nestingLevel").invoke(ctx)
-      val sym = newSymbol.invoke(symbols, ctx, owner, typeName, flags, alias, privateIn, 0, nestingLevel)
-      sym.asInstanceOf[Symbol]
-    catch
-      case _: Exception =>
-        report.errorAndAbort(s"Not supported: type $name in $owner")
-
   extension (xf: Transform)
     def transformRepeated(method: Symbol, tpe: TypeRepr, arg: Term): Tree =
       val x = Symbol.freshName("x")
@@ -182,7 +162,7 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
       yield
         if member.isTypeDef then
           val flags = member.overrideKeeping(Flags.Infix)
-          newTypeAlias(sym, member.name, flags, aliases(member), member.privateIn)
+          Symbol.newTypeAlias(sym, member.name, flags, aliases(member), member.privateIn)
         else if member.isValDef then
           val tpe = cls.memberType(member).substituteTypes(from, to)
           val flags = member.overrideKeeping(Flags.Lazy)

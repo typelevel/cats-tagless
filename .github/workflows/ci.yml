@@ -83,11 +83,11 @@ jobs:
 
       - name: Make target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/master')
-        run: mkdir -p fs2/.native/target macros/.jvm/target core/.native/target macros/.native/target laws/.native/target core/.js/target macros/.js/target laws/.js/target core/.jvm/target laws/.jvm/target fs2/.js/target fs2/.jvm/target project/target
+        run: mkdir -p data/.jvm/target fs2/.native/target macros/.jvm/target core/.native/target macros/.native/target laws/.native/target core/.js/target macros/.js/target laws/.js/target core/.jvm/target data/.js/target laws/.jvm/target fs2/.js/target data/.native/target fs2/.jvm/target project/target
 
       - name: Compress target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/master')
-        run: tar cf targets.tar fs2/.native/target macros/.jvm/target core/.native/target macros/.native/target laws/.native/target core/.js/target macros/.js/target laws/.js/target core/.jvm/target laws/.jvm/target fs2/.js/target fs2/.jvm/target project/target
+        run: tar cf targets.tar data/.jvm/target fs2/.native/target macros/.jvm/target core/.native/target macros/.native/target laws/.native/target core/.js/target macros/.js/target laws/.js/target core/.jvm/target data/.js/target laws/.jvm/target fs2/.js/target data/.native/target fs2/.jvm/target project/target
 
       - name: Upload target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/master')

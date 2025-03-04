@@ -19,6 +19,9 @@ package cats.tagless.derived
 import cats.tagless.{ContravariantK, Derive}
 
 import scala.annotation.experimental
+import scala.compiletime.summonFrom
 
 trait DerivedContravariantK:
-  @experimental inline def derived[Alg[_[_]]]: ContravariantK[Alg] = Derive.contravariantK[Alg]
+  @experimental inline def derived[Alg[_[_]]]: ContravariantK[Alg] = summonFrom:
+    case derived: Derived[ContravariantK[Alg]] => derived.instance
+    case _ => Derive.contravariantK[Alg]

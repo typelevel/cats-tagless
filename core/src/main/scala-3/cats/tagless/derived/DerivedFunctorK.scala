@@ -19,6 +19,9 @@ package cats.tagless.derived
 import cats.tagless.{Derive, FunctorK}
 
 import scala.annotation.experimental
+import scala.compiletime.summonFrom
 
 trait DerivedFunctorK:
-  @experimental inline def derived[Alg[_[_]]]: FunctorK[Alg] = Derive.functorK[Alg]
+  @experimental inline def derived[Alg[_[_]]]: FunctorK[Alg] = summonFrom:
+    case derived: Derived[FunctorK[Alg]] => derived.instance
+    case _ => Derive.functorK[Alg]

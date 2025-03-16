@@ -19,6 +19,9 @@ package cats.tagless.derived
 import cats.tagless.{Derive, SemigroupalK}
 
 import scala.annotation.experimental
+import scala.compiletime.summonFrom
 
 trait DerivedSemigroupalK:
-  @experimental inline def derived[Alg[_[_]]]: SemigroupalK[Alg] = Derive.semigroupalK[Alg]
+  @experimental inline def derived[Alg[_[_]]]: SemigroupalK[Alg] = summonFrom:
+    case derived: Derived[SemigroupalK[Alg]] => derived.instance
+    case _ => Derive.semigroupalK[Alg]

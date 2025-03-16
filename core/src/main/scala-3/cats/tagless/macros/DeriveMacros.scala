@@ -243,10 +243,14 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
         transformDef: DefDef => List[List[Tree]] => Option[Term],
         transformVal: ValDef => Option[Term]
     ): Expr[T] =
+      val T = TypeRepr.of[T].dealias.typeSymbol
+      if T.flags.is(Flags.Enum) then report.errorAndAbort(s"Not supported: $T is an enum")
+      if !T.isClassDef || !T.flags.is(Flags.Trait) && !T.flags.is(Flags.Abstract) then
+        report.errorAndAbort(s"Not supported: $T is not a trait or abstract class")
+
       val name = Symbol.freshName("$anon")
       val parents = List(TypeTree.of[Object], TypeTree.of[T])
       val cls = Symbol.newClass(Symbol.spliceOwner, name, parents.map(_.tpe), _.overridableMembers(delegate), None)
-
       val members = cls.declarations
         .filterNot(_.isClassConstructor)
         .map: member =>

@@ -17,7 +17,8 @@
 package cats.tagless.tests
 
 import cats.{Eq, Invariant}
-import cats.laws.discipline.{InvariantTests, SerializableTests}
+import cats.laws.discipline.{InvariantTests, MiniInt, SerializableTests}
+import cats.laws.discipline.arbitrary.*
 import cats.laws.discipline.eq.*
 import cats.tagless.derived.*
 import org.scalacheck.{Arbitrary, Cogen}
@@ -26,7 +27,7 @@ import org.scalacheck.{Arbitrary, Cogen}
 class autoInvariantTests extends CatsTaglessTestSuite:
   import autoInvariantTests.*
 
-  checkAll("SimpleAlg[Option]", InvariantTests[SimpleAlg].invariant[Float, String, Int])
+  checkAll("SimpleAlg[Option]", InvariantTests[SimpleAlg].invariant[Float, MiniInt, Int])
   checkAll("Invariant[SimpleAlg]", SerializableTests.serializable(Invariant[SimpleAlg]))
 
   test("non effect method correctly delegated"):

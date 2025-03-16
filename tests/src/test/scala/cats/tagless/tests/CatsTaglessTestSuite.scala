@@ -32,6 +32,9 @@ class CatsTaglessTestSuite extends DisciplineSuite with cats.syntax.AllSyntax wi
 object TestInstances extends TestInstances
 trait TestInstances {
 
+  implicit def catsDataArbitraryFunctionKId[F[_]]: Arbitrary[FunctionK[F, F]] =
+    Arbitrary(Gen.const(FunctionK.id))
+
   implicit val catsDataArbitraryOptionList: Arbitrary[FunctionK[Option, List]] =
     Arbitrary(Gen.const(FunctionK.liftFunction[Option, List](_.toList)))
 

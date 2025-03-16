@@ -38,6 +38,9 @@ object DerivedFunctorK:
     import DerivedFunctorK.given
     summonInline[DerivedFunctorK[F]].instance
 
+  given const[A]: DerivedFunctorK[ConstK[A]#λ] = new FunctorK[ConstK[A]#λ]:
+    override def mapK[F[_], G[_]](af: A)(fk: F ~> G): A = af
+
   given generic[F[_[_]]](using inst: => Instances[Of, F]): DerivedFunctorK[F] =
     given Instances[FunctorK, F] = inst.unify
     new Generic[FunctorK, F] {}

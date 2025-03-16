@@ -35,8 +35,11 @@ object DerivedContravariantK:
 
   @nowarn("msg=unused import")
   inline def apply[F[_[_]]]: ContravariantK[F] =
-    import ContravariantK.given
+    import DerivedContravariantK.given
     summonInline[DerivedContravariantK[F]].instance
+
+  given const[A]: DerivedContravariantK[ConstK[A]#λ] = new ContravariantK[ConstK[A]#λ]:
+    override def contramapK[F[_], G[_]](af: A)(fk: G ~> F): A = af
 
   given generic[F[_[_]]](using inst: => Instances[Of, F]): DerivedContravariantK[F] =
     given Instances[ContravariantK, F] = inst.unify

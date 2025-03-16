@@ -38,6 +38,9 @@ object DerivedInvariantK:
     import DerivedInvariantK.given
     summonInline[DerivedInvariantK[F]].instance
 
+  given const[A]: DerivedInvariantK[ConstK[A]#λ] = new InvariantK[ConstK[A]#λ]:
+    override def imapK[F[_], G[_]](af: A)(fk: F ~> G)(gk: G ~> F): A = af
+
   given generic[F[_[_]]](using inst: => Instances[Of, F]): DerivedInvariantK[F] =
     given Instances[InvariantK, F] = inst.unify
     new Generic[InvariantK, F] {}

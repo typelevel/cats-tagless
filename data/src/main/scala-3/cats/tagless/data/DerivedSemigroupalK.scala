@@ -17,6 +17,7 @@
 package cats.tagless
 package data
 
+import cats.Semigroup
 import cats.data.Tuple2K
 import cats.tagless.derived.*
 import shapeless3.deriving.K11.*
@@ -35,6 +36,9 @@ object DerivedSemigroupalK:
   inline def apply[F[_[_]]]: SemigroupalK[F] =
     import DerivedSemigroupalK.given
     summonInline[DerivedSemigroupalK[F]].instance
+
+  given const[A: Semigroup]: DerivedSemigroupalK[ConstK[A]#λ] = new SemigroupalK[ConstK[A]#λ]:
+    override def productK[F[_], G[_]](af: A, ag: A): A = Semigroup.combine(af, ag)
 
   given product[F[_[_]]](using inst: => ProductInstances[Of, F]): DerivedSemigroupalK[F] =
     given ProductInstances[SemigroupalK, F] = inst.unify

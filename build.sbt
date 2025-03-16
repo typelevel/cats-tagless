@@ -1,4 +1,4 @@
-import com.typesafe.tools.mima.core._
+import com.typesafe.tools.mima.core.*
 
 addCommandAlias("validateJVM", "all scalafmtCheckAll scalafmtSbtCheck testsJVM/test")
 addCommandAlias("validateJS", "all testsJS/test")
@@ -83,8 +83,8 @@ lazy val data = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .settings(rootSettings)
   .settings(
     moduleName := "cats-tagless-data",
-    publish / skip := scalaBinaryVersion.value != "3",
-    tlVersionIntroduced := Map("3" -> "0.16.3"),
+    publish / skip := !tlIsScala3.value,
+    tlVersionIntroduced := Map("3" -> "0.16.4"),
     tlMimaPreviousVersions := (if (tlIsScala3.value) tlMimaPreviousVersions.value else Set.empty),
     libraryDependencies ++= when(tlIsScala3.value)("org.typelevel" %%% "shapeless3-deriving" % shapelessVersion)
   )

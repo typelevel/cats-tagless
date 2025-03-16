@@ -18,7 +18,7 @@ package cats.tagless
 package data
 
 import cats.data.Tuple2K
-import cats.tagless.derived.Derived
+import cats.tagless.derived.*
 import shapeless3.deriving.K11.*
 
 import scala.annotation.*
@@ -29,15 +29,16 @@ Make sure it satisfies one of the following conditions:
   * generic case class where all fields form SemigroupalK""")
 type DerivedSemigroupalK[F[_[_]]] = Derived[SemigroupalK[F]]
 object DerivedSemigroupalK:
-  type Or[F[_[_]]] = Derived.Or[SemigroupalK[F]]
+  type Of[F[_[_]]] = SemigroupalK[F] || DerivedSemigroupalK[F]
 
   @nowarn("msg=unused import")
   inline def apply[F[_[_]]]: SemigroupalK[F] =
     import DerivedSemigroupalK.given
     summonInline[DerivedSemigroupalK[F]].instance
 
-  given product[F[_[_]]](using inst: => ProductInstances[Or, F]): DerivedSemigroupalK[F] =
-    new Product[SemigroupalK, F](using inst.unify) {}
+  given product[F[_[_]]](using inst: => ProductInstances[Of, F]): DerivedSemigroupalK[F] =
+    given ProductInstances[SemigroupalK, F] = inst.unify
+    new Product[SemigroupalK, F] {}
 
   trait Product[T[f[_[_]]] <: SemigroupalK[f], F[_[_]]: ProductInstancesOf[T]] extends SemigroupalK[F]:
     final override def productK[A[_], B[_]](fa: F[A], fb: F[B]): F[Tuple2K[A, B, *]] =

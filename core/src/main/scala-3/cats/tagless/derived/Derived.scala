@@ -19,37 +19,27 @@ package cats.tagless.derived
 import scala.annotation.*
 import scala.compiletime.summonFrom
 
+infix type ||[A, B] = OrElse[A, B]
+
 // Copied from https://github.com/typelevel/kittens/blob/master/core/src/main/scala-3/cats/derived/Derived.scala
 @implicitNotFound("Could not derive an instance of ${A}")
 opaque type Derived[A] = A
 object Derived:
   def apply[A](instance: A): Derived[A] = instance
+  given conv[A]: Conversion[A, Derived[A]] = identity
   extension [A](derived: Derived[A]) def instance: A = derived
-  given [A]: Conversion[A, Derived[A]] = apply
+  extension [A](derived: OrElse[A, Derived[A]]) def unify: A = OrElse.unify(derived)
 
-  type Or0[F[_]] = [x] =>> Derived.Or[F[x]]
-  type Or1[F[_[_]]] = [x[_]] =>> Derived.Or[F[x]]
-  type Or11[F[_[_[_]]]] = [x[_[_]]] =>> Derived.Or[F[x]]
-  type Or2[F[_[_, _]]] = [x[_, _]] =>> Derived.Or[F[x]]
+/** A type-level `orElse` - tries to summon `A` first and if not found, then `B`. */
+opaque type OrElse[A, B] = A | B
+object OrElse extends OrElseInstances:
+  def apply[A, B](instance: A | B): OrElse[A, B] = instance
+  given conv[A, B]: Conversion[OrElse[A, B], A | B] = identity
+  extension [A, B](orElse: OrElse[A, B]) def unify: A | B = orElse
+  extension [I[k, t], K, T](instances: I[K, OrElse[T, Derived[T]]])
+    @targetName("unifyInstances") def unify: I[K, T] = instances
 
-  opaque type Or[A] = A
-  object Or extends OrInstances:
-    def apply[A](instance: A): Or[A] = instance
-    extension [A](derived: Or[A]) def unify: A = derived
-    extension [I[f[_], t], F[_], T](inst: I[Or0[F], T])
-      @targetName("unifyK0")
-      def unify: I[F, T] = inst
-    extension [I[f[_[_]], t[_]], F[_[_]], T[_]](inst: I[Or1[F], T])
-      @targetName("unifyK1")
-      def unify: I[F, T] = inst
-    extension [I[f[_[_[_]]], t[_[_]]], F[_[_[_]]], T[_[_]]](inst: I[Or11[F], T])
-      @targetName("unifyK11")
-      def unify: I[F, T] = inst
-    extension [I[f[_[_, _]], t[_, _]], F[_[_, _]], T[_, _]](inst: I[Or2[F], T])
-      @targetName("unifyK2")
-      def unify: I[F, T] = inst
-
-sealed abstract class OrInstances:
-  inline given [A]: Derived.Or[A] = summonFrom:
-    case instance: A => Derived.Or(instance)
-    case derived: Derived[A] => Derived.Or(derived.instance)
+sealed abstract class OrElseInstances:
+  inline given orElse[A, B]: OrElse[A, B] = summonFrom:
+    case instance: A => OrElse(instance)
+    case instance: B => OrElse(instance)

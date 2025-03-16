@@ -18,7 +18,7 @@ package cats.tagless
 package data
 
 import cats.~>
-import cats.tagless.derived.Derived
+import cats.tagless.derived.*
 import shapeless3.deriving.K11.*
 
 import scala.annotation.*
@@ -31,15 +31,16 @@ Make sure it satisfies one of the following conditions:
   * generic enum where all variants form ContravariantK""")
 type DerivedContravariantK[F[_[_]]] = Derived[ContravariantK[F]]
 object DerivedContravariantK:
-  type Or[F[_[_]]] = Derived.Or[ContravariantK[F]]
+  type Of[F[_[_]]] = ContravariantK[F] || DerivedContravariantK[F]
 
   @nowarn("msg=unused import")
   inline def apply[F[_[_]]]: ContravariantK[F] =
     import ContravariantK.given
     summonInline[DerivedContravariantK[F]].instance
 
-  given generic[F[_[_]]](using inst: => Instances[Or, F]): DerivedContravariantK[F] =
-    new Generic[ContravariantK, F](using inst.unify) {}
+  given generic[F[_[_]]](using inst: => Instances[Of, F]): DerivedContravariantK[F] =
+    given Instances[ContravariantK, F] = inst.unify
+    new Generic[ContravariantK, F] {}
 
   trait Generic[T[f[_[_]]] <: ContravariantK[f], F[_[_]]: InstancesOf[T]] extends ContravariantK[F]:
     final override def contramapK[A[_], B[_]](fa: F[A])(f: B ~> A): F[B] =

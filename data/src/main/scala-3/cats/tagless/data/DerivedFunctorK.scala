@@ -18,7 +18,7 @@ package cats.tagless
 package data
 
 import cats.~>
-import cats.tagless.derived.Derived
+import cats.tagless.derived.*
 import shapeless3.deriving.K11.*
 
 import scala.annotation.*
@@ -31,15 +31,16 @@ Make sure it satisfies one of the following conditions:
   * generic enum where all variants form FunctorK""")
 type DerivedFunctorK[F[_[_]]] = Derived[FunctorK[F]]
 object DerivedFunctorK:
-  type Or[F[_[_]]] = Derived.Or[FunctorK[F]]
+  type Of[F[_[_]]] = FunctorK[F] || DerivedFunctorK[F]
 
   @nowarn("msg=unused import")
   inline def apply[F[_[_]]]: FunctorK[F] =
     import DerivedFunctorK.given
     summonInline[DerivedFunctorK[F]].instance
 
-  given generic[F[_[_]]](using inst: => Instances[Or, F]): DerivedFunctorK[F] =
-    new Generic[FunctorK, F](using inst.unify) {}
+  given generic[F[_[_]]](using inst: => Instances[Of, F]): DerivedFunctorK[F] =
+    given Instances[FunctorK, F] = inst.unify
+    new Generic[FunctorK, F] {}
 
   trait Generic[T[f[_[_]]] <: FunctorK[f], F[_[_]]: InstancesOf[T]] extends FunctorK[F]:
     final override def mapK[A[_], B[_]](fa: F[A])(fk: A ~> B): F[B] =

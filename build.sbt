@@ -53,7 +53,7 @@ val fs2Version = "3.11.0"
 val kindProjectorVersion = "0.13.3"
 val paradiseVersion = "2.1.1"
 val scalaCheckVersion = "1.17.1"
-val shapelessVersion = "3.5.0"
+val shapelessVersion = "3.4.2"
 
 lazy val root = tlCrossRootProject.aggregate(core, data, fs2, laws, tests, macros, examples)
 

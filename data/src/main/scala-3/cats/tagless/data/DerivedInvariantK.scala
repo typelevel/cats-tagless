@@ -18,7 +18,7 @@ package cats.tagless
 package data
 
 import cats.~>
-import cats.tagless.derived.Derived
+import cats.tagless.derived.*
 import shapeless3.deriving.K11.*
 
 import scala.annotation.*
@@ -31,15 +31,16 @@ Make sure it satisfies one of the following conditions:
   * generic enum where all variants form InvariantK""")
 type DerivedInvariantK[F[_[_]]] = Derived[InvariantK[F]]
 object DerivedInvariantK:
-  type Or[F[_[_]]] = Derived.Or[InvariantK[F]]
+  type Of[F[_[_]]] = InvariantK[F] || DerivedInvariantK[F]
 
   @nowarn("msg=unused import")
   inline def apply[F[_[_]]]: InvariantK[F] =
     import DerivedInvariantK.given
     summonInline[DerivedInvariantK[F]].instance
 
-  given generic[F[_[_]]](using inst: => Instances[Or, F]): DerivedInvariantK[F] =
-    new Generic[InvariantK, F](using inst.unify) {}
+  given generic[F[_[_]]](using inst: => Instances[Of, F]): DerivedInvariantK[F] =
+    given Instances[InvariantK, F] = inst.unify
+    new Generic[InvariantK, F] {}
 
   trait Generic[T[f[_[_]]] <: InvariantK[f], F[_[_]]: InstancesOf[T]] extends InvariantK[F]:
     final override def imapK[A[_], B[_]](fa: F[A])(fk: A ~> B)(gk: B ~> A): F[B] =

@@ -41,12 +41,13 @@ object MacroSemigroupK:
 
     val A = TypeRepr.of[A]
 
-    List(x, y).combineTo[F[A]](body = {
-      case (_, tpe, x :: y :: Nil) if tpe.contains(A) =>
-        Select
-          .unique(tpe.summonLambda[SemigroupK](A), "combineK")
-          .appliedToTypes(List(A))
-          .appliedTo(x, y)
-      case (_, tpe, x :: y :: Nil) =>
-        tpe.summonOpt[Semigroup].fold(x)(Select.unique(_, "combine").appliedTo(x, y))
-    })
+    List(x, y).combineTo[F[A]](
+      body =
+        case (_, tpe, x :: y :: Nil) if tpe.contains(A) =>
+          Select
+            .unique(tpe.summonLambda[SemigroupK](A), "combineK")
+            .appliedToTypes(List(A))
+            .appliedTo(x, y)
+        case (_, tpe, x :: y :: Nil) =>
+          tpe.summonOpt[Semigroup].fold(x)(Select.unique(_, "combine").appliedTo(x, y))
+    )

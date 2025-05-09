@@ -74,7 +74,7 @@ object MacroAspect:
         catch case _: ReflectiveOperationException => ()
 
     alg.transformTo[Alg[[X] =>> Aspect.Weave[F, Dom, Cod, X]]](
-      body = {
+      body =
         case (sym, tpe, body) if tpe <:< WeaveF =>
           val (givens, clauses) = sym.tree match
             case method: DefDef =>
@@ -91,5 +91,4 @@ object MacroAspect:
               val domain = Expr.ofList(clauses.map(c => '{ List.concat(${ Varargs(c.params.map(paramAdvice)) }*) }))
               val codomain = '{ Aspect.Advice($methodName, ${ body.asExprOf[F[t]] })(using $cod) }
               '{ Aspect.Weave($algebraName, $domain, $codomain) }.asTerm
-      }
     )

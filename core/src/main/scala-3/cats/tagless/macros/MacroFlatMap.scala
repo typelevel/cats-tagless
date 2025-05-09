@@ -48,16 +48,14 @@ object MacroFlatMap:
     val B = TypeRepr.of[B]
 
     fa.transformTo[F[B]](
-      args = {
+      args =
         case (method, tpe, _) if tpe.contains(B) =>
-          report.errorAndAbort(s"Type parameter ${A.show} occurs in contravariant position in $method")
-      },
-      body = {
+          report.errorAndAbort(s"Type parameter ${A.show} occurs in contravariant position in $method"),
+      body =
         case (_, tpe, body) if tpe =:= B =>
           body.replace(fa, '{ $f(${ body.asExprOf[A] }) })
         case (method, tpe, _) if tpe.contains(B) =>
           report.errorAndAbort(s"Expected $method to return ${A.show} but found ${tpe.show}")
-      }
     )
 
   private[macros] def deriveTailRecM[F[_]: Type, A: Type, B: Type](
@@ -71,11 +69,10 @@ object MacroFlatMap:
     val B = TypeRepr.of[B]
 
     '{ $f($a) }.transformTo[F[B]](
-      args = {
+      args =
         case (method, tpe, _) if tpe.contains(B) =>
-          report.errorAndAbort(s"Type parameter ${A.show} occurs in contravariant position in $method")
-      },
-      body = {
+          report.errorAndAbort(s"Type parameter ${A.show} occurs in contravariant position in $method"),
+      body =
         case (method, tpe, body) if tpe =:= B =>
           given Quotes = method.asQuotes
           '{
@@ -87,5 +84,4 @@ object MacroFlatMap:
           }.asTerm
         case (method, tpe, _) if tpe.contains(B) =>
           report.errorAndAbort(s"Expected $method to return ${A.show} but found ${tpe.show}")
-      }
     )

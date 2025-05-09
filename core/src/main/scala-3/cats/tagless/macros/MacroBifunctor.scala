@@ -46,7 +46,7 @@ object MacroBifunctor:
     val D = TypeRepr.of[D]
 
     fab.transformTo[F[C, D]](
-      args = {
+      args =
         case (method, tpe, _) if tpe.containsAll(C, D) =>
           val msg = s"Both type parameters ${A.show} and ${B.show} occur in contravariant position in $method"
           report.errorAndAbort(msg)
@@ -61,9 +61,8 @@ object MacroBifunctor:
             .unique(tpe.summonLambda[Contravariant](D), "contramap")
             .appliedToTypes(List(D, B))
             .appliedTo(arg)
-            .appliedTo(g.asTerm)
-      },
-      body = {
+            .appliedTo(g.asTerm),
+      body =
         case (_, tpe, body) if tpe.containsAll(C, D) =>
           Select
             .unique(tpe.summonLambda[Bifunctor](C, D), "bimap")
@@ -82,5 +81,4 @@ object MacroBifunctor:
             .appliedToTypes(List(B, D))
             .appliedTo(body)
             .appliedTo(g.asTerm)
-      }
     )

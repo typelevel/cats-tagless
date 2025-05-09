@@ -48,7 +48,7 @@ object MacroApply:
       args = List.fill(2):
         case (method, tpe, _) if tpe.contains(B) =>
           report.errorAndAbort(s"Type parameter ${A.show} occurs in contravariant position in $method"),
-      body = {
+      body =
         case (_, tpe, ff :: fa :: Nil) if tpe.contains(B) =>
           Select
             .unique(tpe.summonLambda[cats.Apply](B), "ap")
@@ -57,5 +57,4 @@ object MacroApply:
             .appliedTo(fa)
         case (_, tpe, ff :: fa :: Nil) =>
           tpe.summonOpt[Semigroup].fold(ff)(Select.unique(_, "combine").appliedTo(ff, fa))
-      }
     )

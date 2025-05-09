@@ -47,7 +47,7 @@ object MacroProfunctor:
     val D = TypeRepr.of[D]
 
     fab.transformTo[F[C, D]](
-      args = {
+      args =
         case (_, tpe, arg) if tpe.containsAll(C, D) =>
           Select
             .unique(tpe.summonLambda[Profunctor](D, C), "dimap")
@@ -66,9 +66,8 @@ object MacroProfunctor:
             .unique(tpe.summonLambda[Contravariant](D), "contramap")
             .appliedToTypes(List(D, B))
             .appliedTo(arg)
-            .appliedTo(g.asTerm)
-      },
-      body = {
+            .appliedTo(g.asTerm),
+      body =
         case (_, tpe, body) if tpe.containsAll(C, D) =>
           Select
             .unique(tpe.summonLambda[Profunctor](C, D), "dimap")
@@ -88,5 +87,4 @@ object MacroProfunctor:
             .appliedToTypes(List(B, D))
             .appliedTo(body)
             .appliedTo(g.asTerm)
-      }
     )

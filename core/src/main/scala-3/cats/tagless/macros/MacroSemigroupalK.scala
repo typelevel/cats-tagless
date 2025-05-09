@@ -74,7 +74,7 @@ object MacroSemigroupalK:
               .appliedTo(tuple2K("secondK"))
         }
       ),
-      body = {
+      body =
         case (_, tpe, af :: ag :: Nil) if tpe.contains(F) =>
           Select
             .unique(tpe.firstK.summonLambda[SemigroupalK](F), "productK")
@@ -82,5 +82,4 @@ object MacroSemigroupalK:
             .appliedTo(af, ag)
         case (_, tpe, af :: ag :: Nil) =>
           tpe.summonOpt[Semigroup].fold(af)(Select.unique(_, "combine").appliedTo(af, ag))
-      }
     )

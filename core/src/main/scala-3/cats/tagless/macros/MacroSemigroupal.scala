@@ -74,7 +74,7 @@ object MacroSemigroupal:
               .appliedTo(tuple(method, "_2", B))
         }
       ),
-      body = {
+      body =
         case (_, tpe, af :: ag :: Nil) if tpe.contains(A) =>
           Select
             .unique(tpe.first.summonLambda[Semigroupal](A), "product")
@@ -82,5 +82,4 @@ object MacroSemigroupal:
             .appliedTo(af, ag)
         case (_, tpe, af :: ag :: Nil) =>
           tpe.summonOpt[Semigroup].fold(af)(Select.unique(_, "combine").appliedTo(af, ag))
-      }
     )

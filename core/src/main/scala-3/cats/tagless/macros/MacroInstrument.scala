@@ -46,17 +46,13 @@ object MacroInstrument:
     val Alg = TypeRepr.of[Alg]
 
     alg.transformTo[Alg[[X] =>> Instrumentation[F, X]]](
-      body = {
+      body =
         case (sym, tpe, body) if tpe <:< InstrumentationF =>
           val resultType = tpe.typeArgs.tail
-
           val newBody = resultType.map(_.asType) match
             case '[t] :: Nil =>
               '{ Instrumentation[F, t](${ body.asExprOf[F[t]] }, ${ Expr(Alg.typeSymbol.name) }, ${ Expr(sym.name) }) }
-
             case _ =>
               report.errorAndAbort(s"Expected method ${sym.name} to return $F[?] but found ${tpe.show}")
-
           newBody.asTerm
-      }
     )

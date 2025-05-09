@@ -44,16 +44,15 @@ object MacroInvariantK:
     val G = TypeRepr.of[G]
 
     alg.transformTo[Alg[G]](
-      args = {
+      args =
         case (_, tpe, arg) if tpe.contains(G) =>
           Select
             .unique(tpe.summonLambda[InvariantK](G), "imapK")
             .appliedToTypes(List(G, F))
             .appliedTo(arg)
             .appliedTo(gk.asTerm)
-            .appliedTo(fk.asTerm)
-      },
-      body = {
+            .appliedTo(fk.asTerm),
+      body =
         case (_, tpe, body) if tpe.contains(G) =>
           Select
             .unique(tpe.summonLambda[InvariantK](G), "imapK")
@@ -61,5 +60,4 @@ object MacroInvariantK:
             .appliedTo(body)
             .appliedTo(fk.asTerm)
             .appliedTo(gk.asTerm)
-      }
     )

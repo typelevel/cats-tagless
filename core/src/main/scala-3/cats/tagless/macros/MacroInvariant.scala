@@ -44,16 +44,15 @@ object MacroInvariant:
     val B = TypeRepr.of[B]
 
     fa.transformTo[F[B]](
-      args = {
+      args =
         case (_, tpe, arg) if tpe.contains(B) =>
           Select
             .unique(tpe.summonLambda[Invariant](B), "imap")
             .appliedToTypes(List(B, A))
             .appliedTo(arg)
             .appliedTo(g.asTerm)
-            .appliedTo(f.asTerm)
-      },
-      body = {
+            .appliedTo(f.asTerm),
+      body =
         case (_, tpe, body) if tpe.contains(B) =>
           Select
             .unique(tpe.summonLambda[Invariant](B), "imap")
@@ -61,5 +60,4 @@ object MacroInvariant:
             .appliedTo(body)
             .appliedTo(f.asTerm)
             .appliedTo(g.asTerm)
-      }
     )

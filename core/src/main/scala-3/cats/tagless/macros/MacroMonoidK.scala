@@ -39,11 +39,12 @@ object MacroMonoidK:
 
     val A = TypeRepr.of[A]
 
-    '{ null.asInstanceOf[F[A]] }.transformTo[F[A]](body = {
-      case (_, tpe, _) if tpe.contains(A) =>
-        Select
-          .unique(tpe.summonLambda[MonoidK](A), "empty")
-          .appliedToTypes(List(A))
-      case (_, tpe, _) =>
-        Select.unique(TypeRepr.of[Monoid].appliedTo(tpe).summon, "empty")
-    })
+    '{ null.asInstanceOf[F[A]] }.transformTo[F[A]](
+      body =
+        case (_, tpe, _) if tpe.contains(A) =>
+          Select
+            .unique(tpe.summonLambda[MonoidK](A), "empty")
+            .appliedToTypes(List(A))
+        case (_, tpe, _) =>
+          Select.unique(TypeRepr.of[Monoid].appliedTo(tpe).summon, "empty")
+    )

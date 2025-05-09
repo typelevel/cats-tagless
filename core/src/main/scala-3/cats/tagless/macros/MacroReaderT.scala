@@ -36,7 +36,8 @@ object MacroReaderT:
     val RT = TypeRepr.of[ReaderT[F, Alg[F], ?]]
 
     def readerT[T: Type](owner: Symbol)(body: Term => Term): Term =
-      '{ ReaderT((af: Alg[F]) => ${ body('af.asTerm).asExprOf[F[T]] }) }.asTerm.changeOwner(owner)
+      given Quotes = owner.asQuotes
+      '{ ReaderT((af: Alg[F]) => ${ body('af.asTerm).asExprOf[F[T]] }) }.asTerm
 
     def argTransformer(af: Term): dm.Transform =
       case (_, tpe, arg) if tpe <:< RT => Select.unique(arg, "apply").appliedTo(af)

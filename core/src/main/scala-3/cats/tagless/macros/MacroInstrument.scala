@@ -35,8 +35,8 @@ object MacroInstrument:
         ${ MacroFunctorK.deriveMapK('{ alg }, '{ fk }) }
   }
 
-  private[macros] def deriveInstrument[Alg[_[_]]: Type, F[_]: Type](alg: Expr[Alg[F]])(using
-      Type[[X] =>> Instrumentation[F, X]]
+  private[macros] def deriveInstrument[Alg[_[_]]: Type, F[_]: Type](
+      alg: Expr[Alg[F]]
   )(using q: Quotes): Expr[Alg[[X] =>> Instrumentation[F, X]]] =
     import quotes.reflect.*
     given DeriveMacros[q.type] = new DeriveMacros

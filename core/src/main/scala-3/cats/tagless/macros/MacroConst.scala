@@ -20,6 +20,7 @@ import cats.tagless.*
 
 import scala.annotation.experimental
 import scala.quoted.*
+import scala.annotation.unused
 
 @experimental
 object MacroConst:
@@ -31,7 +32,7 @@ object MacroConst:
 
     val A = TypeRepr.of[A]
 
-    def transformDef(method: DefDef)(argss: List[List[Tree]]): Option[Term] =
+    def transformDef(method: DefDef)(@unused argss: List[List[Tree]]): Option[Term] =
       method.returnTpt.tpe.asType match
         case '[A] =>
           Some(const.asTerm)

@@ -26,7 +26,6 @@ import cats.tagless.tests.CatsTaglessTestSuite
 import cats.tagless.{InvariantK, SemigroupalK}
 import org.scalacheck.Arbitrary
 
-import scala.annotation.unused
 import scala.util.Try
 
 class SemigroupalKSuite extends CatsTaglessTestSuite:

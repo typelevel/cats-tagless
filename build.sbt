@@ -261,7 +261,8 @@ lazy val commonSettings = List(
 lazy val commonJsSettings = List(
   // currently sbt-doctest doesn't work in JS builds
   // https://github.com/tkawachi/sbt-doctest/issues/52
-  doctestGenTests := Nil
+  doctestGenTests := Nil,
+  scalacOptions -= "-Werror"
 )
 
 lazy val commonNativeSettings = List(

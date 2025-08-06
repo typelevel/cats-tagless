@@ -63,11 +63,11 @@ object MacroAspect:
     alg.transformTo[Alg[[X] =>> Aspect.Weave[F, Dom, Cod, X]]](
       body =
         case (sym, tpe, body) if tpe <:< WeaveF =>
-          val (givens, clauses) = sym.tree match
+          val clauses = sym.tree match
             case method: DefDef =>
-              method.termParamss.partition(c => c.isGiven || c.isImplicit)
+              method.termParamss.filterNot(c => c.isGiven || c.isImplicit)
             case _ =>
-              (Nil, Nil)
+              Nil
 
           tpe.typeArgs.last.asType match
             case '[t] =>

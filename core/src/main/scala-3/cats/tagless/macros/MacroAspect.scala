@@ -60,20 +60,6 @@ object MacroAspect:
           else if tpe.isRepeated then '{ ${ value.asExprOf[Seq[t]] }.map(Aspect.Advice.byValue($name, _)(using $dom)) }
           else '{ Aspect.Advice.byValue($name, ${ value.asExprOf[t] })(using $dom) :: Nil }
 
-    // This is a hack.
-    def addToGivenScope(refs: List[TermRef])(using q: Quotes): Unit =
-      if refs.nonEmpty then
-        try
-          val _ = Expr.summon[Nothing] // fill implicit cache
-          val ctxMethod = q.getClass.getMethod("ctx")
-          val ctx = ctxMethod.invoke(q)
-          val cache = ctxMethod.getReturnType.getDeclaredField("implicitsCache")
-          cache.setAccessible(true)
-          val contextual = Class.forName("dotty.tools.dotc.typer.Implicits$ContextualImplicits")
-          val modified = contextual.getConstructors.head.newInstance(refs, cache.get(ctx), false, ctx)
-          cache.set(ctx, modified)
-        catch case _: ReflectiveOperationException => ()
-
     alg.transformTo[Alg[[X] =>> Aspect.Weave[F, Dom, Cod, X]]](
       body =
         case (sym, tpe, body) if tpe <:< WeaveF =>
@@ -86,7 +72,6 @@ object MacroAspect:
           tpe.typeArgs.last.asType match
             case '[t] =>
               given Quotes = sym.asQuotes
-              addToGivenScope(givens.flatMap(_.params).map(_.symbol.termRef))
               val methodName = Expr(sym.name)
               val cod = summon[Cod[t]]
               val domain = Expr.ofList(clauses.map(c => '{ List.concat(${ Varargs(c.params.map(paramAdvice)) }*) }))

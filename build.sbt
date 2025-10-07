@@ -7,7 +7,7 @@ addCommandAlias("fmt", "all scalafmtSbt scalafmtAll")
 addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 
 val Scala212 = "2.12.20"
-val Scala213 = "2.13.16"
+val Scala213 = "2.13.17"
 val Scala3 = "3.3.6"
 
 val gitRepo = "git@github.com:typelevel/cats-tagless.git"
@@ -178,7 +178,7 @@ lazy val examples = project
     libraryDependencies += "org.typelevel" %%% "cats-free" % catsVersion
   )
 
-/** Docs - Generates and publishes the scaladoc API documents and the project web site. */
+/** Docs - Generates and publishes the scaladoc API documents and the project website. */
 lazy val docs = project
   .dependsOn(macrosJVM)
   .enablePlugins(MicrositesPlugin, SiteScaladocPlugin, NoPublishPlugin)
@@ -231,7 +231,7 @@ lazy val commonSettings = List(
   scalacOptions ~= (_.filterNot(_ == "-source:3.0-migration")),
   scalacOptions ++= (scalaBinaryVersion.value match {
     case "3" => List("-language:adhocExtensions", "-explain")
-    case "2.13" => List("-Xsource:3", "-P:kind-projector:underscore-placeholders", "-Xlint:-pattern-shadow")
+    case "2.13" => List("-Xsource:3", "-P:kind-projector:underscore-placeholders", "-Xlint:-pattern-shadow,-infer-any")
     case _ => List("-Xsource:3", "-P:kind-projector:underscore-placeholders")
   })
 )

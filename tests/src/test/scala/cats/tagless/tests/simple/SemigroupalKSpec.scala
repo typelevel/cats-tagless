@@ -21,9 +21,7 @@ import cats.Id
 import cats.arrow.FunctionK
 import cats.data.Tuple2K
 import cats.tagless.syntax.all.*
-import cats.tagless.tests.experimental
 
-@experimental
 class SemigroupalKSpec extends munit.FunSuite with Fixtures {
   test("DeriveMacro should derive instance for a simple algebra") {
     val semigroupalK = Derive.semigroupalK[SimpleService]

@@ -28,9 +28,9 @@ class OptimizationSpec extends munit.FunSuite {
     def put(key: String, value: String): F[Unit]
   }
 
-  val mockInterpreter = new KVStore[Eval] {
-    def get(key: String) = Eval.later(Some(s"Value for $key"))
-    def put(key: String, value: String) = Eval.later(())
+  val mockInterpreter = new KVStore[Id] {
+    def get(key: String) = Some(s"Value for $key")
+    def put(key: String, value: String) = ()
   }
 
   def createOptimizer[F[_]: Monad]: Optimizer[KVStore, F] = new Optimizer[KVStore, F] {
@@ -71,10 +71,10 @@ class OptimizationSpec extends munit.FunSuite {
       def apply[F[_]: Applicative](alg: KVStore[F]): F[List[String]] = program(alg)
     }
 
-    implicit val optimizer = createOptimizer[Eval]
+    implicit val optimizer = createOptimizer[Id]
 
-    val unoptimized = program(mockInterpreter).value
-    val optimized = programInstance.optimize(mockInterpreter).value
+    val unoptimized = program(mockInterpreter)
+    val optimized = programInstance.optimize(mockInterpreter)
 
     // Both should produce the same result
     assertEquals(optimized, unoptimized)
@@ -129,10 +129,10 @@ class OptimizationSpec extends munit.FunSuite {
       def apply[F[_]: Applicative](alg: KVStore[F]): F[List[String]] = putGetProgram(alg)
     }
     
-    implicit val putGetOptimizer = createPutGetEliminator[Eval]
+    implicit val putGetOptimizer = createPutGetEliminator[Id]
     
-    val unoptimized = putGetProgram(mockInterpreter).value
-    val optimized = putGetProgramInstance.optimize(mockInterpreter).value
+    val unoptimized = putGetProgram(mockInterpreter)
+    val optimized = putGetProgramInstance.optimize(mockInterpreter)
     
     // Both should produce the same result
     assertEquals(optimized, unoptimized)
@@ -178,10 +178,10 @@ class OptimizationSpec extends munit.FunSuite {
       def apply[F[_]: Monad](alg: KVStore[F]): F[List[String]] = monadProgram(alg)
     }
     
-    implicit val monadOptimizer = createMonadOptimizer[Eval]
+    implicit val monadOptimizer = createMonadOptimizer[Id]
     
-    val unoptimized = monadProgram(mockInterpreter).value
-    val optimized = monadProgramInstance.optimizeM(mockInterpreter).value
+    val unoptimized = monadProgram(mockInterpreter)
+    val optimized = monadProgramInstance.optimizeM(mockInterpreter)
     
     // Both should produce the same result
     assertEquals(optimized, unoptimized)

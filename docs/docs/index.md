@@ -319,10 +319,6 @@ The optimization package is inspired by techniques originally developed in the [
 ### Quick Example
 
 ```scala mdoc:silent
-import cats.tagless.optimize.*
-import cats.*
-import cats.data.*
-
 trait KVStore[F[_]] {
   def get(key: String): F[Option[String]]
   def put(key: String, value: String): F[Unit]

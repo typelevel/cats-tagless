@@ -39,7 +39,7 @@ class OptimizationSpec extends munit.FunSuite {
     def monoidM = implicitly[Monoid[Set[String]]]
     def monadF = implicitly[Monad[F]]
     
-    def extract = new KVStore[Const[Set[String], *]] {
+    def extract = new KVStore[Const[Set[String], ?]] {
       def get(key: String) = Const(Set(key))
       def put(key: String, value: String) = Const(Set.empty)
     }
@@ -95,7 +95,7 @@ class OptimizationSpec extends munit.FunSuite {
       def monoidM = implicitly[Monoid[KVStoreInfo]]
       def monadF = implicitly[Monad[F]]
       
-      def extract = new KVStore[Const[KVStoreInfo, *]] {
+      def extract = new KVStore[Const[KVStoreInfo, ?]] {
         def get(key: String) = Const(KVStoreInfo(Set(key), Map.empty))
         def put(key: String, value: String) = Const(KVStoreInfo(Set.empty, Map(key -> value)))
       }
@@ -146,7 +146,7 @@ class OptimizationSpec extends munit.FunSuite {
       def monadF = implicitly[Monad[F]]
       def applyK = implicitly[ApplyK[KVStore]]
       
-      def rebuild(interp: KVStore[F]): KVStore[Kleisli[F, M, *]] = new KVStore[Kleisli[F, M, *]] {
+      def rebuild(interp: KVStore[F]): KVStore[Kleisli[F, M, ?]] = new KVStore[Kleisli[F, M, ?]] {
         def get(key: String): Kleisli[F, M, Option[String]] = Kleisli { cache =>
           cache.get(key) match {
             case Some(value) => Option(value).pure[F]
@@ -159,7 +159,7 @@ class OptimizationSpec extends munit.FunSuite {
         }
       }
       
-      def extract: KVStore[* => M] = new KVStore[* => M] {
+      def extract: KVStore[? => M] = new KVStore[? => M] {
         def get(key: String): Option[String] => M = {
           case Some(value) => Map(key -> value)
           case None => Map.empty

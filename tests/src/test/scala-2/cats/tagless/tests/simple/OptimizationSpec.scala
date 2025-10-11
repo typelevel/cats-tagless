@@ -33,7 +33,8 @@ class OptimizationSpec extends munit.FunSuite {
     def put(key: String, value: String) = ()
   }
 
-  def createOptimizer[F[_]: Monad]: Optimizer[KVStore, F] = new Optimizer[KVStore, F] {
+  def createOptimizer[F[_]: Monad]: Optimizer[KVStore, F] =
+    new Optimizer[KVStore, F] {
     type M = Set[String]
     
     def monoidM = implicitly[Monoid[Set[String]]]
@@ -89,7 +90,8 @@ class OptimizationSpec extends munit.FunSuite {
   test("Optimizer should work with put-get elimination") {
     case class KVStoreInfo(queries: Set[String], cache: Map[String, String])
     
-    def createPutGetEliminator[F[_]: Monad]: Optimizer[KVStore, F] = new Optimizer[KVStore, F] {
+    def createPutGetEliminator[F[_]: Monad]: Optimizer[KVStore, F] =
+      new Optimizer[KVStore, F] {
       type M = KVStoreInfo
       
       def monoidM = implicitly[Monoid[KVStoreInfo]]
@@ -139,14 +141,16 @@ class OptimizationSpec extends munit.FunSuite {
   }
 
   test("MonadOptimizer should work with stateful optimizations") {
-    def createMonadOptimizer[F[_]: Monad]: MonadOptimizer[KVStore, F] = new MonadOptimizer[KVStore, F] {
+    def createMonadOptimizer[F[_]: Monad]: MonadOptimizer[KVStore, F] =
+      new MonadOptimizer[KVStore, F] {
       type M = Map[String, String]
       
       def monoidM = implicitly[Monoid[Map[String, String]]]
       def monadF = implicitly[Monad[F]]
       def applyK = implicitly[ApplyK[KVStore]]
       
-      def rebuild(interp: KVStore[F]): KVStore[Lambda[A => Kleisli[F, M, A]]] = new KVStore[Lambda[A => Kleisli[F, M, A]]] {
+      def rebuild(interp: KVStore[F]): KVStore[Lambda[A => Kleisli[F, M, A]]] =
+        new KVStore[Lambda[A => Kleisli[F, M, A]]] {
         def get(key: String): Kleisli[F, M, Option[String]] = Kleisli { cache =>
           cache.get(key) match {
             case Some(value) => Option(value).pure[F]
@@ -159,7 +163,8 @@ class OptimizationSpec extends munit.FunSuite {
         }
       }
       
-      def extract: KVStore[Lambda[A => A => M]] = new KVStore[Lambda[A => A => M]] {
+      def extract: KVStore[Lambda[A => A => M]] =
+        new KVStore[Lambda[A => A => M]] {
         def get(key: String): Option[String] => M = {
           case Some(value) => Map(key -> value)
           case None => Map.empty

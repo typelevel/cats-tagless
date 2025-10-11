@@ -38,11 +38,6 @@ The optimization package provides three main type classes:
 Let's start with a simple example using a key-value store algebra:
 
 ```scala mdoc:silent
-import cats.tagless.optimize.*
-import cats.*
-import cats.data.*
-import cats.syntax.all.*
-
 trait KVStore[F[_]] {
   def get(key: String): F[Option[String]]
   def put(key: String, value: String): F[Unit]
@@ -58,6 +53,11 @@ To create an optimizer, you need to implement the `Optimizer` trait with three k
 3. **`rebuild`**: A function that creates an optimized interpreter based on the collected information
 
 ```scala mdoc:silent
+import cats._
+import cats.data._
+import cats.syntax.all._
+import cats.tagless.optimize._
+
 def createKVStoreOptimizer[F[_]: Monad]: Optimizer[KVStore, F] = new Optimizer[KVStore, F] {
   type M = Set[String]
   
@@ -93,6 +93,9 @@ def createKVStoreOptimizer[F[_]: Monad]: Optimizer[KVStore, F] = new Optimizer[K
 Now you can use the optimizer to optimize programs:
 
 ```scala mdoc:silent
+import cats._
+import cats.syntax.all._
+
 def program[F[_]: Applicative](store: KVStore[F]): F[List[String]] = {
   (store.get("Cats"), store.get("Dogs"), store.get("Cats"), store.get("Birds"))
     .mapN((c, d, c2, b) => List(c, d, c2, b).flatten)
@@ -104,6 +107,8 @@ val programInstance = new Program[KVStore, Applicative, List[String]] {
 ```
 
 ```scala mdoc:silent
+import cats.Eval
+
 // Example interpreter
 val mockInterpreter = new KVStore[Eval] {
   def get(key: String) = Eval.later {
@@ -133,6 +138,11 @@ val optimized = programInstance.optimize(mockInterpreter).value
 A more sophisticated optimization can eliminate redundant put-get pairs:
 
 ```scala mdoc:silent
+import cats._
+import cats.data._
+import cats.syntax.all._
+import cats.tagless.optimize._
+
 case class KVStoreInfo(queries: Set[String], cache: Map[String, String])
 
 def createPutGetEliminator[F[_]: Monad]: Optimizer[KVStore, F] = new Optimizer[KVStore, F] {
@@ -172,6 +182,11 @@ def createPutGetEliminator[F[_]: Monad]: Optimizer[KVStore, F] = new Optimizer[K
 For more complex optimizations that require state, use `MonadOptimizer`:
 
 ```scala mdoc:silent
+import cats._
+import cats.data._
+import cats.tagless.ApplyK
+import cats.tagless.optimize._
+
 def createMonadOptimizer[F[_]: Monad]: MonadOptimizer[KVStore, F] = new MonadOptimizer[KVStore, F] {
   type M = Map[String, String]
   

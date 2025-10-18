@@ -60,10 +60,10 @@ object MacroAspect:
           else '{ Aspect.Advice.byValue($name, ${ value.asExprOf[t] })(using $dom) :: Nil }
 
     // This is a hack.
-    def addToGivenScope(refs: List[TermRef])(using q: Quotes) =
+    def addToGivenScope(refs: List[TermRef])(using q: Quotes): Unit =
       if refs.nonEmpty then
         try
-          Expr.summon[Nothing] // fill implicit cache
+          val _ = Expr.summon[Nothing] // fill implicit cache
           val ctxMethod = q.getClass.getMethod("ctx")
           val ctx = ctxMethod.invoke(q)
           val cache = ctxMethod.getReturnType.getDeclaredField("implicitsCache")

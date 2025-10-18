@@ -8,7 +8,7 @@ addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 
 val Scala212 = "2.12.20"
 val Scala213 = "2.13.17"
-val Scala3 = "3.3.6"
+val Scala3 = "3.3.7"
 
 val gitRepo = "git@github.com:typelevel/cats-tagless.git"
 val homePage = "https://typelevel.org/cats-tagless"
@@ -219,6 +219,28 @@ lazy val docSettings = commonSettings ::: List(
   makeSite / includeFilter := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md"
 )
 
+val scala3Options = List(
+  "-language:adhocExtensions",
+  "-explain",
+  List(
+    "locals",
+    "params",
+    "implicits",
+    "explicits",
+    "nowarn",
+    "strict-no-implicit-warn",
+    "unsafe-warn-patvars"
+  ).mkString("-Wunused:", ",", "")
+)
+
+val scala212Options = List(
+  "-Xsource:3",
+  "-P:kind-projector:underscore-placeholders"
+)
+
+val scala213Options =
+  "-Xlint:-pattern-shadow,-infer-any" :: scala212Options
+
 lazy val commonSettings = List(
   scalaVersion := (ThisBuild / scalaVersion).value,
   crossScalaVersions := (ThisBuild / crossScalaVersions).value,
@@ -227,12 +249,12 @@ lazy val commonSettings = List(
   startYear := Some(2019),
   apiURL := Some(url("https://typelevel.org/cats-tagless/api/")),
   autoAPIMappings := true,
-  // sbt-typelevel sets -source:3.0-migration, we'd like to replace it with -source:future
-  scalacOptions ~= (_.filterNot(_ == "-source:3.0-migration")),
+  scalacOptions ~= (_.filterNot(_.startsWith("-Wunused"))),
   scalacOptions ++= (scalaBinaryVersion.value match {
-    case "3" => List("-language:adhocExtensions", "-explain")
-    case "2.13" => List("-Xsource:3", "-P:kind-projector:underscore-placeholders", "-Xlint:-pattern-shadow,-infer-any")
-    case _ => List("-Xsource:3", "-P:kind-projector:underscore-placeholders")
+    case "3" => scala3Options
+    case "2.13" => scala213Options
+    case "2.12" => scala212Options
+    case _ => Nil
   })
 )
 

@@ -26,6 +26,7 @@ import cats.tagless.tests.{CatsTaglessTestSuite, experimental}
 import cats.tagless.{InvariantK, SemigroupalK}
 import org.scalacheck.Arbitrary
 
+import scala.annotation.unused
 import scala.util.Try
 
 @experimental
@@ -47,7 +48,7 @@ object SemigroupalKSuite:
         SemigroupalK
 
   object Parsed:
-    given [F[_]](using
+    @unused given [F[_]](using
         Arbitrary[F[Int]],
         Arbitrary[F[String]],
         Arbitrary[F[Option[String]]],
@@ -60,7 +61,7 @@ object SemigroupalKSuite:
         errors <- Arbitrary.arbitrary[EitherT[F, String, Int]]
       yield Parsed(position, labels, metadata, errors)
 
-  given [F[_]](using
+  @unused given [F[_]](using
       Eq[F[Int]],
       Eq[F[String]],
       Eq[F[Option[String]]],

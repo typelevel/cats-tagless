@@ -109,13 +109,8 @@ class OptimizerTests extends CatsTaglessTestSuite {
     type M = Map[String, String]
 
     def monoidM = implicitly
-
     def monadF = implicitly
-
     def applyK: ApplyK[KVStore] = implicitly
-
-    type Cache = Map[String, String]
-    type CachedAction[A] = StateT[F, Cache, A]
 
     def rebuild(interp: KVStore[F]): KVStore[Kleisli[F, M, *]] = new KVStore[Kleisli[F, M, *]] {
       def get(key: String): Kleisli[F, M, Option[String]] = Kleisli(m =>

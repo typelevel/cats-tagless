@@ -123,7 +123,7 @@ val mockInterpreter = new KVStore[Eval] {
 implicit val optimizer = createKVStoreOptimizer[Eval]
 ```
 
-```scala mdoc
+```scala mdoc:compile-only
 // Without optimization - each get is executed
 val unoptimized = program(mockInterpreter).value
 

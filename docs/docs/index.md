@@ -332,4 +332,4 @@ def program[F[_]: Applicative](store: KVStore[F]): F[List[String]] = {
 
 With optimization, the duplicate `get("Cats")` call can be eliminated automatically.
 
-For detailed information about optimization techniques and usage, see the [Optimization Guide](optimization.html).
+For detailed information about optimization techniques and usage, see the [Optimization Guide](optimization.md).

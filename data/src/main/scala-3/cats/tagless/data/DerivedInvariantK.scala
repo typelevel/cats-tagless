@@ -33,7 +33,6 @@ type DerivedInvariantK[F[_[_]]] = Derived[InvariantK[F]]
 object DerivedInvariantK:
   type Of[F[_[_]]] = InvariantK[F] || DerivedInvariantK[F]
 
-  @nowarn("msg=unused import")
   inline def apply[F[_[_]]]: InvariantK[F] =
     import DerivedInvariantK.given
     summonInline[DerivedInvariantK[F]].instance

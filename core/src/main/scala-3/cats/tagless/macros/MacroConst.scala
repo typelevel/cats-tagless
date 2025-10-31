@@ -18,7 +18,7 @@ package cats.tagless.macros
 
 import cats.tagless.*
 
-import scala.annotation.experimental
+import scala.annotation.*
 import scala.quoted.*
 import scala.annotation.unused
 

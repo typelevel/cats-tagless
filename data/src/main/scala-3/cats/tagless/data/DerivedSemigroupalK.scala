@@ -32,7 +32,6 @@ type DerivedSemigroupalK[F[_[_]]] = Derived[SemigroupalK[F]]
 object DerivedSemigroupalK:
   type Of[F[_[_]]] = SemigroupalK[F] || DerivedSemigroupalK[F]
 
-  @nowarn("msg=unused import")
   inline def apply[F[_[_]]]: SemigroupalK[F] =
     import DerivedSemigroupalK.given
     summonInline[DerivedSemigroupalK[F]].instance

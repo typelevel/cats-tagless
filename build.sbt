@@ -7,8 +7,8 @@ addCommandAlias("fmt", "all scalafmtSbt scalafmtAll")
 addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 
 val Scala212 = "2.12.20"
-val Scala213 = "2.13.16"
-val Scala3 = "3.7.2"
+val Scala213 = "2.13.17"
+val Scala3 = "3.7.3"
 
 val gitRepo = "git@github.com:typelevel/cats-tagless.git"
 val homePage = "https://typelevel.org/cats-tagless"
@@ -49,8 +49,8 @@ val catsVersion = "2.11.0"
 val circeVersion = "0.14.8"
 val disciplineVersion = "1.6.0"
 val disciplineMunitVersion = "2.0.0-M3"
-val fs2Version = "3.12.0"
-val kindProjectorVersion = "0.13.3"
+val fs2Version = "3.12.2"
+val kindProjectorVersion = "0.13.4"
 val paradiseVersion = "2.1.1"
 val scalaCheckVersion = "1.17.1"
 val shapelessVersion = "3.4.2"
@@ -178,7 +178,7 @@ lazy val examples = project
     libraryDependencies += "org.typelevel" %%% "cats-free" % catsVersion
   )
 
-/** Docs - Generates and publishes the scaladoc API documents and the project web site. */
+/** Docs - Generates and publishes the scaladoc API documents and the project website. */
 lazy val docs = project
   .dependsOn(macrosJVM)
   .enablePlugins(MicrositesPlugin, SiteScaladocPlugin, NoPublishPlugin)
@@ -219,6 +219,28 @@ lazy val docSettings = commonSettings ::: List(
   makeSite / includeFilter := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.swf" | "*.yml" | "*.md"
 )
 
+val scala3Options = List(
+  "-language:adhocExtensions",
+  "-explain",
+  List(
+    "locals",
+    "params",
+    "implicits",
+    "explicits",
+    "nowarn",
+    "strict-no-implicit-warn",
+    "unsafe-warn-patvars"
+  ).mkString("-Wunused:", ",", "")
+)
+
+val scala212Options = List(
+  "-Xsource:3",
+  "-P:kind-projector:underscore-placeholders"
+)
+
+val scala213Options =
+  "-Xlint:-pattern-shadow,-infer-any" :: scala212Options
+
 lazy val commonSettings = List(
   scalaVersion := (ThisBuild / scalaVersion).value,
   crossScalaVersions := (ThisBuild / crossScalaVersions).value,
@@ -227,12 +249,12 @@ lazy val commonSettings = List(
   startYear := Some(2019),
   apiURL := Some(url("https://typelevel.org/cats-tagless/api/")),
   autoAPIMappings := true,
-  // sbt-typelevel sets -source:3.0-migration, we'd like to replace it with -source:future
-  scalacOptions ~= (_.filterNot(_ == "-source:3.0-migration")),
+  scalacOptions ~= (_.filterNot(_.startsWith("-Wunused"))),
   scalacOptions ++= (scalaBinaryVersion.value match {
-    case "3" => List("-language:adhocExtensions", "-explain")
-    case "2.13" => List("-Xsource:3", "-P:kind-projector:underscore-placeholders", "-Xlint:-pattern-shadow")
-    case _ => List("-Xsource:3", "-P:kind-projector:underscore-placeholders")
+    case "3" => scala3Options
+    case "2.13" => scala213Options
+    case "2.12" => scala212Options
+    case _ => Nil
   })
 )
 
@@ -240,7 +262,7 @@ lazy val commonJsSettings = List(
   // currently sbt-doctest doesn't work in JS builds
   // https://github.com/tkawachi/sbt-doctest/issues/52
   doctestGenTests := Nil,
-  scalacOptions -= "-Werror"
+  scalacOptions --= Seq("-Werror", "-Xfatal-warnings")
 )
 
 lazy val commonNativeSettings = List(

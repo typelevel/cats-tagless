@@ -33,7 +33,6 @@ type DerivedContravariantK[F[_[_]]] = Derived[ContravariantK[F]]
 object DerivedContravariantK:
   type Of[F[_[_]]] = ContravariantK[F] || DerivedContravariantK[F]
 
-  @nowarn("msg=unused import")
   inline def apply[F[_[_]]]: ContravariantK[F] =
     import DerivedContravariantK.given
     summonInline[DerivedContravariantK[F]].instance

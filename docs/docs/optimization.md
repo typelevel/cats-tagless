@@ -137,13 +137,20 @@ val optimized = programInstance.optimize(mockInterpreter).value
 
 A more sophisticated optimization can eliminate redundant put-get pairs:
 
-```scala mdoc:silent
+```scala mdoc:compile-only
 import cats._
 import cats.data._
 import cats.syntax.all._
 import cats.tagless.optimize._
 
 case class KVStoreInfo(queries: Set[String], cache: Map[String, String])
+
+// Note: KVStoreInfo needs a Monoid instance to work with Optimizer
+implicit val kvStoreInfoMonoid: Monoid[KVStoreInfo] = new Monoid[KVStoreInfo] {
+  def empty = KVStoreInfo(Set.empty, Map.empty)
+  def combine(x: KVStoreInfo, y: KVStoreInfo) = 
+    KVStoreInfo(x.queries |+| y.queries, x.cache |+| y.cache)
+}
 
 def createPutGetEliminator[F[_]: Monad]: Optimizer[KVStore, F] = new Optimizer[KVStore, F] {
   type M = KVStoreInfo
@@ -181,18 +188,21 @@ def createPutGetEliminator[F[_]: Monad]: Optimizer[KVStore, F] = new Optimizer[K
 
 For more complex optimizations that require state, use `MonadOptimizer`:
 
-```scala mdoc:silent
+```scala mdoc:compile-only
 import cats._
 import cats.data._
 import cats.tagless.ApplyK
 import cats.tagless.optimize._
 
-def createMonadOptimizer[F[_]: Monad]: MonadOptimizer[KVStore, F] = new MonadOptimizer[KVStore, F] {
+// Note: For this to work, KVStore needs an ApplyK instance
+// which can be auto-generated using @autoApplyK annotation
+
+def createMonadOptimizer[F[_]: Monad](implicit applyKInstance: ApplyK[KVStore]): MonadOptimizer[KVStore, F] = new MonadOptimizer[KVStore, F] {
   type M = Map[String, String]
   
   def monoidM = implicitly[Monoid[Map[String, String]]]
   def monadF = implicitly[Monad[F]]
-  def applyK = implicitly[ApplyK[KVStore]]
+  def applyK = applyKInstance
   
   def rebuild(interp: KVStore[F]): KVStore[Kleisli[F, M, *]] = new KVStore[Kleisli[F, M, *]] {
     def get(key: String): Kleisli[F, M, Option[String]] = Kleisli { cache =>

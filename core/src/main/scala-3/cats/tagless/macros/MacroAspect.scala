@@ -43,7 +43,8 @@ object MacroAspect:
     given DeriveMacros[q.type] = new DeriveMacros
 
     val WeaveF = TypeRepr.of[Aspect.Weave[F, Dom, Cod, ?]]
-    val algebraName = Expr(TypeRepr.of[Alg].typeSymbol.name)
+    val Alg = TypeRepr.of[Alg]
+    val algebraName = Expr(Alg.classSymbol.getOrElse(Alg.typeSymbol).name)
 
     def summon[T: Type](using Quotes): Expr[T] =
       Expr.summon[T].getOrElse(report.errorAndAbort(s"Not found: given ${Type.show[T]}"))

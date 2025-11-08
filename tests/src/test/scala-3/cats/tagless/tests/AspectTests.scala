@@ -16,10 +16,11 @@
 
 package cats.tagless.tests
 
+import cats.Id
 import cats.arrow.FunctionK
 import cats.kernel.laws.discipline.SerializableTests
 import cats.tagless.{Derive, Void, Trivial}
-import cats.tagless.aop.Aspect
+import cats.tagless.aop.{Aspect, Instrument}
 import cats.tagless.laws.discipline
 import cats.Show
 import cats.syntax.all.*
@@ -110,6 +111,12 @@ class AspectTests extends CatsTaglessTestSuite:
       )
     )
 
+  test("Aux algebra name"):
+    val aspect = AlgWithTypeMember.aspect.weave(AlgWithTypeMember.instance)
+    val instrument = AlgWithTypeMember.instrument.instrument(AlgWithTypeMember.instance)
+    assertEquals(aspect.a(42).algebraName, "AlgWithTypeMember")
+    assertEquals(instrument.a(42).algebraName, "AlgWithTypeMember")
+
 @experimental
 object AspectTests:
   type Location = (Double, Double)
@@ -139,3 +146,17 @@ object AspectTests:
       body: Option[Json] = None
   ):
     def decoder: Decoder[A] = summon
+
+  trait AlgWithTypeMember[F[_]]:
+    type T
+    def a(i: Int): F[T]
+
+  object AlgWithTypeMember:
+    type Aux[F[_], A] = AlgWithTypeMember[F] { type T = A }
+
+    def aspect[T]: Aspect[[f[_]] =>> Aux[f, T], Trivial, Trivial] = Derive.aspect
+    def instrument[T]: Instrument[[f[_]] =>> Aux[f, T]] = Derive.instrument
+
+    val instance: Aux[Id, Unit] = new AlgWithTypeMember[Id]:
+      type T = Unit
+      def a(i: Int): T = ()

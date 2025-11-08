@@ -17,10 +17,10 @@
 package cats.tagless.tests
 
 import cats.kernel.laws.discipline.SerializableTests
-import cats.tagless.aop.Aspect
+import cats.tagless.aop.{Aspect, Instrument}
 import cats.tagless.laws.discipline
 import cats.tagless.{Derive, Trivial, Void}
-import cats.{Show, ~>}
+import cats.{Id, Show, ~>}
 import io.circe.syntax.*
 import io.circe.{Decoder, Encoder, Json, JsonObject}
 
@@ -109,6 +109,13 @@ class AspectTests extends CatsTaglessTestSuite {
       )
     )
   }
+
+  test("Aux algebra name") {
+    val aspect = AlgWithTypeMember.aspect.weave(AlgWithTypeMember.instance)
+    val instrument = AlgWithTypeMember.instrument.instrument(AlgWithTypeMember.instance)
+    assertEquals(aspect.a(42).algebraName, "AlgWithTypeMember")
+    assertEquals(instrument.a(42).algebraName, "AlgWithTypeMember")
+  }
 }
 
 object AspectTests extends TestInstances {
@@ -142,4 +149,21 @@ object AspectTests extends TestInstances {
       url: String,
       body: Option[Json] = None
   )(implicit val decoder: Decoder[A])
+
+  trait AlgWithTypeMember[F[_]] {
+    type T
+    def a(i: Int): F[T]
+  }
+
+  object AlgWithTypeMember {
+    type Aux[F[_], A] = AlgWithTypeMember[F] { type T = A }
+
+    def aspect[T]: Aspect[Aux[*[_], T], Trivial, Trivial] = Derive.aspect
+    def instrument[T]: Instrument[Aux[*[_], T]] = Derive.instrument
+
+    val instance: Aux[Id, Unit] = new AlgWithTypeMember[Id] {
+      type T = Unit
+      def a(i: Int): T = ()
+    }
+  }
 }

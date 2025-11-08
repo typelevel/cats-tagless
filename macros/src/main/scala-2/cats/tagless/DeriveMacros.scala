@@ -141,6 +141,14 @@ class DeriveMacros(val c: blackbox.Context) {
   /** Constructor / extractor for by-name parameter types. */
   val ByNameParam = new ParamExtractor(definitions.ByNameParamClass)
 
+  /** Returns name of a type, taking care of refinements and anonymous classes. */
+  private def typeNameOf(tpe: Type): String = {
+    val symbol = tpe.typeSymbol
+    val name = symbol.name.decodedName.toString
+    if (name != "<refinement>" && !name.contains("$anon")) name
+    else symbol.asClass.baseClasses.lift(1).fold(name)(_.name.decodedName.toString)
+  }
+
   /** Return the dealiased and eta-expanded type constructor of this tag's type. */
   def typeConstructorOf(tag: WeakTypeTag[?]): Type =
     tag.tpe.typeConstructor.dealias.etaExpand
@@ -643,7 +651,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val Af = singleType(NoPrefix, af)
       val members = overridableMembersOf(Af)
       val types = delegateAbstractTypes(Af, members, Af)
-      val algebraName = algebra.typeSymbol.name.decodedName.toString
+      val algebraName = typeNameOf(algebra)
 
       val methods = delegateMethods(Af, members, af) {
         case method if method.returnType.typeSymbol == f =>
@@ -669,7 +677,7 @@ class DeriveMacros(val c: blackbox.Context) {
       val Af = singleType(NoPrefix, af)
       val members = overridableMembersOf(Af)
       val types = delegateAbstractTypes(Af, members, Af)
-      val algebraName = algebra.typeSymbol.name.decodedName.toString
+      val algebraName = typeNameOf(algebra)
 
       val methods = delegateMethods(Af, members, af) {
         case method if method.returnType.typeSymbol == f =>

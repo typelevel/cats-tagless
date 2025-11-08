@@ -44,6 +44,7 @@ object MacroInstrument:
     val F = TypeRepr.of[F]
     val InstrumentationF = TypeRepr.of[Instrumentation[F, ?]]
     val Alg = TypeRepr.of[Alg]
+    val algebraName = Expr(Alg.classSymbol.getOrElse(Alg.typeSymbol).name)
 
     alg.transformTo[Alg[[X] =>> Instrumentation[F, X]]](
       body =
@@ -51,7 +52,7 @@ object MacroInstrument:
           val resultType = tpe.typeArgs.tail
           val newBody = resultType.map(_.asType) match
             case '[t] :: Nil =>
-              '{ Instrumentation[F, t](${ body.asExprOf[F[t]] }, ${ Expr(Alg.typeSymbol.name) }, ${ Expr(sym.name) }) }
+              '{ Instrumentation[F, t](${ body.asExprOf[F[t]] }, $algebraName, ${ Expr(sym.name) }) }
             case _ =>
               report.errorAndAbort(s"Expected method ${sym.name} to return $F[?] but found ${tpe.show}")
           newBody.asTerm

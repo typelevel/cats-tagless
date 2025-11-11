@@ -21,7 +21,7 @@ import cats.data.*
 import cats.tagless.optimize.*
 import cats.tagless.optimize.syntax.all.*
 
-class OptimizationSpec extends munit.FunSuite {
+class OptimizationSpec extends cats.tagless.tests.CatsTaglessTestSuite {
 
   trait KVStore[F[_]] {
     def get(key: String): F[Option[String]]

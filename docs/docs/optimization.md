@@ -37,7 +37,12 @@ The optimization package provides three main type classes:
 
 Let's start with a simple example using a key-value store algebra:
 
-```scala mdoc:silent
+```scala
+import cats.tagless.optimize.*
+import cats.*
+import cats.data.*
+import cats.syntax.all.*
+
 trait KVStore[F[_]] {
   def get(key: String): F[Option[String]]
   def put(key: String, value: String): F[Unit]
@@ -52,7 +57,7 @@ To create an optimizer, you need to implement the `Optimizer` trait with three k
 2. **`extract`**: An interpreter that collects static information
 3. **`rebuild`**: A function that creates an optimized interpreter based on the collected information
 
-```scala mdoc:silent
+```scala
 import cats._
 import cats.data._
 import cats.syntax.all._
@@ -92,7 +97,7 @@ def createKVStoreOptimizer[F[_]: Monad]: Optimizer[KVStore, F] = new Optimizer[K
 
 Now you can use the optimizer to optimize programs:
 
-```scala mdoc:silent
+```scala
 import cats._
 import cats.syntax.all._
 
@@ -106,7 +111,7 @@ val programInstance = new Program[KVStore, Applicative, List[String]] {
 }
 ```
 
-```scala mdoc:silent
+```scala
 import cats.Eval
 
 // Example interpreter
@@ -123,7 +128,7 @@ val mockInterpreter = new KVStore[Eval] {
 implicit val optimizer = createKVStoreOptimizer[Eval]
 ```
 
-```scala mdoc:compile-only
+```scala
 // Without optimization - each get is executed
 val unoptimized = program(mockInterpreter).value
 
@@ -137,7 +142,7 @@ val optimized = programInstance.optimize(mockInterpreter).value
 
 A more sophisticated optimization can eliminate redundant put-get pairs:
 
-```scala mdoc:compile-only
+```scala
 import cats._
 import cats.data._
 import cats.syntax.all._
@@ -188,7 +193,7 @@ def createPutGetEliminator[F[_]: Monad]: Optimizer[KVStore, F] = new Optimizer[K
 
 For more complex optimizations that require state, use `MonadOptimizer`:
 
-```scala mdoc:compile-only
+```scala
 import cats._
 import cats.data._
 import cats.tagless.ApplyK
@@ -232,7 +237,7 @@ def createMonadOptimizer[F[_]: Monad](implicit applyKInstance: ApplyK[KVStore]):
 
 The optimization package provides convenient syntax for working with optimizers:
 
-```scala mdoc:silent
+```scala
 import cats.tagless.optimize.syntax.all.*
 
 // Using the syntax extension
@@ -241,24 +246,4 @@ val optimizedResult = programInstance.optimize(mockInterpreter)
 
 ## Best Practices
 
-1. **Choose the Right Optimizer**: Use `SemigroupalOptimizer` for basic optimizations, `Optimizer` for applicative programs, and `MonadOptimizer` for complex stateful optimizations.
-
-2. **Design Your Analysis Type**: The type `M` should efficiently represent the information you need to collect. Use appropriate data structures like `Set`, `Map`, or custom case classes.
-
-3. **Consider Memory Usage**: Be mindful of the memory footprint of your analysis type, especially for large programs.
-
-4. **Test Thoroughly**: Always verify that optimized programs produce the same results as unoptimized ones.
-
-5. **Profile Performance**: Measure the actual performance improvements to ensure optimizations are beneficial.
-
-## Limitations
-
-- Optimizations are based on static analysis, so they work best with programs that have predictable patterns
-- The analysis phase requires interpreting the program, which may have overhead for very simple programs
-- Some optimizations may not be applicable to all effect types or program structures
-
-## Further Reading
-
-- [Optimizing Tagless Final – Saying farewell to Free](https://typelevel.org/blog/2017/12/27/optimizing-final-tagless.html) - The original blog post by Luka Jacobowitz
-- [Sphynx](https://github.com/typelevel/sphynx) - The original library that inspired these optimizations
-- [Cats-tagless tests](https://github.com/typelevel/cats-tagless/tree/master/tests/src/test/scala/cats/tagless/tests) - See `OptimizerTests.scala` for more examples
+1. **Choose the Right Optimizer**: Use `SemigroupalOptimizer`

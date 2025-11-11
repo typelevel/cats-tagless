@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package cats.tagless.tests.simple
+package cats.tagless.tests
+package simple
 
 import cats.*
 import cats.data.*
@@ -76,7 +77,7 @@ class OptimizationSpec extends cats.tagless.tests.CatsTaglessTestSuite {
 
     // Both should produce the same result
     assertEquals(optimized, unoptimized)
-    
+
     // The optimized version should have the same values but potentially different execution order
     assertEquals(optimized.size, 4)
     assert(optimized.contains("Value for Cats"))

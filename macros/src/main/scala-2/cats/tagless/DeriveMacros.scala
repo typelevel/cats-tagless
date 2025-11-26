@@ -52,11 +52,13 @@ class DeriveMacros(val c: blackbox.Context) {
 
     /** Construct a new set of parameter lists after substituting some type symbols. */
     def transformedParamLists(types: Transform[Type]): List[List[ValDef]] =
-      for (ps <- paramLists) yield for (p <- ps) yield {
-        val oldType = p.tpt.tpe
-        val newType = types.applyOrElse(oldType, identity[Type])
-        if (newType == oldType) p else ValDef(p.mods, p.name, TypeTree(newType), p.rhs)
-      }
+      for (ps <- paramLists)
+        yield
+          for (p <- ps) yield {
+            val oldType = p.tpt.tpe
+            val newType = types.applyOrElse(oldType, identity[Type])
+            if (newType == oldType) p else ValDef(p.mods, p.name, TypeTree(newType), p.rhs)
+          }
 
     /** Construct a new set of argument lists based on their name and type. */
     def transformedArgLists(f: TransformParam = PartialFunction.empty): List[List[Tree]] = {
@@ -72,8 +74,9 @@ class DeriveMacros(val c: blackbox.Context) {
       }
 
       for (ps <- paramLists)
-        yield for (p <- ps)
-          yield f_*(Parameter(p.name, p.tpt.tpe, p.mods))
+        yield
+          for (p <- ps)
+            yield f_*(Parameter(p.name, p.tpt.tpe, p.mods))
     }
 
     /** Transform this method into another by applying transformations to types, arguments and body. */
@@ -221,17 +224,23 @@ class DeriveMacros(val c: blackbox.Context) {
   ): Iterable[Tree] = for (member <- members if member.isMethod && !member.asMethod.isAccessor) yield {
     val name = member.name.toTermName
     val signature = member.typeSignatureIn(algebra)
-    val paramLists = for (ps <- signature.paramLists) yield for (p <- ps) yield {
-      // Only preserve the by-name and implicit modifiers (e.g. drop the default parameter flag).
-      val flags = List(Flag.BYNAMEPARAM, Flag.IMPLICIT).filter(hasFlag(p))
-      val modifiers = Modifiers(flags.foldLeft(Flag.PARAM)(_ | _))
-      ValDef(modifiers, p.name.toTermName, TypeTree(p.typeSignatureIn(algebra)), EmptyTree)
-    }
+    val paramLists =
+      for (ps <- signature.paramLists)
+        yield
+          for (p <- ps) yield {
+            // Only preserve the by-name and implicit modifiers (e.g. drop the default parameter flag).
+            val flags = List(Flag.BYNAMEPARAM, Flag.IMPLICIT).filter(hasFlag(p))
+            val modifiers = Modifiers(flags.foldLeft(Flag.PARAM)(_ | _))
+            ValDef(modifiers, p.name.toTermName, TypeTree(p.typeSignatureIn(algebra)), EmptyTree)
+          }
 
-    val argLists = for (ps <- signature.paramLists) yield for (p <- ps) yield p.typeSignatureIn(algebra) match {
-      case RepeatedParam(_) => q"${p.name.toTermName}: _*"
-      case _ => Ident(p.name)
-    }
+    val argLists =
+      for (ps <- signature.paramLists)
+        yield
+          for (p <- ps) yield p.typeSignatureIn(algebra) match {
+            case RepeatedParam(_) => q"${p.name.toTermName}: _*"
+            case _ => Ident(p.name)
+          }
 
     val body = q"$instance.$name[..${typeArgsFrom(signature)}](...$argLists)"
     val reified = Method(name, signature, typeParamsOf(signature), paramLists, signature.finalResultType, body)

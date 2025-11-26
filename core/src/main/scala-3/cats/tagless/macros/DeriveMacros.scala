@@ -115,8 +115,9 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
         val sym = method.symbol
         val delegate = term.call(sym):
           for (params, xs) <- method.paramss.zip(argss)
-          yield for paramAndArg <- params.params.zip(xs)
-          yield args.transformArg(sym, paramAndArg)
+          yield
+            for paramAndArg <- params.params.zip(xs)
+            yield args.transformArg(sym, paramAndArg)
         Some(body.applyOrElse((sym, method.returnTpt.tpe, delegate), _ => delegate))
 
       def transformVal(value: ValDef): Option[Term] =
@@ -140,8 +141,9 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
           .map: (term, xf) =>
             term.call(sym):
               for (params, args) <- method.paramss.zip(argss)
-              yield for paramAndArg <- params.params.zip(args)
-              yield xf.transformArg(sym, paramAndArg)
+              yield
+                for paramAndArg <- params.params.zip(args)
+                yield xf.transformArg(sym, paramAndArg)
         Some(body.applyOrElse((sym, method.returnTpt.tpe, delegates), _ => delegates.head))
 
       def combineVal(value: ValDef): Option[Term] =

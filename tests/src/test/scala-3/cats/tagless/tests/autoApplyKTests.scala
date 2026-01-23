@@ -25,10 +25,8 @@ import cats.tagless.ApplyK
 import cats.tagless.laws.discipline.ApplyKTests
 import org.scalacheck.Arbitrary
 
-import scala.annotation.experimental
 import scala.util.Try
 
-@experimental
 class autoApplyKTests extends CatsTaglessTestSuite:
   import autoApplyKTests.AutoApplyKTestAlg
 

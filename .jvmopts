@@ -1,5 +1,5 @@
 -Dfile.encoding=UTF8
--Xss4m
+-Xss8m
 -Xms1G
 -Xmx3G
 -XX:ReservedCodeCacheSize=250M

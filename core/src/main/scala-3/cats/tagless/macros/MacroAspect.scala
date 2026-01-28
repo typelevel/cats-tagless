@@ -30,10 +30,10 @@ object MacroAspect:
   def aspect[Alg[_[_]]: Type, Dom[_]: Type, Cod[_]: Type](using Quotes): Expr[Aspect[Alg, Dom, Cod]] = '{
     new Aspect[Alg, Dom, Cod]:
       def weave[F[_]](af: Alg[F]): Alg[[X] =>> Aspect.Weave[F, Dom, Cod, X]] =
-        ${ deriveWeave('{ af }) }
+        ${ deriveWeave('af) }
 
       def mapK[F[_], G[_]](alg: Alg[F])(fk: F ~> G): Alg[G] =
-        ${ MacroFunctorK.deriveMapK('{ alg }, '{ fk }) }
+        ${ MacroFunctorK.deriveMapK('alg, 'fk) }
   }
 
   private[macros] def deriveWeave[Alg[_[_]]: Type, Dom[_]: Type, Cod[_]: Type, F[_]: Type](alg: Expr[Alg[F]])(using

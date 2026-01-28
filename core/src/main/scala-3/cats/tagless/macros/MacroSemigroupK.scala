@@ -29,7 +29,7 @@ object MacroSemigroupK:
   def semigroupK[F[_]: Type](using Quotes): Expr[SemigroupK[F]] = '{
     new SemigroupK[F]:
       def combineK[A](x: F[A], y: F[A]): F[A] =
-        ${ deriveCombineK('{ x }, '{ y }) }
+        ${ deriveCombineK('x, 'y) }
   }
 
   private[macros] def deriveCombineK[F[_]: Type, A: Type](

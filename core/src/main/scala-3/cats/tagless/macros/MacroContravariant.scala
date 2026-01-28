@@ -29,7 +29,7 @@ object MacroContravariant:
   def contramap[F[_]: Type](using Quotes): Expr[Contravariant[F]] = '{
     new Contravariant[F]:
       def contramap[A, B](fa: F[A])(f: B => A): F[B] =
-        ${ deriveContramap('{ fa }, '{ f }) }
+        ${ deriveContramap('fa, 'f) }
   }
 
   private[macros] def deriveContramap[F[_]: Type, A: Type, B: Type](

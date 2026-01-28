@@ -29,7 +29,7 @@ object MacroInvariantK:
   def invariantK[Alg[_[_]]: Type](using Quotes): Expr[InvariantK[Alg]] = '{
     new InvariantK[Alg]:
       def imapK[F[_], G[_]](alg: Alg[F])(fk: F ~> G)(gk: G ~> F): Alg[G] =
-        ${ deriveIMapK('{ alg }, '{ fk }, '{ gk }) }
+        ${ deriveIMapK('alg, 'fk, 'gk) }
   }
 
   private[macros] def deriveIMapK[Alg[_[_]]: Type, F[_]: Type, G[_]: Type](

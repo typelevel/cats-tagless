@@ -29,9 +29,9 @@ object MacroApply:
   def apply[F[_]: Type](using Quotes): Expr[Apply[F]] = '{
     new Apply[F]:
       def map[A, B](fa: F[A])(f: A => B): F[B] =
-        ${ MacroFunctor.deriveMap('{ fa }, '{ f }) }
+        ${ MacroFunctor.deriveMap('fa, 'f) }
       def ap[A, B](ff: F[A => B])(fa: F[A]): F[B] =
-        ${ deriveAp('{ ff }, '{ fa }) }
+        ${ deriveAp('ff, 'fa) }
   }
 
   private[macros] def deriveAp[F[_]: Type, A: Type, B: Type](

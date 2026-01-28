@@ -29,7 +29,7 @@ object MacroBifunctor:
   def bifunctor[F[_, _]: Type](using Quotes): Expr[Bifunctor[F]] = '{
     new Bifunctor[F]:
       def bimap[A, B, C, D](fab: F[A, B])(f: A => C, g: B => D): F[C, D] =
-        ${ deriveBimap('{ fab }, '{ f }, '{ g }) }
+        ${ deriveBimap('fab, 'f, 'g) }
   }
 
   private[macros] def deriveBimap[F[_, _]: Type, A: Type, B: Type, C: Type, D: Type](

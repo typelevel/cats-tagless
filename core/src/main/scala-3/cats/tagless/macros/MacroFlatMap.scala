@@ -30,11 +30,11 @@ object MacroFlatMap:
   def flatMap[F[_]: Type](using Quotes): Expr[FlatMap[F]] = '{
     new FlatMap[F]:
       def map[A, B](fa: F[A])(f: A => B): F[B] =
-        ${ MacroFunctor.deriveMap('{ fa }, '{ f }) }
+        ${ MacroFunctor.deriveMap('fa, 'f) }
       def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B] =
-        ${ deriveFlatMap('{ fa }, '{ f }) }
+        ${ deriveFlatMap('fa, 'f) }
       def tailRecM[A, B](a: A)(f: A => F[Either[A, B]]): F[B] =
-        ${ deriveTailRecM('{ a }, '{ f }) }
+        ${ deriveTailRecM('a, 'f) }
   }
 
   private[macros] def deriveFlatMap[F[_]: Type, A: Type, B: Type](
@@ -77,7 +77,7 @@ object MacroFlatMap:
           given Quotes = method.asQuotes
           '{
             @tailrec def step(x: A): B =
-              ${ body.replace(a, '{ x }).asExprOf[Either[A, B]] } match
+              ${ body.replace(a, 'x).asExprOf[Either[A, B]] } match
                 case Left(a) => step(a)
                 case Right(b) => b
             step($a)

@@ -30,7 +30,7 @@ object MacroSemigroupalK:
   def semigroupalK[Alg[_[_]]: Type](using Quotes): Expr[SemigroupalK[Alg]] = '{
     new SemigroupalK[Alg]:
       def productK[F[_], G[_]](af: Alg[F], ag: Alg[G]): Alg[Tuple2K[F, G, *]] =
-        ${ deriveProductK('{ af }, '{ ag }) }
+        ${ deriveProductK('af, 'ag) }
   }
 
   private type FirstK[F[_], G[_]] = [H[_], I[_], A] =>> (H[A], I[A]) match
@@ -53,7 +53,7 @@ object MacroSemigroupalK:
         tpe.substituteTypes(T.typeSymbol :: Nil, TypeRepr.of[FirstK[F, G]] :: Nil)
 
     def tuple2K(name: String): Term =
-      Select.unique('{ SemigroupalK }.asTerm, name).appliedToTypes(List(F, G))
+      Select.unique('SemigroupalK.asTerm, name).appliedToTypes(List(F, G))
 
     List(eaf, eag).combineTo[Alg[Tuple2K[F, G, *]]](
       args = List(

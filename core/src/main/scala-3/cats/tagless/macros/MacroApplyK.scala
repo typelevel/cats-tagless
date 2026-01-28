@@ -30,7 +30,7 @@ object MacroApplyK:
   def applyK[Alg[_[_]]: Type](using Quotes): Expr[ApplyK[Alg]] = '{
     new ApplyK[Alg]:
       def mapK[F[_], G[_]](af: Alg[F])(fk: F ~> G): Alg[G] =
-        ${ MacroFunctorK.deriveMapK('{ af }, '{ fk }) }
+        ${ MacroFunctorK.deriveMapK('af, 'fk) }
       def productK[F[_], G[_]](af: Alg[F], ag: Alg[G]): Alg[Tuple2K[F, G, *]] =
-        ${ MacroSemigroupalK.deriveProductK('{ af }, '{ ag }) }
+        ${ MacroSemigroupalK.deriveProductK('af, 'ag) }
   }

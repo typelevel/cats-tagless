@@ -30,7 +30,7 @@ object MacroProfunctor:
   def profunctor[F[_, _]: Type](using Quotes): Expr[Profunctor[F]] = '{
     new Profunctor[F]:
       def dimap[A, B, C, D](fab: F[A, B])(f: C => A)(g: B => D): F[C, D] =
-        ${ deriveDimap('{ fab }, '{ f }, '{ g }) }
+        ${ deriveDimap('fab, 'f, 'g) }
   }
 
   private[macros] def deriveDimap[F[_, _]: Type, A: Type, B: Type, C: Type, D: Type](

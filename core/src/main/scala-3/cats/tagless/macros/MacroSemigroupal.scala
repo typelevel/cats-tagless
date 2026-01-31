@@ -29,7 +29,7 @@ object MacroSemigroupal:
   def semigroupal[F[_]: Type](using Quotes): Expr[Semigroupal[F]] = '{
     new Semigroupal[F]:
       def product[A, B](fa: F[A], fb: F[B]): F[(A, B)] =
-        ${ deriveProduct('{ fa }, '{ fb }) }
+        ${ deriveProduct('fa, 'fb) }
   }
 
   private type First[A, B] = [X, Y] =>> (X, Y) match

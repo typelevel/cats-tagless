@@ -29,7 +29,7 @@ object MacroInvariant:
   def invariant[F[_]: Type](using Quotes): Expr[Invariant[F]] = '{
     new Invariant[F]:
       def imap[A, B](fa: F[A])(f: A => B)(g: B => A): F[B] =
-        ${ deriveIMap('{ fa }, '{ f }, '{ g }) }
+        ${ deriveIMap('fa, 'f, 'g) }
   }
 
   private[macros] def deriveIMap[F[_]: Type, A: Type, B: Type](

@@ -29,10 +29,10 @@ object MacroInstrument:
   def instrument[Alg[_[_]]: Type](using Quotes): Expr[Instrument[Alg]] = '{
     new Instrument[Alg]:
       def instrument[F[_]](af: Alg[F]): Alg[[X] =>> Instrumentation[F, X]] =
-        ${ deriveInstrument('{ af }) }
+        ${ deriveInstrument('af) }
 
       def mapK[F[_], G[_]](alg: Alg[F])(fk: F ~> G): Alg[G] =
-        ${ MacroFunctorK.deriveMapK('{ alg }, '{ fk }) }
+        ${ MacroFunctorK.deriveMapK('alg, 'fk) }
   }
 
   private[macros] def deriveInstrument[Alg[_[_]]: Type, F[_]: Type](alg: Expr[Alg[F]])(using

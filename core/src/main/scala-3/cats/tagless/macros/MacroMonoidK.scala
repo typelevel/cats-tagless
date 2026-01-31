@@ -28,9 +28,9 @@ object MacroMonoidK:
 
   def monoidK[F[_]: Type](using Quotes): Expr[MonoidK[F]] = '{
     new MonoidK[F]:
-      def empty[A]: F[A] = ${ deriveEmpty }
+      def empty[A]: F[A] = $deriveEmpty
       def combineK[A](x: F[A], y: F[A]): F[A] =
-        ${ MacroSemigroupK.deriveCombineK('{ x }, '{ y }) }
+        ${ MacroSemigroupK.deriveCombineK('x, 'y) }
   }
 
   private[macros] def deriveEmpty[F[_]: Type, A: Type](using q: Quotes): Expr[F[A]] =

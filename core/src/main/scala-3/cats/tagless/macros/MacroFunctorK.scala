@@ -29,7 +29,7 @@ object MacroFunctorK:
   def functorK[Alg[_[_]]: Type](using Quotes): Expr[FunctorK[Alg]] = '{
     new FunctorK[Alg]:
       def mapK[F[_], G[_]](alg: Alg[F])(fk: F ~> G): Alg[G] =
-        ${ deriveMapK('{ alg }, '{ fk }) }
+        ${ deriveMapK('alg, 'fk) }
   }
 
   private[macros] def deriveMapK[Alg[_[_]]: Type, F[_]: Type, G[_]: Type](

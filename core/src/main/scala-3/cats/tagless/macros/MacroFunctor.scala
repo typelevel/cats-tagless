@@ -29,7 +29,7 @@ object MacroFunctor:
   def functor[F[_]: Type](using Quotes): Expr[Functor[F]] = '{
     new Functor[F]:
       def map[A, B](fa: F[A])(f: A => B): F[B] =
-        ${ deriveMap('{ fa }, '{ f }) }
+        ${ deriveMap('fa, 'f) }
   }
 
   private[macros] def deriveMap[F[_]: Type, A: Type, B: Type](

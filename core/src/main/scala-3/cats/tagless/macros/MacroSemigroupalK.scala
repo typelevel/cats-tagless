@@ -30,7 +30,7 @@ object MacroSemigroupalK:
   def semigroupalK[Alg[_[_]]: Type](using Quotes): Expr[SemigroupalK[Alg]] = '{
     new SemigroupalK[Alg]:
       def productK[F[_], G[_]](af: Alg[F], ag: Alg[G]): Alg[Tuple2K[F, G, *]] =
-        ${ deriveProductK('{ af }, '{ ag }) }
+        ${ deriveProductK('af, 'ag) }
   }
 
   private type FirstK[F[_], G[_]] = [H[_], I[_], A] =>> (H[A], I[A]) match

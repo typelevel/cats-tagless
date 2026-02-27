@@ -45,15 +45,15 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
   )
 )
 
-val catsVersion = "2.11.0"
-val circeVersion = "0.14.8"
-val disciplineVersion = "1.6.0"
-val disciplineMunitVersion = "2.0.0-M3"
+val catsVersion = "2.13.0"
+val circeVersion = "0.14.15"
+val disciplineVersion = "1.7.0"
+val disciplineMunitVersion = "2.0.0"
 val fs2Version = "3.12.2"
 val kindProjectorVersion = "0.13.4"
 val paradiseVersion = "2.1.1"
-val scalaCheckVersion = "1.17.1"
-val shapelessVersion = "3.4.2"
+val scalaCheckVersion = "1.19.0"
+val shapelessVersion = "3.5.0"
 
 lazy val root = tlCrossRootProject.aggregate(core, data, fs2, laws, tests, macros, examples)
 
@@ -91,13 +91,14 @@ lazy val data = crossProject(JVMPlatform, JSPlatform, NativePlatform)
 
 lazy val fs2JVM = fs2.jvm
 lazy val fs2JS = fs2.js
-lazy val fs2Native = fs2.native
-lazy val fs2 = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+// Temporarily disabled until fs2 is release for SN 0.5
+// lazy val fs2Native = fs2.native
+lazy val fs2 = crossProject(JVMPlatform, JSPlatform /*, NativePlatform */ )
   .crossType(CrossType.Pure)
   .dependsOn(core)
   .enablePlugins(AutomateHeaderPlugin)
   .jsSettings(commonJsSettings)
-  .nativeSettings(commonNativeSettings)
+//  .nativeSettings(commonNativeSettings)
   .settings(rootSettings)
   .settings(
     moduleName := "cats-tagless-fs2",

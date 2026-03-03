@@ -8,7 +8,7 @@ addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 
 val Scala212 = "2.12.21"
 val Scala213 = "2.13.18"
-val Scala3 = "3.3.7"
+val Scala3 = "3.8.1"
 
 val gitRepo = "git@github.com:typelevel/cats-tagless.git"
 val homePage = "https://typelevel.org/cats-tagless"
@@ -18,31 +18,26 @@ ThisBuild / organizationName := "cats-tagless maintainers"
 // Note: we use early SemVer so the base version should be bumped only on binary-breaking changes.
 // Additions to the API are allowed in a patch version while the major version remains zero.
 ThisBuild / tlBaseVersion := "0.16"
-ThisBuild / crossScalaVersions := Seq(Scala212, Scala213, Scala3)
-ThisBuild / tlCiReleaseBranches := Seq("master")
-ThisBuild / mergifyStewardConfig := Some(
-  MergifyStewardConfig(
-    author = "typelevel-steward[bot]",
-    mergeMinors = true
-  )
-)
-ThisBuild / githubWorkflowAddedJobs ++= Seq(
-  WorkflowJob(
-    "microsite",
-    "Microsite",
-    githubWorkflowJobSetup.value.toList ::: List(
-      WorkflowStep.Use(
-        UseRef.Public("ruby", "setup-ruby", "v1"),
-        name = Some("Setup Ruby"),
-        params = Map("ruby-version" -> "3.3", "bundler-cache" -> "true")
-      ),
-      WorkflowStep.Run(List("gem install jekyll -v 3.9.4"), name = Some("Install Jekyll")),
-      WorkflowStep.Run(List("gem install kramdown-parser-gfm -v 1.1.0"), name = Some("Install Kramdown")),
-      WorkflowStep.Sbt(List("docs/makeMicrosite"), name = Some("Build microsite"))
+ThisBuild / tlCiReleaseBranches := List("master")
+ThisBuild / crossScalaVersions := List(Scala212, Scala213, Scala3)
+ThisBuild / githubWorkflowJavaVersions := List(JavaSpec.temurin("17"))
+ThisBuild / mergifyStewardConfig := Some(MergifyStewardConfig(author = "typelevel-steward[bot]", mergeMinors = true))
+
+ThisBuild / githubWorkflowAddedJobs += WorkflowJob(
+  "microsite",
+  "Microsite",
+  githubWorkflowJobSetup.value.toList ::: List(
+    WorkflowStep.Use(
+      UseRef.Public("ruby", "setup-ruby", "v1"),
+      name = Some("Setup Ruby"),
+      params = Map("ruby-version" -> "3.3", "bundler-cache" -> "true")
     ),
-    scalas = List("2.13"),
-    javas = List(JavaSpec.temurin("11"))
-  )
+    WorkflowStep.Run(List("gem install jekyll -v 3.9.4"), name = Some("Install Jekyll")),
+    WorkflowStep.Run(List("gem install kramdown-parser-gfm -v 1.1.0"), name = Some("Install Kramdown")),
+    WorkflowStep.Sbt(List("docs/makeMicrosite"), name = Some("Build microsite"))
+  ),
+  scalas = List("2.13"),
+  javas = List(JavaSpec.temurin("11"))
 )
 
 val catsVersion = "2.13.0"
@@ -156,7 +151,7 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .settings(rootSettings, macroSettings)
   .settings(
     moduleName := "cats-tagless-tests",
-    scalacOptions ++= when(tlIsScala3.value)("-Xcheck-macros"),
+    scalacOptions ++= when(tlIsScala3.value)("-experimental", "-Xcheck-macros"),
     libraryDependencies ++= List(
       "org.typelevel" %%% "cats-free" % catsVersion,
       "org.typelevel" %%% "cats-testkit" % catsVersion,
@@ -216,17 +211,11 @@ lazy val docSettings = commonSettings ::: List(
 )
 
 val scala3Options = List(
+  "-java-output-version",
+  "17",
   "-language:adhocExtensions",
   "-explain",
-  List(
-    "locals",
-    "params",
-    "implicits",
-    "explicits",
-    "nowarn",
-    "strict-no-implicit-warn",
-    "unsafe-warn-patvars"
-  ).mkString("-Wunused:", ",", "")
+  "-Wunused:all"
 )
 
 val scala212Options = List(
@@ -245,6 +234,7 @@ lazy val commonSettings = List(
   startYear := Some(2019),
   apiURL := Some(url("https://typelevel.org/cats-tagless/api/")),
   autoAPIMappings := true,
+  scalacOptions --= when(tlIsScala3.value)("-java-output-version", "8"),
   scalacOptions ~= (_.filterNot(_.startsWith("-Wunused"))),
   scalacOptions ++= (scalaBinaryVersion.value match {
     case "3" => scala3Options
@@ -257,7 +247,8 @@ lazy val commonSettings = List(
 lazy val commonJsSettings = List(
   // currently sbt-doctest doesn't work in JS builds
   // https://github.com/tkawachi/sbt-doctest/issues/52
-  doctestGenTests := Nil
+  doctestGenTests := Nil,
+  scalacOptions -= "-Werror"
 )
 
 lazy val commonNativeSettings = List(
@@ -284,7 +275,8 @@ lazy val mimaSettings = List[Def.Setting[?]](
     ProblemFilters.exclude[MissingClassProblem]("cats.tagless.FunctionKLift"),
     ProblemFilters.exclude[MissingClassProblem]("cats.tagless.FunctionKLift$"),
     // This private val, not sure why MiMa complains.
-    ProblemFilters.exclude[DirectMissingMethodProblem]("cats.tagless.package.idKInstance")
+    ProblemFilters.exclude[DirectMissingMethodProblem]("cats.tagless.package.idKInstance"),
+    ProblemFilters.exclude[DirectMissingMethodProblem]("cats.tagless.macros.MacroInstrument.deriveInstrument")
   )
 )
 

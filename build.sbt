@@ -63,9 +63,9 @@ lazy val coreNative = core.native
 lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .enablePlugins(AutomateHeaderPlugin)
+  .settings(rootSettings, mimaSettings)
   .jsSettings(commonJsSettings)
   .nativeSettings(commonNativeSettings)
-  .settings(rootSettings, mimaSettings)
   .settings(
     moduleName := "cats-tagless-core",
     libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion
@@ -78,9 +78,9 @@ lazy val data = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .dependsOn(core)
   .enablePlugins(AutomateHeaderPlugin)
+  .settings(rootSettings)
   .jsSettings(commonJsSettings)
   .nativeSettings(commonNativeSettings)
-  .settings(rootSettings)
   .settings(
     moduleName := "cats-tagless-data",
     publish / skip := !tlIsScala3.value,
@@ -97,9 +97,9 @@ lazy val fs2 = crossProject(JVMPlatform, JSPlatform /*, NativePlatform */ )
   .crossType(CrossType.Pure)
   .dependsOn(core)
   .enablePlugins(AutomateHeaderPlugin)
+  .settings(rootSettings)
   .jsSettings(commonJsSettings)
 //  .nativeSettings(commonNativeSettings)
-  .settings(rootSettings)
   .settings(
     moduleName := "cats-tagless-fs2",
     libraryDependencies += "co.fs2" %%% "fs2-core" % fs2Version,
@@ -113,9 +113,9 @@ lazy val laws = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .dependsOn(core)
   .enablePlugins(AutomateHeaderPlugin)
+  .settings(rootSettings, mimaSettings)
   .jsSettings(commonJsSettings)
   .nativeSettings(commonNativeSettings)
-  .settings(rootSettings, mimaSettings)
   .settings(
     moduleName := "cats-tagless-laws",
     libraryDependencies ++= List(
@@ -132,20 +132,15 @@ lazy val macros = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .dependsOn(core)
   .aggregate(core)
   .enablePlugins(AutomateHeaderPlugin)
+  .settings(rootSettings, macroSettings, mimaSettings)
   .jsSettings(commonJsSettings)
   .nativeSettings(commonNativeSettings)
-  .settings(rootSettings, macroSettings)
   .settings(
     moduleName := "cats-tagless-macros",
     scalacOptions ~= (_.filterNot(opt => opt.startsWith("-Wunused") || opt.startsWith("-Ywarn-unused"))),
     libraryDependencies += "org.scalacheck" %%% "scalacheck" % scalaCheckVersion % Test,
     publish / skip := tlIsScala3.value,
-    tlMimaPreviousVersions := when(scalaBinaryVersion.value.startsWith("2"))(
-      "0.16.0",
-      "0.15.0",
-      "0.14.0",
-      "0.13.0"
-    ).toSet
+    tlMimaPreviousVersions := when(scalaBinaryVersion.value.startsWith("3"))().toSet
   )
 
 lazy val testsJVM = tests.jvm
@@ -266,7 +261,10 @@ lazy val commonJsSettings = List(
 )
 
 lazy val commonNativeSettings = List(
-  doctestGenTests := Nil
+  doctestGenTests := Nil,
+  // Scala Native 0.5
+  tlMimaPreviousVersions := Set.empty,
+  tlVersionIntroduced := Map.empty
 )
 
 lazy val macroSettings = List[Def.Setting[?]](

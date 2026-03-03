@@ -45,15 +45,15 @@ ThisBuild / githubWorkflowAddedJobs ++= Seq(
   )
 )
 
-val catsVersion = "2.11.0"
-val circeVersion = "0.14.8"
-val disciplineVersion = "1.6.0"
-val disciplineMunitVersion = "2.0.0-M3"
+val catsVersion = "2.13.0"
+val circeVersion = "0.14.15"
+val disciplineVersion = "1.7.0"
+val disciplineMunitVersion = "2.0.0"
 val fs2Version = "3.12.2"
 val kindProjectorVersion = "0.13.4"
 val paradiseVersion = "2.1.1"
-val scalaCheckVersion = "1.17.1"
-val shapelessVersion = "3.4.2"
+val scalaCheckVersion = "1.19.0"
+val shapelessVersion = "3.5.0"
 
 lazy val root = tlCrossRootProject.aggregate(core, data, fs2, laws, tests, macros, examples)
 
@@ -63,9 +63,9 @@ lazy val coreNative = core.native
 lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .enablePlugins(AutomateHeaderPlugin)
+  .settings(rootSettings, mimaSettings)
   .jsSettings(commonJsSettings)
   .nativeSettings(commonNativeSettings)
-  .settings(rootSettings, mimaSettings)
   .settings(
     moduleName := "cats-tagless-core",
     libraryDependencies += "org.typelevel" %%% "cats-core" % catsVersion
@@ -78,9 +78,9 @@ lazy val data = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .dependsOn(core)
   .enablePlugins(AutomateHeaderPlugin)
+  .settings(rootSettings)
   .jsSettings(commonJsSettings)
   .nativeSettings(commonNativeSettings)
-  .settings(rootSettings)
   .settings(
     moduleName := "cats-tagless-data",
     publish / skip := !tlIsScala3.value,
@@ -91,14 +91,15 @@ lazy val data = crossProject(JVMPlatform, JSPlatform, NativePlatform)
 
 lazy val fs2JVM = fs2.jvm
 lazy val fs2JS = fs2.js
-lazy val fs2Native = fs2.native
-lazy val fs2 = crossProject(JVMPlatform, JSPlatform, NativePlatform)
+// Temporarily disabled until fs2 is release for SN 0.5
+// lazy val fs2Native = fs2.native
+lazy val fs2 = crossProject(JVMPlatform, JSPlatform /*, NativePlatform */ )
   .crossType(CrossType.Pure)
   .dependsOn(core)
   .enablePlugins(AutomateHeaderPlugin)
-  .jsSettings(commonJsSettings)
-  .nativeSettings(commonNativeSettings)
   .settings(rootSettings)
+  .jsSettings(commonJsSettings)
+//  .nativeSettings(commonNativeSettings)
   .settings(
     moduleName := "cats-tagless-fs2",
     libraryDependencies += "co.fs2" %%% "fs2-core" % fs2Version,
@@ -112,9 +113,9 @@ lazy val laws = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .dependsOn(core)
   .enablePlugins(AutomateHeaderPlugin)
+  .settings(rootSettings, mimaSettings)
   .jsSettings(commonJsSettings)
   .nativeSettings(commonNativeSettings)
-  .settings(rootSettings, mimaSettings)
   .settings(
     moduleName := "cats-tagless-laws",
     libraryDependencies ++= List(
@@ -131,20 +132,15 @@ lazy val macros = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .dependsOn(core)
   .aggregate(core)
   .enablePlugins(AutomateHeaderPlugin)
+  .settings(rootSettings, macroSettings, mimaSettings)
   .jsSettings(commonJsSettings)
   .nativeSettings(commonNativeSettings)
-  .settings(rootSettings, macroSettings)
   .settings(
     moduleName := "cats-tagless-macros",
     scalacOptions ~= (_.filterNot(opt => opt.startsWith("-Wunused") || opt.startsWith("-Ywarn-unused"))),
     libraryDependencies += "org.scalacheck" %%% "scalacheck" % scalaCheckVersion % Test,
     publish / skip := tlIsScala3.value,
-    tlMimaPreviousVersions := when(scalaBinaryVersion.value.startsWith("2"))(
-      "0.16.0",
-      "0.15.0",
-      "0.14.0",
-      "0.13.0"
-    ).toSet
+    tlMimaPreviousVersions := when(scalaBinaryVersion.value.startsWith("3"))().toSet
   )
 
 lazy val testsJVM = tests.jvm
@@ -265,7 +261,10 @@ lazy val commonJsSettings = List(
 )
 
 lazy val commonNativeSettings = List(
-  doctestGenTests := Nil
+  doctestGenTests := Nil,
+  // Scala Native 0.5
+  tlMimaPreviousVersions := Set.empty,
+  tlVersionIntroduced := Map.empty
 )
 
 lazy val macroSettings = List[Def.Setting[?]](

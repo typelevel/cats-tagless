@@ -20,30 +20,25 @@ ThisBuild / organizationName := "cats-tagless maintainers"
 ThisBuild / tlBaseVersion := "0.16"
 ThisBuild / crossScalaVersions := Seq(Scala212, Scala213, Scala3)
 ThisBuild / tlCiReleaseBranches := Seq("master")
-ThisBuild / mergifyStewardConfig := Some(
-  MergifyStewardConfig(
-    author = "typelevel-steward[bot]",
-    mergeMinors = true
-  )
-)
-ThisBuild / githubWorkflowAddedJobs ++= Seq(
-  WorkflowJob(
-    "microsite",
-    "Microsite",
-    githubWorkflowJobSetup.value.toList ::: List(
-      WorkflowStep.Use(
-        UseRef.Public("ruby", "setup-ruby", "v1"),
-        name = Some("Setup Ruby"),
-        params = Map("ruby-version" -> "3.3", "bundler-cache" -> "true")
-      ),
-      WorkflowStep.Run(List("gem install jekyll -v 3.9.4"), name = Some("Install Jekyll")),
-      WorkflowStep.Run(List("gem install kramdown-parser-gfm -v 1.1.0"), name = Some("Install Kramdown")),
-      WorkflowStep.Sbt(List("docs/makeMicrosite"), name = Some("Build microsite"))
+ThisBuild / mergifyStewardConfig := Some(MergifyStewardConfig(author = "typelevel-steward[bot]", mergeMinors = true))
+ThisBuild / githubWorkflowAddedJobs += WorkflowJob(
+  "microsite",
+  "Microsite",
+  githubWorkflowJobSetup.value.toList ::: List(
+    WorkflowStep.Use(
+      UseRef.Public("ruby", "setup-ruby", "v1"),
+      name = Some("Setup Ruby"),
+      params = Map("ruby-version" -> "3.3", "bundler-cache" -> "true")
     ),
-    scalas = List("2.13"),
-    javas = List(JavaSpec.temurin("11"))
-  )
+    WorkflowStep.Run(List("gem install jekyll -v 3.9.4"), name = Some("Install Jekyll")),
+    WorkflowStep.Run(List("gem install kramdown-parser-gfm -v 1.1.0"), name = Some("Install Kramdown")),
+    WorkflowStep.Sbt(List("docs/makeMicrosite"), name = Some("Build microsite"))
+  ),
+  scalas = List("2.13"),
+  javas = List(JavaSpec.temurin("11"))
 )
+
+Global / excludeLintKeys += tlVersionIntroduced
 
 val catsVersion = "2.13.0"
 val circeVersion = "0.14.15"
@@ -84,26 +79,26 @@ lazy val data = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .settings(
     moduleName := "cats-tagless-data",
     publish / skip := !tlIsScala3.value,
-    tlVersionIntroduced := Map("3" -> "0.16.4"),
+    tlVersionIntroduced := (if (tlIsScala3.value) Map("3" -> "0.16.5") else Map.empty),
     tlMimaPreviousVersions := (if (tlIsScala3.value) tlMimaPreviousVersions.value else Set.empty),
     libraryDependencies ++= when(tlIsScala3.value)("org.typelevel" %%% "shapeless3-deriving" % shapelessVersion)
   )
 
 lazy val fs2JVM = fs2.jvm
 lazy val fs2JS = fs2.js
-// Temporarily disabled until fs2 is release for SN 0.5
-// lazy val fs2Native = fs2.native
-lazy val fs2 = crossProject(JVMPlatform, JSPlatform /*, NativePlatform */ )
+lazy val fs2Native = fs2.native
+lazy val fs2 = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .dependsOn(core)
   .enablePlugins(AutomateHeaderPlugin)
   .settings(rootSettings)
+  .settings(tlVersionIntroduced := Map("2.12" -> "0.15.1", "2.13" -> "0.15.1", "3" -> "0.15.1"))
   .jsSettings(commonJsSettings)
-//  .nativeSettings(commonNativeSettings)
+  .nativeSettings(commonNativeSettings)
+  .nativeSettings(tlMimaPreviousVersions := Set.empty)
   .settings(
     moduleName := "cats-tagless-fs2",
-    libraryDependencies += "co.fs2" %%% "fs2-core" % fs2Version,
-    tlVersionIntroduced := Map("2.12" -> "0.15.1", "2.13" -> "0.15.1", "3" -> "0.15.1")
+    libraryDependencies += "co.fs2" %%% "fs2-core" % fs2Version
   )
 
 lazy val lawsJVM = laws.jvm
@@ -263,8 +258,7 @@ lazy val commonJsSettings = List(
 lazy val commonNativeSettings = List(
   doctestGenTests := Nil,
   // Scala Native 0.5
-  tlMimaPreviousVersions := Set.empty,
-  tlVersionIntroduced := Map.empty
+  tlMimaPreviousVersions := Set("0.16.5")
 )
 
 lazy val macroSettings = List[Def.Setting[?]](

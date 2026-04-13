@@ -22,14 +22,12 @@ import cats.kernel.laws.discipline.SerializableTests
 import cats.laws.discipline.arbitrary.*
 import cats.tagless.data.given
 import cats.tagless.laws.discipline.SemigroupalKTests
-import cats.tagless.tests.{CatsTaglessTestSuite, experimental}
+import cats.tagless.tests.CatsTaglessTestSuite
 import cats.tagless.{InvariantK, SemigroupalK}
 import org.scalacheck.Arbitrary
 
-import scala.annotation.unused
 import scala.util.Try
 
-@experimental
 class SemigroupalKSuite extends CatsTaglessTestSuite:
   import SemigroupalKSuite.*
 
@@ -48,8 +46,7 @@ object SemigroupalKSuite:
         SemigroupalK
 
   object Parsed:
-    @unused given [F[_]](using
-        Arbitrary[F[Int]],
+    given [F[_]](using
         Arbitrary[F[String]],
         Arbitrary[F[Option[String]]],
         Arbitrary[F[Either[String, Int]]]
@@ -61,8 +58,7 @@ object SemigroupalKSuite:
         errors <- Arbitrary.arbitrary[EitherT[F, String, Int]]
       yield Parsed(position, labels, metadata, errors)
 
-  @unused given [F[_]](using
-      Eq[F[Int]],
+  given [F[_]](using
       Eq[F[String]],
       Eq[F[Option[String]]],
       Eq[F[Either[String, Int]]]

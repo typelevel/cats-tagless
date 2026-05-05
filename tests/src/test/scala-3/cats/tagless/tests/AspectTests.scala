@@ -23,14 +23,11 @@ import cats.tagless.{Derive, Void, Trivial}
 import cats.tagless.aop.{Aspect, Instrument}
 import cats.tagless.laws.discipline
 import cats.Show
-import cats.syntax.all.*
 import io.circe.syntax.*
 import io.circe.{Decoder, Encoder, Json, JsonObject}
 
-import scala.annotation.experimental
 import scala.util.Try
 
-@experimental
 class AspectTests extends CatsTaglessTestSuite:
   import AspectTests.*
   import AspectTests.given
@@ -117,7 +114,6 @@ class AspectTests extends CatsTaglessTestSuite:
     assertEquals(aspect.a(42).algebraName, "AlgWithTypeMember")
     assertEquals(instrument.a(42).algebraName, "AlgWithTypeMember")
 
-@experimental
 object AspectTests:
   type Location = (Double, Double)
   given Aspect.Function[SafeAlg, Show] = Derive.aspect

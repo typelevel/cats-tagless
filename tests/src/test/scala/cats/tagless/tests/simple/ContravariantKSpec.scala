@@ -20,14 +20,11 @@ package tests.simple
 import cats.Id
 import cats.arrow.FunctionK
 import cats.tagless.syntax.all.*
-import cats.tagless.tests.experimental
 
-@experimental
 class ContravariantKSpec extends munit.FunSuite with Fixtures {
 
   test("DeriveMacro should derive instance for a simple algebra") {
     def contravariantK = Derive.contravariantK[SimpleServiceC]
-
     assert(contravariantK.isInstanceOf[ContravariantK[SimpleServiceC]])
   }
 

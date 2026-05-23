@@ -23,7 +23,6 @@ import cats.laws.discipline.eq.*
 import cats.tagless.derived.*
 import org.scalacheck.{Arbitrary, Cogen}
 
-@experimental
 class autoProfunctorTests extends CatsTaglessTestSuite:
   import autoProfunctorTests.*
 

@@ -8,7 +8,7 @@ addCommandAlias("fmtCheck", "all scalafmtSbtCheck scalafmtCheckAll")
 
 val Scala212 = "2.12.21"
 val Scala213 = "2.13.18"
-val Scala3 = "3.3.7"
+val Scala3 = "3.3.8"
 
 val gitRepo = "git@github.com:typelevel/cats-tagless.git"
 val homePage = "https://typelevel.org/cats-tagless"
@@ -213,15 +213,7 @@ lazy val docSettings = commonSettings ::: List(
 val scala3Options = List(
   "-language:adhocExtensions",
   "-explain",
-  List(
-    "locals",
-    "params",
-    "implicits",
-    "explicits",
-    "nowarn",
-    "strict-no-implicit-warn",
-    "unsafe-warn-patvars"
-  ).mkString("-Wunused:", ",", "")
+  "-Wunused:all"
 )
 
 val scala212Options = List(

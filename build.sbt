@@ -213,15 +213,7 @@ lazy val docSettings = commonSettings ::: List(
 val scala3Options = List(
   "-language:adhocExtensions",
   "-explain",
-  List(
-    "locals",
-    "params",
-    "implicits",
-    "explicits",
-    "nowarn",
-    "strict-no-implicit-warn",
-    "unsafe-warn-patvars"
-  ).mkString("-Wunused:", ",", "")
+  "-Wunused:all"
 )
 
 val scala212Options = List(

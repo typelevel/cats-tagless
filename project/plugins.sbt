@@ -3,7 +3,7 @@ addSbtPlugin("org.typelevel" % "sbt-typelevel-mergify" % "0.8.6")
 addSbtPlugin("org.portable-scala" % "sbt-scala-native-crossproject" % "1.3.2")
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.22.0")
 addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.5.12")
-addSbtPlugin("io.github.sbt-doctest" % "sbt-doctest" % "0.12.5")
+addSbtPlugin("io.github.sbt-doctest" % "sbt-doctest" % "0.13.1")
 addSbtPlugin("com.47deg" % "sbt-microsites" % "1.4.4")
 addSbtPlugin("org.scalameta" % "sbt-mdoc" % "2.9.0")
 

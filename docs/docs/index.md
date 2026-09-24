@@ -65,7 +65,7 @@ Similar to [simulacrum](https://github.com/mpilquist/simulacrum), `@finalAlg` ad
 ExpressionAlg[Try]
 ```
 
-Cats-tagless provides a [FunctorK](typeclasses.html#functork) type class to map over algebras using [cats](http://typelevel.org/cats)' [FunctionK](http://typelevel.org/cats/datatypes/functionk.html).
+Cats-tagless provides a [FunctorK](typeclasses.md#functork) type class to map over algebras using [cats](http://typelevel.org/cats)' [FunctionK](http://typelevel.org/cats/datatypes/functionk.html).
 More specifically With an instance of `FunctorK[ExpressionAlg]`, you can transform an `ExpressionAlg[F]` to a `ExpressionAlg[G]` using a `FunctionK[F, G]`, a.k.a. `F ~> G`.
 
 The `@autoFunctorK` annotation adds the following line (among some other code) in the companion object.
@@ -97,8 +97,8 @@ Note that the `Try ~> Option` is implemented using [kind projector's polymorphic
 `@autoFunctorK` also add an auto derivation, so that if you have an implicit  `ExpressionAlg[F]` and an implicit
 `F ~> G`, you automatically have a `ExpressionAlg[G]`.
 
-Obviously [FunctorK](typeclasses.html#functork) instance is only possible when the effect type `F[_]` appears only in the
-covariant position (i.e. the return types). For algebras with effect type also appearing in the contravariant position (i.e. argument types), Cats-tagless provides a [InvariantK](typeclasses.html#invariantk) type class and an `autoInvariantK` annotation to automatically generate instances.
+Obviously [FunctorK](typeclasses.md#functork) instance is only possible when the effect type `F[_]` appears only in the
+covariant position (i.e. the return types). For algebras with effect type also appearing in the contravariant position (i.e. argument types), Cats-tagless provides a [InvariantK](typeclasses.md#invariantk) type class and an `autoInvariantK` annotation to automatically generate instances.
 
 ```scala mdoc
 import ExpressionAlg.autoDerive._
@@ -187,7 +187,7 @@ new StringCalculatorOption
 
 ## <a id="horizontal-comp" href="#horizontal-comp"></a>Horizontal composition
 
-You can use the [SemigroupalK](typeclasses.html#semigroupalk) type class to create a new interpreter that runs two interpreters simultaneously and return the result as a `cats.Tuple2K`. The `@autoSemigroupalK` attribute add an instance of `SemigroupalK` to the companion object. Example:
+You can use the [SemigroupalK](typeclasses.md#semigroupalk) type class to create a new interpreter that runs two interpreters simultaneously and return the result as a `cats.Tuple2K`. The `@autoSemigroupalK` attribute add an instance of `SemigroupalK` to the companion object. Example:
 
 ```scala mdoc
 val prod = ExpressionAlg[Option].productK(ExpressionAlg[Try])
@@ -302,3 +302,34 @@ SimpleContraAlg[String].contramap[Int](_.toString).foo(12)
 ```
 
 Note that if there are multiple type parameters on the trait, `@autoFunctor`, `@autoInvariant`, `@autoContravariant` will treat the last one as the target `T`.
+
+## <a id="optimization" href="#optimization"></a>Program Optimization
+
+Cats-tagless provides powerful optimization capabilities through the `cats.tagless.optimize` package. These optimizations can significantly improve performance by eliminating redundant operations, batching requests, and applying other program transformations based on static analysis.
+
+The optimization package is inspired by techniques originally developed in the [Sphynx](https://github.com/typelevel/sphynx) library and is based on the principles described in the blog post ["Optimizing Tagless Final – Saying farewell to Free"](https://typelevel.org/blog/2017/12/27/optimizing-final-tagless.html) by Luka Jacobowitz.
+
+### Key Features
+
+- **Static Analysis**: Extract static information from programs to identify optimization opportunities
+- **Duplicate Elimination**: Remove redundant operations automatically
+- **Put-Get Elimination**: Optimize common patterns like storing and immediately retrieving values
+- **Batching**: Combine multiple operations into more efficient batch operations
+
+### Quick Example
+
+```scala mdoc:silent
+trait KVStore[F[_]] {
+  def get(key: String): F[Option[String]]
+  def put(key: String, value: String): F[Unit]
+}
+
+def program[F[_]: Applicative](store: KVStore[F]): F[List[String]] = {
+  (store.get("Cats"), store.get("Dogs"), store.get("Cats"), store.get("Birds"))
+    .mapN((c, d, c2, b) => List(c, d, c2, b).flatten)
+}
+```
+
+With optimization, the duplicate `get("Cats")` call can be eliminated automatically.
+
+For detailed information about optimization techniques and usage, see the [Optimization](#optimization) section below.

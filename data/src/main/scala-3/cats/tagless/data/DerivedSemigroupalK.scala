@@ -45,4 +45,5 @@ object DerivedSemigroupalK:
 
   trait Product[T[f[_[_]]] <: SemigroupalK[f], F[_[_]]: ProductInstancesOf[T]] extends SemigroupalK[F]:
     final override def productK[A[_], B[_]](fa: F[A], fb: F[B]): F[Tuple2K[A, B, *]] =
-      ProductInstances.map2(fa, fb)([f[_[_]]] => (F: T[f], fa: f[A], fb: f[B]) => F.productK(fa, fb))
+      ProductInstances.map2(fa, fb): [f[_[_]]] =>
+        (F, fa, fb) => F.productK(fa, fb)

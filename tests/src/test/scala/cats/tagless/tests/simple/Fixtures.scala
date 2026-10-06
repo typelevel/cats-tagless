@@ -19,10 +19,9 @@ package tests.simple
 
 import cats.Id
 import cats.data.Cokleisli
-import cats.tagless.tests.experimental
 
 object Fixtures extends Fixtures
-@experimental trait Fixtures {
+trait Fixtures {
 
   /** Simple algebra definition */
   trait SimpleService[F[_]] {

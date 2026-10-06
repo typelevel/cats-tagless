@@ -23,12 +23,11 @@ import cats.laws.discipline.arbitrary.*
 import cats.tagless.ApplyK
 import cats.tagless.data.given
 import cats.tagless.laws.discipline.ApplyKTests
-import cats.tagless.tests.{CatsTaglessTestSuite, experimental}
+import cats.tagless.tests.CatsTaglessTestSuite
 import org.scalacheck.Arbitrary
 
 import scala.util.Try
 
-@experimental
 class ApplyKSuite extends CatsTaglessTestSuite:
   import ApplyKSuite.*
 

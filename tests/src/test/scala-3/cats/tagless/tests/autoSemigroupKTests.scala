@@ -24,7 +24,6 @@ import cats.tagless.derived.*
 import cats.{Comparison, Eq, SemigroupK}
 import org.scalacheck.{Arbitrary, Cogen, Gen}
 
-@experimental
 class autoSemigroupKTests extends CatsTaglessTestSuite:
   import autoSemigroupKTests.*
 

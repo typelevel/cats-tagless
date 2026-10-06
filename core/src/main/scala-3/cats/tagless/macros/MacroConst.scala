@@ -20,6 +20,7 @@ import cats.tagless.*
 
 import scala.annotation.*
 import scala.quoted.*
+import scala.annotation.unused
 
 @experimental
 object MacroConst:

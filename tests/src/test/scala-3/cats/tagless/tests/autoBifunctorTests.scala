@@ -22,7 +22,6 @@ import cats.tagless.derived.*
 import cats.{Bifunctor, Eq}
 import org.scalacheck.{Arbitrary, Cogen}
 
-@experimental
 class autoBifunctorTests extends CatsTaglessTestSuite:
   import autoBifunctorTests.*
 

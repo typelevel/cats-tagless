@@ -40,6 +40,10 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
   private val nonOverridableFlags =
     List(Flags.Final, Flags.Artifact, Flags.Synthetic, Flags.Mutable, Flags.Param)
 
+  // Overloads share a name, so break ties by signature.
+  private val byNameOrSignature =
+    Ordering.by[Symbol, String](_.name).orElseBy(_.info.show)
+
   // TODO: This is a hack - replace with `Symbol.newTypeAlias` on Scala 3.6+
   private def newTypeAlias(owner: Symbol, name: String, flags: Flags, tpe: TypeRepr, privateIn: Symbol): Symbol =
     try
@@ -176,7 +180,7 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
 
       for
         // Members come back in an order that can change between compilations; sort for stable output.
-        member <- List(sym.typeMembers, sym.fieldMembers, sym.methodMembers).flatMap(_.sortBy(_.name))
+        member <- List(sym.typeMembers, sym.fieldMembers, sym.methodMembers).flatMap(_.sorted(using byNameOrSignature))
         if !member.isNoSymbol
         if !member.isClassConstructor
         if !nonOverridableFlags.exists(member.flags.is)

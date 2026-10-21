@@ -175,7 +175,8 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
       val (from, to) = typeAliases.unzip
 
       for
-        member <- List.concat(sym.typeMembers, sym.fieldMembers, sym.methodMembers)
+        // Members come back in an order that can change between compilations; sort for stable output.
+        member <- List(sym.typeMembers, sym.fieldMembers, sym.methodMembers).flatMap(_.sortBy(_.name))
         if !member.isNoSymbol
         if !member.isClassConstructor
         if !nonOverridableFlags.exists(member.flags.is)

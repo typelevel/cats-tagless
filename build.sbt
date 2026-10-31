@@ -42,10 +42,10 @@ ThisBuild / githubWorkflowAddedJobs += WorkflowJob(
 Global / excludeLintKeys += tlVersionIntroduced
 
 val catsVersion = "2.13.0"
-val circeVersion = "0.14.16"
+val circeVersion = "0.14.17"
 val disciplineVersion = "1.7.0"
 val disciplineMunitVersion = "2.0.0"
-val fs2Version = "3.13.0"
+val fs2Version = "3.14.0"
 val kindProjectorVersion = "0.13.4"
 val paradiseVersion = "2.1.1"
 val scalaCheckVersion = "1.20.0"

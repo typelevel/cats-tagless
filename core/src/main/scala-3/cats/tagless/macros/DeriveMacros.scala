@@ -40,6 +40,10 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
   private val nonOverridableFlags =
     List(Flags.Final, Flags.Artifact, Flags.Synthetic, Flags.Mutable, Flags.Param)
 
+  // Overloads share a name, so break ties by signature.
+  private val byNameOrSignature =
+    Ordering.by[Symbol, String](_.name).orElseBy(_.info.show)
+
   extension (xf: Transform)
     def transformRepeated(method: Symbol, tpe: TypeRepr, arg: Term): Tree =
       val x = Symbol.freshName("x")
@@ -155,7 +159,8 @@ private class DeriveMacros[Q <: Quotes](using val q: Q):
       val (from, to) = typeAliases.unzip
 
       for
-        member <- List.concat(sym.typeMembers, sym.fieldMembers, sym.methodMembers)
+        // Members come back in an order that can change between compilations; sort for stable output.
+        member <- List(sym.typeMembers, sym.fieldMembers, sym.methodMembers).flatMap(_.sorted(using byNameOrSignature))
         if !member.isNoSymbol
         if !member.isClassConstructor
         if !nonOverridableFlags.exists(member.flags.is)

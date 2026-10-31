@@ -21,12 +21,11 @@ import cats.kernel.laws.discipline.SerializableTests
 import cats.tagless.FunctorK
 import cats.tagless.data.given
 import cats.tagless.laws.discipline.FunctorKTests
-import cats.tagless.tests.{CatsTaglessTestSuite, experimental}
+import cats.tagless.tests.CatsTaglessTestSuite
 import org.scalacheck.{Arbitrary, Gen}
 
 import scala.util.Try
 
-@experimental
 class FunctorKSuite extends CatsTaglessTestSuite:
   import FunctorKSuite.*
 

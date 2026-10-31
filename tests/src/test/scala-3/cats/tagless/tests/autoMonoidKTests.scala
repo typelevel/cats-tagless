@@ -22,7 +22,6 @@ import cats.tagless.derived.*
 import cats.{Eq, MonoidK}
 import org.scalacheck.{Arbitrary, Cogen}
 
-@experimental
 class autoMonoidKTests extends CatsTaglessTestSuite:
   import autoMonoidKTests.*
 

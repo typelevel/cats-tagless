@@ -46,4 +46,5 @@ object DerivedFunctorK:
 
   trait Generic[T[f[_[_]]] <: FunctorK[f], F[_[_]]: InstancesOf[T]] extends FunctorK[F]:
     final override def mapK[A[_], B[_]](fa: F[A])(fk: A ~> B): F[B] =
-      Instances.map(fa)([f[_[_]]] => (F: T[f], fa: f[A]) => F.mapK(fa)(fk))
+      Instances.map(fa): [f[_[_]]] =>
+        (F, fa) => F.mapK(fa)(fk)

@@ -24,10 +24,8 @@ import cats.tagless.{AutoDerive, Derive, FunctorK}
 import cats.tagless.laws.discipline.FunctorKTests
 import cats.{Monad, Show, ~>}
 
-import scala.annotation.experimental
 import scala.util.Try
 
-@experimental
 class autoFunctorKTests extends CatsTaglessTestSuite:
   import autoFunctorKTests.*
   import autoFunctorKTests.given

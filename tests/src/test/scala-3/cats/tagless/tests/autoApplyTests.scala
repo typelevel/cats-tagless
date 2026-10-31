@@ -22,7 +22,6 @@ import cats.tagless.derived.*
 import cats.{Apply, Eq}
 import org.scalacheck.Arbitrary
 
-@experimental
 class autoApplyTests extends CatsTaglessTestSuite:
   import autoApplyTests.*
 

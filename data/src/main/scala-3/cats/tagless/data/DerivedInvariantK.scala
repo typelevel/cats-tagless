@@ -46,4 +46,5 @@ object DerivedInvariantK:
 
   trait Generic[T[f[_[_]]] <: InvariantK[f], F[_[_]]: InstancesOf[T]] extends InvariantK[F]:
     final override def imapK[A[_], B[_]](fa: F[A])(fk: A ~> B)(gk: B ~> A): F[B] =
-      Instances.map(fa)([f[_[_]]] => (F: T[f], fa: f[A]) => F.imapK(fa)(fk)(gk))
+      Instances.map(fa): [f[_[_]]] =>
+        (F, fa) => F.imapK(fa)(fk)(gk)

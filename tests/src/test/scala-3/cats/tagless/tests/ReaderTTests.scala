@@ -22,9 +22,7 @@ import cats.FlatMap
 import cats.tagless.{Derive, InvariantK}
 
 import scala.util.{Failure, Success, Try}
-import scala.annotation.experimental
 
-@experimental
 class ReaderTTests extends CatsTaglessTestSuite:
   import ReaderTTests.*
 
@@ -94,7 +92,6 @@ class ReaderTTests extends CatsTaglessTestSuite:
       )
     )
 
-@experimental
 object ReaderTTests:
   final case class Galaxy(name: String)
   final case class Error(message: String) extends RuntimeException(message)

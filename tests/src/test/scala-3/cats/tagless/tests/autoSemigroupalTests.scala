@@ -22,7 +22,6 @@ import cats.tagless.derived.*
 import cats.{Eq, Invariant, Semigroupal}
 import org.scalacheck.{Arbitrary, Cogen}
 
-@experimental
 class autoSemigroupalTests extends CatsTaglessTestSuite:
   import autoSemigroupalTests.*
 

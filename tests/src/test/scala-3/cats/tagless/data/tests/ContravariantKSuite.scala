@@ -26,12 +26,11 @@ import cats.laws.discipline.eq.*
 import cats.tagless.ContravariantK
 import cats.tagless.data.{DerivedContravariantK, given}
 import cats.tagless.laws.discipline.ContravariantKTests
-import cats.tagless.tests.{CatsTaglessTestSuite, experimental}
+import cats.tagless.tests.CatsTaglessTestSuite
 import org.scalacheck.{Arbitrary, Cogen, Gen}
 
 import scala.util.Try
 
-@experimental
 class ContravariantKSuite extends CatsTaglessTestSuite:
   import ContravariantKSuite.*
 

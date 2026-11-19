@@ -25,12 +25,11 @@ import cats.laws.discipline.eq.*
 import cats.tagless.InvariantK
 import cats.tagless.data.given
 import cats.tagless.laws.discipline.InvariantKTests
-import cats.tagless.tests.{CatsTaglessTestSuite, experimental}
+import cats.tagless.tests.CatsTaglessTestSuite
 import org.scalacheck.{Arbitrary, Gen}
 
 import scala.util.Try
 
-@experimental
 class InvariantKSuite extends CatsTaglessTestSuite:
   import InvariantKSuite.*
 

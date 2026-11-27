@@ -21,10 +21,8 @@ import cats.laws.discipline.arbitrary.*
 import cats.tagless.SemigroupalK
 import cats.tagless.laws.discipline.SemigroupalKTests
 
-import scala.annotation.experimental
 import scala.util.Try
 
-@experimental
 class autoSemigroupalKTests extends CatsTaglessTestSuite:
   checkAll("SemigroupalK[SafeAlg]", SemigroupalKTests[SafeAlg].semigroupalK[Try, Option, List])
   checkAll("SemigroupalK[SafeInvAlg]", SemigroupalKTests[SafeInvAlg].semigroupalK[Try, Option, List])

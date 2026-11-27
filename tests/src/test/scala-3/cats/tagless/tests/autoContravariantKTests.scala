@@ -25,10 +25,8 @@ import cats.tagless.ContravariantK
 import cats.tagless.laws.discipline.ContravariantKTests
 import org.scalacheck.{Arbitrary, Cogen}
 
-import scala.annotation.experimental
 import scala.util.Try
 
-@experimental
 class autoContravariantKTests extends CatsTaglessTestSuite:
   import autoContravariantKTests.*
 
@@ -44,8 +42,9 @@ object autoContravariantKTests:
     def foldSpecialized(init: String)(f: (Int, String) => Int): Cokleisli[F, String, Int]
 
   object TestAlgebra:
-    given [F[_]](using Arbitrary[F[Int]], Arbitrary[F[String]]): Eq[TestAlgebra[F]] =
-      Eq.by(algebra => (algebra.sum, algebra.sumAll _, algebra.foldSpecialized))
+    given [F[_]](using Arbitrary[F[Int]], Arbitrary[F[String]]): Eq[TestAlgebra[F]] = Eq.by: algebra =>
+      val sumAll = algebra.sumAll()
+      (algebra.sum, sumAll, algebra.foldSpecialized)
 
   given [F[_]](using
       Arbitrary[F[String]],

@@ -26,10 +26,8 @@ import cats.{Eq, Eval, Monoid, ~>}
 import cats.tagless.{ApplyK, InvariantK, SemigroupalK}
 import org.scalacheck.{Arbitrary, Cogen}
 
-import scala.annotation.experimental
 import scala.util.Try
 
-@experimental
 trait SafeAlg[F[_]] derives SemigroupalK, Instrument:
   def parseInt(str: String): F[Int]
   def divide(dividend: Float, divisor: Float): F[Float]
@@ -48,7 +46,6 @@ object SafeAlg:
       def parseInt(str: String) = parseIntF(str)
       def divide(dividend: Float, divisor: Float) = divideF(dividend, divisor)
 
-@experimental
 trait SafeInvAlg[F[_]] derives InvariantK, SemigroupalK:
   def parseInt(fs: F[String]): F[Int]
   def doubleParser(precision: Int): Kleisli[F, String, Double]
@@ -80,7 +77,6 @@ object SafeInvAlg:
       def doubleParser(precision: Int) = doubleParserF(precision)
       def parseIntOrError(fs: EitherT[F, String, String]) = parseIntOrErrorF(fs)
 
-@experimental
 trait CalculatorAlg[F[_]] derives InvariantK, SemigroupalK:
   def lit(i: Int): F[Int]
   def add(x: F[Int], y: F[Int]): F[Int]
@@ -124,12 +120,10 @@ object KVStoreInfo:
   )
 
 object Interpreters:
-  @experimental
   given tryInterpreter: SafeAlg[Try] with
     def parseInt(str: String): Try[Int] = Try(str.toInt)
     def divide(dividend: Float, divisor: Float): Try[Float] = Try(dividend / divisor)
 
-  @experimental
   given lazyInterpreter: SafeAlg[Eval] with
     def parseInt(str: String): Eval[Int] = Eval.later(str.toInt)
     def divide(dividend: Float, divisor: Float): Eval[Float] = Eval.later(dividend / divisor)

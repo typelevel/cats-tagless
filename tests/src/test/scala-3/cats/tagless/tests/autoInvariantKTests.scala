@@ -23,10 +23,8 @@ import cats.tagless.{AutoDerive, Derive, InvariantK}
 import cats.tagless.laws.discipline.InvariantKTests
 import cats.~>
 
-import scala.annotation.experimental
 import scala.util.Try
 
-@experimental
 class autoInvariantKTests extends CatsTaglessTestSuite:
   import autoInvariantKTests.*
   import autoInvariantKTests.given
@@ -87,10 +85,8 @@ class autoInvariantKTests extends CatsTaglessTestSuite:
   test("with methods with type param"):
     object tryAlg extends AlgWithTypeParam[Try]:
       def a[T](i: Try[T]): Try[String] = i.map(_.toString)
-
     assertEquals(tryAlg.imapK(toFk)(otFk).a(Option(1)), Some("1"))
 
-@experimental
 object autoInvariantKTests:
   given toFk: (Try ~> Option) = FunctionK.liftFunction[Try, Option](_.toOption)
   given otFk: (Option ~> Try) = FunctionK.liftFunction[Option, Try](o => Try(o.get))
